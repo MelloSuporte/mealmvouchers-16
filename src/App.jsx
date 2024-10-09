@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import Search from "./pages/Search";
 import Menu from "./pages/Menu";
 import Profile from "./pages/Profile";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -19,7 +20,8 @@ const App = () => (
       <Toaster />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Voucher />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/voucher" element={<Voucher />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/self-services" element={<SelfServices />} />
           <Route path="/app" element={<Layout />}>
