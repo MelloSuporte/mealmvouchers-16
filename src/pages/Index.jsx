@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-blue-600 flex flex-col p-4">
-      <div className="flex justify-end mb-8">
+    <div className="min-h-screen bg-blue-600 flex flex-col p-4 relative">
+      <div className="absolute top-4 right-4">
         <Link to="/admin-login">
           <Button className="bg-white text-blue-600 hover:bg-blue-100">
             Login
