@@ -5,6 +5,10 @@ import { Home, Search, Menu, User } from 'lucide-react';
 const Layout = () => {
   return (
     <div className="flex flex-col min-h-screen">
+      <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold">Refeitório</h1>
+        <User size={24} />
+      </header>
       <main className="flex-grow">
         <Outlet />
       </main>
