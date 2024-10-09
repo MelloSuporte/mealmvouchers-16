@@ -3,7 +3,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
-import Login from "./pages/Login";
+import Voucher from "./pages/Voucher";
+import AdminLogin from "./pages/AdminLogin";
 import Home from "./pages/Home";
 import Search from "./pages/Search";
 import Menu from "./pages/Menu";
@@ -17,8 +18,9 @@ const App = () => (
       <Toaster />
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Layout />}>
+          <Route path="/" element={<Voucher />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/app" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="search" element={<Search />} />
             <Route path="menu" element={<Menu />} />
