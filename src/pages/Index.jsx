@@ -5,13 +5,6 @@ import { Link } from 'react-router-dom';
 const Index = () => {
   return (
     <div className="min-h-screen bg-blue-600 flex flex-col p-4 relative">
-      <div className="absolute top-4 right-4">
-        <Link to="/admin-login">
-          <Button className="bg-white text-blue-600 hover:bg-blue-100">
-            Admin
-          </Button>
-        </Link>
-      </div>
       <div className="flex-grow flex items-center justify-center">
         <div className="text-center text-white">
           <h1 className="text-4xl font-bold mb-4">Bem-vindo ao Refeitório</h1>
