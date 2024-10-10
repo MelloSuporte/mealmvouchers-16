@@ -25,7 +25,7 @@ connection.connect((err) => {
   console.log('Conectado ao banco de dados MySQL');
 });
 
-// API para obter todos os usuários
+// Rotas para usuários
 app.get('/api/users', (req, res) => {
   connection.query('SELECT * FROM users', (err, results) => {
     if (err) {
@@ -36,7 +36,6 @@ app.get('/api/users', (req, res) => {
   });
 });
 
-// API para criar um novo usuário
 app.post('/api/users', (req, res) => {
   const { name, email } = req.body;
   connection.query(
@@ -50,6 +49,50 @@ app.post('/api/users', (req, res) => {
       res.status(201).json({ id: result.insertId, name, email });
     }
   );
+});
+
+// Rotas para refeições
+app.get('/api/meals', (req, res) => {
+  connection.query('SELECT * FROM meals', (err, results) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Rotas para itens do menu
+app.get('/api/menu-items', (req, res) => {
+  connection.query('SELECT * FROM menu_items', (err, results) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Rotas para reservas
+app.get('/api/reservations', (req, res) => {
+  connection.query('SELECT * FROM reservations', (err, results) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Rotas para vouchers
+app.get('/api/vouchers', (req, res) => {
+  connection.query('SELECT * FROM vouchers', (err, results) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(results);
+  });
 });
 
 app.listen(port, () => {
