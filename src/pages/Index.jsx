@@ -10,7 +10,6 @@ const Index = () => {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    // Foca automaticamente no campo de entrada quando o componente é montado
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -24,10 +23,16 @@ const Index = () => {
 
   const handleNumpadClick = (num) => {
     setVoucherCode(prevCode => prevCode + num);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   const handleBackspace = () => {
     setVoucherCode(prevCode => prevCode.slice(0, -1));
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   const renderNumpad = () => {
@@ -37,13 +42,18 @@ const Index = () => {
         {numbers.map(num => (
           <Button
             key={num}
+            type="button"
             onClick={() => handleNumpadClick(num)}
             className="bg-gray-200 text-black hover:bg-gray-300 text-xl py-4"
           >
             {num}
           </Button>
         ))}
-        <Button onClick={handleBackspace} className="bg-red-500 hover:bg-red-600 text-white col-span-2">
+        <Button 
+          type="button"
+          onClick={handleBackspace} 
+          className="bg-red-500 hover:bg-red-600 text-white col-span-2"
+        >
           Backspace
         </Button>
       </div>
