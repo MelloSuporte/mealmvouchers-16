@@ -8,7 +8,7 @@ const Index = () => {
       <div className="absolute top-4 right-4">
         <Link to="/admin-login">
           <Button className="bg-white text-blue-600 hover:bg-blue-100">
-            Login
+            Admin
           </Button>
         </Link>
       </div>
