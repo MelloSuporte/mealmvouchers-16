@@ -17,28 +17,28 @@ const SelfServices = () => {
       
       <div className="z-10 w-full max-w-md space-y-8">
         <h2 className="text-3xl font-bold text-center text-white mb-12">Escolha sua refeição</h2>
-        <div className="space-y-4 bg-white p-8 rounded-lg shadow-lg">
-          <Button
-            onClick={() => handleMealSelection('Café')}
-            className="w-full bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-3 px-4 border border-blue-500 hover:border-transparent rounded"
-          >
-            Café
-          </Button>
+        <div className="grid grid-cols-2 gap-4 bg-white p-8 rounded-lg shadow-lg">
           <Button
             onClick={() => handleMealSelection('Almoço')}
-            className="w-full bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-3 px-4 border border-blue-500 hover:border-transparent rounded"
+            className="w-full bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-6 px-4 border border-blue-500 hover:border-transparent rounded-lg transition-all duration-300"
           >
             Almoço
           </Button>
           <Button
+            onClick={() => handleMealSelection('Café')}
+            className="w-full bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-6 px-4 border border-blue-500 hover:border-transparent rounded-lg transition-all duration-300"
+          >
+            Café
+          </Button>
+          <Button
             onClick={() => handleMealSelection('Ceia')}
-            className="w-full bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-3 px-4 border border-blue-500 hover:border-transparent rounded"
+            className="w-full bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-6 px-4 border border-blue-500 hover:border-transparent rounded-lg transition-all duration-300"
           >
             Ceia
           </Button>
           <Button
             onClick={() => handleMealSelection('Extra')}
-            className="w-full bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-3 px-4 border border-blue-500 hover:border-transparent rounded"
+            className="w-full bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-6 px-4 border border-blue-500 hover:border-transparent rounded-lg transition-all duration-300"
           >
             Extra
           </Button>
