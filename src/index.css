@@ -74,3 +74,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos para manter o cursor visível em dispositivos de toque */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Desabilitar zoom em inputs em dispositivos iOS */
+@supports (-webkit-touch-callout: none) {
+  input[type="text"],
+  input[type="number"],
+  textarea {
+    font-size: 16px;
+  }
+}
