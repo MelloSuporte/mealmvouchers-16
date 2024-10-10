@@ -1,74 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Ticket } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const [newUser, setNewUser] = useState({ name: '', email: '' });
+  const [voucherCode, setVoucherCode] = useState('');
+  const navigate = useNavigate();
 
-  const fetchUsers = async () => {
-    const response = await fetch('http://localhost:5000/api/users');
-    if (!response.ok) {
-      throw new Error('Erro ao buscar usuários');
-    }
-    return response.json();
-  };
-
-  const { data: users, isLoading, error, refetch } = useQuery({
-    queryKey: ['users'],
-    queryFn: fetchUsers,
-  });
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const response = await fetch('http://localhost:5000/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newUser),
-      });
-      if (!response.ok) {
-        throw new Error('Erro ao criar usuário');
-      }
-      setNewUser({ name: '', email: '' });
-      refetch();
-    } catch (error) {
-      console.error('Erro:', error);
-    }
+    console.log('Voucher submitted:', voucherCode);
+    navigate('/self-services');
   };
-
-  if (isLoading) return <div>Carregando...</div>;
-  if (error) return <div>Erro: {error.message}</div>;
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Lista de Usuários</h1>
-      <ul className="mb-4">
-        {users.map((user) => (
-          <li key={user.id} className="mb-2">
-            {user.name} - {user.email}
-          </li>
-        ))}
-      </ul>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          placeholder="Nome"
-          value={newUser.name}
-          onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={newUser.email}
-          onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-          className="w-full p-2 border rounded"
-        />
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-          Adicionar Usuário
-        </button>
-      </form>
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Blue curved shape */}
+      <div className="absolute top-0 right-0 w-full h-1/3 bg-blue-600 rounded-bl-[30%]"></div>
+      
+      {/* White curved shape */}
+      <div className="absolute bottom-0 left-0 w-full h-2/3 bg-gray-100 rounded-tr-[30%]"></div>
+      
+      <div className="relative z-10 flex-grow flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="relative">
+              <Input
+                type="text"
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="VOUCHER"
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.target.value)}
+              />
+              <Ticket className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              ENTER
+            </Button>
+          </form>
+          <div className="text-center">
+            <Button
+              onClick={() => navigate('/admin-login')}
+              variant="link"
+              className="text-blue-600 hover:text-blue-800 font-medium transition duration-300 ease-in-out"
+            >
+              ADMIN
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

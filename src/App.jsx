@@ -3,7 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
-import Voucher from "./pages/Voucher";
+import Index from "./pages/Index";
 import AdminLogin from "./pages/AdminLogin";
 import SelfServices from "./pages/SelfServices";
 import Home from "./pages/Home";
@@ -19,7 +19,7 @@ const App = () => (
       <Toaster />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Voucher />} />
+          <Route path="/" element={<Index />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/self-services" element={<SelfServices />} />
           <Route path="/app" element={<Layout />}>
