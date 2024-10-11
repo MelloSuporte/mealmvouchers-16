@@ -8,12 +8,13 @@ const SelfServices = () => {
 
   const handleMealSelection = (mealType) => {
     console.log(`Refeição selecionada: ${mealType}`);
-    navigate('/app');
+    // Aqui você pode adicionar lógica para obter o nome do usuário
+    const userName = "User"; // Substitua isso pela lógica real de obtenção do nome do usuário
+    navigate(`/bom-apetite/${userName}`);
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-start p-4 relative overflow-hidden">
-      {/* Blue curved shape with centered text */}
       <div className="absolute top-0 right-0 w-full h-1/3 bg-blue-600 rounded-bl-[30%] flex items-start justify-center pt-8">
         <h2 className="text-3xl font-bold text-white">Escolha sua refeição</h2>
       </div>
