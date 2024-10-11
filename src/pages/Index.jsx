@@ -18,7 +18,9 @@ const Index = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Voucher submitted:', voucherCode);
-    navigate('/self-services');
+    // Simulating a user name for demonstration purposes
+    const userName = "User";
+    navigate(`/bom-apetite/${userName}`);
   };
 
   const handleNumpadClick = (num) => {
