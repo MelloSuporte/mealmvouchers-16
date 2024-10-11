@@ -1,22 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { Coffee, Utensils, Moon, Plus } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const SelfServices = () => {
   const navigate = useNavigate();
-  const [showBomApetite, setShowBomApetite] = useState(false);
-  const [selectedMeal, setSelectedMeal] = useState('');
 
   const handleMealSelection = (mealType) => {
-    setSelectedMeal(mealType);
-    setShowBomApetite(true);
-  };
-
-  const handleCloseBomApetite = () => {
-    setShowBomApetite(false);
-    navigate('/voucher');
+    console.log(`Refeição selecionada: ${mealType}`);
+    // Aqui você pode adicionar lógica para obter o nome do usuário
+    const userName = "User"; // Substitua isso pela lógica real de obtenção do nome do usuário
+    navigate(`/bom-apetite/${userName}`);
   };
 
   return (
@@ -57,18 +51,6 @@ const SelfServices = () => {
           </Button>
         </div>
       </div>
-
-      <Dialog open={showBomApetite} onOpenChange={setShowBomApetite}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>BOM APETITE!</DialogTitle>
-          </DialogHeader>
-          <div className="text-center">
-            <p className="text-2xl font-bold mb-4">Você escolheu: {selectedMeal}</p>
-            <Button onClick={handleCloseBomApetite}>Fechar</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

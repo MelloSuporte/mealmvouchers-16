@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Ticket } from 'lucide-react';
 
 const Voucher = () => {
@@ -10,9 +10,9 @@ const Voucher = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically validate the voucher code
+    // Aqui você pode adicionar a lógica para validar o código do voucher
     console.log('Voucher submitted:', voucherCode);
-    // After validation, redirect to SelfServices
+    // Após a validação bem-sucedida, redirecione para a página SelfServices
     navigate('/self-services');
   };
 
