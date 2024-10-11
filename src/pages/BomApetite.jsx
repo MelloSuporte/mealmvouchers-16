@@ -8,7 +8,7 @@ const BomApetite = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigate('/self-services');
-    }, 3000); // Redireciona após 3 segundos
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, [navigate]);
