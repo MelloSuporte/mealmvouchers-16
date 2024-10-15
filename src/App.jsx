@@ -23,7 +23,7 @@ const App = () => (
       <Toaster />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Navigate to="/voucher" />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/voucher" element={<Voucher />} />
           <Route path="/self-services" element={<SelfServices />} />

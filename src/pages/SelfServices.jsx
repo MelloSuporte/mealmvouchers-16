@@ -10,7 +10,7 @@ const SelfServices = () => {
     console.log(`Refeição selecionada: ${mealType}`);
     // Aqui você pode adicionar lógica para obter o nome do usuário
     const userName = "User"; // Substitua isso pela lógica real de obtenção do nome do usuário
-    navigate(`/bom-apetite/${userName}`);
+    navigate(`/bom-apetite/${userName}`, { state: { mealType } });
   };
 
   return (

@@ -10,9 +10,9 @@ const Voucher = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically validate the voucher code
+    // Aqui você pode adicionar a lógica de validação do voucher
     console.log('Voucher submitted:', voucherCode);
-    // After validation, redirect to SelfServices
+    // Após a validação, redireciona para SelfServices
     navigate('/self-services');
   };
 
