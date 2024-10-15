@@ -1,12 +1,16 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 import { Coffee, Utensils, Moon, Plus } from 'lucide-react';
 
 const SelfServices = () => {
+  const navigate = useNavigate();
+
   const handleMealSelection = (mealType) => {
     console.log(`Refeição selecionada: ${mealType}`);
-    // Aqui você pode adicionar lógica para lidar com a seleção da refeição
-    // sem navegar para a página BomApetite
+    // Aqui você pode adicionar lógica para obter o nome do usuário
+    const userName = "User"; // Substitua isso pela lógica real de obtenção do nome do usuário
+    navigate(`/bom-apetite/${userName}`);
   };
 
   return (

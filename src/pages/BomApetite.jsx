@@ -7,7 +7,7 @@ const BomApetite = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/self-services');
+      navigate('/');
     }, 3000);
 
     return () => clearTimeout(timer);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Ticket } from 'lucide-react';
 
 const Voucher = () => {
@@ -45,11 +45,6 @@ const Voucher = () => {
             </Button>
           </div>
         </form>
-        <div className="text-center">
-          <Link to="/admin-login" className="font-medium text-blue-600 hover:text-blue-500">
-            Admin
-          </Link>
-        </div>
       </div>
     </div>
   );
