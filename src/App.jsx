@@ -13,7 +13,6 @@ import Profile from "./pages/Profile";
 import User from "./pages/User";
 import Login from "./pages/Login";
 import Voucher from "./pages/Voucher";
-import BomApetite from "./pages/BomApetite";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +28,6 @@ const App = () => (
           <Route path="/self-services" element={<SelfServices />} />
           <Route path="/login" element={<Login />} />
           <Route path="/user" element={<User />} />
-          <Route path="/bom-apetite/:userName" element={<BomApetite />} />
           <Route path="/app" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="search" element={<Search />} />
