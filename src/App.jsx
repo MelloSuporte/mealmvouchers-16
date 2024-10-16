@@ -14,6 +14,7 @@ import User from "./pages/User";
 import Login from "./pages/Login";
 import Voucher from "./pages/Voucher";
 import BomApetite from "./pages/BomApetite";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/bom-apetite/:userName" element={<BomApetite />} />
           <Route path="/login" element={<Login />} />
           <Route path="/user" element={<User />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/app" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="search" element={<Search />} />

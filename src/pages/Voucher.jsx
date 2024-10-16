@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { Ticket } from 'lucide-react';
+import { Ticket, Settings } from 'lucide-react';
 
 const Voucher = () => {
   const [voucherCode, setVoucherCode] = useState('');
@@ -61,7 +61,14 @@ const Voucher = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4 relative">
+      <Button
+        onClick={() => navigate('/admin')}
+        className="absolute top-4 right-4 bg-white text-blue-600 hover:bg-blue-100"
+      >
+        <Settings className="mr-2 h-4 w-4" />
+        Admin
+      </Button>
       <div className="w-full max-w-md space-y-8 bg-white p-6 rounded-lg shadow-lg">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-blue-600">Voucher</h2>
