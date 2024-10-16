@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { Coffee, Utensils, Moon, Plus } from 'lucide-react';
+import { Coffee, Utensils, Moon, Plus, Sandwich } from 'lucide-react';
 
 const SelfServices = () => {
   const navigate = useNavigate();
@@ -34,6 +34,20 @@ const SelfServices = () => {
           >
             <Coffee className="h-12 w-12 mb-2" />
             Café
+          </Button>
+          <Button
+            onClick={() => handleMealSelection('Lanche')}
+            className="w-full h-32 bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-6 px-4 border border-blue-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
+          >
+            <Sandwich className="h-12 w-12 mb-2" />
+            Lanche
+          </Button>
+          <Button
+            onClick={() => handleMealSelection('Jantar')}
+            className="w-full h-32 bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-6 px-4 border border-blue-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
+          >
+            <Moon className="h-12 w-12 mb-2" />
+            Jantar
           </Button>
           <Button
             onClick={() => handleMealSelection('Ceia')}
