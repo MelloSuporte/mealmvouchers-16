@@ -4,49 +4,61 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const User = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [fullName, setFullName] = useState("");
   const [cpf, setCpf] = useState("");
   const [company, setCompany] = useState("");
-  const [sector, setSector] = useState("");
+  const [voucherPassword, setVoucherPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isExtraMeal, setIsExtraMeal] = useState(false);
 
-  // Mock data for companies and sectors
+  // Mock data for companies
   const companies = ["Empresa A", "Empresa B", "Empresa C"];
-  const sectors = ["Setor 1", "Setor 2", "Setor 3"];
 
   const handleRegister = () => {
     setIsRegistering(true);
   };
 
   const handleSave = () => {
-    // Here you would typically handle the save logic
-    console.log('Saving user:', { fullName, cpf, company, sector });
+    // Aqui você implementaria a lógica de salvar
+    console.log('Salvando usuário:', { fullName, cpf, company, voucherPassword, isExtraMeal });
     setIsRegistering(false);
+    setIsChangingPassword(false);
   };
 
-  const handleUpdate = () => {
-    // Here you would typically handle the update logic
-    console.log('Updating user:', { fullName, cpf, company, sector });
+  const handleCPFChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+      setCpf(value);
+      if (!isChangingPassword && value.length >= 4) {
+        setVoucherPassword(value.substring(0, 4));
+      }
+    }
+  };
+
+  const handleChangePassword = () => {
+    setIsChangingPassword(true);
   };
 
   return (
     <div className="container mx-auto p-4">
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-center">User Profile</CardTitle>
+          <CardTitle className="text-center">Perfil do Usuário</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-4">
           {!isRegistering && (
             <>
               <Avatar className="w-24 h-24">
-                <AvatarImage src="/placeholder.svg" alt="John Doe" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarImage src="/placeholder.svg" alt="User" />
+                <AvatarFallback>U</AvatarFallback>
               </Avatar>
-              <h2 className="text-2xl font-bold">John Doe</h2>
-              <p className="text-gray-500">john.doe@example.com</p>
-              <Button onClick={handleRegister} className="w-full">Usuários</Button>
+              <h2 className="text-2xl font-bold">Usuário</h2>
+              <Button onClick={handleRegister} className="w-full">Cadastrar Usuário</Button>
             </>
           )}
           {isRegistering && (
@@ -57,9 +69,9 @@ const User = () => {
                 onChange={(e) => setFullName(e.target.value)}
               />
               <Input
-                placeholder="CPF"
+                placeholder="CPF (000.000.000-00)"
                 value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
+                onChange={handleCPFChange}
               />
               <Select value={company} onValueChange={setCompany}>
                 <SelectTrigger>
@@ -71,18 +83,31 @@ const User = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={sector} onValueChange={setSector}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o setor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sectors.map((sec) => (
-                    <SelectItem key={sec} value={sec}>{sec}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                type="password"
+                placeholder="Senha do Voucher (4 dígitos)"
+                value={voucherPassword}
+                onChange={(e) => setVoucherPassword(e.target.value.slice(0, 4))}
+                maxLength={4}
+                disabled={!isChangingPassword}
+              />
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="extraMeal"
+                  checked={isExtraMeal}
+                  onCheckedChange={setIsExtraMeal}
+                />
+                <label
+                  htmlFor="extraMeal"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Refeição Extra
+                </label>
+              </div>
+              <Button onClick={handleChangePassword} className="w-full">
+                {isChangingPassword ? "Cancelar Alteração de Senha" : "Alterar Senha"}
+              </Button>
               <Button onClick={handleSave} className="w-full">Salvar Cadastro</Button>
-              <Button onClick={handleUpdate} className="w-full">Alterar Cadastro</Button>
             </form>
           )}
         </CardContent>
