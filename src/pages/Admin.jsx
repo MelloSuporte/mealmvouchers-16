@@ -12,12 +12,22 @@ const Admin = () => {
   const [logo, setLogo] = useState(null);
   const [mealType, setMealType] = useState("");
   const [mealValue, setMealValue] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userCPF, setUserCPF] = useState("");
 
   const handleCNPJChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length <= 14) {
       value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
       setCnpj(value);
+    }
+  };
+
+  const handleCPFChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+      setUserCPF(value);
     }
   };
 
@@ -38,17 +48,30 @@ const Admin = () => {
   const handleSaveMealType = () => {
     console.log('Salvando tipo de refeição:', { mealType, mealValue });
     // Aqui você implementaria a lógica para salvar os dados do tipo de refeição
-    // Por exemplo, enviar para uma API ou armazenar no estado global
-    // Após salvar, você pode limpar os campos:
     setMealType("");
     setMealValue("");
   };
 
+  const handleSaveUser = () => {
+    const voucher = userCPF.replace(/\D/g, '').slice(0, 4);
+    console.log('Salvando usuário:', { userName, userCPF, voucher });
+    // Aqui você implementaria a lógica para salvar os dados do usuário
+    setUserName("");
+    setUserCPF("");
+  };
+
   const renderUserForm = () => (
     <form className="space-y-4">
-      <Input placeholder="Nome do usuário" />
-      <Input placeholder="Email" type="email" />
-      <Input placeholder="Senha" type="password" />
+      <Input 
+        placeholder="Nome do usuário" 
+        value={userName}
+        onChange={(e) => setUserName(e.target.value)}
+      />
+      <Input 
+        placeholder="CPF (000.000.000-00)" 
+        value={userCPF}
+        onChange={handleCPFChange}
+      />
       <Select>
         <SelectTrigger>
           <SelectValue placeholder="Empresa" />
@@ -58,7 +81,7 @@ const Admin = () => {
           <SelectItem value="empresa2">Empresa 2</SelectItem>
         </SelectContent>
       </Select>
-      <Button type="submit">Cadastrar Usuário</Button>
+      <Button type="button" onClick={handleSaveUser}>Cadastrar Usuário</Button>
     </form>
   );
 
