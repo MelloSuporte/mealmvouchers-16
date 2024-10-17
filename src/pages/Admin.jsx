@@ -10,6 +10,8 @@ const Admin = () => {
   const [companyName, setCompanyName] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [logo, setLogo] = useState(null);
+  const [mealType, setMealType] = useState("");
+  const [mealValue, setMealValue] = useState("");
 
   const handleCNPJChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -33,6 +35,15 @@ const Admin = () => {
     // Aqui você implementaria a lógica para salvar os dados da empresa
   };
 
+  const handleSaveMealType = () => {
+    console.log('Salvando tipo de refeição:', { mealType, mealValue });
+    // Aqui você implementaria a lógica para salvar os dados do tipo de refeição
+    // Por exemplo, enviar para uma API ou armazenar no estado global
+    // Após salvar, você pode limpar os campos:
+    setMealType("");
+    setMealValue("");
+  };
+
   const renderUserForm = () => (
     <form className="space-y-4">
       <Input placeholder="Nome do usuário" />
@@ -53,9 +64,27 @@ const Admin = () => {
 
   const renderMealTypeForm = () => (
     <form className="space-y-4">
-      <Input placeholder="Tipo de refeição" />
-      <Input placeholder="Valor" type="number" step="0.01" />
-      <Button type="submit">Cadastrar Tipo de Refeição</Button>
+      <Select value={mealType} onValueChange={setMealType}>
+        <SelectTrigger>
+          <SelectValue placeholder="Selecione o tipo de refeição" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="Almoço">Almoço</SelectItem>
+          <SelectItem value="Café">Café</SelectItem>
+          <SelectItem value="Lanche">Lanche</SelectItem>
+          <SelectItem value="Jantar">Jantar</SelectItem>
+          <SelectItem value="Ceia">Ceia</SelectItem>
+          <SelectItem value="Extra">Extra</SelectItem>
+        </SelectContent>
+      </Select>
+      <Input 
+        placeholder="Valor da refeição" 
+        type="number" 
+        step="0.01" 
+        value={mealValue}
+        onChange={(e) => setMealValue(e.target.value)}
+      />
+      <Button type="button" onClick={handleSaveMealType}>Cadastrar Tipo de Refeição</Button>
     </form>
   );
 
