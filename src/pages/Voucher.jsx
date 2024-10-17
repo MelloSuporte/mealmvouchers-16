@@ -8,10 +8,15 @@ const Voucher = () => {
   const [voucherCode, setVoucherCode] = useState('');
   const navigate = useNavigate();
   const inputRef = useRef(null);
+  const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
+    }
+    const savedBackground = localStorage.getItem('voucherBackground');
+    if (savedBackground) {
+      setBackgroundImage(savedBackground);
     }
   }, []);
 
@@ -67,7 +72,14 @@ const Voucher = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4 relative">
+    <div 
+      className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
       <Button
         onClick={() => navigate('/admin')}
         className="absolute top-4 right-4 bg-white text-blue-600 hover:bg-blue-100"

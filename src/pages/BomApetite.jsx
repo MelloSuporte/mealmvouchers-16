@@ -7,6 +7,7 @@ const BomApetite = () => {
   const location = useLocation();
   const mealType = location.state?.mealType || 'Refeição';
   const [companyLogo, setCompanyLogo] = useState(null);
+  const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
     // Aqui você faria uma chamada à API para obter a logo da empresa com base no usuário
@@ -18,10 +19,22 @@ const BomApetite = () => {
     };
 
     fetchCompanyLogo();
+
+    const savedBackground = localStorage.getItem('bomApetiteBackground');
+    if (savedBackground) {
+      setBackgroundImage(savedBackground);
+    }
   }, [userName]);
 
   return (
-    <div className="container mx-auto p-4">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="text-center">
           {companyLogo && (
