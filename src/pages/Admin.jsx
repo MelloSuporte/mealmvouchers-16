@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eye, EyeOff } from 'lucide-react';
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
@@ -14,6 +15,8 @@ const Admin = () => {
   const [mealValue, setMealValue] = useState("");
   const [userName, setUserName] = useState("");
   const [userCPF, setUserCPF] = useState("");
+  const [voucher, setVoucher] = useState("");
+  const [showVoucher, setShowVoucher] = useState(false);
 
   const handleCNPJChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -52,12 +55,28 @@ const Admin = () => {
     setMealValue("");
   };
 
+  const generateVoucher = () => {
+    const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+      const index = Math.floor(Math.random() * digits.length);
+      result += digits[index];
+      digits.splice(index, 1);
+    }
+    return result;
+  };
+
   const handleSaveUser = () => {
-    const voucher = userCPF.replace(/\D/g, '').slice(0, 4);
-    console.log('Salvando usuário:', { userName, userCPF, voucher });
+    const newVoucher = generateVoucher();
+    setVoucher(newVoucher);
+    console.log('Salvando usuário:', { userName, userCPF, voucher: newVoucher });
     // Aqui você implementaria a lógica para salvar os dados do usuário
     setUserName("");
     setUserCPF("");
+  };
+
+  const toggleVoucherVisibility = () => {
+    setShowVoucher(!showVoucher);
   };
 
   const renderUserForm = () => (
@@ -81,6 +100,16 @@ const Admin = () => {
           <SelectItem value="empresa2">Empresa 2</SelectItem>
         </SelectContent>
       </Select>
+      <div className="flex items-center space-x-2">
+        <Input 
+          placeholder="Voucher" 
+          value={showVoucher ? voucher : '****'}
+          readOnly
+        />
+        <Button type="button" onClick={toggleVoucherVisibility}>
+          {showVoucher ? <EyeOff size={20} /> : <Eye size={20} />}
+        </Button>
+      </div>
       <Button type="button" onClick={handleSaveUser}>Cadastrar Usuário</Button>
     </form>
   );
