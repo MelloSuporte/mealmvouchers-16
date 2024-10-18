@@ -40,7 +40,17 @@ const ReportForm = () => {
     const wb = XLSX.utils.book_new();
     
     Object.entries(reportData).forEach(([type, data]) => {
-      const ws = XLSX.utils.json_to_sheet(data);
+      // Formatar os cabeçalhos da tabela
+      const formattedData = data.map(item => ({
+        "Colaborador": item.userName,
+        "Data": item.mealDate,
+        "Horas": item.mealTime,
+        "Empresa": item.company,
+        "Refeição": item.mealType,
+        "Quantidade": item.quantity
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(formattedData);
       XLSX.utils.book_append_sheet(wb, ws, type);
     });
 
