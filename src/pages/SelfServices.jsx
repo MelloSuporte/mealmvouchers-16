@@ -1,14 +1,40 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Coffee, Utensils, Moon, Plus, Sandwich } from 'lucide-react';
+import { toast } from "sonner";
 
 const SelfServices = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const voucherType = location.state?.voucherType || 'Regular';
 
   const handleMealSelection = (mealType) => {
-    console.log(`Refeição selecionada: ${mealType}`);
-    // Aqui você pode adicionar lógica para obter o nome do usuário
+    const today = new Date().toISOString().split('T')[0];
+    const usedVouchers = JSON.parse(localStorage.getItem('usedVouchers') || '{}');
+
+    if (!usedVouchers[today]) {
+      usedVouchers[today] = [];
+    }
+
+    if (voucherType === 'Extra' && mealType !== 'Extra') {
+      toast.error("Voucher Extra só pode ser usado para refeição Extra.");
+      return;
+    }
+
+    if (voucherType === 'Regular' && mealType === 'Extra') {
+      toast.error("Refeição Extra requer um Voucher Extra.");
+      return;
+    }
+
+    if (usedVouchers[today].includes(mealType)) {
+      toast.error(`Você já utilizou um voucher para ${mealType} hoje.`);
+      return;
+    }
+
+    usedVouchers[today].push(mealType);
+    localStorage.setItem('usedVouchers', JSON.stringify(usedVouchers));
+
     const userName = "User"; // Substitua isso pela lógica real de obtenção do nome do usuário
     navigate(`/bom-apetite/${userName}`, { state: { mealType } });
   };

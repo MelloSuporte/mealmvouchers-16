@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { Ticket, Settings } from 'lucide-react';
+import { toast } from "sonner";
 
 const Voucher = () => {
   const [voucherCode, setVoucherCode] = useState('');
@@ -22,8 +23,22 @@ const Voucher = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Voucher submitted:', voucherCode);
-    navigate('/self-services');
+    const today = new Date().toISOString().split('T')[0];
+    const usedVouchers = JSON.parse(localStorage.getItem('usedVouchers') || '{}');
+
+    if (voucherCode === '9999') { // Assuming '9999' is the code for Extra voucher
+      if (!usedVouchers[today] || !usedVouchers[today].includes('Extra')) {
+        navigate('/self-services', { state: { voucherType: 'Extra' } });
+      } else {
+        toast.error("Voucher Extra já foi utilizado hoje.");
+      }
+    } else {
+      if (!usedVouchers[today] || usedVouchers[today].length < 5) { // 5 regular meals per day
+        navigate('/self-services', { state: { voucherType: 'Regular' } });
+      } else {
+        toast.error("Limite diário de vouchers atingido.");
+      }
+    }
   };
 
   const handleNumpadClick = (num) => {
