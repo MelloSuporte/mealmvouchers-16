@@ -2,14 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { Ticket, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { toast } from "sonner";
+import AdminLoginDialog from '../components/AdminLoginDialog';
 
 const Voucher = () => {
   const [voucherCode, setVoucherCode] = useState('');
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const [backgroundImage, setBackgroundImage] = useState('');
+  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -26,14 +28,14 @@ const Voucher = () => {
     const today = new Date().toISOString().split('T')[0];
     const usedVouchers = JSON.parse(localStorage.getItem('usedVouchers') || '{}');
 
-    if (voucherCode === '9999') { // Assuming '9999' is the code for Extra voucher
+    if (voucherCode === '9999') {
       if (!usedVouchers[today] || !usedVouchers[today].includes('Extra')) {
         navigate('/self-services', { state: { voucherType: 'Extra' } });
       } else {
         toast.error("Voucher Extra já foi utilizado hoje.");
       }
     } else {
-      if (!usedVouchers[today] || usedVouchers[today].length < 5) { // 5 regular meals per day
+      if (!usedVouchers[today] || usedVouchers[today].length < 5) {
         navigate('/self-services', { state: { voucherType: 'Regular' } });
       } else {
         toast.error("Limite diário de vouchers atingido.");
@@ -96,7 +98,7 @@ const Voucher = () => {
       }}
     >
       <Button
-        onClick={() => navigate('/admin')}
+        onClick={() => setIsAdminLoginOpen(true)}
         className="absolute top-4 right-4 bg-white text-blue-600 hover:bg-blue-100"
       >
         <Settings className="mr-2 h-4 w-4" />
@@ -135,6 +137,10 @@ const Voucher = () => {
           </div>
         </form>
       </div>
+      <AdminLoginDialog 
+        isOpen={isAdminLoginOpen} 
+        onClose={() => setIsAdminLoginOpen(false)} 
+      />
     </div>
   );
 };
