@@ -6,6 +6,7 @@ import CompanyForm from '../components/admin/CompanyForm';
 import MealTypeForm from '../components/admin/MealTypeForm';
 import RLSForm from '../components/admin/RLSForm';
 import BackgroundImageForm from '../components/admin/BackgroundImageForm';
+import ReportForm from '../components/admin/ReportForm';
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
@@ -14,12 +15,13 @@ const Admin = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Painel de Administração</h1>
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
           <TabsTrigger value="mealTypes">Tipos de Refeições</TabsTrigger>
           <TabsTrigger value="rls">RLS</TabsTrigger>
           <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>
+          <TabsTrigger value="reports">Relatórios</TabsTrigger>
         </TabsList>
         <TabsContent value="users">
           <Card>
@@ -68,6 +70,16 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <BackgroundImageForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="reports">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerar Relatórios</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ReportForm />
             </CardContent>
           </Card>
         </TabsContent>
