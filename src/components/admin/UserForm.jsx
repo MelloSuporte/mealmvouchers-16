@@ -24,24 +24,41 @@ const UserForm = () => {
   };
 
   const generateVoucher = () => {
-    const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    let result = '';
-    for (let i = 0; i < 4; i++) {
-      const index = Math.floor(Math.random() * digits.length);
-      result += digits[index];
-      digits.splice(index, 1);
+    if (userCPF.length !== 14) {
+      toast.error("Por favor, insira um CPF válido antes de gerar o voucher.");
+      return;
     }
-    return result;
+
+    const cpfDigits = userCPF.replace(/\D/g, '').slice(0, 9);
+    let newVoucher;
+    do {
+      const hash = cpfDigits.split('').reduce((acc, digit) => {
+        return (acc * 31 + parseInt(digit)) % 10000;
+      }, 0);
+      newVoucher = hash.toString().padStart(4, '0');
+    } while (isVoucherUsed(newVoucher)); // Simula a verificação de unicidade
+
+    setVoucher(newVoucher);
+    toast.success("Novo voucher gerado com sucesso!");
+  };
+
+  // Simulação de verificação de unicidade do voucher
+  const isVoucherUsed = (voucher) => {
+    // Aqui você implementaria a lógica real para verificar se o voucher já existe no banco de dados
+    return Math.random() < 0.1; // 10% de chance de "colisão" para simular a necessidade de regeneração
   };
 
   const handleSaveUser = () => {
-    const newVoucher = generateVoucher();
-    setVoucher(newVoucher);
-    console.log('Salvando usuário:', { userName, userCPF, voucher: newVoucher, isSuspended, userPhoto });
-    // Aqui você implementaria a lógica para salvar os dados do usuário, incluindo a foto
+    if (!voucher) {
+      toast.error("Por favor, gere um voucher antes de salvar o usuário.");
+      return;
+    }
+    console.log('Salvando usuário:', { userName, userCPF, voucher, isSuspended, userPhoto });
     toast.success("Usuário salvo com sucesso!");
+    // Resetar os campos após salvar
     setUserName("");
     setUserCPF("");
+    setVoucher("");
     setIsSuspended(false);
     setUserPhoto(null);
   };
@@ -95,6 +112,9 @@ const UserForm = () => {
         />
         <Button type="button" onClick={toggleVoucherVisibility}>
           {showVoucher ? <EyeOff size={20} /> : <Eye size={20} />}
+        </Button>
+        <Button type="button" onClick={generateVoucher}>
+          Gerar Voucher
         </Button>
       </div>
       <div className="flex items-center space-x-2">
