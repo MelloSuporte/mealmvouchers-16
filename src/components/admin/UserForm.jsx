@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Upload } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ const UserForm = () => {
   const [voucher, setVoucher] = useState("");
   const [showVoucher, setShowVoucher] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
+  const [userPhoto, setUserPhoto] = useState(null);
 
   const handleCPFChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -36,12 +37,13 @@ const UserForm = () => {
   const handleSaveUser = () => {
     const newVoucher = generateVoucher();
     setVoucher(newVoucher);
-    console.log('Salvando usuário:', { userName, userCPF, voucher: newVoucher, isSuspended });
-    // Aqui você implementaria a lógica para salvar os dados do usuário
+    console.log('Salvando usuário:', { userName, userCPF, voucher: newVoucher, isSuspended, userPhoto });
+    // Aqui você implementaria a lógica para salvar os dados do usuário, incluindo a foto
     toast.success("Usuário salvo com sucesso!");
     setUserName("");
     setUserCPF("");
     setIsSuspended(false);
+    setUserPhoto(null);
   };
 
   const toggleVoucherVisibility = () => {
@@ -51,6 +53,17 @@ const UserForm = () => {
   const handleSuspendUser = () => {
     setIsSuspended(!isSuspended);
     toast.info(`Usuário ${isSuspended ? 'reativado' : 'suspenso'} com sucesso!`);
+  };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUserPhoto(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -91,6 +104,20 @@ const UserForm = () => {
           onCheckedChange={handleSuspendUser}
         />
         <Label htmlFor="suspend-user">Suspender acesso</Label>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Input
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoUpload}
+          className="hidden"
+          id="photo-upload"
+        />
+        <Button type="button" onClick={() => document.getElementById('photo-upload').click()}>
+          <Upload size={20} className="mr-2" />
+          Upload Foto
+        </Button>
+        {userPhoto && <img src={userPhoto} alt="User" className="w-10 h-10 rounded-full object-cover" />}
       </div>
       <Button type="button" onClick={handleSaveUser}>Cadastrar Usuário</Button>
     </form>

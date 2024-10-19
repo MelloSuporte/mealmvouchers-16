@@ -28,15 +28,21 @@ const Voucher = () => {
     const today = new Date().toISOString().split('T')[0];
     const usedVouchers = JSON.parse(localStorage.getItem('usedVouchers') || '{}');
 
+    // Simular a verificação do voucher (isso deve ser substituído por uma chamada à API real)
+    const mockUserData = {
+      userName: "João Silva",
+      userPhoto: "https://example.com/path/to/photo.jpg"
+    };
+
     if (voucherCode === '9999') {
       if (!usedVouchers[today] || !usedVouchers[today].includes('Extra')) {
-        navigate('/self-services', { state: { voucherType: 'Extra' } });
+        navigate('/user-confirmation', { state: { ...mockUserData, voucherType: 'Extra' } });
       } else {
         toast.error("Voucher Extra já foi utilizado hoje.");
       }
     } else {
       if (!usedVouchers[today] || usedVouchers[today].length < 5) {
-        navigate('/self-services', { state: { voucherType: 'Regular' } });
+        navigate('/user-confirmation', { state: { ...mockUserData, voucherType: 'Regular' } });
       } else {
         toast.error("Limite diário de vouchers atingido.");
       }

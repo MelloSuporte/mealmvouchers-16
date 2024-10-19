@@ -15,6 +15,7 @@ import Login from "./pages/Login";
 import Voucher from "./pages/Voucher";
 import BomApetite from "./pages/BomApetite";
 import Admin from "./pages/Admin";
+import UserConfirmation from "./pages/UserConfirmation";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/" element={<Navigate to="/voucher" />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/voucher" element={<Voucher />} />
+          <Route path="/user-confirmation" element={<UserConfirmation />} />
           <Route path="/self-services" element={<SelfServices />} />
           <Route path="/bom-apetite/:userName" element={<BomApetite />} />
           <Route path="/login" element={<Login />} />
