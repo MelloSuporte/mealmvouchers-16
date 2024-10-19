@@ -35,17 +35,39 @@ const Voucher = () => {
     };
 
     if (voucherCode === '9999') {
-      if (!usedVouchers[today] || !usedVouchers[today].includes('Extra')) {
-        navigate('/user-confirmation', { state: { ...mockUserData, voucherType: 'Extra' } });
-      } else {
-        toast.error("Voucher Extra já foi utilizado hoje.");
-      }
+      // Voucher Extra - verificar regras RLS
+      checkRLSRules(today, mockUserData);
     } else {
-      if (!usedVouchers[today] || usedVouchers[today].length < 5) {
-        navigate('/user-confirmation', { state: { ...mockUserData, voucherType: 'Regular' } });
-      } else {
-        toast.error("Limite diário de vouchers atingido.");
-      }
+      // Voucher Regular - verificar limite individual
+      checkRegularVoucherLimit(today, usedVouchers, mockUserData);
+    }
+  };
+
+  const checkRLSRules = (today, userData) => {
+    // Aqui você deve implementar a lógica para verificar as regras RLS
+    // Por enquanto, vamos apenas simular a aprovação
+    const isApproved = true; // Substitua isso pela lógica real de verificação RLS
+
+    if (isApproved) {
+      navigate('/user-confirmation', { state: { ...userData, voucherType: 'Extra' } });
+    } else {
+      toast.error("Voucher Extra não autorizado pelas regras RLS.");
+    }
+  };
+
+  const checkRegularVoucherLimit = (today, usedVouchers, userData) => {
+    if (!usedVouchers[today]) {
+      usedVouchers[today] = [];
+    }
+
+    // Verificar se todos os tipos de refeição regular já foram usados
+    const regularMealTypes = ['Almoço', 'Café', 'Lanche', 'Jantar', 'Ceia'];
+    const unusedMealTypes = regularMealTypes.filter(type => !usedVouchers[today].includes(type));
+
+    if (unusedMealTypes.length > 0) {
+      navigate('/user-confirmation', { state: { ...userData, voucherType: 'Regular' } });
+    } else {
+      toast.error("Limite diário de vouchers regulares atingido.");
     }
   };
 
