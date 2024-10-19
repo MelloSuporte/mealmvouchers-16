@@ -7,6 +7,7 @@ import MealTypeForm from '../components/admin/MealTypeForm';
 import RLSForm from '../components/admin/RLSForm';
 import BackgroundImageForm from '../components/admin/BackgroundImageForm';
 import ReportForm from '../components/admin/ReportForm';
+import TurnosForm from '../components/admin/TurnosForm';
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
@@ -15,13 +16,14 @@ const Admin = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Painel de Administração</h1>
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
           <TabsTrigger value="mealTypes">Tipos de Refeições</TabsTrigger>
           <TabsTrigger value="rls">RLS</TabsTrigger>
           <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>
           <TabsTrigger value="reports">Relatórios</TabsTrigger>
+          <TabsTrigger value="turnos">Turnos</TabsTrigger>
         </TabsList>
         <TabsContent value="users">
           <Card>
@@ -80,6 +82,16 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <ReportForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="turnos">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuração de Turnos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TurnosForm />
             </CardContent>
           </Card>
         </TabsContent>

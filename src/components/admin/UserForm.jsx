@@ -6,6 +6,7 @@ import { Eye, EyeOff, Upload } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const UserForm = () => {
   const [userName, setUserName] = useState("");
@@ -14,6 +15,14 @@ const UserForm = () => {
   const [showVoucher, setShowVoucher] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
   const [userPhoto, setUserPhoto] = useState(null);
+  const [selectedTurno, setSelectedTurno] = useState("");
+
+  const turnos = [
+    { id: "central", label: "Turno Central", entrada: "08:00", saida: "17:00" },
+    { id: "primeiro", label: "Primeiro Turno", entrada: "06:00", saida: "14:00" },
+    { id: "segundo", label: "Segundo Turno", entrada: "14:00", saida: "22:00" },
+    { id: "terceiro", label: "Terceiro Turno", entrada: "22:00", saida: "06:00" },
+  ];
 
   const handleCPFChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -36,16 +45,14 @@ const UserForm = () => {
         return (acc * 31 + parseInt(digit)) % 10000;
       }, 0);
       newVoucher = hash.toString().padStart(4, '0');
-    } while (isVoucherUsed(newVoucher)); // Simula a verificação de unicidade
+    } while (isVoucherUsed(newVoucher));
 
     setVoucher(newVoucher);
     toast.success("Novo voucher gerado com sucesso!");
   };
 
-  // Simulação de verificação de unicidade do voucher
   const isVoucherUsed = (voucher) => {
-    // Aqui você implementaria a lógica real para verificar se o voucher já existe no banco de dados
-    return Math.random() < 0.1; // 10% de chance de "colisão" para simular a necessidade de regeneração
+    return Math.random() < 0.1;
   };
 
   const handleSaveUser = () => {
@@ -53,14 +60,18 @@ const UserForm = () => {
       toast.error("Por favor, gere um voucher antes de salvar o usuário.");
       return;
     }
-    console.log('Salvando usuário:', { userName, userCPF, voucher, isSuspended, userPhoto });
+    if (!selectedTurno) {
+      toast.error("Por favor, selecione um turno para o usuário.");
+      return;
+    }
+    console.log('Salvando usuário:', { userName, userCPF, voucher, isSuspended, userPhoto, turno: selectedTurno });
     toast.success("Usuário salvo com sucesso!");
-    // Resetar os campos após salvar
     setUserName("");
     setUserCPF("");
     setVoucher("");
     setIsSuspended(false);
     setUserPhoto(null);
+    setSelectedTurno("");
   };
 
   const toggleVoucherVisibility = () => {
@@ -116,6 +127,19 @@ const UserForm = () => {
         <Button type="button" onClick={generateVoucher}>
           Gerar Voucher
         </Button>
+      </div>
+      <div className="space-y-2">
+        <Label>Turno</Label>
+        <RadioGroup value={selectedTurno} onValueChange={setSelectedTurno}>
+          {turnos.map((turno) => (
+            <div key={turno.id} className="flex items-center space-x-2">
+              <RadioGroupItem value={turno.id} id={turno.id} />
+              <Label htmlFor={turno.id}>
+                {turno.label} ({turno.entrada} - {turno.saida})
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
       </div>
       <div className="flex items-center space-x-2">
         <Switch
