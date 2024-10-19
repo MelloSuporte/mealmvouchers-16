@@ -19,7 +19,7 @@ const UserConfirmation = () => {
 
   useEffect(() => {
     if (countdown === 0) {
-      handleConfirm();
+      handleCancel();
     }
   }, [countdown]);
 
@@ -29,7 +29,7 @@ const UserConfirmation = () => {
   };
 
   const handleCancel = () => {
-    toast.error("Confirmação cancelada.");
+    toast.error("Confirmação cancelada. Retornando à página de voucher.");
     navigate('/voucher');
   };
 
@@ -41,7 +41,7 @@ const UserConfirmation = () => {
           <img src={userPhoto} alt={userName} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" />
         )}
         <p className="mb-4">Olá, {userName}! É você mesmo?</p>
-        <p className="mb-4">Confirmação automática em: {countdown} segundos</p>
+        <p className="mb-4">Retorno automático à página de voucher em: {countdown} segundos</p>
         <div className="flex justify-between">
           <Button onClick={handleCancel} variant="outline">Cancelar</Button>
           <Button onClick={handleConfirm}>Confirmar</Button>
