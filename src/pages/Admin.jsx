@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import UserForm from '../components/admin/UserForm';
 import CompanyForm from '../components/admin/CompanyForm';
 import MealTypeForm from '../components/admin/MealTypeForm';
@@ -11,10 +13,18 @@ import TurnosForm from '../components/admin/TurnosForm';
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
+  const navigate = useNavigate();
+
+  const handleReturn = () => {
+    navigate('/voucher');
+  };
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Painel de Administração</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Painel de Administração</h1>
+        <Button onClick={handleReturn} variant="outline">Retornar</Button>
+      </div>
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="users">Usuários</TabsTrigger>
