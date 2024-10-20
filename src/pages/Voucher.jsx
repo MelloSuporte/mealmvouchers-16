@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { Settings } from 'lucide-react';
 import { toast } from "sonner";
 import AdminLoginDialog from '../components/AdminLoginDialog';
-import { getBackgroundImageStyle } from '../utils/backgroundImage';
 
 const Voucher = () => {
   const [voucherCode, setVoucherCode] = useState('');
@@ -18,19 +17,10 @@ const Voucher = () => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-    const fetchBackgroundImage = async () => {
-      try {
-        const response = await fetch('/api/background-image?page=voucher');
-        if (response.ok) {
-          const data = await response.json();
-          setBackgroundImage(data.imageUrl);
-        }
-      } catch (error) {
-        console.error('Failed to fetch background image:', error);
-      }
-    };
-
-    fetchBackgroundImage();
+    const savedBackground = localStorage.getItem('voucherBackground');
+    if (savedBackground) {
+      setBackgroundImage(savedBackground);
+    }
   }, []);
 
   const handleSubmit = (e) => {
@@ -128,8 +118,12 @@ const Voucher = () => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center p-4 relative"
-      style={getBackgroundImageStyle(backgroundImage)}
+      className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
       <Button
         onClick={() => setIsAdminLoginOpen(true)}
