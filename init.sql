@@ -5,11 +5,7 @@ USE seu_banco_de_dados;
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  cpf VARCHAR(14) NOT NULL UNIQUE,
-  turno ENUM('primeiro', 'segundo', 'terceiro') NOT NULL,
-  voucher_count INT DEFAULT 2,
-  is_suspended BOOLEAN DEFAULT FALSE
+  email VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS meals (
@@ -17,8 +13,7 @@ CREATE TABLE IF NOT EXISTS meals (
   name VARCHAR(255) NOT NULL,
   description TEXT,
   start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  turno ENUM('primeiro', 'segundo', 'terceiro') NOT NULL
+  end_time TIME NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS menu_items (
@@ -51,19 +46,11 @@ CREATE TABLE IF NOT EXISTS vouchers (
   FOREIGN KEY (meal_id) REFERENCES meals(id)
 );
 
--- Inserir refeições para cada turno
-INSERT INTO meals (name, description, start_time, end_time, turno) VALUES
-  ('Café (1)', 'Primeiro café da manhã', '06:00:00', '08:00:00', 'primeiro'),
-  ('Café (2)', 'Segundo café da manhã', '08:00:00', '10:00:00', 'primeiro'),
-  ('Almoço', 'Refeição do meio-dia', '11:00:00', '14:00:00', 'primeiro'),
-  ('Jantar', 'Refeição noturna', '18:00:00', '20:00:00', 'segundo'),
-  ('Lanche', 'Lanche noturno', '20:00:00', '22:00:00', 'segundo'),
-  ('Ceia', 'Refeição da madrugada', '00:00:00', '02:00:00', 'terceiro'),
-  ('Desjejum', 'Café da manhã da madrugada', '04:00:00', '06:00:00', 'terceiro'),
-  ('Extra', 'Refeição extra (sujeita a regras RLS)', '00:00:00', '23:59:59', 'primeiro');
+INSERT INTO users (name, email) VALUES
+  ('João Silva', 'joao@example.com'),
+  ('Maria Santos', 'maria@example.com');
 
--- Inserir usuários de exemplo para cada turno
-INSERT INTO users (name, email, cpf, turno) VALUES
-  ('João Silva', 'joao@example.com', '123.456.789-00', 'primeiro'),
-  ('Maria Santos', 'maria@example.com', '987.654.321-00', 'segundo'),
-  ('Pedro Oliveira', 'pedro@example.com', '111.222.333-44', 'terceiro');
+INSERT INTO meals (name, description, start_time, end_time) VALUES
+  ('Café da Manhã', 'Refeição matinal', '06:00:00', '09:00:00'),
+  ('Almoço', 'Refeição do meio-dia', '11:00:00', '14:00:00'),
+  ('Jantar', 'Refeição noturna', '18:00:00', '21:00:00');

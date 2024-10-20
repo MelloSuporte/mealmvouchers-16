@@ -37,69 +37,16 @@ app.get('/api/users', (req, res) => {
 });
 
 app.post('/api/users', (req, res) => {
-  const { name, email, cpf, turno } = req.body;
+  const { name, email } = req.body;
   connection.query(
-    'INSERT INTO users (name, email, cpf, turno) VALUES (?, ?, ?, ?)',
-    [name, email, cpf, turno],
+    'INSERT INTO users (name, email) VALUES (?, ?)',
+    [name, email],
     (err, result) => {
       if (err) {
         res.status(500).json({ error: err.message });
         return;
       }
-      res.status(201).json({ id: result.insertId, name, email, cpf, turno });
-    }
-  );
-});
-
-// Rota para verificar disponibilidade de voucher
-app.post('/api/check-voucher', (req, res) => {
-  const { userId, mealType } = req.body;
-  
-  connection.query(
-    'SELECT turno, voucher_count FROM users WHERE id = ?',
-    [userId],
-    (err, results) => {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      
-      if (results.length === 0) {
-        res.status(404).json({ error: 'Usuário não encontrado' });
-        return;
-      }
-      
-      const { turno, voucher_count } = results[0];
-      
-      if (voucher_count <= 0) {
-        res.status(403).json({ error: 'Limite de vouchers atingido' });
-        return;
-      }
-      
-      let isAllowed = false;
-      
-      switch (turno) {
-        case 'primeiro':
-          isAllowed = ['Café (1)', 'Café (2)', 'Almoço'].includes(mealType);
-          break;
-        case 'segundo':
-          isAllowed = ['Jantar', 'Lanche'].includes(mealType);
-          break;
-        case 'terceiro':
-          isAllowed = ['Ceia', 'Desjejum'].includes(mealType);
-          break;
-      }
-      
-      if (mealType === 'Extra') {
-        // Implementar lógica RLS aqui
-        isAllowed = true; // Temporariamente permitindo todas as refeições extras
-      }
-      
-      if (isAllowed) {
-        res.json({ allowed: true });
-      } else {
-        res.status(403).json({ error: 'Refeição não permitida para este turno' });
-      }
+      res.status(201).json({ id: result.insertId, name, email });
     }
   );
 });
