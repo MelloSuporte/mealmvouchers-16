@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft } from 'lucide-react'; // Importando o ícone
 import UserForm from '../components/admin/UserForm';
 import CompanyForm from '../components/admin/CompanyForm';
 import MealTypeForm from '../components/admin/MealTypeForm';
@@ -23,7 +24,9 @@ const Admin = () => {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Painel de Administração</h1>
-        <Button onClick={handleReturn} variant="outline">Retornar</Button>
+        <Button onClick={handleReturn} variant="outline" className="flex items-center">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Retornar
+        </Button>
       </div>
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-7">
