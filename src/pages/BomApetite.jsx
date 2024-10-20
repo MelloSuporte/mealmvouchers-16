@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getBackgroundImageStyle } from '../utils/backgroundImage';
 
 const BomApetite = () => {
   const { userName } = useParams();
@@ -10,30 +11,32 @@ const BomApetite = () => {
   const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
-    // Aqui você faria uma chamada à API para obter a logo da empresa com base no usuário
-    // Por enquanto, vamos simular isso com um setTimeout
     const fetchCompanyLogo = async () => {
       setTimeout(() => {
         setCompanyLogo('/placeholder.svg'); // Substitua isso pela URL real da logo
       }, 1000);
     };
 
-    fetchCompanyLogo();
+    const fetchBackgroundImage = async () => {
+      try {
+        const response = await fetch('/api/background-image?page=bomapetite');
+        if (response.ok) {
+          const data = await response.json();
+          setBackgroundImage(data.imageUrl);
+        }
+      } catch (error) {
+        console.error('Failed to fetch background image:', error);
+      }
+    };
 
-    const savedBackground = localStorage.getItem('bomApetiteBackground');
-    if (savedBackground) {
-      setBackgroundImage(savedBackground);
-    }
+    fetchCompanyLogo();
+    fetchBackgroundImage();
   }, [userName]);
 
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-4"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      style={getBackgroundImageStyle(backgroundImage)}
     >
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="text-center">
