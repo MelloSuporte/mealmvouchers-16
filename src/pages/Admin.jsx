@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
-import { toast } from "sonner";
 import UserForm from '../components/admin/UserForm';
 import CompanyForm from '../components/admin/CompanyForm';
 import MealTypeForm from '../components/admin/MealTypeForm';
@@ -15,24 +11,10 @@ import TurnosForm from '../components/admin/TurnosForm';
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    // Here you would typically clear any authentication tokens or user session
-    // For this example, we'll just navigate and show a toast
-    toast.success("Logout realizado com sucesso");
-    navigate('/voucher');
-  };
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Painel de Administração</h1>
-        <Button onClick={handleLogout} variant="outline" className="flex items-center">
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
-        </Button>
-      </div>
+      <h1 className="text-2xl font-bold mb-4">Painel de Administração</h1>
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="users">Usuários</TabsTrigger>
