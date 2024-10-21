@@ -95,6 +95,19 @@ app.get('/api/vouchers', (req, res) => {
   });
 });
 
+// Nova rota para salvar tipos de refeição
+app.post('/api/meal-types', (req, res) => {
+  const { mealType, mealValue, startTime, endTime } = req.body;
+  const query = 'INSERT INTO meal_types (type, value, start_time, end_time) VALUES (?, ?, ?, ?)';
+  connection.query(query, [mealType, mealValue, startTime, endTime], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.status(201).json({ id: result.insertId, mealType, mealValue, startTime, endTime });
+  });
+});
+
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });

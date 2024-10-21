@@ -46,6 +46,14 @@ CREATE TABLE IF NOT EXISTS vouchers (
   FOREIGN KEY (meal_id) REFERENCES meals(id)
 );
 
+CREATE TABLE IF NOT EXISTS meal_types (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  type VARCHAR(255) NOT NULL,
+  value DECIMAL(10, 2) NOT NULL,
+  start_time TIME,
+  end_time TIME
+);
+
 INSERT INTO users (name, email) VALUES
   ('João Silva', 'joao@example.com'),
   ('Maria Santos', 'maria@example.com');

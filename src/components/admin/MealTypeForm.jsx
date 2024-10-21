@@ -2,16 +2,31 @@ import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const MealTypeForm = () => {
   const [mealType, setMealType] = useState("");
   const [mealValue, setMealValue] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+
+  const mealTypes = [
+    "Café (1)", "Café (2)", "Almoço", "Lanche", "Jantar", "Ceia", "Desjejum", "Extra"
+  ];
 
   const handleSaveMealType = () => {
-    console.log('Salvando tipo de refeição:', { mealType, mealValue });
+    if (!mealType || !mealValue || (mealType !== "Extra" && (!startTime || !endTime))) {
+      toast.error("Por favor, preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    console.log('Salvando tipo de refeição:', { mealType, mealValue, startTime, endTime });
     // Aqui você implementaria a lógica para salvar os dados do tipo de refeição
+    toast.success(`Tipo de refeição ${mealType} salvo com sucesso!`);
     setMealType("");
     setMealValue("");
+    setStartTime("");
+    setEndTime("");
   };
 
   return (
@@ -21,12 +36,9 @@ const MealTypeForm = () => {
           <SelectValue placeholder="Selecione o tipo de refeição" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="Almoço">Almoço</SelectItem>
-          <SelectItem value="Café">Café</SelectItem>
-          <SelectItem value="Lanche">Lanche</SelectItem>
-          <SelectItem value="Jantar">Jantar</SelectItem>
-          <SelectItem value="Ceia">Ceia</SelectItem>
-          <SelectItem value="Extra">Extra</SelectItem>
+          {mealTypes.map((type) => (
+            <SelectItem key={type} value={type}>{type}</SelectItem>
+          ))}
         </SelectContent>
       </Select>
       <Input 
@@ -36,6 +48,22 @@ const MealTypeForm = () => {
         value={mealValue}
         onChange={(e) => setMealValue(e.target.value)}
       />
+      {mealType !== "Extra" && (
+        <>
+          <Input 
+            placeholder="Horário de início" 
+            type="time" 
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+          />
+          <Input 
+            placeholder="Horário de término" 
+            type="time" 
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+          />
+        </>
+      )}
       <Button type="button" onClick={handleSaveMealType}>Cadastrar Tipo de Refeição</Button>
     </form>
   );
