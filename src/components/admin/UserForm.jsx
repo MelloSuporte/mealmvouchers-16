@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Upload, Search } from 'lucide-react';
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Search } from 'lucide-react';
 import { toast } from "sonner";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import UserSearchResults from './UserSearchResults';
+import UserFormMain from './UserFormMain';
 
 const UserForm = () => {
   const [userName, setUserName] = useState("");
@@ -131,7 +128,26 @@ const UserForm = () => {
   };
 
   return (
-    <form className="space-y-4">
+    <div className="space-y-4">
+      <UserFormMain
+        userName={userName}
+        setUserName={setUserName}
+        userCPF={userCPF}
+        handleCPFChange={handleCPFChange}
+        voucher={voucher}
+        showVoucher={showVoucher}
+        toggleVoucherVisibility={toggleVoucherVisibility}
+        generateVoucher={generateVoucher}
+        selectedTurno={selectedTurno}
+        setSelectedTurno={setSelectedTurno}
+        isSuspended={isSuspended}
+        handleSuspendUser={handleSuspendUser}
+        handlePhotoUpload={handlePhotoUpload}
+        userPhoto={userPhoto}
+        handleSaveUser={handleSaveUser}
+        turnos={turnos}
+      />
+
       <div className="flex space-x-2">
         <Input 
           placeholder="Pesquisar por CPF (000.000.000-00)" 
@@ -157,76 +173,7 @@ const UserForm = () => {
           )}
         </DialogContent>
       </Dialog>
-
-      <Input 
-        placeholder="Nome do usuário" 
-        value={userName}
-        onChange={(e) => setUserName(e.target.value)}
-      />
-      <Input 
-        placeholder="CPF (000.000.000-00)" 
-        value={userCPF}
-        onChange={handleCPFChange}
-      />
-      <Select>
-        <SelectTrigger>
-          <SelectValue placeholder="Empresa" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="empresa1">Empresa 1</SelectItem>
-          <SelectItem value="empresa2">Empresa 2</SelectItem>
-        </SelectContent>
-      </Select>
-      <div className="flex items-center space-x-2">
-        <Input 
-          placeholder="Voucher" 
-          value={showVoucher ? voucher : '****'}
-          readOnly
-        />
-        <Button type="button" onClick={toggleVoucherVisibility}>
-          {showVoucher ? <EyeOff size={20} /> : <Eye size={20} />}
-        </Button>
-        <Button type="button" onClick={generateVoucher}>
-          Gerar Voucher
-        </Button>
-      </div>
-      <div className="space-y-2">
-        <Label>Turno</Label>
-        <RadioGroup value={selectedTurno} onValueChange={setSelectedTurno}>
-          {turnos.map((turno) => (
-            <div key={turno.id} className="flex items-center space-x-2">
-              <RadioGroupItem value={turno.id} id={turno.id} />
-              <Label htmlFor={turno.id}>
-                {turno.label} ({turno.entrada} - {turno.saida})
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
-      </div>
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="suspend-user"
-          checked={isSuspended}
-          onCheckedChange={handleSuspendUser}
-        />
-        <Label htmlFor="suspend-user">Suspender acesso</Label>
-      </div>
-      <div className="flex items-center space-x-2">
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoUpload}
-          className="hidden"
-          id="photo-upload"
-        />
-        <Button type="button" onClick={() => document.getElementById('photo-upload').click()}>
-          <Upload size={20} className="mr-2" />
-          Upload Foto
-        </Button>
-        {userPhoto && <img src={userPhoto} alt="User" className="w-10 h-10 rounded-full object-cover" />}
-      </div>
-      <Button type="button" onClick={handleSaveUser}>Cadastrar Usuário</Button>
-    </form>
+    </div>
   );
 };
 
