@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS bd_voucher;
+CREATE DATABASE IF NOT EXISTS seu_banco_de_dados;
 
-USE bd_voucher;
+USE seu_banco_de_dados;
 
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -13,19 +13,21 @@ CREATE TABLE IF NOT EXISTS users (
   is_suspended BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE IF NOT EXISTS companies (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  cnpj VARCHAR(18) NOT NULL UNIQUE,
-  logo TEXT
-);
-
 CREATE TABLE IF NOT EXISTS meals (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   description TEXT,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS menu_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  meal_id INT,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  date DATE NOT NULL,
+  FOREIGN KEY (meal_id) REFERENCES meals(id)
 );
 
 CREATE TABLE IF NOT EXISTS vouchers (
@@ -39,3 +41,21 @@ CREATE TABLE IF NOT EXISTS vouchers (
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (meal_id) REFERENCES meals(id)
 );
+
+CREATE TABLE IF NOT EXISTS meal_types (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  type VARCHAR(255) NOT NULL,
+  value DECIMAL(10, 2) NOT NULL,
+  start_time TIME,
+  end_time TIME
+);
+
+-- Inserir dados de exemplo
+INSERT INTO users (name, email, cpf, company, voucher, turno) VALUES
+  ('João Silva', 'joao@example.com', '123.456.789-00', 'Empresa A', '1234', 'central'),
+  ('Maria Santos', 'maria@example.com', '987.654.321-00', 'Empresa B', '5678', 'primeiro');
+
+INSERT INTO meals (name, description, start_time, end_time) VALUES
+  ('Café da Manhã', 'Refeição matinal', '06:00:00', '09:00:00'),
+  ('Almoço', 'Refeição do meio-dia', '11:00:00', '14:00:00'),
+  ('Jantar', 'Refeição noturna', '18:00:00', '21:00:00');

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import axios from 'axios';
 
 const CompanyForm = () => {
   const [companyName, setCompanyName] = useState("");
@@ -22,38 +20,13 @@ const CompanyForm = () => {
     if (file && file.type === "image/png") {
       setLogo(file);
     } else {
-      toast.error("Por favor, selecione uma imagem PNG.");
+      alert("Por favor, selecione uma imagem PNG.");
     }
   };
 
-  const handleSaveCompany = async () => {
-    try {
-      const formData = new FormData();
-      formData.append('companyName', companyName);
-      formData.append('cnpj', cnpj);
-      if (logo) {
-        formData.append('logo', logo);
-      }
-
-      const response = await axios.post('http://localhost:5000/api/companies', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      console.log('Empresa salva:', response.data);
-      toast.success("Empresa cadastrada com sucesso!");
-      resetForm();
-    } catch (error) {
-      console.error('Erro ao salvar empresa:', error);
-      toast.error("Erro ao cadastrar empresa. Por favor, tente novamente.");
-    }
-  };
-
-  const resetForm = () => {
-    setCompanyName("");
-    setCnpj("");
-    setLogo(null);
+  const handleSaveCompany = () => {
+    console.log('Salvando empresa:', { companyName, cnpj, logo });
+    // Aqui você implementaria a lógica para salvar os dados da empresa
   };
 
   return (
