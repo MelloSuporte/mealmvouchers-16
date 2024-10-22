@@ -10,8 +10,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 const UserFormMain = ({
   userName,
   setUserName,
+  userEmail,
+  setUserEmail,
   userCPF,
   handleCPFChange,
+  company,
+  setCompany,
   voucher,
   showVoucher,
   toggleVoucherVisibility,
@@ -33,19 +37,21 @@ const UserFormMain = ({
         onChange={(e) => setUserName(e.target.value)}
       />
       <Input 
+        placeholder="E-mail do usuário" 
+        type="email"
+        value={userEmail}
+        onChange={(e) => setUserEmail(e.target.value)}
+      />
+      <Input 
         placeholder="CPF (000.000.000-00)" 
         value={userCPF}
         onChange={handleCPFChange}
       />
-      <Select>
-        <SelectTrigger>
-          <SelectValue placeholder="Empresa" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="empresa1">Empresa 1</SelectItem>
-          <SelectItem value="empresa2">Empresa 2</SelectItem>
-        </SelectContent>
-      </Select>
+      <Input 
+        placeholder="Empresa" 
+        value={company}
+        onChange={(e) => setCompany(e.target.value)}
+      />
       <div className="flex items-center space-x-2">
         <Input 
           placeholder="Voucher" 

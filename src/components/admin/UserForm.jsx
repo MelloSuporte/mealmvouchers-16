@@ -6,10 +6,13 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import UserSearchResults from './UserSearchResults';
 import UserFormMain from './UserFormMain';
+import axios from 'axios';
 
 const UserForm = () => {
   const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
   const [userCPF, setUserCPF] = useState("");
+  const [company, setCompany] = useState("");
   const [voucher, setVoucher] = useState("");
   const [showVoucher, setShowVoucher] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
@@ -57,7 +60,7 @@ const UserForm = () => {
     return Math.random() < 0.1;
   };
 
-  const handleSaveUser = () => {
+  const handleSaveUser = async () => {
     if (!voucher) {
       toast.error("Por favor, gere um voucher antes de salvar o usuário.");
       return;
@@ -66,10 +69,30 @@ const UserForm = () => {
       toast.error("Por favor, selecione um turno para o usuário.");
       return;
     }
-    console.log('Salvando usuário:', { userName, userCPF, voucher, isSuspended, userPhoto, turno: selectedTurno });
-    toast.success("Usuário salvo com sucesso!");
+    try {
+      const response = await axios.post('http://localhost:5000/api/users', {
+        name: userName,
+        email: userEmail,
+        cpf: userCPF,
+        company,
+        voucher,
+        turno: selectedTurno,
+        isSuspended
+      });
+      console.log('Usuário salvo:', response.data);
+      toast.success("Usuário salvo com sucesso!");
+      resetForm();
+    } catch (error) {
+      console.error('Erro ao salvar usuário:', error);
+      toast.error("Erro ao salvar usuário. Por favor, tente novamente.");
+    }
+  };
+
+  const resetForm = () => {
     setUserName("");
+    setUserEmail("");
     setUserCPF("");
+    setCompany("");
     setVoucher("");
     setIsSuspended(false);
     setUserPhoto(null);
@@ -132,17 +155,30 @@ const UserForm = () => {
       <UserFormMain
         userName={userName}
         setUserName={setUserName}
+        userEmail={userEmail}
+        setUserEmail={setUserEmail}
         userCPF={userCPF}
         handleCPFChange={handleCPFChange}
+        company={company}
+        setCompany={setCompany}
         voucher={voucher}
         showVoucher={showVoucher}
-        toggleVoucherVisibility={toggleVoucherVisibility}
+        toggleVoucherVisibility={() => setShowVoucher(!showVoucher)}
         generateVoucher={generateVoucher}
         selectedTurno={selectedTurno}
         setSelectedTurno={setSelectedTurno}
         isSuspended={isSuspended}
-        handleSuspendUser={handleSuspendUser}
-        handlePhotoUpload={handlePhotoUpload}
+        handleSuspendUser={() => setIsSuspended(!isSuspended)}
+        handlePhotoUpload={(e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setUserPhoto(reader.result);
+            };
+            reader.readAsDataURL(file);
+          }
+        }}
         userPhoto={userPhoto}
         handleSaveUser={handleSaveUser}
         turnos={turnos}
