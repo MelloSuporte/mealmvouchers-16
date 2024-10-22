@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS vouchers (
   code VARCHAR(255) NOT NULL UNIQUE,
   user_id INT,
   meal_id INT,
+  meal_type VARCHAR(50) NOT NULL,
   date DATE NOT NULL,
   status ENUM('unused', 'used', 'expired') DEFAULT 'unused',
   FOREIGN KEY (user_id) REFERENCES users(id),

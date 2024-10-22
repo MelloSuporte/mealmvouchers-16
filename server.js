@@ -108,6 +108,103 @@ app.post('/api/meal-types', (req, res) => {
   });
 });
 
+// Nova rota para validar o uso de voucher
+app.post('/api/validate-voucher', (req, res) => {
+  const { userId, mealType, turno } = req.body;
+  const today = new Date().toISOString().split('T')[0];
+
+  // Função para verificar o uso de vouchers no dia
+  const checkVoucherUsage = (callback) => {
+    connection.query(
+      'SELECT COUNT(*) as count FROM vouchers WHERE user_id = ? AND date = ? AND status = "used"',
+      [userId, today],
+      (err, results) => {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        callback(results[0].count);
+      }
+    );
+  };
+
+  // Função para verificar se o usuário já usou um tipo específico de refeição
+  const checkMealTypeUsage = (mealType, callback) => {
+    connection.query(
+      'SELECT COUNT(*) as count FROM vouchers WHERE user_id = ? AND date = ? AND meal_type = ? AND status = "used"',
+      [userId, today, mealType],
+      (err, results) => {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        callback(results[0].count > 0);
+      }
+    );
+  };
+
+  // Validar regras baseadas no turno
+  checkVoucherUsage((voucherCount) => {
+    if (voucherCount >= 2 && mealType !== 'Extra') {
+      res.status(403).json({ error: 'Limite diário de vouchers atingido' });
+      return;
+    }
+
+    if (mealType === 'Extra') {
+      // Verificar regras RLS (não implementadas neste exemplo)
+      res.json({ valid: true, message: 'Voucher Extra válido, sujeito às regras RLS' });
+      return;
+    }
+
+    switch (turno) {
+      case 'central':
+        if (mealType === 'Café (2)' || mealType === 'Almoço') {
+          checkMealTypeUsage('Lanche', (usedLanche) => {
+            if (usedLanche) {
+              res.status(403).json({ error: 'Usuário já utilizou Lanche, não pode usar Café (2)' });
+            } else {
+              res.json({ valid: true });
+            }
+          });
+        } else {
+          res.status(403).json({ error: 'Tipo de refeição não permitido para este turno' });
+        }
+        break;
+      case 'primeiro':
+        if (mealType === 'Café (1)' || mealType === 'Almoço') {
+          checkMealTypeUsage('Café (2)', (usedCafe2) => {
+            if (usedCafe2) {
+              res.status(403).json({ error: 'Usuário já utilizou Café (2), não pode usar Café (1)' });
+            } else {
+              res.json({ valid: true });
+            }
+          });
+        } else {
+          res.status(403).json({ error: 'Tipo de refeição não permitido para este turno' });
+        }
+        break;
+      case 'segundo':
+        if (mealType === 'Jantar' || mealType === 'Lanche') {
+          res.json({ valid: true });
+        } else {
+          res.status(403).json({ error: 'Tipo de refeição não permitido para este turno' });
+        }
+        break;
+      case 'terceiro':
+        if (mealType === 'Ceia' || mealType === 'Desjejum') {
+          res.json({ valid: true });
+        } else {
+          res.status(403).json({ error: 'Tipo de refeição não permitido para este turno' });
+        }
+        break;
+      default:
+        res.status(400).json({ error: 'Turno inválido' });
+    }
+  });
+});
+
+// ... keep existing code (outras rotas e configurações)
+
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
