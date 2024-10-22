@@ -1,56 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { toast } from "sonner";
 
 const BomApetite = () => {
   const { userName } = useParams();
+  const navigate = useNavigate();
   const location = useLocation();
+  const [countdown, setCountdown] = useState(5);
   const mealType = location.state?.mealType || 'Refeição';
-  const [companyLogo, setCompanyLogo] = useState(null);
-  const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
-    // Aqui você faria uma chamada à API para obter a logo da empresa com base no usuário
-    // Por enquanto, vamos simular isso com um setTimeout
-    const fetchCompanyLogo = async () => {
-      setTimeout(() => {
-        setCompanyLogo('/placeholder.svg'); // Substitua isso pela URL real da logo
-      }, 1000);
-    };
+    const timer = setInterval(() => {
+      setCountdown((prevCount) => prevCount - 1);
+    }, 1000);
 
-    fetchCompanyLogo();
+    return () => clearInterval(timer);
+  }, []);
 
-    const savedBackground = localStorage.getItem('bomApetiteBackground');
-    if (savedBackground) {
-      setBackgroundImage(savedBackground);
+  useEffect(() => {
+    if (countdown === 0) {
+      toast.success("Redirecionando para a página de voucher...");
+      navigate('/voucher');
     }
-  }, [userName]);
+  }, [countdown, navigate]);
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="text-center">
-          {companyLogo && (
-            <img src={companyLogo} alt="Logo da Empresa" className="mx-auto w-32 h-32 object-contain mb-4" />
-          )}
-          <CardTitle className="text-3xl font-bold text-green-600">Bom Apetite!</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xl text-center">
-            Olá, <span className="font-bold">{userName}</span>!
-          </p>
-          <p className="text-lg text-center mt-2">
-            Aproveite seu(sua) <span className="font-bold">{mealType}</span>.
-          </p>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-green-100 p-4">
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+        <h1 className="text-4xl font-bold text-green-600 mb-4">Bom Apetite!</h1>
+        <p className="text-xl mb-4">Olá, {userName}!</p>
+        <p className="text-lg mb-6">Aproveite seu(sua) {mealType}.</p>
+        <p className="text-md">Retornando à página de voucher em {countdown} segundos...</p>
+      </div>
     </div>
   );
 };
