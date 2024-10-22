@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -6,14 +6,20 @@ import { toast } from "sonner";
 
 const BackgroundImageForm = () => {
   const [voucherBackground, setVoucherBackground] = useState('');
+  const [userConfirmationBackground, setUserConfirmationBackground] = useState('');
   const [bomApetiteBackground, setBomApetiteBackground] = useState('');
 
+  useEffect(() => {
+    setVoucherBackground(localStorage.getItem('voucherBackground') || '');
+    setUserConfirmationBackground(localStorage.getItem('userConfirmationBackground') || '');
+    setBomApetiteBackground(localStorage.getItem('bomApetiteBackground') || '');
+  }, []);
+
   const handleSaveBackgrounds = () => {
-    // Here you would implement the logic to save the background image URLs
-    // For now, we'll just log them and show a success toast
-    console.log('Saving backgrounds:', { voucherBackground, bomApetiteBackground });
-    localStorage.setItem('voucherBackground', voucherBackground);
-    localStorage.setItem('bomApetiteBackground', bomApetiteBackground);
+    const timestamp = new Date().getTime();
+    localStorage.setItem('voucherBackground', `${voucherBackground}?v=${timestamp}`);
+    localStorage.setItem('userConfirmationBackground', `${userConfirmationBackground}?v=${timestamp}`);
+    localStorage.setItem('bomApetiteBackground', `${bomApetiteBackground}?v=${timestamp}`);
     toast.success("Imagens de fundo atualizadas com sucesso!");
   };
 
@@ -27,6 +33,16 @@ const BackgroundImageForm = () => {
           placeholder="URL da imagem"
           value={voucherBackground}
           onChange={(e) => setVoucherBackground(e.target.value)}
+        />
+      </div>
+      <div>
+        <Label htmlFor="user-confirmation-bg">Imagem de fundo para tela UserConfirmation</Label>
+        <Input
+          id="user-confirmation-bg"
+          type="text"
+          placeholder="URL da imagem"
+          value={userConfirmationBackground}
+          onChange={(e) => setUserConfirmationBackground(e.target.value)}
         />
       </div>
       <div>

@@ -118,11 +118,9 @@ const Voucher = () => {
 
   return (
     <div 
-      className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4 relative"
+      className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4 relative bg-cover bg-center bg-no-repeat"
       style={{
         backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
       }}
     >
       <Button

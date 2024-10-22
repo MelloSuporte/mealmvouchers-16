@@ -8,6 +8,14 @@ const BomApetite = () => {
   const location = useLocation();
   const [countdown, setCountdown] = useState(5);
   const mealType = location.state?.mealType || 'Refeição';
+  const [backgroundImage, setBackgroundImage] = useState('');
+
+  useEffect(() => {
+    const savedBackground = localStorage.getItem('bomApetiteBackground');
+    if (savedBackground) {
+      setBackgroundImage(savedBackground);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -25,7 +33,12 @@ const BomApetite = () => {
   }, [countdown, navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-green-100 p-4">
+    <div 
+      className="flex flex-col items-center justify-center min-h-screen bg-green-100 p-4 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+      }}
+    >
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
         <h1 className="text-4xl font-bold text-green-600 mb-4">Bom Apetite!</h1>
         <p className="text-xl mb-4">Olá, {userName}!</p>

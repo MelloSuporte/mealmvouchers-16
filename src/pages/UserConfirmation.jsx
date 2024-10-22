@@ -8,6 +8,14 @@ const UserConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { userPhoto, userName } = location.state || {};
+  const [backgroundImage, setBackgroundImage] = useState('');
+
+  useEffect(() => {
+    const savedBackground = localStorage.getItem('userConfirmationBackground');
+    if (savedBackground) {
+      setBackgroundImage(savedBackground);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -34,7 +42,12 @@ const UserConfirmation = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+    <div 
+      className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+      }}
+    >
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
         <h2 className="text-2xl font-bold mb-4">Confirme sua identidade</h2>
         {userPhoto && (
