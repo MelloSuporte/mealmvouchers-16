@@ -19,22 +19,18 @@ const UserForm = () => {
 
   const handleSaveUser = async () => {
     try {
-      const query = `
-        INSERT INTO users (name, email, cpf, company, voucher, turno, is_suspended)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `;
-      
-      const params = [
-        formData.userName,
-        formData.userEmail,
-        formData.userCPF,
-        formData.company,
-        formData.voucher,
-        formData.selectedTurno,
-        formData.isSuspended
-      ];
-
-      await executeQuery(query, params);
+      await executeQuery(
+        'INSERT INTO users (name, email, cpf, company, voucher, turno, is_suspended) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [
+          formData.userName,
+          formData.userEmail,
+          formData.userCPF,
+          formData.company,
+          formData.voucher,
+          formData.selectedTurno,
+          formData.isSuspended
+        ]
+      );
       toast.success("Usuário cadastrado com sucesso!");
       resetForm();
     } catch (error) {
@@ -44,19 +40,19 @@ const UserForm = () => {
 
   const handleSearch = async (searchCPF) => {
     try {
-      const query = 'SELECT * FROM users WHERE cpf = ?';
-      const results = await executeQuery(query, [searchCPF]);
+      const results = await executeQuery('SELECT * FROM users WHERE cpf = ?', [searchCPF]);
       
       if (results.length > 0) {
+        const user = results[0];
         setFormData({
-          userName: results[0].name,
-          userEmail: results[0].email,
-          userCPF: results[0].cpf,
-          company: results[0].company,
-          voucher: results[0].voucher,
-          selectedTurno: results[0].turno,
-          isSuspended: results[0].is_suspended,
-          userPhoto: results[0].photo
+          userName: user.name,
+          userEmail: user.email,
+          userCPF: user.cpf,
+          company: user.company,
+          voucher: user.voucher,
+          selectedTurno: user.turno,
+          isSuspended: user.is_suspended,
+          userPhoto: user.photo
         });
         toast.success("Usuário encontrado!");
       } else {
@@ -83,7 +79,7 @@ const UserForm = () => {
   return (
     <div className="space-y-4">
       <UserFormMain
-        formData={formData}
+        {...formData}
         setFormData={setFormData}
         handleSaveUser={handleSaveUser}
       />
