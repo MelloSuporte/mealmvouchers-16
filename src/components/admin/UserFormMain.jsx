@@ -1,33 +1,39 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, Upload } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
+const defaultTurnos = [
+  { id: "central", label: "Turno Central", entrada: "08:00", saida: "17:00" },
+  { id: "primeiro", label: "Primeiro Turno", entrada: "06:00", saida: "14:00" },
+  { id: "segundo", label: "Segundo Turno", entrada: "14:00", saida: "22:00" },
+  { id: "terceiro", label: "Terceiro Turno", entrada: "22:00", saida: "06:00" }
+];
+
 const UserFormMain = ({
-  userName,
+  userName = '',
   setUserName,
-  userEmail,
+  userEmail = '',
   setUserEmail,
-  userCPF,
+  userCPF = '',
   handleCPFChange,
-  company,
+  company = '',
   setCompany,
-  voucher,
-  showVoucher,
+  voucher = '',
+  showVoucher = false,
   toggleVoucherVisibility,
   generateVoucher,
-  selectedTurno,
+  selectedTurno = '',
   setSelectedTurno,
-  isSuspended,
+  isSuspended = false,
   handleSuspendUser,
   handlePhotoUpload,
   userPhoto,
   handleSaveUser,
-  turnos
+  turnos = defaultTurnos
 }) => {
   return (
     <form className="space-y-4">
