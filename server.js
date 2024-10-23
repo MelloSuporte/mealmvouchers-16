@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 const app = express();
@@ -9,93 +9,85 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Configuração da conexão com o MySQL
-const connection = mysql.createConnection({
+// Criar pool de conexões MySQL
+const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-connection.connect((err) => {
-  if (err) {
-    console.error('Erro ao conectar ao banco de dados:', err);
-    return;
+// Middleware para verificar conexão com banco
+app.use(async (req, res, next) => {
+  try {
+    req.db = await pool.getConnection();
+    next();
+  } catch (err) {
+    console.error('Database connection error:', err);
+    res.status(500).json({ error: 'Error connecting to database' });
   }
-  console.log('Conectado ao banco de dados MySQL');
+});
+
+// Rota de teste
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'API is running' });
 });
 
 // Rotas para usuários
-app.post('/api/users', (req, res) => {
+app.post('/api/users', async (req, res) => {
   const { name, email, cpf, company, voucher, turno, isSuspended } = req.body;
-  const query = 'INSERT INTO users (name, email, cpf, company, voucher, turno, is_suspended) VALUES (?, ?, ?, ?, ?, ?, ?)';
-  connection.query(query, [name, email, cpf, company, voucher, turno, isSuspended], (err, result) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.status(201).json({ id: result.insertId, name, email, cpf, company, voucher, turno, isSuspended });
-  });
+  try {
+    const [result] = await req.db.execute(
+      'INSERT INTO users (name, email, cpf, company, voucher, turno, is_suspended) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, email, cpf, company, voucher, turno, isSuspended]
+    );
+    res.status(201).json({ id: result.insertId, ...req.body });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    req.db.release();
+  }
 });
 
-app.get('/api/users', (req, res) => {
-  connection.query('SELECT * FROM users', (err, results) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(results);
-  });
+app.get('/api/users', async (req, res) => {
+  try {
+    const [rows] = await req.db.execute('SELECT * FROM users');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    req.db.release();
+  }
 });
 
-// Rotas para refeições
-app.post('/api/meals', (req, res) => {
-  const { name, description, startTime, endTime } = req.body;
-  const query = 'INSERT INTO meals (name, description, start_time, end_time) VALUES (?, ?, ?, ?)';
-  connection.query(query, [name, description, startTime, endTime], (err, result) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+app.get('/api/users/search', async (req, res) => {
+  const { cpf } = req.query;
+  try {
+    const [rows] = await req.db.execute('SELECT * FROM users WHERE cpf = ?', [cpf]);
+    if (rows.length > 0) {
+      res.json(rows[0]);
+    } else {
+      res.status(404).json({ message: 'User not found' });
     }
-    res.status(201).json({ id: result.insertId, name, description, startTime, endTime });
-  });
+  } catch (error) {
+    console.error('Error searching user:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    req.db.release();
+  }
 });
 
-app.get('/api/meals', (req, res) => {
-  connection.query('SELECT * FROM meals', (err, results) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(results);
-  });
+// Tratamento de erros global
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something broke!' });
 });
-
-// Rotas para vouchers
-app.post('/api/vouchers', (req, res) => {
-  const { code, userId, mealId, mealType, date, status } = req.body;
-  const query = 'INSERT INTO vouchers (code, user_id, meal_id, meal_type, date, status) VALUES (?, ?, ?, ?, ?, ?)';
-  connection.query(query, [code, userId, mealId, mealType, date, status], (err, result) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.status(201).json({ id: result.insertId, code, userId, mealId, mealType, date, status });
-  });
-});
-
-app.get('/api/vouchers', (req, res) => {
-  connection.query('SELECT * FROM vouchers', (err, results) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(results);
-  });
-});
-
-// ... keep existing code (outras rotas e configurações)
 
 app.listen(port, () => {
-  console.log(`Servidor rodando na porta ${port}`);
+  console.log(`Server running on port ${port}`);
 });

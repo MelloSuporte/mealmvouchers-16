@@ -1,33 +1,34 @@
-// Simulação temporária usando localStorage
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api';
+
 export const executeQuery = async (query, params = []) => {
   try {
-    // Simular delay de rede
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Simular operações básicas
     if (query.toLowerCase().includes('select')) {
-      const storedData = localStorage.getItem('users') || '[]';
-      return JSON.parse(storedData);
+      if (query.includes('WHERE cpf =')) {
+        const cpf = params[0];
+        const response = await axios.get(`${API_URL}/users/search?cpf=${cpf}`);
+        return [response.data];
+      } else {
+        const response = await axios.get(`${API_URL}/users`);
+        return response.data;
+      }
     } else if (query.toLowerCase().includes('insert')) {
-      const storedData = localStorage.getItem('users') || '[]';
-      const users = JSON.parse(storedData);
-      const newUser = {
-        id: Date.now(),
-        name: params[0],
-        email: params[1],
-        cpf: params[2],
-        company: params[3],
-        voucher: params[4],
-        turno: params[5],
-        is_suspended: params[6]
-      };
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      return { insertId: newUser.id };
+      const [name, email, cpf, company, voucher, turno, isSuspended] = params;
+      const response = await axios.post(`${API_URL}/users`, {
+        name,
+        email,
+        cpf,
+        company,
+        voucher,
+        turno,
+        isSuspended
+      });
+      return response.data;
     }
     return [];
   } catch (error) {
-    console.error('Database error:', error);
+    console.error('API error:', error);
     throw error;
   }
 };
