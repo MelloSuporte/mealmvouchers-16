@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
+const axios = require('axios');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -86,6 +87,27 @@ app.get('/api/users/search', async (req, res) => {
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something broke!' });
+});
+
+// Rota para proxy de imagens
+app.get('/api/images/proxy', async (req, res) => {
+  try {
+    const { url } = req.query;
+    const response = await axios({
+      url,
+      method: 'GET',
+      responseType: 'stream'
+    });
+    
+    // Encaminhar headers de content-type
+    res.setHeader('Content-Type', response.headers['content-type']);
+    
+    // Pipe a resposta diretamente para o cliente
+    response.data.pipe(res);
+  } catch (error) {
+    console.error('Error proxying image:', error);
+    res.status(500).send('Error loading image');
+  }
 });
 
 app.listen(port, () => {

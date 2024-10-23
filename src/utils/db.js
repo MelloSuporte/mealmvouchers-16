@@ -8,10 +8,10 @@ export const executeQuery = async (query, params = []) => {
       if (query.includes('WHERE cpf =')) {
         const cpf = params[0];
         const response = await axios.get(`${API_URL}/users/search?cpf=${cpf}`);
-        return [response.data];
+        return response.data ? [response.data] : [];
       } else {
         const response = await axios.get(`${API_URL}/users`);
-        return response.data;
+        return response.data || [];
       }
     } else if (query.toLowerCase().includes('insert')) {
       const [name, email, cpf, company, voucher, turno, isSuspended] = params;
@@ -29,6 +29,6 @@ export const executeQuery = async (query, params = []) => {
     return [];
   } catch (error) {
     console.error('API error:', error);
-    throw error;
+    return []; // Sempre retorna um array vazio em caso de erro
   }
 };
