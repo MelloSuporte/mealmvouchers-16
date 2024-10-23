@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS seu_banco_de_dados;
+CREATE DATABASE IF NOT EXISTS bd_voucher;
 
-USE seu_banco_de_dados;
+USE bd_voucher;
 
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -10,52 +10,30 @@ CREATE TABLE IF NOT EXISTS users (
   company VARCHAR(255) NOT NULL,
   voucher VARCHAR(4) NOT NULL,
   turno ENUM('central', 'primeiro', 'segundo', 'terceiro') NOT NULL,
-  is_suspended BOOLEAN DEFAULT FALSE
+  is_suspended BOOLEAN DEFAULT FALSE,
+  photo LONGTEXT
 );
 
-CREATE TABLE IF NOT EXISTS meals (
+CREATE TABLE IF NOT EXISTS companies (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  description TEXT,
-  start_time TIME NOT NULL,
-  end_time TIME NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS menu_items (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  meal_id INT,
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  date DATE NOT NULL,
-  FOREIGN KEY (meal_id) REFERENCES meals(id)
-);
-
-CREATE TABLE IF NOT EXISTS vouchers (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  code VARCHAR(255) NOT NULL UNIQUE,
-  user_id INT,
-  meal_id INT,
-  meal_type VARCHAR(50) NOT NULL,
-  date DATE NOT NULL,
-  status ENUM('unused', 'used', 'expired') DEFAULT 'unused',
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (meal_id) REFERENCES meals(id)
+  cnpj VARCHAR(18) NOT NULL UNIQUE,
+  logo LONGTEXT
 );
 
 CREATE TABLE IF NOT EXISTS meal_types (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  type VARCHAR(255) NOT NULL,
-  value DECIMAL(10, 2) NOT NULL,
+  name VARCHAR(255) NOT NULL,
   start_time TIME,
-  end_time TIME
+  end_time TIME,
+  value DECIMAL(10,2)
 );
 
--- Inserir dados de exemplo
-INSERT INTO users (name, email, cpf, company, voucher, turno) VALUES
-  ('João Silva', 'joao@example.com', '123.456.789-00', 'Empresa A', '1234', 'central'),
-  ('Maria Santos', 'maria@example.com', '987.654.321-00', 'Empresa B', '5678', 'primeiro');
-
-INSERT INTO meals (name, description, start_time, end_time) VALUES
-  ('Café da Manhã', 'Refeição matinal', '06:00:00', '09:00:00'),
-  ('Almoço', 'Refeição do meio-dia', '11:00:00', '14:00:00'),
-  ('Jantar', 'Refeição noturna', '18:00:00', '21:00:00');
+CREATE TABLE IF NOT EXISTS voucher_usage (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  meal_type_id INT,
+  used_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (meal_type_id) REFERENCES meal_types(id)
+);
