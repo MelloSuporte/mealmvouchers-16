@@ -30,6 +30,11 @@ app.use(async (req, res, next) => {
   }
 });
 
+// Rota simples para verificar se o servidor está rodando
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Server is running' });
+});
+
 // Rotas de usuários
 app.post('/api/users', async (req, res) => {
   const { name, email, cpf, company_id, voucher, turno } = req.body;
@@ -56,7 +61,7 @@ app.get('/api/users/search', async (req, res) => {
     if (rows.length > 0) {
       res.json(rows[0]);
     } else {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: 'Usuário não encontrado' });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -69,39 +74,35 @@ app.get('/api/users/search', async (req, res) => {
 app.post('/api/vouchers/validate', async (req, res) => {
   const { cpf, voucherCode, mealType } = req.body;
   try {
-    // Verificar usuário
-    const [users] = await req.db.execute('SELECT * FROM users WHERE cpf = ? AND voucher = ?', [cpf, voucherCode]);
+    const [users] = await req.db.execute(
+      'SELECT * FROM users WHERE cpf = ? AND voucher = ?', 
+      [cpf, voucherCode]
+    );
+    
     if (users.length === 0) {
-      return res.status(401).json({ error: 'Invalid voucher' });
+      return res.status(401).json({ error: 'Voucher inválido' });
     }
 
     const user = users[0];
     if (user.is_suspended) {
-      return res.status(403).json({ error: 'User is suspended' });
+      return res.status(403).json({ error: 'Usuário suspenso' });
     }
 
-    // Verificar horário da refeição
-    const [mealTypes] = await req.db.execute('SELECT * FROM meal_types WHERE name = ?', [mealType]);
+    const [mealTypes] = await req.db.execute(
+      'SELECT * FROM meal_types WHERE name = ?', 
+      [mealType]
+    );
+    
     if (mealTypes.length === 0) {
-      return res.status(400).json({ error: 'Invalid meal type' });
+      return res.status(400).json({ error: 'Tipo de refeição inválido' });
     }
 
-    const mealTypeData = mealTypes[0];
-    if (mealTypeData.start_time && mealTypeData.end_time) {
-      const now = new Date();
-      const currentTime = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
-      if (currentTime < mealTypeData.start_time || currentTime > mealTypeData.end_time) {
-        return res.status(403).json({ error: 'Meal not available at this time' });
-      }
-    }
-
-    // Registrar uso do voucher
     await req.db.execute(
       'INSERT INTO voucher_usage (user_id, meal_type_id) VALUES (?, ?)',
-      [user.id, mealTypeData.id]
+      [user.id, mealTypes[0].id]
     );
 
-    res.json({ success: true, message: 'Voucher validated successfully' });
+    res.json({ success: true, message: 'Voucher validado com sucesso' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   } finally {
@@ -125,39 +126,7 @@ app.post('/api/companies', async (req, res) => {
   }
 });
 
-// Rotas para imagens de fundo
-app.post('/api/background-images', async (req, res) => {
-  const { page, imageUrl } = req.body;
-  try {
-    await req.db.execute('UPDATE background_images SET active = FALSE WHERE page = ?', [page]);
-    const [result] = await req.db.execute(
-      'INSERT INTO background_images (page, image_url, active) VALUES (?, ?, TRUE)',
-      [page, imageUrl]
-    );
-    res.status(201).json({ id: result.insertId, ...req.body });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  } finally {
-    req.db.release();
-  }
-});
-
-app.get('/api/background-images/:page', async (req, res) => {
-  const { page } = req.params;
-  try {
-    const [rows] = await req.db.execute(
-      'SELECT * FROM background_images WHERE page = ? AND active = TRUE ORDER BY created_at DESC LIMIT 1',
-      [page]
-    );
-    res.json(rows[0] || null);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  } finally {
-    req.db.release();
-  }
-});
-
 // Iniciar servidor
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Servidor rodando na porta ${port}`);
 });
