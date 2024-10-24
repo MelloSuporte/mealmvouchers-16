@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Coffee, Utensils, Moon, Plus, Sandwich } from 'lucide-react';
@@ -7,7 +7,14 @@ import { toast } from "sonner";
 const SelfServices = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const voucherType = location.state?.voucherType || 'Regular';
+  const [backgroundImage, setBackgroundImage] = useState('');
+
+  useEffect(() => {
+    const savedBackground = localStorage.getItem('userConfirmationBackground');
+    if (savedBackground) {
+      setBackgroundImage(savedBackground);
+    }
+  }, []);
 
   const handleMealSelection = (mealType) => {
     const today = new Date().toISOString().split('T')[0];
@@ -15,16 +22,6 @@ const SelfServices = () => {
 
     if (!usedVouchers[today]) {
       usedVouchers[today] = [];
-    }
-
-    if (voucherType === 'Extra' && mealType !== 'Extra') {
-      toast.error("Voucher Extra só pode ser usado para refeição Extra.");
-      return;
-    }
-
-    if (voucherType === 'Regular' && mealType === 'Extra') {
-      toast.error("Refeição Extra requer um Voucher Extra.");
-      return;
     }
 
     if (usedVouchers[today].includes(mealType)) {
@@ -40,13 +37,18 @@ const SelfServices = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-start p-4 relative overflow-hidden">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-start p-4 relative bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+      }}
+    >
       <div className="absolute top-0 right-0 w-full h-1/3 bg-blue-600 rounded-bl-[30%] flex items-start justify-center pt-8">
         <h2 className="text-3xl font-bold text-white">Escolha sua refeição</h2>
       </div>
       
       <div className="z-10 w-full max-w-md space-y-8 mt-32 flex flex-col items-center">
-        <div className="grid grid-cols-2 gap-8 bg-white p-8 rounded-lg shadow-lg">
+        <div className="grid grid-cols-2 gap-8 bg-white/90 p-8 rounded-lg shadow-lg backdrop-blur-sm">
           <Button
             onClick={() => handleMealSelection('Almoço')}
             className="w-full h-32 bg-transparent hover:bg-blue-100 text-blue-600 font-semibold py-6 px-4 border border-blue-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
