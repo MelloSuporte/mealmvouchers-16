@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
-const axios = require('axios');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -10,7 +9,6 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Criar pool de conexões MySQL
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -21,7 +19,7 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Middleware para verificar conexão com banco
+// Middleware para verificar conexão
 app.use(async (req, res, next) => {
   try {
     req.db = await pool.getConnection();
@@ -32,34 +30,16 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Rota de teste
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'API is running' });
-});
-
-// Rotas para usuários
+// Rotas de usuários
 app.post('/api/users', async (req, res) => {
-  const { name, email, cpf, company, voucher, turno, isSuspended } = req.body;
+  const { name, email, cpf, company_id, voucher, turno } = req.body;
   try {
     const [result] = await req.db.execute(
-      'INSERT INTO users (name, email, cpf, company, voucher, turno, is_suspended) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, email, cpf, company, voucher, turno, isSuspended]
+      'INSERT INTO users (name, email, cpf, company_id, voucher, turno) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, email, cpf, company_id, voucher, turno]
     );
     res.status(201).json({ id: result.insertId, ...req.body });
   } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ error: error.message });
-  } finally {
-    req.db.release();
-  }
-});
-
-app.get('/api/users', async (req, res) => {
-  try {
-    const [rows] = await req.db.execute('SELECT * FROM users');
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching users:', error);
     res.status(500).json({ error: error.message });
   } finally {
     req.db.release();
@@ -69,47 +49,115 @@ app.get('/api/users', async (req, res) => {
 app.get('/api/users/search', async (req, res) => {
   const { cpf } = req.query;
   try {
-    const [rows] = await req.db.execute('SELECT * FROM users WHERE cpf = ?', [cpf]);
+    const [rows] = await req.db.execute(
+      'SELECT u.*, c.name as company_name FROM users u LEFT JOIN companies c ON u.company_id = c.id WHERE u.cpf = ?',
+      [cpf]
+    );
     if (rows.length > 0) {
       res.json(rows[0]);
     } else {
       res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    console.error('Error searching user:', error);
     res.status(500).json({ error: error.message });
   } finally {
     req.db.release();
   }
 });
 
-// Tratamento de erros global
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something broke!' });
-});
-
-// Rota para proxy de imagens
-app.get('/api/images/proxy', async (req, res) => {
+// Rota para validar voucher
+app.post('/api/vouchers/validate', async (req, res) => {
+  const { cpf, voucherCode, mealType } = req.body;
   try {
-    const { url } = req.query;
-    const response = await axios({
-      url,
-      method: 'GET',
-      responseType: 'stream'
-    });
-    
-    // Encaminhar headers de content-type
-    res.setHeader('Content-Type', response.headers['content-type']);
-    
-    // Pipe a resposta diretamente para o cliente
-    response.data.pipe(res);
+    // Verificar usuário
+    const [users] = await req.db.execute('SELECT * FROM users WHERE cpf = ? AND voucher = ?', [cpf, voucherCode]);
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'Invalid voucher' });
+    }
+
+    const user = users[0];
+    if (user.is_suspended) {
+      return res.status(403).json({ error: 'User is suspended' });
+    }
+
+    // Verificar horário da refeição
+    const [mealTypes] = await req.db.execute('SELECT * FROM meal_types WHERE name = ?', [mealType]);
+    if (mealTypes.length === 0) {
+      return res.status(400).json({ error: 'Invalid meal type' });
+    }
+
+    const mealTypeData = mealTypes[0];
+    if (mealTypeData.start_time && mealTypeData.end_time) {
+      const now = new Date();
+      const currentTime = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+      if (currentTime < mealTypeData.start_time || currentTime > mealTypeData.end_time) {
+        return res.status(403).json({ error: 'Meal not available at this time' });
+      }
+    }
+
+    // Registrar uso do voucher
+    await req.db.execute(
+      'INSERT INTO voucher_usage (user_id, meal_type_id) VALUES (?, ?)',
+      [user.id, mealTypeData.id]
+    );
+
+    res.json({ success: true, message: 'Voucher validated successfully' });
   } catch (error) {
-    console.error('Error proxying image:', error);
-    res.status(500).send('Error loading image');
+    res.status(500).json({ error: error.message });
+  } finally {
+    req.db.release();
   }
 });
 
+// Rotas para empresas
+app.post('/api/companies', async (req, res) => {
+  const { name, cnpj, logo } = req.body;
+  try {
+    const [result] = await req.db.execute(
+      'INSERT INTO companies (name, cnpj, logo) VALUES (?, ?, ?)',
+      [name, cnpj, logo]
+    );
+    res.status(201).json({ id: result.insertId, ...req.body });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } finally {
+    req.db.release();
+  }
+});
+
+// Rotas para imagens de fundo
+app.post('/api/background-images', async (req, res) => {
+  const { page, imageUrl } = req.body;
+  try {
+    await req.db.execute('UPDATE background_images SET active = FALSE WHERE page = ?', [page]);
+    const [result] = await req.db.execute(
+      'INSERT INTO background_images (page, image_url, active) VALUES (?, ?, TRUE)',
+      [page, imageUrl]
+    );
+    res.status(201).json({ id: result.insertId, ...req.body });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } finally {
+    req.db.release();
+  }
+});
+
+app.get('/api/background-images/:page', async (req, res) => {
+  const { page } = req.params;
+  try {
+    const [rows] = await req.db.execute(
+      'SELECT * FROM background_images WHERE page = ? AND active = TRUE ORDER BY created_at DESC LIMIT 1',
+      [page]
+    );
+    res.json(rows[0] || null);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } finally {
+    req.db.release();
+  }
+});
+
+// Iniciar servidor
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
