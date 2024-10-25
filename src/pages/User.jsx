@@ -17,10 +17,14 @@ const User = () => {
   const [isExtraMeal, setIsExtraMeal] = useState(false);
   const [selectedTurno, setSelectedTurno] = useState("");
 
-  // Mock data for companies
-  const companies = ["Empresa A", "Empresa B", "Empresa C"];
+  // Mock data for companies - Isso deve vir do banco de dados posteriormente
+  const companies = [
+    { id: 1, name: "Selecione a empresa" },
+    { id: 2, name: "Empresa A" },
+    { id: 3, name: "Empresa B" },
+    { id: 4, name: "Empresa C" }
+  ];
 
-  // Turnos disponíveis
   const turnos = [
     { id: "central", label: "Turno Central", horario: "08:00 - 17:00" },
     { id: "primeiro", label: "Primeiro Turno", horario: "06:00 - 14:00" },
@@ -35,6 +39,11 @@ const User = () => {
   const handleSave = () => {
     if (!fullName || !cpf || !company || !selectedTurno) {
       toast.error("Por favor, preencha todos os campos obrigatórios!");
+      return;
+    }
+
+    if (company === "Selecione a empresa") {
+      toast.error("Por favor, selecione uma empresa válida!");
       return;
     }
     
@@ -74,7 +83,7 @@ const User = () => {
           <CardTitle className="text-center">Perfil do Usuário</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-4">
-          {!isRegistering && (
+          {!isRegistering ? (
             <>
               <Avatar className="w-24 h-24">
                 <AvatarImage src="/placeholder.svg" alt="User" />
@@ -83,8 +92,7 @@ const User = () => {
               <h2 className="text-2xl font-bold">Usuário</h2>
               <Button onClick={handleRegister} className="w-full">Cadastrar Usuário</Button>
             </>
-          )}
-          {isRegistering && (
+          ) : (
             <form className="w-full space-y-4">
               <Input
                 placeholder="Nome completo"
@@ -102,7 +110,9 @@ const User = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {companies.map((comp) => (
-                    <SelectItem key={comp} value={comp}>{comp}</SelectItem>
+                    <SelectItem key={comp.id} value={comp.name}>
+                      {comp.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
