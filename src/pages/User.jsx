@@ -17,12 +17,11 @@ const User = () => {
   const [isExtraMeal, setIsExtraMeal] = useState(false);
   const [selectedTurno, setSelectedTurno] = useState("");
 
-  // Mock data for companies - Isso deve vir do banco de dados posteriormente
   const companies = [
-    { id: 1, name: "Selecione a empresa" },
-    { id: 2, name: "Empresa A" },
-    { id: 3, name: "Empresa B" },
-    { id: 4, name: "Empresa C" }
+    { id: 0, name: "Selecione a empresa" },
+    { id: 1, name: "Empresa A" },
+    { id: 2, name: "Empresa B" },
+    { id: 3, name: "Empresa C" }
   ];
 
   const turnos = [
