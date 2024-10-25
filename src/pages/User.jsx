@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const User = () => {
@@ -103,31 +104,37 @@ const User = () => {
                 value={cpf}
                 onChange={handleCPFChange}
               />
-              <Select value={company} onValueChange={setCompany}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione a empresa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map((comp) => (
-                    <SelectItem key={comp.id} value={comp.name}>
-                      {comp.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>Empresa</Label>
+                <Select value={company} onValueChange={setCompany}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione a empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies.map((comp) => (
+                      <SelectItem key={comp.id} value={comp.name}>
+                        {comp.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <Select value={selectedTurno} onValueChange={setSelectedTurno}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o turno" />
-                </SelectTrigger>
-                <SelectContent>
-                  {turnos.map((turno) => (
-                    <SelectItem key={turno.id} value={turno.id}>
-                      {turno.label} ({turno.horario})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>Turno</Label>
+                <Select value={selectedTurno} onValueChange={setSelectedTurno}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o turno" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {turnos.map((turno) => (
+                      <SelectItem key={turno.id} value={turno.id}>
+                        {turno.label} ({turno.horario})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               <Input
                 type="password"
@@ -143,12 +150,9 @@ const User = () => {
                   checked={isExtraMeal}
                   onCheckedChange={setIsExtraMeal}
                 />
-                <label
-                  htmlFor="extraMeal"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
+                <Label htmlFor="extraMeal">
                   Refeição Extra
-                </label>
+                </Label>
               </div>
               <Button onClick={handleChangePassword} className="w-full">
                 {isChangingPassword ? "Cancelar Alteração de Senha" : "Alterar Senha"}
