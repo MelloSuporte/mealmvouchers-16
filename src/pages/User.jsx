@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 
 const User = () => {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -14,17 +15,39 @@ const User = () => {
   const [voucherPassword, setVoucherPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isExtraMeal, setIsExtraMeal] = useState(false);
+  const [selectedTurno, setSelectedTurno] = useState("");
 
   // Mock data for companies
   const companies = ["Empresa A", "Empresa B", "Empresa C"];
+
+  // Turnos disponíveis
+  const turnos = [
+    { id: "central", label: "Turno Central", horario: "08:00 - 17:00" },
+    { id: "primeiro", label: "Primeiro Turno", horario: "06:00 - 14:00" },
+    { id: "segundo", label: "Segundo Turno", horario: "14:00 - 22:00" },
+    { id: "terceiro", label: "Terceiro Turno", horario: "22:00 - 06:00" }
+  ];
 
   const handleRegister = () => {
     setIsRegistering(true);
   };
 
   const handleSave = () => {
-    // Aqui você implementaria a lógica de salvar
-    console.log('Salvando usuário:', { fullName, cpf, company, voucherPassword, isExtraMeal });
+    if (!fullName || !cpf || !company || !selectedTurno) {
+      toast.error("Por favor, preencha todos os campos obrigatórios!");
+      return;
+    }
+    
+    console.log('Salvando usuário:', { 
+      fullName, 
+      cpf, 
+      company, 
+      voucherPassword, 
+      isExtraMeal,
+      turno: selectedTurno 
+    });
+    
+    toast.success("Usuário cadastrado com sucesso!");
     setIsRegistering(false);
     setIsChangingPassword(false);
   };
@@ -41,7 +64,7 @@ const User = () => {
   };
 
   const handleChangePassword = () => {
-    setIsChangingPassword(true);
+    setIsChangingPassword(!isChangingPassword);
   };
 
   return (
@@ -83,6 +106,20 @@ const User = () => {
                   ))}
                 </SelectContent>
               </Select>
+              
+              <Select value={selectedTurno} onValueChange={setSelectedTurno}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o turno" />
+                </SelectTrigger>
+                <SelectContent>
+                  {turnos.map((turno) => (
+                    <SelectItem key={turno.id} value={turno.id}>
+                      {turno.label} ({turno.horario})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Input
                 type="password"
                 placeholder="Senha do Voucher (4 dígitos)"
