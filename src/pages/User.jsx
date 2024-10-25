@@ -104,7 +104,7 @@ const User = () => {
                 onChange={handleCPFChange}
               />
               <Select value={company} onValueChange={setCompany}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione a empresa" />
                 </SelectTrigger>
                 <SelectContent>
@@ -117,7 +117,7 @@ const User = () => {
               </Select>
               
               <Select value={selectedTurno} onValueChange={setSelectedTurno}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione o turno" />
                 </SelectTrigger>
                 <SelectContent>
