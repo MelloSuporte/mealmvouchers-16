@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, PieChart, Pie, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Download, Search, PieChart as PieChartIcon, BarChart as BarChartIcon, LineChart as LineChartIcon } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import WeeklyUsageChart from './charts/WeeklyUsageChart';
+import MealDistributionChart from './charts/MealDistributionChart';
+import { COLORS } from './charts/ChartColors';
 
 const ReportForm = () => {
   const [company, setCompany] = useState("");
@@ -47,8 +50,6 @@ const ReportForm = () => {
     { name: '04/03', total: 170 },
     { name: '05/03', total: 190 },
   ];
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
 
   const filteredData = usageData.filter(item =>
     item.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -161,41 +162,12 @@ const ReportForm = () => {
 
         <TabsContent value="usage" className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-4">Uso por Dia da Semana</h3>
-          <div className="w-full overflow-x-auto">
-            <BarChart width={800} height={300} data={weeklyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Almoço" fill="#8884d8" />
-              <Bar dataKey="Jantar" fill="#82ca9d" />
-              <Bar dataKey="Café" fill="#ffc658" />
-            </BarChart>
-          </div>
+          <WeeklyUsageChart data={weeklyData} />
         </TabsContent>
 
         <TabsContent value="distribution" className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-4">Distribuição por Tipo de Refeição</h3>
-          <div className="w-full overflow-x-auto flex justify-center">
-            <PieChart width={400} height={300}>
-              <Pie
-                data={mealTypeDistribution}
-                cx={200}
-                cy={150}
-                labelLine={false}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {mealTypeDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </div>
+          <MealDistributionChart data={mealTypeDistribution} />
         </TabsContent>
 
         <TabsContent value="trend" className="bg-white p-4 rounded-lg shadow">
@@ -207,7 +179,7 @@ const ReportForm = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="total" stroke="#8884d8" />
+              <Line type="monotone" dataKey="total" stroke={COLORS.ALMOCO} />
             </LineChart>
           </div>
         </TabsContent>
