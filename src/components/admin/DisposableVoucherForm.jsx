@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { ptBR } from "date-fns/locale";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 // Dados mockados para tipos de refeição
 const mockedMealTypes = [
@@ -18,7 +18,7 @@ const mockedMealTypes = [
 
 const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
-  const [selectedMealType, setSelectedMealType] = useState("");
+  const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
 
   const handleGenerateVouchers = () => {
@@ -28,15 +28,15 @@ const DisposableVoucherForm = () => {
         return;
       }
 
-      if (!selectedMealType) {
-        toast.error("Selecione um tipo de refeição");
+      if (selectedMealTypes.length === 0) {
+        toast.error("Selecione pelo menos um tipo de refeição");
         return;
       }
 
-      const totalVouchers = quantity * selectedDates.length;
+      const totalVouchers = quantity * selectedDates.length * selectedMealTypes.length;
       toast.success(`${totalVouchers} voucher(s) descartável(is) gerado(s) com sucesso!`);
       setQuantity(1);
-      setSelectedMealType("");
+      setSelectedMealTypes([]);
       setSelectedDates([]);
     } catch (error) {
       toast.error("Erro ao gerar vouchers: " + error.message);
@@ -56,17 +56,13 @@ const DisposableVoucherForm = () => {
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Tipo de Refeição</label>
-        <Select value={selectedMealType} onValueChange={setSelectedMealType}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o tipo de refeição" />
-          </SelectTrigger>
-          <SelectContent>
-            {mockedMealTypes.map((type) => (
-              <SelectItem key={type.id} value={type.id.toString()}>{type.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <label className="text-sm font-medium">Tipos de Refeição</label>
+        <MultiSelect
+          options={mockedMealTypes.map(type => ({ value: type.id.toString(), label: type.name }))}
+          value={selectedMealTypes}
+          onChange={setSelectedMealTypes}
+          placeholder="Selecione os tipos de refeição"
+        />
       </div>
 
       <div className="space-y-2">
@@ -91,7 +87,7 @@ const DisposableVoucherForm = () => {
 
       <Button 
         onClick={handleGenerateVouchers}
-        disabled={!selectedMealType || quantity < 1 || selectedDates.length === 0}
+        disabled={selectedMealTypes.length === 0 || quantity < 1 || selectedDates.length === 0}
         className="w-full"
       >
         Gerar Vouchers Descartáveis
