@@ -7,7 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { executeQuery } from '../../utils/db';
+import mysql from 'mysql2/promise';
 
 const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
@@ -22,9 +22,17 @@ const DisposableVoucherForm = () => {
 
   const loadMealTypes = async () => {
     try {
-      const result = await executeQuery('SELECT * FROM meal_types WHERE is_active = TRUE ORDER BY name');
-      setMealTypes(result);
+      const connection = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+      });
+
+      const [rows] = await connection.execute('SELECT * FROM meal_types WHERE is_active = TRUE ORDER BY name');
+      setMealTypes(rows);
       setIsLoading(false);
+      await connection.end();
     } catch (error) {
       toast.error("Erro ao carregar tipos de refeição: " + error.message);
       setIsLoading(false);
@@ -41,7 +49,7 @@ const DisposableVoucherForm = () => {
     });
   };
 
-  const handleGenerateVouchers = () => {
+  const handleGenerateVouchers = async () => {
     try {
       if (selectedDates.length === 0) {
         toast.error("Selecione pelo menos uma data");
@@ -52,6 +60,19 @@ const DisposableVoucherForm = () => {
         toast.error("Selecione pelo menos um tipo de refeição");
         return;
       }
+
+      const connection = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+      });
+
+      // Aqui você implementaria a lógica para inserir os vouchers no banco de dados
+      // Por exemplo:
+      // await connection.execute('INSERT INTO disposable_vouchers (code, meal_type_id, expiration_date) VALUES (?, ?, ?)', [generatedCode, mealTypeId, expirationDate]);
+
+      await connection.end();
 
       const totalVouchers = quantity * selectedDates.length * selectedMealTypes.length;
       toast.success(`${totalVouchers} voucher(s) descartável(is) gerado(s) com sucesso!`);
