@@ -22,28 +22,28 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Test database connection
-app.get('/api/test', async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    connection.release();
-    res.json({ message: 'Database connection successful!' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something broke!' });
 });
 
-// API endpoints for meal types
-app.get('/api/meal-types', async (req, res) => {
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// API endpoints
+app.get('/api/meal-types', async (req, res, next) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM tipos_refeicao ORDER BY nome');
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-app.post('/api/meal-types', async (req, res) => {
+app.post('/api/meal-types', async (req, res, next) => {
   try {
     const { nome, hora_inicio, hora_fim, valor, max_usuarios_por_dia, tolerancia_minutos } = req.body;
     const [result] = await pool.execute(
@@ -52,21 +52,20 @@ app.post('/api/meal-types', async (req, res) => {
     );
     res.json({ id: result.insertId });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-// API endpoints for users
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', async (req, res, next) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM usuarios ORDER BY nome');
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-app.post('/api/users', async (req, res) => {
+app.post('/api/users', async (req, res, next) => {
   try {
     const { nome, email, cpf, empresa_id, voucher, turno } = req.body;
     const [result] = await pool.execute(
@@ -75,21 +74,20 @@ app.post('/api/users', async (req, res) => {
     );
     res.json({ id: result.insertId });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-// API endpoints for companies
-app.get('/api/companies', async (req, res) => {
+app.get('/api/companies', async (req, res, next) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM empresas ORDER BY nome');
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-app.post('/api/companies', async (req, res) => {
+app.post('/api/companies', async (req, res, next) => {
   try {
     const { nome, cnpj, logo } = req.body;
     const [result] = await pool.execute(
@@ -98,12 +96,11 @@ app.post('/api/companies', async (req, res) => {
     );
     res.json({ id: result.insertId });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-// API endpoints for voucher usage
-app.get('/api/voucher-usage', async (req, res) => {
+app.get('/api/voucher-usage', async (req, res, next) => {
   try {
     const [rows] = await pool.execute(`
       SELECT uv.*, u.nome as usuario_nome, tr.nome as refeicao_nome 
@@ -114,11 +111,11 @@ app.get('/api/voucher-usage', async (req, res) => {
     `);
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-app.post('/api/voucher-usage', async (req, res) => {
+app.post('/api/voucher-usage', async (req, res, next) => {
   try {
     const { usuario_id, tipo_refeicao_id } = req.body;
     const [result] = await pool.execute(
@@ -127,10 +124,11 @@ app.post('/api/voucher-usage', async (req, res) => {
     );
     res.json({ id: result.insertId });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
+// Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

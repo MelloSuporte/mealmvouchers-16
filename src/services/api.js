@@ -26,15 +26,17 @@ export const voucherApi = {
 
 export const mealTypesApi = {
   getAll: async () => {
-    const response = await api.get('/meal-types');
+    const response = await api.get('/api/meal-types');
     return response.data;
   },
+  
   create: async (mealType) => {
-    const response = await api.post('/meal-types', mealType);
+    const response = await api.post('/api/meal-types', mealType);
     return response.data;
   },
+  
   update: async (id, data) => {
-    const response = await api.patch(`/meal-types/${id}`, data);
+    const response = await api.patch(`/api/meal-types/${id}`, data);
     return response.data;
   }
 };
