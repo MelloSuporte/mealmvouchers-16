@@ -1,55 +1,80 @@
 import * as React from "react"
-import * as SelectPrimitive from "@radix-ui/react-select"
-import { Check, ChevronDown } from "lucide-react"
-
+import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
-const MultiSelect = React.forwardRef(({ className, options, value, onChange, placeholder, ...props }, ref) => {
-  const handleValueChange = (selectedValues) => {
-    onChange(selectedValues.split(',').filter(Boolean));
-  };
+const MultiSelect = React.forwardRef(({ className, options, value, onChange, placeholder }, ref) => {
+  const [open, setOpen] = React.useState(false)
+
+  const selectedLabels = options
+    .filter((option) => value.includes(option.value))
+    .map((option) => option.label)
+    .join(", ")
+
+  const handleSelect = (currentValue) => {
+    const newValue = value.includes(currentValue)
+      ? value.filter((v) => v !== currentValue)
+      : [...value, currentValue]
+    onChange(newValue)
+  }
 
   return (
-    <SelectPrimitive.Root
-      value={value.join(',')}
-      onValueChange={handleValueChange}
-      {...props}
-    >
-      <SelectPrimitive.Trigger
-        ref={ref}
-        className={cn(
-          "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
-      >
-        <SelectPrimitive.Value placeholder={placeholder} />
-        <SelectPrimitive.Icon asChild>
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </SelectPrimitive.Icon>
-      </SelectPrimitive.Trigger>
-      <SelectPrimitive.Portal>
-        <SelectPrimitive.Content className="relative z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-80">
-          <SelectPrimitive.Viewport className="p-1">
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          ref={ref}
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            "w-full justify-between",
+            !value.length && "text-muted-foreground",
+            className
+          )}
+        >
+          {selectedLabels || placeholder}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0">
+        <Command>
+          <CommandInput placeholder="Pesquisar tipo de refeição..." />
+          <CommandEmpty>Nenhum tipo de refeição encontrado.</CommandEmpty>
+          <CommandGroup>
             {options.map((option) => (
-              <SelectPrimitive.Item
+              <CommandItem
                 key={option.value}
                 value={option.value}
-                className="relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                onSelect={() => handleSelect(option.value)}
               >
-                <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                  <SelectPrimitive.ItemIndicator>
-                    <Check className="h-4 w-4" />
-                  </SelectPrimitive.ItemIndicator>
-                </span>
-                <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
-              </SelectPrimitive.Item>
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    value.includes(option.value) ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                {option.label}
+              </CommandItem>
             ))}
-          </SelectPrimitive.Viewport>
-        </SelectPrimitive.Content>
-      </SelectPrimitive.Portal>
-    </SelectPrimitive.Root>
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 })
+
 MultiSelect.displayName = "MultiSelect"
 
 export { MultiSelect }
