@@ -5,11 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { executeQuery } from '../../utils/db';
+import { ptBR } from "date-fns/locale";
 
 const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedMealType, setSelectedMealType] = useState("");
-  const [expirationDate, setExpirationDate] = useState(new Date());
+  const [selectedDates, setSelectedDates] = useState([]);
 
   const generateVoucherCode = () => {
     return Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -17,25 +18,33 @@ const DisposableVoucherForm = () => {
 
   const handleGenerateVouchers = async () => {
     try {
-      const vouchers = [];
-      for (let i = 0; i < quantity; i++) {
-        const code = generateVoucherCode();
-        vouchers.push({
-          code,
-          mealTypeId: selectedMealType,
-          expiredAt: expirationDate
-        });
+      if (selectedDates.length === 0) {
+        toast.error("Selecione pelo menos uma data");
+        return;
       }
+
+      const allVouchers = [];
+      selectedDates.forEach(date => {
+        for (let i = 0; i < quantity; i++) {
+          const code = generateVoucherCode();
+          allVouchers.push({
+            code,
+            mealTypeId: selectedMealType,
+            expiredAt: date
+          });
+        }
+      });
 
       // Inserir vouchers no banco
       await executeQuery(
         'INSERT INTO disposable_vouchers (code, meal_type_id, expired_at, created_by) VALUES ?',
-        [vouchers.map(v => [v.code, v.mealTypeId, v.expiredAt, 1])] // 1 é um placeholder para o ID do admin
+        [allVouchers.map(v => [v.code, v.mealTypeId, v.expiredAt, 1])] // 1 é um placeholder para o ID do admin
       );
 
-      toast.success(`${quantity} voucher(s) descartável(is) gerado(s) com sucesso!`);
+      toast.success(`${quantity * selectedDates.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
       setQuantity(1);
       setSelectedMealType("");
+      setSelectedDates([]);
     } catch (error) {
       toast.error("Erro ao gerar vouchers: " + error.message);
     }
@@ -44,7 +53,7 @@ const DisposableVoucherForm = () => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">Quantidade de Vouchers</label>
+        <label className="text-sm font-medium">Quantidade de Vouchers por Data</label>
         <Input
           type="number"
           min="1"
@@ -70,18 +79,28 @@ const DisposableVoucherForm = () => {
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Data de Expiração</label>
+        <label className="text-sm font-medium">Datas de Expiração</label>
         <Calendar
-          mode="single"
-          selected={expirationDate}
-          onSelect={setExpirationDate}
+          mode="multiple"
+          selected={selectedDates}
+          onSelect={setSelectedDates}
           className="rounded-md border"
+          locale={ptBR}
+          formatters={{
+            formatCaption: (date) => {
+              const month = ptBR.localize.month(date.getMonth());
+              return `${month.charAt(0).toUpperCase() + month.slice(1)} ${date.getFullYear()}`;
+            }
+          }}
         />
+        <p className="text-sm text-gray-500">
+          {selectedDates.length > 0 && `${selectedDates.length} data(s) selecionada(s)`}
+        </p>
       </div>
 
       <Button 
         onClick={handleGenerateVouchers}
-        disabled={!selectedMealType || quantity < 1}
+        disabled={!selectedMealType || quantity < 1 || selectedDates.length === 0}
         className="w-full"
       >
         Gerar Vouchers Descartáveis
