@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ptBR } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Dados mockados para tipos de refeição
 const mockedMealTypes = [
@@ -72,18 +73,20 @@ const DisposableVoucherForm = () => {
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Tipos de Refeição</label>
-        <div className="grid grid-cols-2 gap-4 max-h-60 overflow-y-auto p-4 border rounded-md">
-          {mockedMealTypes.map((type) => (
-            <div key={type.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`meal-type-${type.id}`}
-                checked={selectedMealTypes.includes(type.id)}
-                onCheckedChange={() => handleMealTypeToggle(type.id)}
-              />
-              <Label htmlFor={`meal-type-${type.id}`}>{type.name}</Label>
-            </div>
-          ))}
-        </div>
+        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+          <div className="space-y-2">
+            {mockedMealTypes.map((type) => (
+              <div key={type.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`meal-type-${type.id}`}
+                  checked={selectedMealTypes.includes(type.id)}
+                  onCheckedChange={() => handleMealTypeToggle(type.id)}
+                />
+                <Label htmlFor={`meal-type-${type.id}`}>{type.name}</Label>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
 
       <div className="space-y-2">
