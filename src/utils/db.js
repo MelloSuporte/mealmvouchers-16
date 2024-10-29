@@ -9,6 +9,9 @@ export const executeQuery = async (query, params = []) => {
         const cpf = params[0];
         const response = await axios.get(`${API_URL}/users/search?cpf=${cpf}`);
         return response.data ? [response.data] : [];
+      } else if (query.includes('FROM meal_types')) {
+        const response = await axios.get(`${API_URL}/meal-types`);
+        return response.data || [];
       } else {
         const response = await axios.get(`${API_URL}/users`);
         return response.data || [];

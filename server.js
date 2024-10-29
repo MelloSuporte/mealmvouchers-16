@@ -165,6 +165,20 @@ app.post('/api/vouchers/validate-disposable', async (req, res) => {
   }
 });
 
+// Rota para obter tipos de refeição ativos
+app.get('/api/meal-types', async (req, res) => {
+  try {
+    const [rows] = await req.db.execute(
+      'SELECT id, name FROM meal_types WHERE is_active = TRUE'
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } finally {
+    req.db.release();
+  }
+});
+
 // Iniciar servidor
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);

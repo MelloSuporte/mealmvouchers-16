@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -7,19 +7,17 @@ import { executeQuery } from '../../utils/db';
 import { ptBR } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useQuery } from '@tanstack/react-query';
 
 const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
 
-  const mealTypes = [
-    { id: "1", label: "Café" },
-    { id: "2", label: "Almoço" },
-    { id: "3", label: "Lanche" },
-    { id: "4", label: "Jantar" },
-    { id: "5", label: "Ceia" }
-  ];
+  const { data: mealTypes, isLoading, error } = useQuery({
+    queryKey: ['mealTypes'],
+    queryFn: () => executeQuery('SELECT id, name FROM meal_types WHERE is_active = TRUE'),
+  });
 
   const generateVoucherCode = () => {
     return Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -39,12 +37,12 @@ const DisposableVoucherForm = () => {
 
       const allVouchers = [];
       selectedDates.forEach(date => {
-        selectedMealTypes.forEach(mealType => {
+        selectedMealTypes.forEach(mealTypeId => {
           for (let i = 0; i < quantity; i++) {
             const code = generateVoucherCode();
             allVouchers.push({
               code,
-              mealTypeId: mealType,
+              mealTypeId,
               expiredAt: date
             });
           }
@@ -77,6 +75,9 @@ const DisposableVoucherForm = () => {
     });
   };
 
+  if (isLoading) return <div>Carregando tipos de refeição...</div>;
+  if (error) return <div>Erro ao carregar tipos de refeição: {error.message}</div>;
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -99,7 +100,7 @@ const DisposableVoucherForm = () => {
                 checked={selectedMealTypes.includes(type.id)}
                 onCheckedChange={() => handleMealTypeToggle(type.id)}
               />
-              <Label htmlFor={`meal-type-${type.id}`}>{type.label}</Label>
+              <Label htmlFor={`meal-type-${type.id}`}>{type.name}</Label>
             </div>
           ))}
         </div>
