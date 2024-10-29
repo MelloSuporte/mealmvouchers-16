@@ -2,6 +2,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import AdminLogin from "./pages/AdminLogin";
 import SelfServices from "./pages/SelfServices";
@@ -20,28 +22,59 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/voucher" />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/voucher" element={<Voucher />} />
-          <Route path="/user-confirmation" element={<UserConfirmation />} />
-          <Route path="/self-services" element={<SelfServices />} />
-          <Route path="/bom-apetite/:userName" element={<BomApetite />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/user" element={<User />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/app" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="search" element={<Search />} />
-            <Route path="menu" element={<Menu />} />
-            <Route path="profile" element={<Profile />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to="/voucher" />} />
+            <Route path="/voucher" element={<Voucher />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            
+            {/* Rotas protegidas que requerem autenticação de usuário */}
+            <Route path="/user-confirmation" element={
+              <ProtectedRoute>
+                <UserConfirmation />
+              </ProtectedRoute>
+            } />
+            <Route path="/self-services" element={
+              <ProtectedRoute>
+                <SelfServices />
+              </ProtectedRoute>
+            } />
+            <Route path="/bom-apetite/:userName" element={
+              <ProtectedRoute>
+                <BomApetite />
+              </ProtectedRoute>
+            } />
+            <Route path="/user" element={
+              <ProtectedRoute>
+                <User />
+              </ProtectedRoute>
+            } />
+            
+            {/* Rotas protegidas que requerem autenticação de admin */}
+            <Route path="/admin" element={
+              <ProtectedRoute requireAdmin>
+                <Admin />
+              </ProtectedRoute>
+            } />
+            
+            {/* Rotas do layout principal protegidas */}
+            <Route path="/app" element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Home />} />
+              <Route path="search" element={<Search />} />
+              <Route path="menu" element={<Menu />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
