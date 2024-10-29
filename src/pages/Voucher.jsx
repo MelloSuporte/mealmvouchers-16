@@ -23,7 +23,7 @@ const Voucher = () => {
     }
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const today = new Date().toISOString().split('T')[0];
     const usedVouchers = JSON.parse(localStorage.getItem('usedVouchers') || '{}');
@@ -34,12 +34,27 @@ const Voucher = () => {
       userPhoto: "https://example.com/path/to/photo.jpg"
     };
 
-    if (voucherCode === '9999') {
-      // Voucher Extra - verificar regras RLS
-      checkRLSRules(today, mockUserData);
-    } else {
-      // Voucher Regular - verificar limite individual
-      checkRegularVoucherLimit(today, usedVouchers, mockUserData);
+    try {
+      // Verificar se o voucher é extra através da API
+      const response = await fetch('/api/vouchers/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ voucherCode }),
+      });
+
+      const data = await response.json();
+
+      if (data.isExtraVoucher) {
+        // Se for um voucher extra, verificar as regras RLS
+        checkRLSRules(today, mockUserData);
+      } else {
+        // Se for um voucher regular, verificar limite individual
+        checkRegularVoucherLimit(today, usedVouchers, mockUserData);
+      }
+    } catch (error) {
+      toast.error("Erro ao validar o voucher. Tente novamente.");
     }
   };
 
