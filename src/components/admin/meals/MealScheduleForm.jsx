@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { executeQuery } from "../../../utils/db";
+import { mealTypesApi } from '@/services/api';
 
 const MealScheduleForm = () => {
   const [mealSchedule, setMealSchedule] = useState({
@@ -33,19 +33,7 @@ const MealScheduleForm = () => {
     }
 
     try {
-      await executeQuery(
-        'INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor, ativo, max_usuarios_por_dia, tolerancia_minutos) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [
-          mealSchedule.nome,
-          mealSchedule.hora_inicio,
-          mealSchedule.hora_fim,
-          mealSchedule.valor,
-          mealSchedule.ativo,
-          mealSchedule.max_usuarios_por_dia,
-          mealSchedule.tolerancia_minutos
-        ]
-      );
-      
+      await mealTypesApi.create(mealSchedule);
       toast.success("Refeição cadastrada com sucesso!");
       setMealSchedule({
         nome: "",
