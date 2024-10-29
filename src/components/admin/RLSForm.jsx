@@ -55,12 +55,12 @@ const RLSForm = () => {
           locale={ptBR}
           weekStartsOn={0}
           formatters={{
-            formatWeekdayName: (day) => ptBR.localize.day(day, { width: 'short' }).toUpperCase(),
             formatCaption: (date) => {
-              const month = ptBR.localize.month(date.getMonth(), { width: 'wide' });
+              const month = ptBR.localize.month(date.getMonth());
               return `${month.charAt(0).toUpperCase() + month.slice(1)} ${date.getFullYear()}`;
             }
           }}
+          ISOWeek
         />
       </div>
 
