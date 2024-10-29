@@ -110,8 +110,8 @@ const User = () => {
 
               <div className="space-y-2">
                 <Label>Empresa</Label>
-                <Select value={company} onValueChange={setCompany}>
-                  <SelectTrigger>
+                <Select onValueChange={setCompany}>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione a empresa" />
                   </SelectTrigger>
                   <SelectContent>
@@ -126,8 +126,8 @@ const User = () => {
               
               <div className="space-y-2">
                 <Label>Turno</Label>
-                <Select value={selectedTurno} onValueChange={setSelectedTurno}>
-                  <SelectTrigger>
+                <Select onValueChange={setSelectedTurno}>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o turno" />
                   </SelectTrigger>
                   <SelectContent>
