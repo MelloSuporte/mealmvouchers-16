@@ -2,6 +2,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import AdminLogin from "./pages/AdminLogin";
 import SelfServices from "./pages/SelfServices";
@@ -21,25 +23,34 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/voucher" />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/voucher" element={<Voucher />} />
-          <Route path="/user-confirmation" element={<UserConfirmation />} />
-          <Route path="/self-services" element={<SelfServices />} />
-          <Route path="/bom-apetite/:userName" element={<BomApetite />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/user" element={<User />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/app" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="search" element={<Search />} />
-            <Route path="menu" element={<Menu />} />
-            <Route path="profile" element={<Profile />} />
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <Toaster />
+          <Routes>
+            <Route path="/" element={<Navigate to="/voucher" />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/voucher" element={<Voucher />} />
+            <Route path="/user-confirmation" element={<UserConfirmation />} />
+            <Route path="/self-services" element={<SelfServices />} />
+            <Route path="/bom-apetite/:userName" element={<BomApetite />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/user" element={<User />} />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/app" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="search" element={<Search />} />
+              <Route path="menu" element={<Menu />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
