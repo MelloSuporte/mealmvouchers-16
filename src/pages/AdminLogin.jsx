@@ -2,16 +2,15 @@ import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User, Lock } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    await login(email, password);
+    // Aqui você pode adicionar a lógica de autenticação do administrador
+    console.log('Admin login:', { username, password });
   };
 
   return (
@@ -24,12 +23,12 @@ const AdminLogin = () => {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <Input
-                type="email"
+                type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 icon={<User className="h-5 w-5 text-gray-400" />}
               />
             </div>
@@ -38,7 +37,7 @@ const AdminLogin = () => {
                 type="password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Senha"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 icon={<Lock className="h-5 w-5 text-gray-400" />}
