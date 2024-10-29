@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import BiometricAuth from '../components/BiometricAuth';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -11,9 +13,11 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically handle the login logic
     console.log('Login attempt with:', email, password);
-    // For now, we'll just redirect to the User page
+    navigate('/user');
+  };
+
+  const handleBiometricSuccess = () => {
     navigate('/user');
   };
 
@@ -47,6 +51,12 @@ const Login = () => {
               Login
             </Button>
           </form>
+          
+          <div className="my-4">
+            <Separator className="my-4" />
+            <div className="text-center text-sm text-gray-500 mb-4">ou</div>
+            <BiometricAuth onSuccess={handleBiometricSuccess} />
+          </div>
         </CardContent>
       </Card>
     </div>
