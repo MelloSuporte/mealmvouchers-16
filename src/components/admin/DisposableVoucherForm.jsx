@@ -7,7 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import mysql from 'mysql2/promise';
+import axios from 'axios';
 
 const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
@@ -22,17 +22,9 @@ const DisposableVoucherForm = () => {
 
   const loadMealTypes = async () => {
     try {
-      const connection = await mysql.createConnection({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
-      });
-
-      const [rows] = await connection.execute('SELECT * FROM tipos_refeicao WHERE ativo = TRUE ORDER BY nome');
-      setMealTypes(rows);
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/meal-types`);
+      setMealTypes(response.data);
       setIsLoading(false);
-      await connection.end();
     } catch (error) {
       toast.error("Erro ao carregar tipos de refeição: " + error.message);
       setIsLoading(false);
@@ -61,29 +53,13 @@ const DisposableVoucherForm = () => {
         return;
       }
 
-      const connection = await mysql.createConnection({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/vouchers/disposable/generate`, {
+        quantity,
+        mealTypes: selectedMealTypes,
+        dates: selectedDates
       });
 
-      for (let date of selectedDates) {
-        for (let mealTypeId of selectedMealTypes) {
-          for (let i = 0; i < quantity; i++) {
-            const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-            await connection.execute(
-              'INSERT INTO vouchers_descartaveis (codigo, tipo_refeicao_id, expira_em, criado_por) VALUES (?, ?, ?, ?)',
-              [code, mealTypeId, date, 1] // Assumindo que o ID do usuário criador é 1
-            );
-          }
-        }
-      }
-
-      await connection.end();
-
-      const totalVouchers = quantity * selectedDates.length * selectedMealTypes.length;
-      toast.success(`${totalVouchers} voucher(s) descartável(is) gerado(s) com sucesso!`);
+      toast.success(`${response.data.count} voucher(s) descartável(is) gerado(s) com sucesso!`);
       setQuantity(1);
       setSelectedMealTypes([]);
       setSelectedDates([]);
@@ -134,12 +110,6 @@ const DisposableVoucherForm = () => {
           onSelect={setSelectedDates}
           className="rounded-md border"
           locale={ptBR}
-          formatters={{
-            formatCaption: (date) => {
-              const month = ptBR.localize.month(date.getMonth());
-              return `${month.charAt(0).toUpperCase() + month.slice(1)} ${date.getFullYear()}`;
-            }
-          }}
         />
         <p className="text-sm text-gray-500">
           {selectedDates.length > 0 && `${selectedDates.length} data(s) selecionada(s)`}

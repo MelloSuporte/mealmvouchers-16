@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import mysql from 'mysql2/promise';
 import { toast } from "sonner";
 import UserFormMain from './UserFormMain';
 import UserSearchDialog from './UserSearchDialog';
+import axios from 'axios';
 
 const UserForm = () => {
   const [formData, setFormData] = useState({
@@ -19,27 +19,15 @@ const UserForm = () => {
 
   const handleSaveUser = async () => {
     try {
-      const connection = await mysql.createConnection({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/users`, {
+        nome: formData.userName,
+        email: formData.userEmail,
+        cpf: formData.userCPF,
+        empresa_id: formData.company,
+        voucher: formData.voucher,
+        turno: formData.selectedTurno,
+        suspenso: formData.isSuspended
       });
-
-      await connection.execute(
-        'INSERT INTO usuarios (nome, email, cpf, empresa_id, voucher, turno, suspenso) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [
-          formData.userName,
-          formData.userEmail,
-          formData.userCPF,
-          formData.company,
-          formData.voucher,
-          formData.selectedTurno,
-          formData.isSuspended
-        ]
-      );
-
-      await connection.end();
 
       toast.success("Usuário cadastrado com sucesso!");
       resetForm();
@@ -50,19 +38,12 @@ const UserForm = () => {
 
   const handleSearch = async (searchCPF) => {
     try {
-      const connection = await mysql.createConnection({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/search`, {
+        params: { cpf: searchCPF }
       });
-
-      const [rows] = await connection.execute('SELECT * FROM usuarios WHERE cpf = ?', [searchCPF]);
       
-      await connection.end();
-
-      if (rows.length > 0) {
-        const user = rows[0];
+      if (response.data) {
+        const user = response.data;
         setFormData({
           userName: user.nome,
           userEmail: user.email,

@@ -43,23 +43,35 @@ app.get('/api/meal-types', async (req, res, next) => {
   }
 });
 
-app.post('/api/meal-types', async (req, res, next) => {
+app.post('/api/vouchers/disposable/generate', async (req, res, next) => {
   try {
-    const { nome, hora_inicio, hora_fim, valor, max_usuarios_por_dia, tolerancia_minutos } = req.body;
-    const [result] = await pool.execute(
-      'INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor, max_usuarios_por_dia, tolerancia_minutos) VALUES (?, ?, ?, ?, ?, ?)',
-      [nome, hora_inicio, hora_fim, valor, max_usuarios_por_dia, tolerancia_minutos]
-    );
-    res.json({ id: result.insertId });
+    const { quantity, mealTypes, dates } = req.body;
+    let generatedCount = 0;
+
+    for (const date of dates) {
+      for (const mealTypeId of mealTypes) {
+        for (let i = 0; i < quantity; i++) {
+          const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+          await pool.execute(
+            'INSERT INTO vouchers_descartaveis (codigo, tipo_refeicao_id, expira_em, criado_por) VALUES (?, ?, ?, ?)',
+            [code, mealTypeId, date, 1]
+          );
+          generatedCount++;
+        }
+      }
+    }
+
+    res.json({ count: generatedCount });
   } catch (error) {
     next(error);
   }
 });
 
-app.get('/api/users', async (req, res, next) => {
+app.get('/api/users/search', async (req, res, next) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM usuarios ORDER BY nome');
-    res.json(rows);
+    const { cpf } = req.query;
+    const [rows] = await pool.execute('SELECT * FROM usuarios WHERE cpf = ?', [cpf]);
+    res.json(rows[0] || null);
   } catch (error) {
     next(error);
   }
@@ -67,60 +79,10 @@ app.get('/api/users', async (req, res, next) => {
 
 app.post('/api/users', async (req, res, next) => {
   try {
-    const { nome, email, cpf, empresa_id, voucher, turno } = req.body;
+    const { nome, email, cpf, empresa_id, voucher, turno, suspenso } = req.body;
     const [result] = await pool.execute(
-      'INSERT INTO usuarios (nome, email, cpf, empresa_id, voucher, turno) VALUES (?, ?, ?, ?, ?, ?)',
-      [nome, email, cpf, empresa_id, voucher, turno]
-    );
-    res.json({ id: result.insertId });
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.get('/api/companies', async (req, res, next) => {
-  try {
-    const [rows] = await pool.execute('SELECT * FROM empresas ORDER BY nome');
-    res.json(rows);
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.post('/api/companies', async (req, res, next) => {
-  try {
-    const { nome, cnpj, logo } = req.body;
-    const [result] = await pool.execute(
-      'INSERT INTO empresas (nome, cnpj, logo) VALUES (?, ?, ?)',
-      [nome, cnpj, logo]
-    );
-    res.json({ id: result.insertId });
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.get('/api/voucher-usage', async (req, res, next) => {
-  try {
-    const [rows] = await pool.execute(`
-      SELECT uv.*, u.nome as usuario_nome, tr.nome as refeicao_nome 
-      FROM uso_voucher uv 
-      JOIN usuarios u ON uv.usuario_id = u.id 
-      JOIN tipos_refeicao tr ON uv.tipo_refeicao_id = tr.id 
-      ORDER BY uv.usado_em DESC
-    `);
-    res.json(rows);
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.post('/api/voucher-usage', async (req, res, next) => {
-  try {
-    const { usuario_id, tipo_refeicao_id } = req.body;
-    const [result] = await pool.execute(
-      'INSERT INTO uso_voucher (usuario_id, tipo_refeicao_id) VALUES (?, ?)',
-      [usuario_id, tipo_refeicao_id]
+      'INSERT INTO usuarios (nome, email, cpf, empresa_id, voucher, turno, suspenso) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [nome, email, cpf, empresa_id, voucher, turno, suspenso]
     );
     res.json({ id: result.insertId });
   } catch (error) {
