@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import AdminLogin from "./pages/AdminLogin";
 import SelfServices from "./pages/SelfServices";
 import Home from "./pages/Home";
@@ -26,13 +27,29 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Navigate to="/voucher" />} />
           <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/voucher" element={<Voucher />} />
+          <Route path="/login" element={<Login />} />
+          
+          <Route path="/voucher" element={
+            <ProtectedRoute requiredPermission="validate_vouchers">
+              <Voucher />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/user-confirmation" element={<UserConfirmation />} />
           <Route path="/self-services" element={<SelfServices />} />
           <Route path="/bom-apetite/:userName" element={<BomApetite />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/user" element={<User />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/user" element={
+            <ProtectedRoute requiredPermission="use_voucher">
+              <User />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin" element={
+            <ProtectedRoute requiredPermission="all">
+              <Admin />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/app" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="search" element={<Search />} />

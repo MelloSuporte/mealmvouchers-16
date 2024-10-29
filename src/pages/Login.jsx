@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { ROLES } from '../utils/roles';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -11,10 +13,39 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically handle the login logic
-    console.log('Login attempt with:', email, password);
-    // For now, we'll just redirect to the User page
-    navigate('/user');
+    
+    // Simulação de autenticação com roles
+    let userRole;
+    if (email.includes('admin')) {
+      userRole = ROLES.ADMIN;
+    } else if (email.includes('supervisor')) {
+      userRole = ROLES.SUPERVISOR;
+    } else if (email.includes('operator')) {
+      userRole = ROLES.OPERATOR;
+    } else {
+      userRole = ROLES.USER;
+    }
+
+    // Armazenar informações do usuário
+    localStorage.setItem('userRole', userRole);
+    localStorage.setItem('userEmail', email);
+
+    // Redirecionar baseado na role
+    switch (userRole) {
+      case ROLES.ADMIN:
+        navigate('/admin');
+        break;
+      case ROLES.SUPERVISOR:
+        navigate('/app/reports');
+        break;
+      case ROLES.OPERATOR:
+        navigate('/voucher');
+        break;
+      default:
+        navigate('/user');
+    }
+
+    toast.success(`Login realizado com sucesso como ${userRole}`);
   };
 
   return (
@@ -37,7 +68,7 @@ const Login = () => {
             <div>
               <Input
                 type="password"
-                placeholder="Password"
+                placeholder="Senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
