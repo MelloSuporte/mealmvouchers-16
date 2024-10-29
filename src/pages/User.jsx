@@ -19,7 +19,6 @@ const User = () => {
   const [selectedTurno, setSelectedTurno] = useState("");
 
   const companies = [
-    { id: 0, name: "Selecione a empresa" },
     { id: 1, name: "Empresa A" },
     { id: 2, name: "Empresa B" },
     { id: 3, name: "Empresa C" }
@@ -41,11 +40,6 @@ const User = () => {
       toast.error("Por favor, preencha todos os campos obrigatórios!");
       return;
     }
-
-    if (company === "Selecione a empresa") {
-      toast.error("Por favor, selecione uma empresa válida!");
-      return;
-    }
     
     console.log('Salvando usuário:', { 
       fullName, 
@@ -64,7 +58,7 @@ const User = () => {
   const handleCPFChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length <= 11) {
-      value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+      value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
       setCpf(value);
       if (!isChangingPassword && value.length >= 4) {
         setVoucherPassword(value.substring(0, 4));
@@ -93,21 +87,31 @@ const User = () => {
               <Button onClick={handleRegister} className="w-full">Cadastrar Usuário</Button>
             </>
           ) : (
-            <form className="w-full space-y-4">
-              <Input
-                placeholder="Nome completo"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
-              <Input
-                placeholder="CPF (000.000.000-00)"
-                value={cpf}
-                onChange={handleCPFChange}
-              />
+            <form className="w-full space-y-4" onSubmit={(e) => e.preventDefault()}>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Nome completo</Label>
+                <Input
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Digite o nome completo"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <Input
+                  id="cpf"
+                  placeholder="000.000.000-00"
+                  value={cpf}
+                  onChange={handleCPFChange}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label>Empresa</Label>
                 <Select value={company} onValueChange={setCompany}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger>
                     <SelectValue placeholder="Selecione a empresa" />
                   </SelectTrigger>
                   <SelectContent>
@@ -123,7 +127,7 @@ const User = () => {
               <div className="space-y-2">
                 <Label>Turno</Label>
                 <Select value={selectedTurno} onValueChange={setSelectedTurno}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger>
                     <SelectValue placeholder="Selecione o turno" />
                   </SelectTrigger>
                   <SelectContent>
@@ -136,14 +140,19 @@ const User = () => {
                 </Select>
               </div>
 
-              <Input
-                type="password"
-                placeholder="Senha do Voucher (4 dígitos)"
-                value={voucherPassword}
-                onChange={(e) => setVoucherPassword(e.target.value.slice(0, 4))}
-                maxLength={4}
-                disabled={!isChangingPassword}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="voucherPassword">Senha do Voucher</Label>
+                <Input
+                  id="voucherPassword"
+                  type="password"
+                  placeholder="4 dígitos"
+                  value={voucherPassword}
+                  onChange={(e) => setVoucherPassword(e.target.value.slice(0, 4))}
+                  maxLength={4}
+                  disabled={!isChangingPassword}
+                />
+              </div>
+
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="extraMeal"
@@ -154,10 +163,14 @@ const User = () => {
                   Refeição Extra
                 </Label>
               </div>
+
               <Button onClick={handleChangePassword} className="w-full">
                 {isChangingPassword ? "Cancelar Alteração de Senha" : "Alterar Senha"}
               </Button>
-              <Button onClick={handleSave} className="w-full">Salvar Cadastro</Button>
+              
+              <Button onClick={handleSave} className="w-full">
+                Salvar Cadastro
+              </Button>
             </form>
           )}
         </CardContent>
