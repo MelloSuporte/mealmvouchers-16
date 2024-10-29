@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { ptBR } from "date-fns/locale";
-import { MultiSelect } from "@/components/ui/multi-select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Dados mockados para tipos de refeição
 const mockedMealTypes = [
@@ -20,6 +22,16 @@ const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
+
+  const handleMealTypeToggle = (typeId) => {
+    setSelectedMealTypes(current => {
+      if (current.includes(typeId)) {
+        return current.filter(id => id !== typeId);
+      } else {
+        return [...current, typeId];
+      }
+    });
+  };
 
   const handleGenerateVouchers = () => {
     try {
@@ -57,12 +69,20 @@ const DisposableVoucherForm = () => {
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Tipos de Refeição</label>
-        <MultiSelect
-          options={mockedMealTypes.map(type => ({ value: type.id.toString(), label: type.name }))}
-          value={selectedMealTypes}
-          onChange={setSelectedMealTypes}
-          placeholder="Selecione os tipos de refeição"
-        />
+        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+          <div className="space-y-2">
+            {mockedMealTypes.map((type) => (
+              <div key={type.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`meal-type-${type.id}`}
+                  checked={selectedMealTypes.includes(type.id)}
+                  onCheckedChange={() => handleMealTypeToggle(type.id)}
+                />
+                <Label htmlFor={`meal-type-${type.id}`}>{type.name}</Label>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
 
       <div className="space-y-2">
