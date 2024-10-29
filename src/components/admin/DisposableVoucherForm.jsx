@@ -4,9 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { ptBR } from "date-fns/locale";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Dados mockados para tipos de refeição
 const mockedMealTypes = [
@@ -20,12 +18,8 @@ const mockedMealTypes = [
 
 const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
-  const [selectedMealTypes, setSelectedMealTypes] = useState([]);
+  const [selectedMealType, setSelectedMealType] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-
-  const generateVoucherCode = () => {
-    return Math.random().toString(36).substring(2, 10).toUpperCase();
-  };
 
   const handleGenerateVouchers = () => {
     try {
@@ -34,29 +28,19 @@ const DisposableVoucherForm = () => {
         return;
       }
 
-      if (selectedMealTypes.length === 0) {
-        toast.error("Selecione pelo menos um tipo de refeição");
+      if (!selectedMealType) {
+        toast.error("Selecione um tipo de refeição");
         return;
       }
 
-      const totalVouchers = quantity * selectedDates.length * selectedMealTypes.length;
+      const totalVouchers = quantity * selectedDates.length;
       toast.success(`${totalVouchers} voucher(s) descartável(is) gerado(s) com sucesso!`);
       setQuantity(1);
-      setSelectedMealTypes([]);
+      setSelectedMealType("");
       setSelectedDates([]);
     } catch (error) {
       toast.error("Erro ao gerar vouchers: " + error.message);
     }
-  };
-
-  const handleMealTypeToggle = (mealTypeId) => {
-    setSelectedMealTypes(current => {
-      if (current.includes(mealTypeId)) {
-        return current.filter(id => id !== mealTypeId);
-      } else {
-        return [...current, mealTypeId];
-      }
-    });
   };
 
   return (
@@ -72,21 +56,17 @@ const DisposableVoucherForm = () => {
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Tipos de Refeição</label>
-        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-          <div className="space-y-2">
+        <label className="text-sm font-medium">Tipo de Refeição</label>
+        <Select value={selectedMealType} onValueChange={setSelectedMealType}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o tipo de refeição" />
+          </SelectTrigger>
+          <SelectContent>
             {mockedMealTypes.map((type) => (
-              <div key={type.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`meal-type-${type.id}`}
-                  checked={selectedMealTypes.includes(type.id)}
-                  onCheckedChange={() => handleMealTypeToggle(type.id)}
-                />
-                <Label htmlFor={`meal-type-${type.id}`}>{type.name}</Label>
-              </div>
+              <SelectItem key={type.id} value={type.id.toString()}>{type.name}</SelectItem>
             ))}
-          </div>
-        </ScrollArea>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
@@ -111,7 +91,7 @@ const DisposableVoucherForm = () => {
 
       <Button 
         onClick={handleGenerateVouchers}
-        disabled={!selectedMealTypes.length || quantity < 1 || selectedDates.length === 0}
+        disabled={!selectedMealType || quantity < 1 || selectedDates.length === 0}
         className="w-full"
       >
         Gerar Vouchers Descartáveis
