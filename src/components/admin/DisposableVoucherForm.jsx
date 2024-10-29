@@ -41,7 +41,29 @@ const DisposableVoucherForm = () => {
     });
   };
 
-  const handleGenerateVouchers = () => {
+  const generateUniqueVoucherCode = async () => {
+    while (true) {
+      // Generate a 4-digit numeric code
+      const code = Math.floor(1000 + Math.random() * 9000).toString();
+      
+      // Check if code exists in database
+      try {
+        const result = await executeQuery(
+          'SELECT code FROM disposable_vouchers WHERE code = ?',
+          [code]
+        );
+        
+        if (result.length === 0) {
+          return code;
+        }
+      } catch (error) {
+        console.error('Error checking voucher code:', error);
+        throw new Error('Erro ao verificar código do voucher');
+      }
+    }
+  };
+
+  const handleGenerateVouchers = async () => {
     try {
       if (selectedDates.length === 0) {
         toast.error("Selecione pelo menos uma data");
@@ -54,6 +76,21 @@ const DisposableVoucherForm = () => {
       }
 
       const totalVouchers = quantity * selectedDates.length * selectedMealTypes.length;
+      const generatedVouchers = [];
+
+      for (let i = 0; i < totalVouchers; i++) {
+        const code = await generateUniqueVoucherCode();
+        generatedVouchers.push(code);
+      }
+
+      // Save vouchers to database
+      for (const code of generatedVouchers) {
+        await executeQuery(
+          'INSERT INTO disposable_vouchers (code, meal_type_id, created_by) VALUES (?, ?, ?)',
+          [code, selectedMealTypes[0], 1] // Assuming created_by = 1 for now
+        );
+      }
+
       toast.success(`${totalVouchers} voucher(s) descartável(is) gerado(s) com sucesso!`);
       setQuantity(1);
       setSelectedMealTypes([]);

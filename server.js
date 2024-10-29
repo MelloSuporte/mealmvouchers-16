@@ -235,6 +235,11 @@ app.post('/api/companies', async (req, res) => {
 // Rota para validar voucher descartável
 app.post('/api/vouchers/validate-disposable', async (req, res) => {
   const { code, mealType } = req.body;
+  
+  if (!/^\d{4}$/.test(code)) {
+    return res.status(400).json({ error: 'Código do voucher deve conter 4 dígitos numéricos' });
+  }
+
   try {
     const [vouchers] = await req.db.execute(
       `SELECT dv.*, mt.name as meal_type_name 
@@ -255,7 +260,6 @@ app.post('/api/vouchers/validate-disposable', async (req, res) => {
       return res.status(400).json({ error: 'Tipo de refeição inválido para este voucher' });
     }
 
-    // Marcar voucher como usado
     await req.db.execute(
       'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
       [voucher.id]
