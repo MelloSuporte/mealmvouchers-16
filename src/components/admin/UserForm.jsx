@@ -76,12 +76,19 @@ const UserForm = () => {
     });
   };
 
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   return (
     <div className="space-y-4">
       <UserFormMain
-        {...formData}
-        setFormData={setFormData}
-        handleSaveUser={handleSaveUser}
+        formData={formData}
+        onInputChange={handleInputChange}
+        onSave={handleSaveUser}
       />
       <UserSearchDialog
         isOpen={isDialogOpen}

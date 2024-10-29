@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Upload } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const defaultTurnos = [
   { id: "central", label: "Turno Central", entrada: "08:00", saida: "17:00" },
@@ -14,81 +14,88 @@ const defaultTurnos = [
 ];
 
 const UserFormMain = ({
-  userName = '',
-  setUserName,
-  userEmail = '',
-  setUserEmail,
-  userCPF = '',
-  handleCPFChange,
-  company = '',
-  setCompany,
-  voucher = '',
-  showVoucher = false,
-  toggleVoucherVisibility,
-  generateVoucher,
-  selectedTurno = '',
-  setSelectedTurno,
-  isSuspended = false,
-  handleSuspendUser,
-  handlePhotoUpload,
-  userPhoto,
-  handleSaveUser,
+  formData,
+  onInputChange,
+  onSave,
   turnos = defaultTurnos
 }) => {
+  const [showVoucher, setShowVoucher] = React.useState(false);
+
+  const handlePhotoUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      onInputChange('userPhoto', file);
+    }
+  };
+
+  const generateVoucher = () => {
+    const newVoucher = Math.random().toString(36).substring(2, 8).toUpperCase();
+    onInputChange('voucher', newVoucher);
+  };
+
   return (
-    <form className="space-y-4">
+    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
       <Input 
         placeholder="Nome do usuário" 
-        value={userName}
-        onChange={(e) => setUserName(e.target.value)}
+        value={formData.userName}
+        onChange={(e) => onInputChange('userName', e.target.value)}
       />
       <Input 
         placeholder="E-mail do usuário" 
         type="email"
-        value={userEmail}
-        onChange={(e) => setUserEmail(e.target.value)}
+        value={formData.userEmail}
+        onChange={(e) => onInputChange('userEmail', e.target.value)}
       />
       <Input 
         placeholder="CPF (000.000.000-00)" 
-        value={userCPF}
-        onChange={handleCPFChange}
+        value={formData.userCPF}
+        onChange={(e) => onInputChange('userCPF', e.target.value)}
       />
-      <Input 
-        placeholder="Empresa" 
-        value={company}
-        onChange={(e) => setCompany(e.target.value)}
-      />
+      <Select 
+        value={formData.company} 
+        onValueChange={(value) => onInputChange('company', value)}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Selecione a empresa" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="empresa1">Empresa 1</SelectItem>
+          <SelectItem value="empresa2">Empresa 2</SelectItem>
+        </SelectContent>
+      </Select>
       <div className="flex items-center space-x-2">
         <Input 
           placeholder="Voucher" 
-          value={showVoucher ? voucher : '****'}
+          value={showVoucher ? formData.voucher : '****'}
           readOnly
         />
-        <Button type="button" onClick={toggleVoucherVisibility}>
+        <Button type="button" onClick={() => setShowVoucher(!showVoucher)}>
           {showVoucher ? <EyeOff size={20} /> : <Eye size={20} />}
         </Button>
         <Button type="button" onClick={generateVoucher}>
           Gerar Voucher
         </Button>
       </div>
-      <div className="space-y-2">
-        <Label>Turno</Label>
-        <RadioGroup value={selectedTurno} onValueChange={setSelectedTurno}>
+      <Select 
+        value={formData.selectedTurno} 
+        onValueChange={(value) => onInputChange('selectedTurno', value)}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Selecione o turno" />
+        </SelectTrigger>
+        <SelectContent>
           {turnos.map((turno) => (
-            <div key={turno.id} className="flex items-center space-x-2">
-              <RadioGroupItem value={turno.id} id={turno.id} />
-              <Label htmlFor={turno.id}>
-                {turno.label} ({turno.entrada} - {turno.saida})
-              </Label>
-            </div>
+            <SelectItem key={turno.id} value={turno.id}>
+              {turno.label} ({turno.entrada} - {turno.saida})
+            </SelectItem>
           ))}
-        </RadioGroup>
-      </div>
+        </SelectContent>
+      </Select>
       <div className="flex items-center space-x-2">
         <Switch
           id="suspend-user"
-          checked={isSuspended}
-          onCheckedChange={handleSuspendUser}
+          checked={formData.isSuspended}
+          onCheckedChange={(checked) => onInputChange('isSuspended', checked)}
         />
         <Label htmlFor="suspend-user">Suspender acesso</Label>
       </div>
@@ -104,9 +111,15 @@ const UserFormMain = ({
           <Upload size={20} className="mr-2" />
           Upload Foto
         </Button>
-        {userPhoto && <img src={userPhoto} alt="User" className="w-10 h-10 rounded-full object-cover" />}
+        {formData.userPhoto && (
+          <img 
+            src={typeof formData.userPhoto === 'string' ? formData.userPhoto : URL.createObjectURL(formData.userPhoto)} 
+            alt="User" 
+            className="w-10 h-10 rounded-full object-cover" 
+          />
+        )}
       </div>
-      <Button type="button" onClick={handleSaveUser}>Cadastrar Usuário</Button>
+      <Button type="button" onClick={onSave}>Cadastrar Usuário</Button>
     </form>
   );
 };
