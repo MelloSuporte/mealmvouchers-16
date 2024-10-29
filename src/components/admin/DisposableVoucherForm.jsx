@@ -92,8 +92,8 @@ const DisposableVoucherForm = () => {
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Tipos de Refeição</label>
-        <div className="grid grid-cols-2 gap-4">
-          {mealTypes.map((type) => (
+        <div className="grid grid-cols-2 gap-4 max-h-60 overflow-y-auto p-4 border rounded-md">
+          {mealTypes && mealTypes.map((type) => (
             <div key={type.id} className="flex items-center space-x-2">
               <Checkbox
                 id={`meal-type-${type.id}`}
