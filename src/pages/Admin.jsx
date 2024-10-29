@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import UserForm from '../components/admin/UserForm';
 import CompanyForm from '../components/admin/CompanyForm';
-import MealTypeForm from '../components/admin/MealTypeForm';
+import MealScheduleManager from '../components/admin/meals/MealScheduleManager';
 import RLSForm from '../components/admin/RLSForm';
 import BackgroundImageForm from '../components/admin/BackgroundImageForm';
 import ReportForm from '../components/admin/ReportForm';
@@ -32,7 +32,7 @@ const Admin = () => {
         <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
-          <TabsTrigger value="mealTypes">Tipos de Refeições</TabsTrigger>
+          <TabsTrigger value="meals">Refeições</TabsTrigger>
           <TabsTrigger value="rls">Voucher Extra</TabsTrigger>
           <TabsTrigger value="disposable">Vouchers Descartáveis</TabsTrigger>
           <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>
@@ -50,6 +50,7 @@ const Admin = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="companies">
           <Card>
             <CardHeader>
@@ -60,16 +61,11 @@ const Admin = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="mealTypes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cadastro de Tipo de Refeição</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MealTypeForm />
-            </CardContent>
-          </Card>
+
+        <TabsContent value="meals">
+          <MealScheduleManager />
         </TabsContent>
+
         <TabsContent value="rls">
           <Card>
             <CardHeader>
@@ -80,6 +76,7 @@ const Admin = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="backgrounds">
           <Card>
             <CardHeader>
@@ -112,6 +109,7 @@ const Admin = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="turnos">
           <Card>
             <CardHeader>
