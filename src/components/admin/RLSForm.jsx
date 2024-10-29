@@ -70,13 +70,15 @@ const RLSForm = () => {
         )}
       </div>
 
-      <Button 
-        type="button" 
-        onClick={handleSaveRLS}
-        className="w-full"
-      >
-        Liberar Voucher Extra
-      </Button>
+      <div className="flex justify-center">
+        <Button 
+          type="button" 
+          onClick={handleSaveRLS}
+          className="px-6"
+        >
+          Liberar Voucher Extra
+        </Button>
+      </div>
     </form>
   );
 };
