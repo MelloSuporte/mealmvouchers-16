@@ -60,8 +60,8 @@ const User = () => {
     if (value.length <= 11) {
       value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
       setCpf(value);
-      if (!isChangingPassword && value.length >= 4) {
-        setVoucherPassword(value.substring(0, 4));
+      if (!isChangingPassword && value.length >= 5) {
+        setVoucherPassword(value.substring(1, 5));
       }
     }
   };
