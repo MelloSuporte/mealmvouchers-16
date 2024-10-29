@@ -2,87 +2,90 @@ CREATE DATABASE IF NOT EXISTS bd_voucher;
 
 USE bd_voucher;
 
-CREATE TABLE IF NOT EXISTS empresas (
+CREATE TABLE IF NOT EXISTS companies (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  nome VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
   cnpj VARCHAR(18) NOT NULL UNIQUE,
   logo LONGTEXT,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS usuarios (
+CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  nome VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
   cpf VARCHAR(14) NOT NULL UNIQUE,
-  empresa_id INT,
+  company_id INT,
   voucher VARCHAR(4) NOT NULL,
   turno ENUM('central', 'primeiro', 'segundo', 'terceiro') NOT NULL,
-  suspenso BOOLEAN DEFAULT FALSE,
-  foto LONGTEXT,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (empresa_id) REFERENCES empresas(id)
+  is_suspended BOOLEAN DEFAULT FALSE,
+  photo LONGTEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (company_id) REFERENCES companies(id)
 );
 
-CREATE TABLE IF NOT EXISTS tipos_refeicao (
+CREATE TABLE IF NOT EXISTS meal_types (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  nome VARCHAR(255) NOT NULL,
-  hora_inicio TIME,
-  hora_fim TIME,
-  valor DECIMAL(10,2) NOT NULL,
-  ativo BOOLEAN DEFAULT TRUE,
-  max_usuarios_por_dia INT,
-  tolerancia_minutos INT DEFAULT 15,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  name VARCHAR(255) NOT NULL,
+  start_time TIME,
+  end_time TIME,
+  value DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS uso_voucher (
+CREATE TABLE IF NOT EXISTS voucher_usage (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  usuario_id INT NOT NULL,
-  tipo_refeicao_id INT NOT NULL,
-  usado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-  FOREIGN KEY (tipo_refeicao_id) REFERENCES tipos_refeicao(id)
+  user_id INT NOT NULL,
+  meal_type_id INT NOT NULL,
+  used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (meal_type_id) REFERENCES meal_types(id)
 );
 
-CREATE TABLE IF NOT EXISTS vouchers_extras (
+CREATE TABLE IF NOT EXISTS extra_vouchers (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  usuario_id INT NOT NULL,
-  autorizado_por VARCHAR(255) NOT NULL,
-  motivo TEXT,
-  valido_ate DATE,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+  user_id INT NOT NULL,
+  authorized_by VARCHAR(255) NOT NULL,
+  reason TEXT,
+  valid_until DATE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE TABLE IF NOT EXISTS imagens_fundo (
+CREATE TABLE IF NOT EXISTS background_images (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  pagina VARCHAR(50) NOT NULL,
-  url_imagem TEXT NOT NULL,
-  ativo BOOLEAN DEFAULT TRUE,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS vouchers_descartaveis (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  codigo VARCHAR(8) NOT NULL UNIQUE,
-  usuario_id INT,
-  tipo_refeicao_id INT,
-  criado_por INT NOT NULL,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  usado_em TIMESTAMP NULL,
-  expira_em TIMESTAMP NULL,
-  usado BOOLEAN DEFAULT FALSE,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-  FOREIGN KEY (tipo_refeicao_id) REFERENCES tipos_refeicao(id),
-  FOREIGN KEY (criado_por) REFERENCES usuarios(id)
+  page VARCHAR(50) NOT NULL,
+  image_url TEXT NOT NULL,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Inserir tipos de refeição padrão
-INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor) VALUES
+INSERT INTO meal_types (name, start_time, end_time, value) VALUES
 ('Café', '06:00:00', '08:00:00', 10.00),
 ('Almoço', '11:00:00', '14:00:00', 25.00),
 ('Lanche', '15:00:00', '16:00:00', 8.00),
 ('Jantar', '18:00:00', '20:00:00', 25.00),
 ('Ceia', '22:00:00', '23:00:00', 15.00),
 ('Extra', NULL, NULL, 25.00);
+
+CREATE TABLE IF NOT EXISTS disposable_vouchers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(8) NOT NULL UNIQUE,
+  user_id INT,
+  meal_type_id INT,
+  created_by INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  used_at TIMESTAMP NULL,
+  expired_at TIMESTAMP NULL,
+  is_used BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (meal_type_id) REFERENCES meal_types(id),
+  FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- Adicionar novos campos à tabela meal_types
+ALTER TABLE meal_types
+ADD COLUMN is_active BOOLEAN DEFAULT TRUE,
+ADD COLUMN max_users_per_day INT,
+ADD COLUMN tolerance_minutes INT DEFAULT 15;
