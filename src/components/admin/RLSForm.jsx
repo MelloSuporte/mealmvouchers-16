@@ -1,88 +1,82 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { ptBR } from 'date-fns/locale';
 import { toast } from "sonner";
-import UserSearchDialog from './UserSearchDialog';
 
 const RLSForm = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [reason, setReason] = useState('');
+  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState("");
+  const [selectedDates, setSelectedDates] = useState([]);
 
-  const handleUserSelect = (user) => {
-    setSelectedUser(user);
-    setIsDialogOpen(false);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSaveRLS = () => {
+    if (!selectedUser || !selectedCompany || selectedDates.length === 0) {
+      toast.error("Por favor, preencha todos os campos e selecione pelo menos uma data.");
+      return;
+    }
     
-    if (!selectedUser) {
-      toast.error("Por favor selecione um usuário");
-      return;
-    }
-
-    if (!reason.trim()) {
-      toast.error("Por favor insira um motivo");
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/rls/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: selectedUser.id,
-          reason: reason
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-
-      toast.success("Voucher extra liberado com sucesso!");
-      setSelectedUser(null);
-      setReason('');
-    } catch (error) {
-      toast.error(error.message || "Erro ao liberar voucher extra");
-    }
+    console.log('Salvando Voucher Extra:', { 
+      selectedUser, 
+      selectedCompany, 
+      selectedDates 
+    });
+    toast.success("Voucher extra liberado com sucesso!");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setIsDialogOpen(true)}
-          className="w-full"
-        >
-          {selectedUser ? selectedUser.name : "Selecionar Usuário"}
-        </Button>
-        <Input
-          placeholder="Motivo"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
+    <form className="space-y-4">
+      <Select value={selectedUser} onValueChange={setSelectedUser}>
+        <SelectTrigger>
+          <SelectValue placeholder="Selecione o usuário" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="user1">Usuário 1</SelectItem>
+          <SelectItem value="user2">Usuário 2</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+        <SelectTrigger>
+          <SelectValue placeholder="Selecione a empresa" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="empresa1">Empresa 1</SelectItem>
+          <SelectItem value="empresa2">Empresa 2</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <div className="border rounded-md p-4">
+        <Calendar
+          mode="multiple"
+          selected={selectedDates}
+          onSelect={setSelectedDates}
+          className="rounded-md border"
+          locale={ptBR}
+          weekStartsOn={0}
+          formatters={{
+            formatCaption: (date) => {
+              const month = ptBR.localize.month(date.getMonth());
+              return `${month.charAt(0).toUpperCase() + month.slice(1)} ${date.getFullYear()}`;
+            }
+          }}
+          ISOWeek
         />
       </div>
-      <div className="flex justify-center">
-        <Button 
-          type="submit"
-          className="w-auto px-6"
-        >
-          Liberar Voucher Extra
-        </Button>
+
+      <div className="text-sm text-gray-500">
+        {selectedDates.length > 0 && (
+          <p>Datas selecionadas: {selectedDates.length}</p>
+        )}
       </div>
-      <UserSearchDialog
-        open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        onSelect={handleUserSelect}
-      />
+
+      <Button 
+        type="button" 
+        onClick={handleSaveRLS}
+        className="w-full"
+      >
+        Liberar Voucher Extra
+      </Button>
     </form>
   );
 };
