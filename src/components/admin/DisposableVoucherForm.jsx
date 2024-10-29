@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { executeQuery } from '../../utils/db';
 import { ptBR } from "date-fns/locale";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
-  const [selectedMealType, setSelectedMealType] = useState("");
+  const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
+
+  const mealTypes = [
+    { id: "1", label: "Café" },
+    { id: "2", label: "Almoço" },
+    { id: "3", label: "Lanche" },
+    { id: "4", label: "Jantar" },
+    { id: "5", label: "Ceia" }
+  ];
 
   const generateVoucherCode = () => {
     return Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -23,16 +32,23 @@ const DisposableVoucherForm = () => {
         return;
       }
 
+      if (selectedMealTypes.length === 0) {
+        toast.error("Selecione pelo menos um tipo de refeição");
+        return;
+      }
+
       const allVouchers = [];
       selectedDates.forEach(date => {
-        for (let i = 0; i < quantity; i++) {
-          const code = generateVoucherCode();
-          allVouchers.push({
-            code,
-            mealTypeId: selectedMealType,
-            expiredAt: date
-          });
-        }
+        selectedMealTypes.forEach(mealType => {
+          for (let i = 0; i < quantity; i++) {
+            const code = generateVoucherCode();
+            allVouchers.push({
+              code,
+              mealTypeId: mealType,
+              expiredAt: date
+            });
+          }
+        });
       });
 
       // Inserir vouchers no banco
@@ -41,19 +57,30 @@ const DisposableVoucherForm = () => {
         [allVouchers.map(v => [v.code, v.mealTypeId, v.expiredAt, 1])] // 1 é um placeholder para o ID do admin
       );
 
-      toast.success(`${quantity * selectedDates.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
+      const totalVouchers = quantity * selectedDates.length * selectedMealTypes.length;
+      toast.success(`${totalVouchers} voucher(s) descartável(is) gerado(s) com sucesso!`);
       setQuantity(1);
-      setSelectedMealType("");
+      setSelectedMealTypes([]);
       setSelectedDates([]);
     } catch (error) {
       toast.error("Erro ao gerar vouchers: " + error.message);
     }
   };
 
+  const handleMealTypeToggle = (mealTypeId) => {
+    setSelectedMealTypes(current => {
+      if (current.includes(mealTypeId)) {
+        return current.filter(id => id !== mealTypeId);
+      } else {
+        return [...current, mealTypeId];
+      }
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">Quantidade de Vouchers por Data</label>
+        <label className="text-sm font-medium">Quantidade de Vouchers por Data/Refeição</label>
         <Input
           type="number"
           min="1"
@@ -63,19 +90,19 @@ const DisposableVoucherForm = () => {
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Tipo de Refeição</label>
-        <Select value={selectedMealType} onValueChange={setSelectedMealType}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o tipo de refeição" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">Café</SelectItem>
-            <SelectItem value="2">Almoço</SelectItem>
-            <SelectItem value="3">Lanche</SelectItem>
-            <SelectItem value="4">Jantar</SelectItem>
-            <SelectItem value="5">Ceia</SelectItem>
-          </SelectContent>
-        </Select>
+        <label className="text-sm font-medium">Tipos de Refeição</label>
+        <div className="grid grid-cols-2 gap-4">
+          {mealTypes.map((type) => (
+            <div key={type.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={`meal-type-${type.id}`}
+                checked={selectedMealTypes.includes(type.id)}
+                onCheckedChange={() => handleMealTypeToggle(type.id)}
+              />
+              <Label htmlFor={`meal-type-${type.id}`}>{type.label}</Label>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -100,7 +127,7 @@ const DisposableVoucherForm = () => {
 
       <Button 
         onClick={handleGenerateVouchers}
-        disabled={!selectedMealType || quantity < 1 || selectedDates.length === 0}
+        disabled={!selectedMealTypes.length || quantity < 1 || selectedDates.length === 0}
         className="w-full"
       >
         Gerar Vouchers Descartáveis
