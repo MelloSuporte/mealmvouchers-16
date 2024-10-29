@@ -11,6 +11,7 @@ import RLSForm from '../components/admin/RLSForm';
 import BackgroundImageForm from '../components/admin/BackgroundImageForm';
 import ReportForm from '../components/admin/ReportForm';
 import TurnosForm from '../components/admin/TurnosForm';
+import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
@@ -28,15 +29,17 @@ const Admin = () => {
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
           <TabsTrigger value="mealTypes">Tipos de Refeições</TabsTrigger>
           <TabsTrigger value="rls">Voucher Extra</TabsTrigger>
+          <TabsTrigger value="disposable">Vouchers Descartáveis</TabsTrigger>
           <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>
           <TabsTrigger value="reports">Relatórios</TabsTrigger>
           <TabsTrigger value="turnos">Turnos</TabsTrigger>
         </TabsList>
+
         <TabsContent value="users">
           <Card>
             <CardHeader>
@@ -87,6 +90,18 @@ const Admin = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="disposable">
+          <Card>
+            <CardHeader>
+              <CardTitle>Vouchers Descartáveis</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DisposableVoucherForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="reports">
           <Card>
             <CardHeader>

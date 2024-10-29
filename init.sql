@@ -68,3 +68,18 @@ INSERT INTO meal_types (name, start_time, end_time, value) VALUES
 ('Jantar', '18:00:00', '20:00:00', 25.00),
 ('Ceia', '22:00:00', '23:00:00', 15.00),
 ('Extra', NULL, NULL, 25.00);
+
+CREATE TABLE IF NOT EXISTS disposable_vouchers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(8) NOT NULL UNIQUE,
+  user_id INT,
+  meal_type_id INT,
+  created_by INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  used_at TIMESTAMP NULL,
+  expired_at TIMESTAMP NULL,
+  is_used BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (meal_type_id) REFERENCES meal_types(id),
+  FOREIGN KEY (created_by) REFERENCES users(id)
+);
