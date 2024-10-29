@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -7,21 +7,29 @@ import { ptBR } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-// Dados mockados para tipos de refeição
-const mockedMealTypes = [
-  { id: 1, name: "Café da Manhã" },
-  { id: 2, name: "Almoço" },
-  { id: 3, name: "Lanche da Tarde" },
-  { id: 4, name: "Jantar" },
-  { id: 5, name: "Ceia" },
-  { id: 6, name: "Extra" },
-];
+import { executeQuery } from '../../utils/db';
 
 const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
+  const [mealTypes, setMealTypes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadMealTypes();
+  }, []);
+
+  const loadMealTypes = async () => {
+    try {
+      const result = await executeQuery('SELECT * FROM meal_types WHERE is_active = TRUE ORDER BY name');
+      setMealTypes(result);
+      setIsLoading(false);
+    } catch (error) {
+      toast.error("Erro ao carregar tipos de refeição: " + error.message);
+      setIsLoading(false);
+    }
+  };
 
   const handleMealTypeToggle = (typeId) => {
     setSelectedMealTypes(current => {
@@ -55,6 +63,10 @@ const DisposableVoucherForm = () => {
     }
   };
 
+  if (isLoading) {
+    return <div>Carregando tipos de refeição...</div>;
+  }
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -71,7 +83,7 @@ const DisposableVoucherForm = () => {
         <label className="text-sm font-medium">Tipos de Refeição</label>
         <ScrollArea className="h-[200px] w-full rounded-md border p-4">
           <div className="space-y-2">
-            {mockedMealTypes.map((type) => (
+            {mealTypes.map((type) => (
               <div key={type.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`meal-type-${type.id}`}
