@@ -21,6 +21,39 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// Helper function to check if time is within shift hours
+const isWithinShiftHours = (shift, currentTime) => {
+  const timeRanges = {
+    'central': { start: '08:00', end: '17:00' },
+    'primeiro': { start: '06:00', end: '14:00' },
+    'segundo': { start: '14:00', end: '22:00' },
+    'terceiro': { start: '22:00', end: '06:00' }
+  };
+  
+  const range = timeRanges[shift];
+  const current = currentTime.split(':').map(Number);
+  const start = range.start.split(':').map(Number);
+  const end = range.end.split(':').map(Number);
+  
+  if (shift === 'terceiro') {
+    // Special handling for third shift that crosses midnight
+    return (current[0] >= start[0] || current[0] <= end[0]);
+  }
+  
+  return (current[0] >= start[0] && current[0] < end[0]);
+};
+
+// Helper function to get allowed meal types by shift
+const getAllowedMealsByShift = (shift) => {
+  const mealsByShift = {
+    'central': ['Café', 'Almoço', 'Lanche'],
+    'primeiro': ['Café', 'Almoço'],
+    'segundo': ['Lanche', 'Jantar'],
+    'terceiro': ['Café', 'Ceia']
+  };
+  return mealsByShift[shift] || [];
+};
+
 // Middleware para verificar conexão
 app.use(async (req, res, next) => {
   try {
@@ -75,38 +108,109 @@ app.get('/api/users/search', async (req, res) => {
 // Rota para validar voucher
 app.post('/api/vouchers/validate', async (req, res) => {
   const { cpf, voucherCode, mealType } = req.body;
+  const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false }).slice(0, 5);
+  
   try {
+    // Get user and their shift
     const [users] = await req.db.execute(
-      'SELECT * FROM users WHERE cpf = ? AND voucher = ?', 
+      'SELECT * FROM users WHERE cpf = ? AND voucher = ?',
       [cpf, voucherCode]
     );
-    
+
     if (users.length === 0) {
-      return res.status(401).json({ error: 'Voucher inválido' });
+      return res.status(401).json({ 
+        error: 'Voucher inválido',
+        userName: null,
+        turno: null 
+      });
     }
 
     const user = users[0];
-    if (user.is_suspended) {
-      return res.status(403).json({ error: 'Usuário suspenso' });
-    }
-
-    const [mealTypes] = await req.db.execute(
-      'SELECT * FROM meal_types WHERE name = ?', 
-      [mealType]
-    );
     
-    if (mealTypes.length === 0) {
-      return res.status(400).json({ error: 'Tipo de refeição inválido' });
+    if (user.is_suspended) {
+      return res.status(403).json({ 
+        error: 'Usuário suspenso',
+        userName: user.name,
+        turno: user.turno 
+      });
     }
 
-    await req.db.execute(
-      'INSERT INTO voucher_usage (user_id, meal_type_id) VALUES (?, ?)',
-      [user.id, mealTypes[0].id]
+    // Check if user is within their shift hours
+    if (!isWithinShiftHours(user.turno, currentTime)) {
+      return res.status(403).json({
+        error: `${user.name}, você está fora do horário do ${user.turno} turno`,
+        userName: user.name,
+        turno: user.turno
+      });
+    }
+
+    // Get today's meal usage
+    const today = new Date().toISOString().slice(0, 10);
+    const [usedMeals] = await req.db.execute(
+      `SELECT mt.name 
+       FROM voucher_usage vu 
+       JOIN meal_types mt ON vu.meal_type_id = mt.id 
+       WHERE vu.user_id = ? 
+       AND DATE(vu.used_at) = ?`,
+      [user.id, today]
     );
 
-    res.json({ success: true, message: 'Voucher validado com sucesso' });
+    const allowedMeals = getAllowedMealsByShift(user.turno);
+    
+    // Check if meal type is allowed for user's shift
+    if (!allowedMeals.includes(mealType)) {
+      return res.status(403).json({
+        error: `${mealType} não está disponível para o ${user.turno} turno`,
+        userName: user.name,
+        turno: user.turno
+      });
+    }
+
+    // Check daily meal limits and rules
+    if (usedMeals.length >= 2) {
+      // Check if this is an extra voucher request
+      const [extraVoucher] = await req.db.execute(
+        'SELECT * FROM extra_vouchers WHERE user_id = ? AND valid_until >= ? AND used = FALSE',
+        [user.id, today]
+      );
+
+      if (!extraVoucher.length) {
+        return res.status(403).json({
+          error: 'Limite diário de refeições atingido',
+          userName: user.name,
+          turno: user.turno
+        });
+      }
+    }
+
+    // Validate meal combination rules
+    const usedMealTypes = usedMeals.map(m => m.name);
+    if (usedMealTypes.includes(mealType)) {
+      return res.status(403).json({
+        error: 'Não é permitido repetir o mesmo tipo de refeição',
+        userName: user.name,
+        turno: user.turno
+      });
+    }
+
+    // Record the meal usage
+    await req.db.execute(
+      'INSERT INTO voucher_usage (user_id, meal_type_id) VALUES (?, (SELECT id FROM meal_types WHERE name = ?))',
+      [user.id, mealType]
+    );
+
+    res.json({ 
+      success: true, 
+      message: 'Voucher validado com sucesso',
+      userName: user.name,
+      turno: user.turno
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      error: error.message,
+      userName: null,
+      turno: null
+    });
   } finally {
     req.db.release();
   }

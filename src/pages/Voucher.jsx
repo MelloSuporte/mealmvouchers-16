@@ -25,64 +25,38 @@ const Voucher = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const today = new Date().toISOString().split('T')[0];
-    const usedVouchers = JSON.parse(localStorage.getItem('usedVouchers') || '{}');
-
-    // Simular a verificação do voucher (isso deve ser substituído por uma chamada à API real)
-    const mockUserData = {
-      userName: "João Silva",
-      userPhoto: "https://example.com/path/to/photo.jpg"
-    };
-
+    
     try {
-      // Verificar se o voucher é extra através da API
       const response = await fetch('/api/vouchers/validate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ voucherCode }),
+        body: JSON.stringify({ 
+          voucherCode,
+          cpf: localStorage.getItem('userCPF') || '',
+          mealType: localStorage.getItem('selectedMealType') || ''
+        }),
       });
 
       const data = await response.json();
 
-      if (data.isExtraVoucher) {
-        // Se for um voucher extra, verificar as regras RLS
-        checkRLSRules(today, mockUserData);
-      } else {
-        // Se for um voucher regular, verificar limite individual
-        checkRegularVoucherLimit(today, usedVouchers, mockUserData);
+      if (!response.ok) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data.success) {
+        navigate('/user-confirmation', { 
+          state: { 
+            userName: data.userName,
+            userTurno: data.turno,
+            mealType: localStorage.getItem('selectedMealType')
+          }
+        });
       }
     } catch (error) {
       toast.error("Erro ao validar o voucher. Tente novamente.");
-    }
-  };
-
-  const checkRLSRules = (today, userData) => {
-    // Aqui você deve implementar a lógica para verificar as regras RLS
-    // Por enquanto, vamos apenas simular a aprovação
-    const isApproved = true; // Substitua isso pela lógica real de verificação RLS
-
-    if (isApproved) {
-      navigate('/user-confirmation', { state: { ...userData, voucherType: 'Extra' } });
-    } else {
-      toast.error("Voucher Extra não autorizado pelas regras RLS.");
-    }
-  };
-
-  const checkRegularVoucherLimit = (today, usedVouchers, userData) => {
-    if (!usedVouchers[today]) {
-      usedVouchers[today] = [];
-    }
-
-    // Verificar se todos os tipos de refeição regular já foram usados
-    const regularMealTypes = ['Almoço', 'Café', 'Lanche', 'Jantar', 'Ceia'];
-    const unusedMealTypes = regularMealTypes.filter(type => !usedVouchers[today].includes(type));
-
-    if (unusedMealTypes.length > 0) {
-      navigate('/user-confirmation', { state: { ...userData, voucherType: 'Regular' } });
-    } else {
-      toast.error("Limite diário de vouchers regulares atingido.");
     }
   };
 

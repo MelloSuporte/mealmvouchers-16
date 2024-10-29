@@ -7,7 +7,7 @@ const UserConfirmation = () => {
   const [countdown, setCountdown] = useState(5);
   const navigate = useNavigate();
   const location = useLocation();
-  const { userPhoto, userName } = location.state || {};
+  const { userName, userTurno, mealType } = location.state || {};
   const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
@@ -50,10 +50,10 @@ const UserConfirmation = () => {
     >
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
         <h2 className="text-2xl font-bold mb-4">Confirme sua identidade</h2>
-        {userPhoto && (
-          <img src={userPhoto} alt={userName} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" />
-        )}
-        <p className="mb-4">Olá, {userName}! É você mesmo?</p>
+        <p className="mb-2">Olá, {userName}!</p>
+        <p className="mb-4 text-gray-600">Turno: {userTurno}</p>
+        <p className="mb-4">Refeição selecionada: {mealType}</p>
+        <p className="mb-4">É você mesmo?</p>
         <p className="mb-4">Retorno automático à página de voucher em: {countdown} segundos</p>
         <div className="flex justify-between">
           <Button onClick={handleCancel} variant="outline">Cancelar</Button>
