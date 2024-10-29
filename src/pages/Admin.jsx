@@ -17,7 +17,6 @@ const Admin = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Aqui você pode adicionar lógica para limpar o estado de autenticação, se necessário
     toast.success("Logout realizado com sucesso!");
     navigate('/voucher');
   };
