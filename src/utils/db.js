@@ -12,11 +12,6 @@ export const executeQuery = async (query, params = []) => {
       } else if (query.includes('FROM meal_types')) {
         const response = await axios.get(`${API_URL}/meal-types`);
         return response.data || [];
-      } else if (query.includes('FROM voucher_usage')) {
-        const userId = params[0];
-        const date = params[1];
-        const response = await axios.get(`${API_URL}/voucher-usage?userId=${userId}&date=${date}`);
-        return response.data || [];
       } else {
         const response = await axios.get(`${API_URL}/users`);
         return response.data || [];
@@ -37,6 +32,6 @@ export const executeQuery = async (query, params = []) => {
     return [];
   } catch (error) {
     console.error('API error:', error);
-    throw error;
+    return []; // Sempre retorna um array vazio em caso de erro
   }
 };

@@ -72,13 +72,10 @@ app.get('/api/users/search', async (req, res) => {
   }
 });
 
-// Rota para validar voucher com regras de limite
+// Rota para validar voucher
 app.post('/api/vouchers/validate', async (req, res) => {
   const { cpf, voucherCode, mealType } = req.body;
-  const today = new Date().toISOString().split('T')[0];
-
   try {
-    // Buscar usuário
     const [users] = await req.db.execute(
       'SELECT * FROM users WHERE cpf = ? AND voucher = ?', 
       [cpf, voucherCode]
@@ -89,68 +86,25 @@ app.post('/api/vouchers/validate', async (req, res) => {
     }
 
     const user = users[0];
-
-    // Verificar se usuário está suspenso
     if (user.is_suspended) {
       return res.status(403).json({ error: 'Usuário suspenso' });
     }
 
-    // Verificar se é voucher extra
-    const [extraVouchers] = await req.db.execute(
-      'SELECT * FROM extra_vouchers WHERE user_id = ? AND valid_until >= ?',
-      [user.id, today]
+    const [mealTypes] = await req.db.execute(
+      'SELECT * FROM meal_types WHERE name = ?', 
+      [mealType]
+    );
+    
+    if (mealTypes.length === 0) {
+      return res.status(400).json({ error: 'Tipo de refeição inválido' });
+    }
+
+    await req.db.execute(
+      'INSERT INTO voucher_usage (user_id, meal_type_id) VALUES (?, ?)',
+      [user.id, mealTypes[0].id]
     );
 
-    if (extraVouchers.length > 0) {
-      return res.json({ isExtraVoucher: true });
-    }
-
-    // Verificar limites para Turno Central
-    if (user.turno === 'central') {
-      // Buscar uso de vouchers do dia
-      const [usedVouchers] = await req.db.execute(
-        `SELECT mt.name as meal_type 
-         FROM voucher_usage vu 
-         JOIN meal_types mt ON vu.meal_type_id = mt.id 
-         WHERE vu.user_id = ? 
-         AND DATE(vu.used_at) = ?`,
-        [user.id, today]
-      );
-
-      // Verificar regras específicas do Turno Central
-      const hasUsedLunch = usedVouchers.some(v => v.meal_type === 'Almoço');
-      const hasUsedBreakfast = usedVouchers.some(v => v.meal_type === 'Café');
-      const hasUsedSnack = usedVouchers.some(v => v.meal_type === 'Lanche');
-      const totalMeals = usedVouchers.length;
-
-      // Verificar limites
-      if (totalMeals >= 2) {
-        return res.status(403).json({ 
-          error: 'Limite diário de refeições atingido' 
-        });
-      }
-
-      if (mealType === 'Almoço' && hasUsedLunch) {
-        return res.status(403).json({ 
-          error: 'Você já utilizou o almoço hoje' 
-        });
-      }
-
-      if ((mealType === 'Café' && hasUsedBreakfast) || 
-          (mealType === 'Lanche' && hasUsedSnack)) {
-        return res.status(403).json({ 
-          error: 'Você já utilizou café/lanche hoje' 
-        });
-      }
-
-      if (!hasUsedLunch && mealType !== 'Almoço' && totalMeals === 1) {
-        return res.status(403).json({ 
-          error: 'Você deve utilizar o almoço como uma das refeições' 
-        });
-      }
-    }
-
-    res.json({ isExtraVoucher: false });
+    res.json({ success: true, message: 'Voucher validado com sucesso' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   } finally {
@@ -167,6 +121,57 @@ app.post('/api/companies', async (req, res) => {
       [name, cnpj, logo]
     );
     res.status(201).json({ id: result.insertId, ...req.body });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } finally {
+    req.db.release();
+  }
+});
+
+// Rota para validar voucher descartável
+app.post('/api/vouchers/validate-disposable', async (req, res) => {
+  const { code, mealType } = req.body;
+  try {
+    const [vouchers] = await req.db.execute(
+      `SELECT dv.*, mt.name as meal_type_name 
+       FROM disposable_vouchers dv 
+       JOIN meal_types mt ON dv.meal_type_id = mt.id 
+       WHERE dv.code = ? AND dv.is_used = FALSE 
+       AND (dv.expired_at IS NULL OR dv.expired_at > NOW())`,
+      [code]
+    );
+
+    if (vouchers.length === 0) {
+      return res.status(401).json({ error: 'Voucher inválido ou expirado' });
+    }
+
+    const voucher = vouchers[0];
+    
+    if (voucher.meal_type_name !== mealType) {
+      return res.status(400).json({ error: 'Tipo de refeição inválido para este voucher' });
+    }
+
+    // Marcar voucher como usado
+    await req.db.execute(
+      'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
+      [voucher.id]
+    );
+
+    res.json({ success: true, message: 'Voucher validado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } finally {
+    req.db.release();
+  }
+});
+
+// Rota para obter tipos de refeição ativos
+app.get('/api/meal-types', async (req, res) => {
+  try {
+    const [rows] = await req.db.execute(
+      'SELECT id, name FROM meal_types WHERE is_active = TRUE'
+    );
+    res.json(rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   } finally {
