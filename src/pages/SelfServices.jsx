@@ -43,7 +43,7 @@ const SelfServices = () => {
         backgroundImage: `url(${backgroundImage})`,
       }}
     >
-      <div className="absolute top-0 right-0 w-full h-1/3 bg-gray-800 rounded-bl-[30%] flex items-start justify-center pt-8">
+      <div className="absolute top-0 right-0 w-full h-1/3 bg-blue-600 rounded-bl-[30%] flex items-start justify-center pt-8">
         <h2 className="text-3xl font-bold text-white">Escolha sua refeição</h2>
       </div>
       
