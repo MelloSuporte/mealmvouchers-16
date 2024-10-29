@@ -4,8 +4,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { Download, Search } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, PieChart, Pie, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
+import { Download, Search, PieChart as PieChartIcon, BarChart as BarChartIcon, LineChart as LineChartIcon } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const ReportForm = () => {
@@ -14,17 +16,17 @@ const ReportForm = () => {
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("usage");
 
   // Dados mockados para demonstração
   const usageData = [
-    { id: 1, date: "2024-03-20", time: "12:30", userName: "João Silva", company: "Empresa A", mealType: "Almoço", voucherType: "Regular" },
-    { id: 2, date: "2024-03-20", time: "13:15", userName: "Maria Santos", company: "Empresa B", mealType: "Almoço", voucherType: "Descartável" },
-    { id: 3, date: "2024-03-20", time: "19:00", userName: "Pedro Costa", company: "Empresa A", mealType: "Jantar", voucherType: "Regular" },
-    // Adicione mais dados conforme necessário
+    { id: 1, date: "2024-03-20", time: "12:30", userName: "João Silva", company: "Empresa A", mealType: "Almoço", voucherType: "Regular", cost: 25.00 },
+    { id: 2, date: "2024-03-20", time: "13:15", userName: "Maria Santos", company: "Empresa B", mealType: "Almoço", voucherType: "Descartável", cost: 25.00 },
+    { id: 3, date: "2024-03-20", time: "19:00", userName: "Pedro Costa", company: "Empresa A", mealType: "Jantar", voucherType: "Regular", cost: 25.00 },
   ];
 
-  // Dados para o gráfico
-  const chartData = [
+  // Dados para os gráficos
+  const weeklyData = [
     { name: 'Segunda', Almoço: 40, Jantar: 24, Café: 15 },
     { name: 'Terça', Almoço: 35, Jantar: 22, Café: 18 },
     { name: 'Quarta', Almoço: 45, Jantar: 25, Café: 20 },
@@ -32,16 +34,37 @@ const ReportForm = () => {
     { name: 'Sexta', Almoço: 42, Jantar: 30, Café: 19 },
   ];
 
+  const mealTypeDistribution = [
+    { name: 'Almoço', value: 200 },
+    { name: 'Jantar', value: 129 },
+    { name: 'Café', value: 89 },
+  ];
+
+  const trendData = [
+    { name: '01/03', total: 150 },
+    { name: '02/03', total: 165 },
+    { name: '03/03', total: 180 },
+    { name: '04/03', total: 170 },
+    { name: '05/03', total: 190 },
+  ];
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
+
   const filteredData = usageData.filter(item =>
     item.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.company.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalCost = filteredData.reduce((acc, curr) => acc + curr.cost, 0);
+  const averageCost = totalCost / filteredData.length || 0;
+  const regularVouchers = filteredData.filter(item => item.voucherType === "Regular").length;
+  const disposableVouchers = filteredData.filter(item => item.voucherType === "Descartável").length;
+
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(usageData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Histórico de Uso");
-    XLSX.writeFile(wb, "historico_uso_vouchers.xlsx");
+    XLSX.writeFile(wb, "relatorio_vouchers.xlsx");
   };
 
   return (
@@ -83,6 +106,113 @@ const ReportForm = () => {
         />
       </div>
 
+      {/* Métricas Principais */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Gasto</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">R$ {totalCost.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Custo Médio</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">R$ {averageCost.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Vouchers Regulares</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{regularVouchers}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Vouchers Descartáveis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{disposableVouchers}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs para diferentes visualizações */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="usage" className="flex items-center gap-2">
+            <BarChartIcon className="h-4 w-4" />
+            Uso por Dia
+          </TabsTrigger>
+          <TabsTrigger value="distribution" className="flex items-center gap-2">
+            <PieChartIcon className="h-4 w-4" />
+            Distribuição
+          </TabsTrigger>
+          <TabsTrigger value="trend" className="flex items-center gap-2">
+            <LineChartIcon className="h-4 w-4" />
+            Tendência
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="usage" className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Uso por Dia da Semana</h3>
+          <div className="w-full overflow-x-auto">
+            <BarChart width={800} height={300} data={weeklyData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Almoço" fill="#8884d8" />
+              <Bar dataKey="Jantar" fill="#82ca9d" />
+              <Bar dataKey="Café" fill="#ffc658" />
+            </BarChart>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="distribution" className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Distribuição por Tipo de Refeição</h3>
+          <div className="w-full overflow-x-auto flex justify-center">
+            <PieChart width={400} height={300}>
+              <Pie
+                data={mealTypeDistribution}
+                cx={200}
+                cy={150}
+                labelLine={false}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {mealTypeDistribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="trend" className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Tendência de Uso</h3>
+          <div className="w-full overflow-x-auto">
+            <LineChart width={800} height={300} data={trendData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="total" stroke="#8884d8" />
+            </LineChart>
+          </div>
+        </TabsContent>
+      </Tabs>
+
       {/* Barra de pesquisa e botão de exportação */}
       <div className="flex justify-between items-center">
         <div className="relative w-64">
@@ -100,23 +230,6 @@ const ReportForm = () => {
         </Button>
       </div>
 
-      {/* Gráfico de uso */}
-      <div className="bg-white p-4 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Uso por Dia da Semana</h3>
-        <div className="w-full overflow-x-auto">
-          <BarChart width={800} height={300} data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="Almoço" fill="#8884d8" />
-            <Bar dataKey="Jantar" fill="#82ca9d" />
-            <Bar dataKey="Café" fill="#ffc658" />
-          </BarChart>
-        </div>
-      </div>
-
       {/* Tabela de histórico */}
       <div className="bg-white rounded-lg shadow">
         <Table>
@@ -128,6 +241,7 @@ const ReportForm = () => {
               <TableHead>Empresa</TableHead>
               <TableHead>Refeição</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead>Custo</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -139,6 +253,7 @@ const ReportForm = () => {
                 <TableCell>{item.company}</TableCell>
                 <TableCell>{item.mealType}</TableCell>
                 <TableCell>{item.voucherType}</TableCell>
+                <TableCell>R$ {item.cost.toFixed(2)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
