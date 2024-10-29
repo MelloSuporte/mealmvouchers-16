@@ -117,13 +117,15 @@ const DisposableVoucherForm = () => {
         </p>
       </div>
 
-      <Button 
-        onClick={handleGenerateVouchers}
-        disabled={selectedMealTypes.length === 0 || quantity < 1 || selectedDates.length === 0}
-        className="w-full"
-      >
-        Gerar Vouchers Descartáveis
-      </Button>
+      <div className="flex justify-center">
+        <Button 
+          onClick={handleGenerateVouchers}
+          disabled={selectedMealTypes.length === 0 || quantity < 1 || selectedDates.length === 0}
+          className="px-6"
+        >
+          Gerar Vouchers Descartáveis
+        </Button>
+      </div>
     </div>
   );
 };
