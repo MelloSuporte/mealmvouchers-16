@@ -33,7 +33,7 @@ const Admin = () => {
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
           <TabsTrigger value="mealTypes">Tipos de Refeições</TabsTrigger>
-          <TabsTrigger value="rls">RLS</TabsTrigger>
+          <TabsTrigger value="rls">Voucher Extra</TabsTrigger>
           <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>
           <TabsTrigger value="reports">Relatórios</TabsTrigger>
           <TabsTrigger value="turnos">Turnos</TabsTrigger>
