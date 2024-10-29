@@ -5,9 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { Settings } from 'lucide-react';
 import { toast } from "sonner";
 import AdminLoginDialog from '../components/AdminLoginDialog';
+import { voucherApi } from '../services/api';
 
 const Voucher = () => {
   const [voucherCode, setVoucherCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const [backgroundImage, setBackgroundImage] = useState('');
@@ -23,51 +25,35 @@ const Voucher = () => {
     }
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const today = new Date().toISOString().split('T')[0];
-    const usedVouchers = JSON.parse(localStorage.getItem('usedVouchers') || '{}');
+    setIsLoading(true);
 
-    // Simular a verificação do voucher (isso deve ser substituído por uma chamada à API real)
-    const mockUserData = {
-      userName: "João Silva",
-      userPhoto: "https://example.com/path/to/photo.jpg"
-    };
+    try {
+      const response = await voucherApi.validate(voucherCode);
+      
+      if (response.isValid) {
+        const today = new Date().toISOString().split('T')[0];
+        const usageCheck = await voucherApi.checkUsage(response.userId, today);
 
-    if (voucherCode === '9999') {
-      // Voucher Extra - verificar regras RLS
-      checkRLSRules(today, mockUserData);
-    } else {
-      // Voucher Regular - verificar limite individual
-      checkRegularVoucherLimit(today, usedVouchers, mockUserData);
-    }
-  };
-
-  const checkRLSRules = (today, userData) => {
-    // Aqui você deve implementar a lógica para verificar as regras RLS
-    // Por enquanto, vamos apenas simular a aprovação
-    const isApproved = true; // Substitua isso pela lógica real de verificação RLS
-
-    if (isApproved) {
-      navigate('/user-confirmation', { state: { ...userData, voucherType: 'Extra' } });
-    } else {
-      toast.error("Voucher Extra não autorizado pelas regras RLS.");
-    }
-  };
-
-  const checkRegularVoucherLimit = (today, usedVouchers, userData) => {
-    if (!usedVouchers[today]) {
-      usedVouchers[today] = [];
-    }
-
-    // Verificar se todos os tipos de refeição regular já foram usados
-    const regularMealTypes = ['Almoço', 'Café', 'Lanche', 'Jantar', 'Ceia'];
-    const unusedMealTypes = regularMealTypes.filter(type => !usedVouchers[today].includes(type));
-
-    if (unusedMealTypes.length > 0) {
-      navigate('/user-confirmation', { state: { ...userData, voucherType: 'Regular' } });
-    } else {
-      toast.error("Limite diário de vouchers regulares atingido.");
+        if (usageCheck.canUse) {
+          navigate('/user-confirmation', { 
+            state: { 
+              userName: response.userName,
+              userPhoto: response.userPhoto,
+              voucherType: response.voucherType 
+            } 
+          });
+        } else {
+          toast.error(usageCheck.message || "Limite de vouchers atingido para hoje.");
+        }
+      } else {
+        toast.error("Voucher inválido");
+      }
+    } catch (error) {
+      toast.error("Erro ao validar voucher: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -155,9 +141,9 @@ const Voucher = () => {
             <Button
               type="submit"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              disabled={voucherCode.length !== 4}
+              disabled={voucherCode.length !== 4 || isLoading}
             >
-              Enter
+              {isLoading ? "Validando..." : "Enter"}
             </Button>
           </div>
         </form>
