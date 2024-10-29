@@ -38,7 +38,7 @@ const SelfServices = () => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-start p-4 relative bg-cover bg-center bg-no-repeat"
+      className="min-h-screen flex flex-col items-center justify-start p-4 relative bg-blue-600 bg-cover bg-center bg-no-repeat"
       style={{
         backgroundImage: `url(${backgroundImage})`,
       }}

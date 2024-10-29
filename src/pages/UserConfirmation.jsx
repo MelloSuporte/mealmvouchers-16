@@ -43,7 +43,7 @@ const UserConfirmation = () => {
 
   return (
     <div 
-      className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 bg-cover bg-center bg-no-repeat"
+      className="min-h-screen flex flex-col items-center justify-center p-4 relative bg-blue-600 bg-cover bg-center bg-no-repeat"
       style={{
         backgroundImage: `url(${backgroundImage})`,
       }}

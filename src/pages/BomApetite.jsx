@@ -34,7 +34,7 @@ const BomApetite = () => {
 
   return (
     <div 
-      className="flex flex-col items-center justify-center min-h-screen bg-green-100 p-4 bg-cover bg-center bg-no-repeat"
+      className="flex flex-col items-center justify-center min-h-screen bg-blue-600 p-4 bg-cover bg-center bg-no-repeat"
       style={{
         backgroundImage: `url(${backgroundImage})`,
       }}
