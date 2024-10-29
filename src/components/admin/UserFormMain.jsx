@@ -6,13 +6,6 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const defaultTurnos = [
-  { id: "central", label: "Turno Central", entrada: "08:00", saida: "17:00" },
-  { id: "primeiro", label: "Primeiro Turno", entrada: "06:00", saida: "14:00" },
-  { id: "segundo", label: "Segundo Turno", entrada: "14:00", saida: "22:00" },
-  { id: "terceiro", label: "Terceiro Turno", entrada: "22:00", saida: "06:00" }
-];
-
 const UserFormMain = ({
   formData,
   onInputChange,
@@ -99,18 +92,23 @@ const UserFormMain = ({
         />
         <Label htmlFor="suspend-user">Suspender acesso</Label>
       </div>
-      <div className="flex items-center space-x-2">
-        <Input
+      <div className="flex items-center justify-between space-x-4">
+        <input
           type="file"
           accept="image/*"
           onChange={handlePhotoUpload}
           className="hidden"
           id="photo-upload"
         />
-        <Button type="button" onClick={() => document.getElementById('photo-upload').click()}>
-          <Upload size={20} className="mr-2" />
-          Upload Foto
-        </Button>
+        <div className="flex space-x-4">
+          <Button type="button" onClick={() => document.getElementById('photo-upload').click()}>
+            <Upload size={20} className="mr-2" />
+            Upload Foto
+          </Button>
+          <Button type="button" onClick={onSave}>
+            Cadastrar Usuário
+          </Button>
+        </div>
         {formData.userPhoto && (
           <img 
             src={typeof formData.userPhoto === 'string' ? formData.userPhoto : URL.createObjectURL(formData.userPhoto)} 
@@ -119,7 +117,6 @@ const UserFormMain = ({
           />
         )}
       </div>
-      <Button type="button" onClick={onSave}>Cadastrar Usuário</Button>
     </form>
   );
 };
