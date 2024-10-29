@@ -29,7 +29,7 @@ const DisposableVoucherForm = () => {
         database: process.env.DB_NAME
       });
 
-      const [rows] = await connection.execute('SELECT * FROM meal_types WHERE is_active = TRUE ORDER BY name');
+      const [rows] = await connection.execute('SELECT * FROM tipos_refeicao WHERE ativo = TRUE ORDER BY nome');
       setMealTypes(rows);
       setIsLoading(false);
       await connection.end();
@@ -68,9 +68,17 @@ const DisposableVoucherForm = () => {
         database: process.env.DB_NAME
       });
 
-      // Aqui você implementaria a lógica para inserir os vouchers no banco de dados
-      // Por exemplo:
-      // await connection.execute('INSERT INTO disposable_vouchers (code, meal_type_id, expiration_date) VALUES (?, ?, ?)', [generatedCode, mealTypeId, expirationDate]);
+      for (let date of selectedDates) {
+        for (let mealTypeId of selectedMealTypes) {
+          for (let i = 0; i < quantity; i++) {
+            const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+            await connection.execute(
+              'INSERT INTO vouchers_descartaveis (codigo, tipo_refeicao_id, expira_em, criado_por) VALUES (?, ?, ?, ?)',
+              [code, mealTypeId, date, 1] // Assumindo que o ID do usuário criador é 1
+            );
+          }
+        }
+      }
 
       await connection.end();
 
@@ -111,7 +119,7 @@ const DisposableVoucherForm = () => {
                   checked={selectedMealTypes.includes(type.id)}
                   onCheckedChange={() => handleMealTypeToggle(type.id)}
                 />
-                <Label htmlFor={`meal-type-${type.id}`}>{type.name}</Label>
+                <Label htmlFor={`meal-type-${type.id}`}>{type.nome}</Label>
               </div>
             ))}
           </div>

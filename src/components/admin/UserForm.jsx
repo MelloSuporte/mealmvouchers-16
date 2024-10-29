@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { executeQuery } from '../../utils/db';
+import mysql from 'mysql2/promise';
 import { toast } from "sonner";
 import UserFormMain from './UserFormMain';
 import UserSearchDialog from './UserSearchDialog';
@@ -19,8 +19,15 @@ const UserForm = () => {
 
   const handleSaveUser = async () => {
     try {
-      await executeQuery(
-        'INSERT INTO users (name, email, cpf, company, voucher, turno, is_suspended) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      const connection = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+      });
+
+      await connection.execute(
+        'INSERT INTO usuarios (nome, email, cpf, empresa_id, voucher, turno, suspenso) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [
           formData.userName,
           formData.userEmail,
@@ -31,6 +38,9 @@ const UserForm = () => {
           formData.isSuspended
         ]
       );
+
+      await connection.end();
+
       toast.success("Usuário cadastrado com sucesso!");
       resetForm();
     } catch (error) {
@@ -40,19 +50,28 @@ const UserForm = () => {
 
   const handleSearch = async (searchCPF) => {
     try {
-      const results = await executeQuery('SELECT * FROM users WHERE cpf = ?', [searchCPF]);
+      const connection = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+      });
+
+      const [rows] = await connection.execute('SELECT * FROM usuarios WHERE cpf = ?', [searchCPF]);
       
-      if (results.length > 0) {
-        const user = results[0];
+      await connection.end();
+
+      if (rows.length > 0) {
+        const user = rows[0];
         setFormData({
-          userName: user.name,
+          userName: user.nome,
           userEmail: user.email,
           userCPF: user.cpf,
-          company: user.company,
+          company: user.empresa_id,
           voucher: user.voucher,
           selectedTurno: user.turno,
-          isSuspended: user.is_suspended,
-          userPhoto: user.photo
+          isSuspended: user.suspenso,
+          userPhoto: user.foto
         });
         toast.success("Usuário encontrado!");
       } else {
