@@ -83,3 +83,9 @@ CREATE TABLE IF NOT EXISTS disposable_vouchers (
   FOREIGN KEY (meal_type_id) REFERENCES meal_types(id),
   FOREIGN KEY (created_by) REFERENCES users(id)
 );
+
+-- Adicionar novos campos à tabela meal_types
+ALTER TABLE meal_types
+ADD COLUMN is_active BOOLEAN DEFAULT TRUE,
+ADD COLUMN max_users_per_day INT,
+ADD COLUMN tolerance_minutes INT DEFAULT 15;

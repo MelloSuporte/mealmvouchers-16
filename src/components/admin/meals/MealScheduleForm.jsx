@@ -1,0 +1,147 @@
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { executeQuery } from '../../../utils/db';
+
+const MealScheduleForm = () => {
+  const [mealSchedule, setMealSchedule] = useState({
+    name: '',
+    startTime: '',
+    endTime: '',
+    value: '',
+    isActive: true,
+    maxUsersPerDay: '',
+    toleranceMinutes: '15'
+  });
+
+  const handleInputChange = (field, value) => {
+    setMealSchedule(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!mealSchedule.name || !mealSchedule.startTime || !mealSchedule.endTime || !mealSchedule.value) {
+      toast.error("Por favor, preencha todos os campos obrigatórios");
+      return;
+    }
+
+    try {
+      await executeQuery(
+        'INSERT INTO meal_types (name, start_time, end_time, value, is_active, max_users_per_day, tolerance_minutes) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [
+          mealSchedule.name,
+          mealSchedule.startTime,
+          mealSchedule.endTime,
+          mealSchedule.value,
+          mealSchedule.isActive,
+          mealSchedule.maxUsersPerDay,
+          mealSchedule.toleranceMinutes
+        ]
+      );
+      
+      toast.success("Refeição cadastrada com sucesso!");
+      setMealSchedule({
+        name: '',
+        startTime: '',
+        endTime: '',
+        value: '',
+        isActive: true,
+        maxUsersPerDay: '',
+        toleranceMinutes: '15'
+      });
+    } catch (error) {
+      toast.error("Erro ao cadastrar refeição: " + error.message);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Nome da Refeição</Label>
+        <Input
+          id="name"
+          value={mealSchedule.name}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          placeholder="Ex: Almoço"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="startTime">Horário Início</Label>
+          <Input
+            id="startTime"
+            type="time"
+            value={mealSchedule.startTime}
+            onChange={(e) => handleInputChange('startTime', e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="endTime">Horário Fim</Label>
+          <Input
+            id="endTime"
+            type="time"
+            value={mealSchedule.endTime}
+            onChange={(e) => handleInputChange('endTime', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="value">Valor (R$)</Label>
+        <Input
+          id="value"
+          type="number"
+          step="0.01"
+          value={mealSchedule.value}
+          onChange={(e) => handleInputChange('value', e.target.value)}
+          placeholder="0.00"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="maxUsersPerDay">Limite de Usuários por Dia</Label>
+        <Input
+          id="maxUsersPerDay"
+          type="number"
+          value={mealSchedule.maxUsersPerDay}
+          onChange={(e) => handleInputChange('maxUsersPerDay', e.target.value)}
+          placeholder="Sem limite"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="toleranceMinutes">Tolerância (minutos)</Label>
+        <Input
+          id="toleranceMinutes"
+          type="number"
+          value={mealSchedule.toleranceMinutes}
+          onChange={(e) => handleInputChange('toleranceMinutes', e.target.value)}
+          placeholder="15"
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="isActive"
+          checked={mealSchedule.isActive}
+          onCheckedChange={(checked) => handleInputChange('isActive', checked)}
+        />
+        <Label htmlFor="isActive">Refeição Ativa</Label>
+      </div>
+
+      <Button type="submit" className="w-full">
+        Cadastrar Refeição
+      </Button>
+    </form>
+  );
+};
+
+export default MealScheduleForm;
