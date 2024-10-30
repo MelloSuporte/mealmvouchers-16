@@ -1,43 +1,38 @@
-# Estágio de build
 FROM oven/bun:1 as builder
 
 WORKDIR /app
 
-# Copiar arquivos de dependências
-COPY package.json .
-COPY bun.lockb .
+# Copy only package files first for better caching
+COPY package.json bun.lockb ./
 
-# Instalar todas as dependências
+# Install dependencies
 RUN bun install
 
-# Copiar o resto dos arquivos do projeto
+# Copy the rest of the application
 COPY . .
 
-# Executar o build
+# Build the application
 RUN bun run build
 
-# Estágio de produção
+# Production stage
 FROM oven/bun:1-slim
 
 WORKDIR /app
 
-# Copiar arquivos de dependências
-COPY package.json .
-COPY bun.lockb .
-
-# Instalar apenas as dependências de produção
+# Copy package files and install production dependencies
+COPY --from=builder /app/package.json /app/bun.lockb ./
 RUN bun install --production
 
-# Copiar arquivos do build e configurações
+# Copy built application and config files
 COPY --from=builder /app/dist ./dist
-COPY .env.example .env
-COPY init.sql ./init.sql
+COPY --from=builder /app/.env.example ./.env
+COPY --from=builder /app/init.sql ./init.sql
 
-# Configurar variáveis de ambiente para produção
+# Set production environment
 ENV NODE_ENV=production
 
-# Expor a porta da aplicação
+# Expose application port
 EXPOSE 5000
 
-# Comando para iniciar a aplicação
+# Start the application
 CMD ["bun", "dist/server.js"]
