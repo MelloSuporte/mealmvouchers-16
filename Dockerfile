@@ -1,0 +1,22 @@
+# Estágio de build
+FROM node:18-alpine as builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Estágio de produção
+FROM node:18-alpine
+
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copiar arquivos de configuração
+COPY .env.example .env
+
+EXPOSE 5000
+CMD ["node", "dist/server.js"]
