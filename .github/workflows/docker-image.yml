@@ -54,8 +54,6 @@ jobs:
         context: .
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/mealmantra:latest
-        cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/mealmantra:buildcache
-        cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/mealmantra:buildcache,mode=max
         
     - name: Deploy to Production Server
       uses: appleboy/ssh-action@master
