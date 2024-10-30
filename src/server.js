@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { securityMiddleware, corsOptions } from './middleware/security';
 import voucherRoutes from './routes/vouchers';
+import reportRoutes from './routes/reports';
 import logger from './config/logger';
 
 dotenv.config();
@@ -17,6 +18,7 @@ app.use(securityMiddleware);
 
 // Routes
 app.use('/api/vouchers', voucherRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
