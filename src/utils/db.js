@@ -1,19 +1,12 @@
-import pool from '../config/database.js';
-import logger from '../config/logger.js';
+import api from './api';
+import { toast } from "sonner";
 
 export const executeQuery = async (query, params = []) => {
-  let connection;
   try {
-    connection = await pool.getConnection();
-    logger.info(`Executing query: ${query}`);
-    const [results] = await connection.execute(query, params);
-    return results;
+    const response = await api.post('/api/query', { query, params });
+    return response.data;
   } catch (error) {
-    logger.error('Database query error:', error);
+    toast.error('Database error: ' + (error.response?.data?.error || error.message));
     throw error;
-  } finally {
-    if (connection) {
-      connection.release();
-    }
   }
 };
