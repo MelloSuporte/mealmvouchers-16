@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 # Copy package files
 COPY package.json bun.lockb ./
 
-# Install all dependencies (including devDependencies)
+# Install all dependencies
 RUN bun install
 
 # Copy the rest of the application
@@ -29,7 +29,7 @@ WORKDIR /app
 # Copy package files and install only production dependencies
 COPY package.json ./
 COPY bun.lockb ./
-RUN bun install --production --frozen-lockfile
+RUN bun install --no-save
 
 # Copy built application and config files
 COPY --from=builder /app/dist ./dist
