@@ -27,8 +27,9 @@ FROM oven/bun:1-debian
 WORKDIR /app
 
 # Copy package files and install only production dependencies
-COPY --from=builder /app/package.json /app/bun.lockb ./
-RUN bun install --production
+COPY package.json ./
+COPY bun.lockb ./
+RUN bun install --production --frozen-lockfile
 
 # Copy built application and config files
 COPY --from=builder /app/dist ./dist
