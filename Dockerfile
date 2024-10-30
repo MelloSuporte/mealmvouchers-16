@@ -8,7 +8,7 @@ COPY package*.json ./
 COPY bun.lockb ./
 
 # Instalar todas as dependências, incluindo as de desenvolvimento
-RUN npm ci
+RUN npm install
 
 # Copiar o resto dos arquivos do projeto
 COPY . .
@@ -24,7 +24,7 @@ WORKDIR /app
 # Instalar apenas as dependências de produção
 COPY package*.json ./
 COPY bun.lockb ./
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Copiar arquivos do build e configurações
 COPY --from=builder /app/dist ./dist
