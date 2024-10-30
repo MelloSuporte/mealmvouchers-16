@@ -6,18 +6,16 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const defaultTurnos = [
-  { id: "central", label: "Turno Central", entrada: "08:00", saida: "17:00" },
-  { id: "primeiro", label: "Primeiro Turno", entrada: "06:00", saida: "14:00" },
-  { id: "segundo", label: "Segundo Turno", entrada: "14:00", saida: "22:00" },
-  { id: "terceiro", label: "Terceiro Turno", entrada: "22:00", saida: "06:00" }
-];
-
 const UserFormMain = ({
   formData,
   onInputChange,
   onSave,
-  turnos = defaultTurnos
+  turnos = [
+    { id: "central", label: "Turno Central", entrada: "08:00", saida: "17:00" },
+    { id: "primeiro", label: "Primeiro Turno", entrada: "06:00", saida: "14:00" },
+    { id: "segundo", label: "Segundo Turno", entrada: "14:00", saida: "22:00" },
+    { id: "terceiro", label: "Terceiro Turno", entrada: "22:00", saida: "06:00" }
+  ]
 }) => {
   const [showVoucher, setShowVoucher] = React.useState(false);
 
