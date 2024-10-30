@@ -14,19 +14,19 @@ const createPool = () => {
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
-      ssl: process.env.NODE_ENV === 'production' ? {
-        rejectUnauthorized: true
-      } : false
+      ssl: false
     });
 
-    // Teste a conexão
+    // Test connection
     pool.getConnection()
       .then(connection => {
         logger.info('Database connection established successfully');
+        logger.info(`Connected to MySQL at ${process.env.DB_HOST}`);
         connection.release();
       })
       .catch(err => {
         logger.error('Failed to connect to database:', err);
+        logger.error(`Connection details: host=${process.env.DB_HOST}, user=${process.env.DB_USER}, database=${process.env.DB_NAME}`);
         throw err;
       });
 

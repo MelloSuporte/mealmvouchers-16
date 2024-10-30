@@ -1,7 +1,20 @@
 version: '3.8'
 
 services:
-  app:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://api:5000
+    depends_on:
+      - api
+    networks:
+      - app-network
+
+  api:
     build:
       context: .
       dockerfile: Dockerfile
@@ -16,9 +29,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - db
-    restart: always
-    volumes:
-      - ./.env:/app/.env
+    networks:
+      - app-network
 
   db:
     image: mysql:8.0
@@ -27,10 +39,18 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: always
+    networks:
+      - app-network
+    command: --default-authentication-plugin=mysql_native_password
 
 volumes:
   mysql_data:
+
+networks:
+  app-network:
+    driver: bridge
