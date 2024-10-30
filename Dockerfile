@@ -1,11 +1,18 @@
-FROM oven/bun:1 as builder
+# Use the official Bun image as base
+FROM oven/bun:1-debian as builder
 
 WORKDIR /app
 
-# Copy only package files first for better caching
+# Install necessary build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
 COPY package.json bun.lockb ./
 
-# Install dependencies
+# Install all dependencies (including devDependencies)
 RUN bun install
 
 # Copy the rest of the application
@@ -15,11 +22,11 @@ COPY . .
 RUN bun run build
 
 # Production stage
-FROM oven/bun:1-slim
+FROM oven/bun:1-debian
 
 WORKDIR /app
 
-# Copy package files and install production dependencies
+# Copy package files and install only production dependencies
 COPY --from=builder /app/package.json /app/bun.lockb ./
 RUN bun install --production
 
@@ -35,4 +42,4 @@ ENV NODE_ENV=production
 EXPOSE 5000
 
 # Start the application
-CMD ["bun", "dist/server.js"]
+CMD ["bun", "run", "start"]
