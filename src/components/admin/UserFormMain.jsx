@@ -29,8 +29,13 @@ const UserFormMain = ({
   };
 
   const generateVoucher = () => {
-    const newVoucher = Math.random().toString(36).substring(2, 8).toUpperCase();
-    onInputChange('voucher', newVoucher);
+    if (formData.userCPF) {
+      const cpfNumbers = formData.userCPF.replace(/\D/g, '');
+      if (cpfNumbers.length >= 5) {
+        const newVoucher = cpfNumbers.substring(1, 5);
+        onInputChange('voucher', newVoucher);
+      }
+    }
   };
 
   return (
@@ -49,7 +54,16 @@ const UserFormMain = ({
       <Input 
         placeholder="CPF (000.000.000-00)" 
         value={formData.userCPF}
-        onChange={(e) => onInputChange('userCPF', e.target.value)}
+        onChange={(e) => {
+          let value = e.target.value.replace(/\D/g, '');
+          if (value.length <= 11) {
+            value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+            onInputChange('userCPF', value);
+            if (value.length >= 5) {
+              onInputChange('voucher', value.substring(1, 5));
+            }
+          }
+        }}
       />
       <Select 
         value={formData.company} 
