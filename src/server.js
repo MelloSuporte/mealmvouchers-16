@@ -1,10 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { securityMiddleware, corsOptions } from './middleware/security';
-import voucherRoutes from './routes/vouchers';
-import reportRoutes from './routes/reports';
-import logger from './config/logger';
+import { securityMiddleware, corsOptions } from './middleware/security.js';
+import voucherRoutes from './routes/vouchers.js';
+import reportRoutes from './routes/reports.js';
+import healthRoutes from './routes/health.js';
+import logger from './config/logger.js';
 
 dotenv.config();
 
@@ -19,11 +20,7 @@ app.use(securityMiddleware);
 // Routes
 app.use('/api/vouchers', voucherRoutes);
 app.use('/api/reports', reportRoutes);
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
-});
+app.use('/api/health', healthRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {
