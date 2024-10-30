@@ -3,17 +3,17 @@ FROM node:18-alpine as builder
 
 WORKDIR /app
 
-# Copiar arquivos de dependências primeiro
+# Instalar dependências primeiro para aproveitar o cache do Docker
 COPY package*.json ./
 COPY bun.lockb ./
 
-# Instalar dependências
-RUN npm install
+# Instalar todas as dependências, incluindo as de desenvolvimento
+RUN npm ci
 
-# Copiar resto dos arquivos do projeto
+# Copiar o resto dos arquivos do projeto
 COPY . .
 
-# Build da aplicação
+# Executar o build
 RUN npm run build
 
 # Estágio de produção
@@ -21,15 +21,21 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copiar arquivos necessários do estágio de build
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
+# Instalar apenas as dependências de produção
+COPY package*.json ./
+COPY bun.lockb ./
+RUN npm ci --only=production
 
-# Copiar arquivos de configuração
+# Copiar arquivos do build e configurações
+COPY --from=builder /app/dist ./dist
 COPY .env.example .env
 COPY init.sql ./init.sql
 
+# Configurar variáveis de ambiente para produção
+ENV NODE_ENV=production
+
+# Expor a porta da aplicação
 EXPOSE 5000
 
+# Comando para iniciar a aplicação
 CMD ["node", "dist/server.js"]
