@@ -1,30 +1,32 @@
 # Estágio de build
-FROM node:18-alpine as builder
+FROM oven/bun:1 as builder
 
 WORKDIR /app
 
-# Instalar dependências primeiro para aproveitar o cache do Docker
-COPY package*.json ./
-COPY bun.lockb ./
+# Copiar arquivos de dependências
+COPY package.json .
+COPY bun.lockb .
 
-# Instalar todas as dependências, incluindo as de desenvolvimento
-RUN npm install
+# Instalar todas as dependências
+RUN bun install
 
 # Copiar o resto dos arquivos do projeto
 COPY . .
 
 # Executar o build
-RUN npm run build
+RUN bun run build
 
 # Estágio de produção
-FROM node:18-alpine
+FROM oven/bun:1-slim
 
 WORKDIR /app
 
+# Copiar arquivos de dependências
+COPY package.json .
+COPY bun.lockb .
+
 # Instalar apenas as dependências de produção
-COPY package*.json ./
-COPY bun.lockb ./
-RUN npm install --only=production
+RUN bun install --production
 
 # Copiar arquivos do build e configurações
 COPY --from=builder /app/dist ./dist
@@ -38,4 +40,4 @@ ENV NODE_ENV=production
 EXPOSE 5000
 
 # Comando para iniciar a aplicação
-CMD ["node", "dist/server.js"]
+CMD ["bun", "dist/server.js"]
