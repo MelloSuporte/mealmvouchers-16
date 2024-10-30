@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Settings } from 'lucide-react';
 import { toast } from "sonner";
 import AdminLoginDialog from '../components/AdminLoginDialog';
+import api from '../utils/api';
 
 const Voucher = () => {
   const [voucherCode, setVoucherCode] = useState('');
@@ -27,36 +28,23 @@ const Voucher = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch('/api/vouchers/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          voucherCode,
-          cpf: localStorage.getItem('userCPF') || '',
-          mealType: localStorage.getItem('selectedMealType') || ''
-        }),
+      const response = await api.post('/vouchers/validate', { 
+        voucherCode,
+        cpf: localStorage.getItem('userCPF') || '',
+        mealType: localStorage.getItem('selectedMealType') || ''
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        toast.error(data.error);
-        return;
-      }
-
-      if (data.success) {
+      if (response.data.success) {
         navigate('/user-confirmation', { 
           state: { 
-            userName: data.userName,
-            userTurno: data.turno,
+            userName: response.data.userName,
+            userTurno: response.data.turno,
             mealType: localStorage.getItem('selectedMealType')
           }
         });
       }
     } catch (error) {
-      toast.error("Erro ao validar o voucher. Tente novamente.");
+      toast.error(error.response?.data?.error || "Erro ao validar o voucher. Tente novamente.");
     }
   };
 

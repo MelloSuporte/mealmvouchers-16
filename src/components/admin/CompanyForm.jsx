@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import api from '../../utils/api';
 
 const CompanyForm = () => {
   const [companyName, setCompanyName] = useState("");
@@ -18,19 +20,37 @@ const CompanyForm = () => {
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type === "image/png") {
-      setLogo(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogo(reader.result);
+      };
+      reader.readAsDataURL(file);
     } else {
-      alert("Por favor, selecione uma imagem PNG.");
+      toast.error("Por favor, selecione uma imagem PNG.");
     }
   };
 
-  const handleSaveCompany = () => {
-    console.log('Salvando empresa:', { companyName, cnpj, logo });
-    // Aqui você implementaria a lógica para salvar os dados da empresa
+  const handleSaveCompany = async () => {
+    try {
+      const response = await api.post('/companies', {
+        name: companyName,
+        cnpj,
+        logo
+      });
+
+      if (response.data) {
+        toast.success('Empresa cadastrada com sucesso!');
+        setCompanyName("");
+        setCnpj("");
+        setLogo(null);
+      }
+    } catch (error) {
+      toast.error("Erro ao cadastrar empresa: " + (error.response?.data?.error || error.message));
+    }
   };
 
   return (
-    <form className="space-y-4">
+    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
       <Input
         placeholder="Nome da empresa"
         value={companyName}
