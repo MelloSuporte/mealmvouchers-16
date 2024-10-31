@@ -1,46 +1,28 @@
-# Use the official Bun image as base
+# Build stage
 FROM oven/bun:1-debian as builder
 
 WORKDIR /app
 
-# Install necessary build dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    python3 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy package files
+# Install dependencies
 COPY package.json bun.lockb ./
-
-# Install all dependencies
 RUN bun install
 
-# Copy the rest of the application
+# Copy source code
 COPY . .
 
 # Build the application
 RUN bun run build
 
 # Production stage
-FROM oven/bun:1-debian
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy package files and install only production dependencies
-COPY package.json ./
-COPY bun.lockb ./
-RUN bun install --no-save
+# Copy built files from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy built application and config files
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/.env.example ./.env
-COPY --from=builder /app/init.sql ./init.sql
+# Expose port
+EXPOSE 80
 
-# Set production environment
-ENV NODE_ENV=production
-
-# Expose application port
-EXPOSE 5000
-
-# Start the application
-CMD ["bun", "run", "start"]
+CMD ["nginx", "-g", "daemon off;"]
