@@ -20,9 +20,9 @@ services:
     environment:
       - NODE_ENV=production
       - DB_HOST=db
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
+      - DB_USER=voucher
+      - DB_PASSWORD=Mysql*voucher
+      - DB_NAME=sis_voucher
       - JWT_SECRET=${JWT_SECRET}
       - PORT=5000
     depends_on:
@@ -33,14 +33,17 @@ services:
 
   db:
     image: mysql:8.0
+    container_name: bd_voucher
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-      - MYSQL_DATABASE=${DB_NAME}
-      - MYSQL_USER=${DB_USER}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=Mysql*voucher
+      - MYSQL_DATABASE=sis_voucher
+      - MYSQL_USER=voucher
+      - MYSQL_PASSWORD=Mysql*voucher
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
     networks:
       - app-network
     restart: always

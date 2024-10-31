@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS bd_voucher;
+CREATE DATABASE IF NOT EXISTS sis_voucher;
 
-USE bd_voucher;
+USE sis_voucher;
 
 CREATE TABLE IF NOT EXISTS companies (
   id INT AUTO_INCREMENT PRIMARY KEY,
