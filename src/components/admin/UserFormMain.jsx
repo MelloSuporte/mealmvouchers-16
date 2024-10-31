@@ -40,7 +40,7 @@ const UserFormMain = ({
 
   const generateVoucher = () => {
     if (formData.userCPF) {
-      const cpfNumbers = formData.userCPF.replace(/\D/g, '');
+      const cpfNumbers = formData.userCPF.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
       if (cpfNumbers.length >= 5) {
         const newVoucher = cpfNumbers.substring(1, 5);
         onInputChange('voucher', newVoucher);
@@ -70,7 +70,8 @@ const UserFormMain = ({
             value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
             onInputChange('userCPF', value);
             if (value.length >= 5) {
-              onInputChange('voucher', value.substring(1, 5));
+              const cpfNumbers = value.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+              onInputChange('voucher', cpfNumbers.substring(1, 5));
             }
           }
         }}
