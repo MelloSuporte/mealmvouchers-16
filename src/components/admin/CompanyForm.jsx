@@ -52,7 +52,6 @@ const CompanyForm = () => {
         setLogo(null);
       }
     } catch (error) {
-      console.error('Error details:', error);
       toast.error("Erro ao cadastrar empresa: " + (error.response?.data?.error || error.message));
     } finally {
       setIsSubmitting(false);

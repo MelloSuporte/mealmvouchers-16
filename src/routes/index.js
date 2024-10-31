@@ -7,19 +7,11 @@ import usersRoutes from './users.js';
 import extraVouchersRoutes from './extraVouchers.js';
 
 export const configureRoutes = (app) => {
-  // Health check route
-  app.use('/health', healthRoutes);
-  
-  // API routes with /api prefix
-  const apiRouter = express.Router();
-  
-  apiRouter.use('/vouchers', voucherRoutes);
-  apiRouter.use('/reports', reportRoutes);
-  apiRouter.use('/meals', mealsRoutes);
-  apiRouter.use('/companies', companiesRoutes);
-  apiRouter.use('/users', usersRoutes);
-  apiRouter.use('/extra-vouchers', extraVouchersRoutes);
-  
-  // Mount all API routes under /api
-  app.use('/api', apiRouter);
+  app.use('/api/vouchers', voucherRoutes);
+  app.use('/api/reports', reportRoutes);
+  app.use('/api/health', healthRoutes);
+  app.use('/api/meals', mealsRoutes);
+  app.use('/api/companies', companiesRoutes);
+  app.use('/api/users', usersRoutes);
+  app.use('/api/extra-vouchers', extraVouchersRoutes);
 };

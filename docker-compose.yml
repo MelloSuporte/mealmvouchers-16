@@ -43,8 +43,7 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 40s
+      retries: 3
     volumes:
       - ./mysql-backups:/app/mysql-backups
       - ./src:/app/src
@@ -77,7 +76,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
 
 volumes:
   mysql_data:
