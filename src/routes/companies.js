@@ -4,6 +4,18 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
+router.get('/', async (req, res) => {
+  try {
+    const db = await pool.getConnection();
+    const [companies] = await db.execute('SELECT * FROM companies ORDER BY name');
+    res.json(companies);
+    db.release();
+  } catch (error) {
+    logger.error('Error fetching companies:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/', async (req, res) => {
   const { name, cnpj, logo } = req.body;
   

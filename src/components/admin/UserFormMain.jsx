@@ -1,10 +1,12 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Upload } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import api from '../../utils/api';
 
 const UserFormMain = ({
   formData,
@@ -18,6 +20,14 @@ const UserFormMain = ({
   ]
 }) => {
   const [showVoucher, setShowVoucher] = React.useState(false);
+
+  const { data: companies = [] } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const response = await api.get('/companies');
+      return response.data;
+    }
+  });
 
   const handlePhotoUpload = (event) => {
     const file = event.target.files[0];
@@ -71,8 +81,11 @@ const UserFormMain = ({
           <SelectValue placeholder="Selecione a empresa" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="empresa1">Empresa 1</SelectItem>
-          <SelectItem value="empresa2">Empresa 2</SelectItem>
+          {companies.map((company) => (
+            <SelectItem key={company.id} value={company.id.toString()}>
+              {company.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       <div className="flex items-center space-x-2">
