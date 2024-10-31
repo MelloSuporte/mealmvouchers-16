@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from "sonner";
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -16,9 +16,9 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   config => {
-    // Remove duplicate /api prefixes
-    if (config.url.startsWith('/api/')) {
-      config.url = config.url.substring(4);
+    // Ensure URL starts with /api
+    if (!config.url.startsWith('/')) {
+      config.url = '/' + config.url;
     }
     return config;
   },
@@ -33,7 +33,10 @@ api.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 502) {
+    if (error.response?.status === 404) {
+      console.error('API Endpoint not found:', originalRequest.url);
+      toast.error('Erro: Endpoint não encontrado. Por favor, contate o suporte.');
+    } else if (error.response?.status === 502) {
       toast.error('Erro de conexão com o servidor. Tentando reconectar...');
       
       if (!originalRequest._retry && originalRequest.retry > 0) {
@@ -47,6 +50,7 @@ api.interceptors.response.use(
     }
 
     console.error('API Error:', {
+      url: originalRequest?.url,
       status: error.response?.status,
       data: error.response?.data,
       message: error.message,
