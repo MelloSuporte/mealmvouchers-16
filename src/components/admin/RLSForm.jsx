@@ -4,45 +4,85 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { ptBR } from 'date-fns/locale';
 import { toast } from "sonner";
+import { useQuery } from '@tanstack/react-query';
+import api from '../../utils/api';
 
 const RLSForm = () => {
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedCompany, setSelectedCompany] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
 
-  const handleSaveRLS = () => {
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const response = await api.get('/users');
+      return response.data || [];
+    }
+  });
+
+  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const response = await api.get('/companies');
+      return response.data || [];
+    }
+  });
+
+  const handleSaveRLS = async () => {
     if (!selectedUser || !selectedCompany || selectedDates.length === 0) {
       toast.error("Por favor, preencha todos os campos e selecione pelo menos uma data.");
       return;
     }
     
-    console.log('Salvando Voucher Extra:', { 
-      selectedUser, 
-      selectedCompany, 
-      selectedDates 
-    });
-    toast.success("Voucher extra liberado com sucesso!");
+    try {
+      await api.post('/extra-vouchers', {
+        userId: selectedUser,
+        companyId: selectedCompany,
+        dates: selectedDates
+      });
+      
+      toast.success("Voucher extra liberado com sucesso!");
+      setSelectedUser("");
+      setSelectedCompany("");
+      setSelectedDates([]);
+    } catch (error) {
+      toast.error("Erro ao liberar voucher extra: " + error.message);
+    }
   };
 
   return (
     <form className="space-y-4">
-      <Select value={selectedUser} onValueChange={setSelectedUser}>
+      <Select 
+        value={selectedUser} 
+        onValueChange={setSelectedUser}
+        disabled={isLoadingUsers}
+      >
         <SelectTrigger>
-          <SelectValue placeholder="Selecione o usuário" />
+          <SelectValue placeholder={isLoadingUsers ? "Carregando usuários..." : "Selecione o usuário"} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="user1">Usuário 1</SelectItem>
-          <SelectItem value="user2">Usuário 2</SelectItem>
+          {users.map((user) => (
+            <SelectItem key={user.id} value={user.id.toString()}>
+              {user.name} - {user.cpf}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
-      <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+      <Select 
+        value={selectedCompany} 
+        onValueChange={setSelectedCompany}
+        disabled={isLoadingCompanies}
+      >
         <SelectTrigger>
-          <SelectValue placeholder="Selecione a empresa" />
+          <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="empresa1">Empresa 1</SelectItem>
-          <SelectItem value="empresa2">Empresa 2</SelectItem>
+          {companies.map((company) => (
+            <SelectItem key={company.id} value={company.id.toString()}>
+              {company.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
@@ -75,6 +115,7 @@ const RLSForm = () => {
           type="button" 
           onClick={handleSaveRLS}
           className="px-6"
+          disabled={isLoadingUsers || isLoadingCompanies}
         >
           Liberar Voucher Extra
         </Button>
