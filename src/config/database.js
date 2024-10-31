@@ -4,9 +4,6 @@ import logger from './logger.js';
 
 dotenv.config();
 
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 5000; // 5 segundos
-
 const createPool = () => {
   try {
     const pool = mysql.createPool({
@@ -15,19 +12,13 @@ const createPool = () => {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME || 'sis_voucher',
       waitForConnections: true,
-      connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT) || 10,
-      queueLimit: parseInt(process.env.DB_QUEUE_LIMIT) || 0,
+      connectionLimit: 10,
+      queueLimit: 0,
       enableKeepAlive: true,
-      keepAliveInitialDelay: 0,
-      connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT) || 30000,
-      ssl: process.env.NODE_ENV === 'production' ? {
-        rejectUnauthorized: false
-      } : false
+      keepAliveInitialDelay: 0
     });
 
     logger.info('Pool de conexão MySQL criado com sucesso');
-    logger.info(`Conectando ao MySQL em ${process.env.DB_HOST}`);
-    
     return pool;
   } catch (error) {
     logger.error('Erro ao criar pool de conexão:', error);
@@ -37,43 +28,16 @@ const createPool = () => {
 
 const pool = createPool();
 
-const testConnectionWithRetry = async (retries = MAX_RETRIES) => {
+// Testar conexão periodicamente
+setInterval(async () => {
   try {
     const connection = await pool.getConnection();
     await connection.ping();
     connection.release();
-    logger.info('Conexão com o banco de dados estabelecida com sucesso');
-    return true;
+    logger.info('Conexão com banco de dados OK');
   } catch (error) {
-    logger.error('Erro ao testar conexão:', error);
-    
-    if (retries > 0) {
-      logger.info(`Tentando reconectar em ${RETRY_DELAY/1000} segundos... (${retries} tentativas restantes)`);
-      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-      return testConnectionWithRetry(retries - 1);
-    }
-    
-    logger.error('Todas as tentativas de conexão falharam');
-    return false;
+    logger.error('Erro na verificação de conexão:', error);
   }
-};
-
-// Iniciar teste de conexão imediatamente
-testConnectionWithRetry();
-
-// Verificar conexão periodicamente
-setInterval(() => {
-  testConnectionWithRetry(1);
-}, 60000); // Verifica a cada minuto
-
-export const getConnection = async () => {
-  try {
-    const connection = await pool.getConnection();
-    return connection;
-  } catch (error) {
-    logger.error('Erro ao obter conexão:', error);
-    throw new Error('Não foi possível obter uma conexão com o banco de dados');
-  }
-};
+}, 30000);
 
 export default pool;

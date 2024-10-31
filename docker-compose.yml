@@ -38,7 +38,12 @@ services:
         condition: service_healthy
     networks:
       - app-network
-    restart: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     volumes:
       - ./mysql-backups:/app/mysql-backups
       - ./src:/app/src
@@ -64,7 +69,7 @@ services:
       - "3306:3306"
     networks:
       - app-network
-    restart: always
+    restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "voucher", "-pMysql*voucher"]

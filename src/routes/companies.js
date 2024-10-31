@@ -8,19 +8,22 @@ router.get('/', async (req, res) => {
   try {
     const db = await pool.getConnection();
     const [companies] = await db.execute('SELECT * FROM companies ORDER BY name');
-    res.json(companies);
     db.release();
+    res.json(companies);
   } catch (error) {
     logger.error('Error fetching companies:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      error: 'Erro ao buscar empresas. Por favor, tente novamente.' 
+    });
   }
 });
 
 router.post('/', async (req, res) => {
   const { name, cnpj, logo } = req.body;
+  let db;
   
   try {
-    const db = await pool.getConnection();
+    db = await pool.getConnection();
     const [result] = await db.execute(
       'INSERT INTO companies (name, cnpj, logo) VALUES (?, ?, ?)',
       [name, cnpj, logo]
@@ -34,11 +37,13 @@ router.post('/', async (req, res) => {
       success: true,
       message: 'Empresa cadastrada com sucesso'
     });
-    
-    db.release();
   } catch (error) {
     logger.error('Error creating company:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      error: 'Erro ao cadastrar empresa. Por favor, tente novamente.' 
+    });
+  } finally {
+    if (db) db.release();
   }
 });
 
