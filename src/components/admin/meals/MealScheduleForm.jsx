@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { executeQuery } from '../../../utils/db';
+import api from '../../../utils/api';
 
 const MealScheduleForm = () => {
   const [mealSchedule, setMealSchedule] = useState({
@@ -33,29 +33,20 @@ const MealScheduleForm = () => {
     }
 
     try {
-      await executeQuery(
-        'INSERT INTO meal_types (name, start_time, end_time, value, is_active, max_users_per_day, tolerance_minutes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [
-          mealSchedule.name,
-          mealSchedule.startTime,
-          mealSchedule.endTime,
-          mealSchedule.value,
-          mealSchedule.isActive,
-          mealSchedule.maxUsersPerDay,
-          mealSchedule.toleranceMinutes
-        ]
-      );
+      const response = await api.post('/meals', mealSchedule);
       
-      toast.success("Refeição cadastrada com sucesso!");
-      setMealSchedule({
-        name: '',
-        startTime: '',
-        endTime: '',
-        value: '',
-        isActive: true,
-        maxUsersPerDay: '',
-        toleranceMinutes: '15'
-      });
+      if (response.data.success) {
+        toast.success("Refeição cadastrada com sucesso!");
+        setMealSchedule({
+          name: '',
+          startTime: '',
+          endTime: '',
+          value: '',
+          isActive: true,
+          maxUsersPerDay: '',
+          toleranceMinutes: '15'
+        });
+      }
     } catch (error) {
       toast.error("Erro ao cadastrar refeição: " + error.message);
     }

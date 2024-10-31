@@ -3,11 +3,10 @@ import { toast } from "sonner";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 30000, // Increased timeout
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
-  // Retry configuration
   retry: 3,
   retryDelay: (retryCount) => {
     return retryCount * 1000;
@@ -17,6 +16,10 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   config => {
+    // Ajuste nas URLs para garantir que começam com /api
+    if (!config.url.startsWith('/api/')) {
+      config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
+    }
     return config;
   },
   error => {
