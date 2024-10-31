@@ -3,9 +3,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import api from '../../../utils/api';
+import { Skeleton } from "@/components/ui/skeleton";
 
 const MealScheduleList = () => {
   const [meals, setMeals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadMeals();
@@ -13,10 +15,14 @@ const MealScheduleList = () => {
 
   const loadMeals = async () => {
     try {
+      setIsLoading(true);
       const response = await api.get('/api/meals');
-      setMeals(response.data);
+      setMeals(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       toast.error("Erro ao carregar refeições: " + error.message);
+      setMeals([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -31,6 +37,24 @@ const MealScheduleList = () => {
       toast.error("Erro ao atualizar status: " + error.message);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  if (meals.length === 0) {
+    return (
+      <div className="text-center py-4 text-gray-500">
+        Nenhuma refeição cadastrada
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-md border">
