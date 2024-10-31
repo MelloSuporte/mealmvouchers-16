@@ -13,8 +13,18 @@ fi
 # Parar containers existentes e remover volumes órfãos
 docker-compose down -v
 
-# Construir e iniciar os containers
-docker-compose up -d --build
+# Limpar cache do Docker
+docker system prune -f
+
+# Reconstruir imagens sem usar cache
+docker-compose build --no-cache
+
+# Iniciar os containers
+docker-compose up -d
+
+# Aguardar banco de dados inicializar
+echo "Aguardando banco de dados inicializar..."
+sleep 30
 
 # Instalar o cron de backup
 chmod +x install-backup-cron.sh
