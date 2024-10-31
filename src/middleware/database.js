@@ -9,14 +9,14 @@ export const withDatabase = async (req, res, next) => {
       const connection = await pool.getConnection();
       req.db = connection;
       
-      // Ensure connection is released after request is complete
+      // Garantir que a conexão seja liberada após a requisição
       res.on('finish', () => {
         if (req.db) {
           req.db.release();
         }
       });
       
-      // Also handle errors to ensure connection is released
+      // Tratar erros para garantir que a conexão seja liberada
       res.on('error', () => {
         if (req.db) {
           req.db.release();
@@ -27,14 +27,14 @@ export const withDatabase = async (req, res, next) => {
     } catch (err) {
       if (retries > 0) {
         retries--;
-        logger.warn(`Database connection failed, retrying... (${retries} attempts left)`);
+        logger.warn(`Falha na conexão com o banco, tentando novamente... (${retries} tentativas restantes)`);
         await new Promise(resolve => setTimeout(resolve, 1000));
         return tryConnection();
       }
       
-      logger.error('Database connection error:', err);
-      res.status(500).json({ 
-        error: 'Erro de conexão com o banco de dados',
+      logger.error('Erro de conexão com o banco de dados:', err);
+      res.status(503).json({ 
+        error: 'Serviço temporariamente indisponível',
         details: process.env.NODE_ENV === 'development' ? err.message : undefined
       });
     }
