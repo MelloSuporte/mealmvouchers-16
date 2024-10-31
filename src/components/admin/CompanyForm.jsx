@@ -8,6 +8,7 @@ const CompanyForm = () => {
   const [companyName, setCompanyName] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [logo, setLogo] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCNPJChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -19,19 +20,25 @@ const CompanyForm = () => {
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.type === "image/png") {
+    if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogo(reader.result);
       };
       reader.readAsDataURL(file);
     } else {
-      toast.error("Por favor, selecione uma imagem PNG.");
+      toast.error("Por favor, selecione uma imagem válida.");
     }
   };
 
   const handleSaveCompany = async () => {
+    if (!companyName || !cnpj) {
+      toast.error("Por favor, preencha todos os campos obrigatórios.");
+      return;
+    }
+
     try {
+      setIsSubmitting(true);
       const response = await api.post('/companies', {
         name: companyName,
         cnpj,
@@ -46,6 +53,8 @@ const CompanyForm = () => {
       }
     } catch (error) {
       toast.error("Erro ao cadastrar empresa: " + (error.response?.data?.error || error.message));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -55,24 +64,41 @@ const CompanyForm = () => {
         placeholder="Nome da empresa"
         value={companyName}
         onChange={(e) => setCompanyName(e.target.value)}
+        required
       />
       <Input
         placeholder="CNPJ (99.999.999/9999-99)"
         value={cnpj}
         onChange={handleCNPJChange}
+        required
       />
       <div>
-        <label htmlFor="logo" className="block text-sm font-medium text-gray-700">
-          Logo da Empresa (PNG)
+        <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-2">
+          Logo da Empresa
         </label>
         <Input
           id="logo"
           type="file"
-          accept=".png"
+          accept="image/*"
           onChange={handleLogoChange}
+          className="mb-2"
         />
+        {logo && (
+          <img 
+            src={logo} 
+            alt="Preview" 
+            className="w-32 h-32 object-contain border rounded-lg"
+          />
+        )}
       </div>
-      <Button type="button" onClick={handleSaveCompany}>Cadastrar Empresa</Button>
+      <Button 
+        type="button" 
+        onClick={handleSaveCompany}
+        disabled={isSubmitting}
+        className="w-full"
+      >
+        {isSubmitting ? "Cadastrando..." : "Cadastrar Empresa"}
+      </Button>
     </form>
   );
 };
