@@ -21,13 +21,15 @@ const UserFormMain = ({
 }) => {
   const [showVoucher, setShowVoucher] = React.useState(false);
 
-  const { data: companies = [] } = useQuery({
+  const { data: companiesData, isLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       const response = await api.get('/companies');
-      return response.data;
+      return response.data || [];
     }
   });
+
+  const companies = Array.isArray(companiesData) ? companiesData : [];
 
   const handlePhotoUpload = (event) => {
     const file = event.target.files[0];
@@ -76,9 +78,10 @@ const UserFormMain = ({
       <Select 
         value={formData.company} 
         onValueChange={(value) => onInputChange('company', value)}
+        disabled={isLoading}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Selecione a empresa" />
+          <SelectValue placeholder={isLoading ? "Carregando empresas..." : "Selecione a empresa"} />
         </SelectTrigger>
         <SelectContent>
           {companies.map((company) => (
