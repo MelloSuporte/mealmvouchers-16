@@ -4,9 +4,10 @@
 chmod +x backup.sh
 chmod +x backup.config
 
-# Criar entrada no crontab para executar backup diariamente às 3 da manhã
-(crontab -l 2>/dev/null; echo "0 3 * * * $(pwd)/backup.sh") | crontab -
+# Criar entrada no crontab para executar backup duas vezes ao dia
+(crontab -l 2>/dev/null; echo "0 9,21 * * * $(pwd)/backup.sh") | crontab -
 
 echo "Backup programado instalado com sucesso!"
-echo "O backup será executado todos os dias às 3:00 da manhã"
+echo "O backup será executado todos os dias às 09:00 e 21:00"
+echo "Os backups serão mantidos por 90 dias"
 echo "Para verificar a programação, use: crontab -l"
