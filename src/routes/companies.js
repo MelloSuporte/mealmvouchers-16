@@ -30,7 +30,9 @@ router.post('/', async (req, res) => {
       id: result.insertId, 
       name, 
       cnpj, 
-      logo 
+      logo,
+      success: true,
+      message: 'Empresa cadastrada com sucesso'
     });
     
     db.release();

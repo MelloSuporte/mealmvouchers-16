@@ -10,13 +10,13 @@ const createPool = () => {
       host: process.env.DB_HOST || 'localhost',
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME || 'bd_voucher',
+      database: process.env.DB_NAME || 'sis_voucher',
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
       enableKeepAlive: true,
       keepAliveInitialDelay: 0,
-      connectTimeout: 30000, // Increased timeout
+      connectTimeout: 30000,
       ssl: process.env.NODE_ENV === 'production' ? {
         rejectUnauthorized: false
       } : false

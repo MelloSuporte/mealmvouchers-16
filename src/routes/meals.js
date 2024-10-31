@@ -4,7 +4,6 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Rota existente para listar refeições
 router.get('/', async (req, res) => {
   try {
     const db = await pool.getConnection();
@@ -17,7 +16,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Nova rota para cadastrar refeições
 router.post('/', async (req, res) => {
   const { name, startTime, endTime, value, isActive, maxUsersPerDay, toleranceMinutes } = req.body;
   
@@ -40,7 +38,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Rota existente para atualizar status
 router.patch('/:id', async (req, res) => {
   const { id } = req.params;
   const { is_active } = req.body;

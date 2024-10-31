@@ -4,11 +4,11 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Rota para buscar usuário por CPF
 router.get('/search', async (req, res) => {
   const { cpf } = req.query;
   try {
-    const [rows] = await req.db.execute(
+    const db = await pool.getConnection();
+    const [rows] = await db.execute(
       'SELECT u.*, c.name as company_name FROM users u LEFT JOIN companies c ON u.company_id = c.id WHERE u.cpf = ?',
       [cpf]
     );
@@ -17,18 +17,19 @@ router.get('/search', async (req, res) => {
     } else {
       res.status(404).json({ message: 'Usuário não encontrado' });
     }
+    db.release();
   } catch (error) {
     logger.error('Error searching user:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Rota para criar novo usuário
 router.post('/', async (req, res) => {
   const { name, email, cpf, company_id, voucher, turno, is_suspended, photo } = req.body;
   
   try {
-    const [result] = await req.db.execute(
+    const db = await pool.getConnection();
+    const [result] = await db.execute(
       'INSERT INTO users (name, email, cpf, company_id, voucher, turno, is_suspended, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [name, email, cpf, company_id, voucher, turno, is_suspended, photo]
     );
@@ -38,6 +39,7 @@ router.post('/', async (req, res) => {
       id: result.insertId,
       message: 'Usuário cadastrado com sucesso'
     });
+    db.release();
   } catch (error) {
     logger.error('Error creating user:', error);
     res.status(500).json({ error: error.message });
