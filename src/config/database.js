@@ -7,14 +7,18 @@ dotenv.config();
 const createPool = () => {
   try {
     const pool = mysql.createPool({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
+      host: process.env.DB_HOST || 'localhost',
+      user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
+      database: process.env.DB_NAME || 'bd_voucher',
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
-      ssl: false
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 0,
+      ssl: process.env.NODE_ENV === 'production' ? {
+        rejectUnauthorized: false
+      } : false
     });
 
     // Test connection
@@ -42,6 +46,7 @@ const pool = createPool();
 export const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
+    await connection.ping();
     connection.release();
     return true;
   } catch (error) {
