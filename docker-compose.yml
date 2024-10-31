@@ -40,7 +40,7 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -48,10 +48,6 @@ services:
     volumes:
       - ./mysql-backups:/app/mysql-backups
       - ./src:/app/src
-    command: >
-      /bin/sh -c "
-      echo '🚀 API is running at http://localhost:5000';
-      bun run src/server.js"
 
   db:
     image: mysql:8.0
