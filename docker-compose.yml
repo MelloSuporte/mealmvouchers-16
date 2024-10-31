@@ -12,6 +12,8 @@ services:
     networks:
       - app-network
     restart: always
+    volumes:
+      - ./src:/app/src
 
   api:
     build:
@@ -35,10 +37,12 @@ services:
     restart: always
     volumes:
       - ./mysql-backups:/app/mysql-backups
+      - ./src:/app/src
 
   db:
     image: mysql:8.0
     container_name: bd_voucher
+    platform: linux/x86_64
     environment:
       - MYSQL_ROOT_PASSWORD=Mysql*voucher
       - MYSQL_DATABASE=sis_voucher
