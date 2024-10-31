@@ -16,6 +16,7 @@ const createPool = () => {
       queueLimit: 0,
       enableKeepAlive: true,
       keepAliveInitialDelay: 0,
+      connectTimeout: 30000, // Increased timeout
       ssl: process.env.NODE_ENV === 'production' ? {
         rejectUnauthorized: false
       } : false
