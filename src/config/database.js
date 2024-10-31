@@ -28,12 +28,22 @@ const createPool = () => {
 
 const pool = createPool();
 
-// Testar conexão periodicamente
-setInterval(async () => {
+export const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
     await connection.ping();
     connection.release();
+    return true;
+  } catch (error) {
+    logger.error('Erro ao testar conexão:', error);
+    return false;
+  }
+};
+
+// Testar conexão periodicamente
+setInterval(async () => {
+  try {
+    await testConnection();
     logger.info('Conexão com banco de dados OK');
   } catch (error) {
     logger.error('Erro na verificação de conexão:', error);

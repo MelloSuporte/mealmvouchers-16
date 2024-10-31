@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from "sonner";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -16,9 +16,9 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   config => {
-    // Ajuste nas URLs para garantir que começam com /api
-    if (!config.url.startsWith('/api/')) {
-      config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
+    // Remove duplicate /api prefixes
+    if (config.url.startsWith('/api/')) {
+      config.url = config.url.substring(4);
     }
     return config;
   },
@@ -36,19 +36,16 @@ api.interceptors.response.use(
     if (error.response?.status === 502) {
       toast.error('Erro de conexão com o servidor. Tentando reconectar...');
       
-      // Retry logic
       if (!originalRequest._retry && originalRequest.retry > 0) {
         originalRequest._retry = true;
         originalRequest.retry--;
         
-        // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, originalRequest.retryDelay(originalRequest._retryCount || 1)));
         
         return api(originalRequest);
       }
     }
 
-    // Log detailed error information
     console.error('API Error:', {
       status: error.response?.status,
       data: error.response?.data,
