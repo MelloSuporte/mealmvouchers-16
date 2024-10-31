@@ -48,6 +48,7 @@ services:
     volumes:
       - ./mysql-backups:/app/mysql-backups
       - ./src:/app/src
+    command: ["bun", "run", "src/server.js"]
 
   db:
     image: mysql:8.0
