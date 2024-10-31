@@ -14,6 +14,10 @@ services:
     restart: always
     volumes:
       - ./src:/app/src
+    command: >
+      /bin/sh -c "
+      echo '🚀 Frontend is running at http://localhost';
+      nginx -g 'daemon off;'"
 
   api:
     build:
@@ -38,6 +42,10 @@ services:
     volumes:
       - ./mysql-backups:/app/mysql-backups
       - ./src:/app/src
+    command: >
+      /bin/sh -c "
+      echo '🚀 API is running at http://localhost:5000';
+      bun run src/server.js"
 
   db:
     image: mysql:8.0
