@@ -1,17 +1,49 @@
 #!/bin/bash
-BACKUP_DIR="./mysql-backups"
-MYSQL_USER="voucher"
-MYSQL_PASSWORD="Mysql*voucher"
-DATABASE="sis_voucher"
-DATE=$(date +%Y%m%d_%H%M%S)
 
-# Criar diretório de backup se não existir
-mkdir -p $BACKUP_DIR
+# Carregar configurações
+source backup.config
 
-# Realizar backup
-docker exec bd_voucher mysqldump -u$MYSQL_USER -p$MYSQL_PASSWORD $DATABASE > "$BACKUP_DIR/backup_$DATE.sql"
+# Configurar logging
+exec 1> >(logger -s -t $(basename $0)) 2>&1
 
-# Manter apenas os últimos 7 backups
-ls -t $BACKUP_DIR/backup_*.sql | tail -n +8 | xargs -r rm
+# Criar diretórios necessários
+mkdir -p "$BACKUP_DIR"
+mkdir -p "$LOG_DIR"
 
-echo "Backup completed: backup_$DATE.sql"
+# Função para logging
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_DIR/backup.log"
+}
+
+# Função de limpeza
+cleanup_old_backups() {
+    log "Iniciando limpeza de backups antigos..."
+    find "$BACKUP_DIR" -name "backup_*.sql" -mtime +$RETENTION_DAYS -delete
+    log "Limpeza concluída"
+}
+
+# Função principal de backup
+do_backup() {
+    local DATE=$(date +%Y%m%d_%H%M%S)
+    local BACKUP_FILE="$BACKUP_DIR/backup_$DATE.sql"
+    
+    log "Iniciando backup do banco $DATABASE..."
+    
+    if docker exec $CONTAINER_NAME mysqldump -u$MYSQL_USER -p$MYSQL_PASSWORD $DATABASE > "$BACKUP_FILE"; then
+        log "Backup concluído com sucesso: $BACKUP_FILE"
+        log "Tamanho do backup: $(du -h "$BACKUP_FILE" | cut -f1)"
+    else
+        log "ERRO: Falha ao realizar backup"
+        return 1
+    fi
+    
+    # Compactar backup
+    gzip -f "$BACKUP_FILE"
+    log "Backup compactado: $BACKUP_FILE.gz"
+}
+
+# Execução principal
+log "Iniciando processo de backup"
+do_backup
+cleanup_old_backups
+log "Processo de backup finalizado"
