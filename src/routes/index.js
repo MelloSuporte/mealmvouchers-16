@@ -3,6 +3,7 @@ import reportRoutes from './reports.js';
 import healthRoutes from './health.js';
 import mealsRoutes from './meals.js';
 import companiesRoutes from './companies.js';
+import usersRoutes from './users.js';
 
 export const configureRoutes = (app) => {
   app.use('/api/vouchers', voucherRoutes);
@@ -10,4 +11,5 @@ export const configureRoutes = (app) => {
   app.use('/api/health', healthRoutes);
   app.use('/api/meals', mealsRoutes);
   app.use('/api/companies', companiesRoutes);
+  app.use('/api/users', usersRoutes);
 };

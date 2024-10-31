@@ -26,16 +26,26 @@ const UserForm = () => {
         company_id: formData.company,
         voucher: formData.voucher,
         turno: formData.selectedTurno,
-        is_suspended: formData.isSuspended
+        is_suspended: formData.isSuspended,
+        photo: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
       });
 
-      if (response.data) {
+      if (response.data.success) {
         toast.success("Usuário cadastrado com sucesso!");
         resetForm();
       }
     } catch (error) {
       toast.error("Erro ao cadastrar usuário: " + (error.response?.data?.error || error.message));
     }
+  };
+
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   const handleSearch = async (searchCPF) => {
