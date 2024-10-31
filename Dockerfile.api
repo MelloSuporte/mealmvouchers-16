@@ -1,32 +1,16 @@
-FROM oven/bun:1-debian as builder
-
-WORKDIR /app
-
-# Copy package files
-COPY package.json ./
-COPY bun.lockb ./
-
-# Install all dependencies (including dev dependencies)
-RUN bun install
-
-# Copy source code
-COPY . .
-
-# Production stage
 FROM oven/bun:1-debian
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better caching
 COPY package.json ./
 COPY bun.lockb ./
 
-# Install only production dependencies
-RUN bun install --production
+# Install dependencies
+RUN bun install
 
-# Copy built files from builder stage
-COPY --from=builder /app/src ./src
-COPY --from=builder /app/.env* ./
+# Copy source code
+COPY . .
 
 # Expose API port
 EXPOSE 5000
