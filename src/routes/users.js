@@ -4,6 +4,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
+// Search user by CPF
 router.get('/search', async (req, res) => {
   const { cpf } = req.query;
   try {
@@ -24,6 +25,7 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// Create new user
 router.post('/', async (req, res) => {
   const { name, email, cpf, company_id, voucher, turno, is_suspended, photo } = req.body;
   
@@ -31,7 +33,7 @@ router.post('/', async (req, res) => {
     const db = await pool.getConnection();
     const [result] = await db.execute(
       'INSERT INTO users (name, email, cpf, company_id, voucher, turno, is_suspended, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [name, email, cpf, company_id, voucher, turno, is_suspended, photo]
+      [name, email, cpf, company_id, voucher, turno, is_suspended || false, photo]
     );
     
     res.status(201).json({ 

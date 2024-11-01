@@ -9,10 +9,10 @@ import extraVouchersRoutes from './extraVouchers.js';
 
 const router = express.Router();
 
-// Rota de health check
+// Health check route
 router.use('/health', healthRoutes);
 
-// Rotas da API
+// API routes
 router.use('/companies', companiesRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/reports', reportRoutes);

@@ -11,21 +11,21 @@ dotenv.config();
 const createApp = () => {
   const app = express();
 
-  // Configurar middleware
+  // Configure middleware
   app.use(cors());
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.use(securityMiddleware);
 
-  // Rotas da API com middleware de banco de dados
+  // API routes with database middleware
   app.use('/api', withDatabase, apiRoutes);
 
-  // Health check endpoint (sem middleware de banco)
+  // Health check endpoint (without database middleware)
   app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
   });
 
-  // Tratamento de erros
+  // Error handling
   app.use((err, req, res, next) => {
     logger.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
