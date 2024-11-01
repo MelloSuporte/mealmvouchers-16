@@ -18,25 +18,6 @@ const createApp = () => {
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.use(securityMiddleware);
 
-  // Health check route (before database middleware)
-  app.get('/health', async (req, res) => {
-    try {
-      const dbConnected = await testConnection();
-      res.json({ 
-        status: dbConnected ? 'OK' : 'ERROR',
-        message: dbConnected ? 'Server is running and database is connected' : 'Database connection failed',
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      logger.error('Health check failed:', error);
-      res.status(503).json({ 
-        status: 'ERROR',
-        message: 'Service unavailable',
-        error: error.message
-      });
-    }
-  });
-
   // API routes with database middleware
   app.use('/api', withDatabase, apiRoutes);
 
