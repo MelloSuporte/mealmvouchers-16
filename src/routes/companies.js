@@ -3,7 +3,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Listar empresas
+// List companies
 router.get('/', async (req, res) => {
   try {
     const [companies] = await req.db.execute('SELECT * FROM companies ORDER BY name');
@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Cadastrar empresa
+// Create company
 router.post('/', async (req, res) => {
   const { name, cnpj, logo } = req.body;
   

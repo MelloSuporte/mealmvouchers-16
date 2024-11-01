@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { securityMiddleware } from '../middleware/security.js';
 import { withDatabase } from '../middleware/database.js';
-import apiRoutes from '../routes/api.js';
+import routes from './routes.js';
 import logger from './logger.js';
 
 dotenv.config();
@@ -17,8 +17,8 @@ const createApp = () => {
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.use(securityMiddleware);
 
-  // API routes with database middleware
-  app.use('/api', withDatabase, apiRoutes);
+  // Mount all routes under /api
+  app.use('/api', withDatabase, routes);
 
   // Health check endpoint (without database middleware)
   app.get('/health', (req, res) => {
