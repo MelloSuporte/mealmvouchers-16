@@ -5,6 +5,7 @@ import { securityMiddleware } from '../middleware/security.js';
 import { withDatabase } from '../middleware/database.js';
 import apiRoutes from '../routes/api.js';
 import logger from './logger.js';
+import { testConnection } from './database.js';
 
 dotenv.config();
 
@@ -16,15 +17,28 @@ const createApp = () => {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.use(securityMiddleware);
-  app.use(withDatabase);
 
-  // Routes
-  app.use('/api', apiRoutes);
-
-  // Health check
-  app.get('/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Server is running' });
+  // Health check route (before database middleware)
+  app.get('/health', async (req, res) => {
+    try {
+      const dbConnected = await testConnection();
+      res.json({ 
+        status: dbConnected ? 'OK' : 'ERROR',
+        message: dbConnected ? 'Server is running and database is connected' : 'Database connection failed',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Health check failed:', error);
+      res.status(503).json({ 
+        status: 'ERROR',
+        message: 'Service unavailable',
+        error: error.message
+      });
+    }
   });
+
+  // API routes with database middleware
+  app.use('/api', withDatabase, apiRoutes);
 
   // Error handling
   app.use((err, req, res, next) => {

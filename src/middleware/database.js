@@ -3,7 +3,7 @@ import logger from '../config/logger.js';
 
 export const withDatabase = async (req, res, next) => {
   let retries = 3;
-  let delay = 1000; // 1 segundo inicial
+  let delay = 1000; // 1 second initial delay
   
   const tryConnection = async () => {
     try {
@@ -21,15 +21,16 @@ export const withDatabase = async (req, res, next) => {
     } catch (err) {
       if (retries > 0) {
         retries--;
-        logger.warn(`Attempting to reconnect... (${retries} attempts remaining)`);
+        logger.warn(`Database connection attempt failed. Retrying in ${delay}ms... (${retries} attempts remaining)`);
         await new Promise(resolve => setTimeout(resolve, delay));
         delay *= 2; // Exponential backoff
         return tryConnection();
       }
       
-      logger.error('Database connection error:', err);
+      logger.error('All database connection attempts failed:', err);
       res.status(503).json({ 
-        error: 'Service temporarily unavailable. Please try again in a few moments.'
+        error: 'Database service unavailable',
+        message: 'Unable to establish database connection. Please try again later.'
       });
     }
   };
