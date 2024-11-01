@@ -1,32 +1,23 @@
 import express from 'express';
-import pool from '../config/database.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  let db;
   try {
-    db = await pool.getConnection();
-    const [companies] = await db.execute('SELECT * FROM companies ORDER BY name');
+    const [companies] = await req.db.execute('SELECT * FROM companies ORDER BY name');
     res.json(companies);
   } catch (error) {
     logger.error('Error fetching companies:', error);
-    res.status(500).json({ 
-      error: 'Error fetching companies. Please try again.' 
-    });
-  } finally {
-    if (db) db.release();
+    res.status(500).json({ error: 'Error fetching companies' });
   }
 });
 
 router.post('/', async (req, res) => {
   const { name, cnpj, logo } = req.body;
-  let db;
   
   try {
-    db = await pool.getConnection();
-    const [result] = await db.execute(
+    const [result] = await req.db.execute(
       'INSERT INTO companies (name, cnpj, logo) VALUES (?, ?, ?)',
       [name, cnpj, logo]
     );
@@ -41,11 +32,7 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error creating company:', error);
-    res.status(500).json({ 
-      error: 'Error registering company. Please try again.' 
-    });
-  } finally {
-    if (db) db.release();
+    res.status(500).json({ error: 'Error registering company' });
   }
 });
 

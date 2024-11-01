@@ -6,7 +6,6 @@ export const startServer = (app) => {
   try {
     const server = app.listen(port, '0.0.0.0', () => {
       logger.info(`Server running on port ${port}`);
-      logger.info(`Health check available at http://localhost:${port}/health`);
     });
 
     // Handle server errors

@@ -20,6 +20,11 @@ const createApp = () => {
   // API routes with database middleware
   app.use('/api', withDatabase, apiRoutes);
 
+  // Health check endpoint (without database middleware)
+  app.get('/health', (req, res) => {
+    res.json({ status: 'OK', message: 'Server is running' });
+  });
+
   // Error handling
   app.use((err, req, res, next) => {
     logger.error('Server error:', err);
