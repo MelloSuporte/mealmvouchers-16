@@ -18,10 +18,10 @@ const createPool = () => {
       keepAliveInitialDelay: 0
     });
 
-    logger.info('Pool de conexão MySQL criado com sucesso');
+    logger.info('MySQL connection pool created successfully');
     return pool;
   } catch (error) {
-    logger.error('Erro ao criar pool de conexão:', error);
+    logger.error('Error creating connection pool:', error);
     throw error;
   }
 };
@@ -33,20 +33,19 @@ export const testConnection = async () => {
     const connection = await pool.getConnection();
     await connection.ping();
     connection.release();
+    logger.info('Database connection test successful');
     return true;
   } catch (error) {
-    logger.error('Erro ao testar conexão:', error);
+    logger.error('Database connection test failed:', error);
     return false;
   }
 };
 
-// Testar conexão periodicamente
+// Test connection periodically
 setInterval(async () => {
-  try {
-    await testConnection();
-    logger.info('Conexão com banco de dados OK');
-  } catch (error) {
-    logger.error('Erro na verificação de conexão:', error);
+  const isConnected = await testConnection();
+  if (!isConnected) {
+    logger.error('Periodic database connection check failed');
   }
 }, 30000);
 
