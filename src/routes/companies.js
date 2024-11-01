@@ -5,9 +5,8 @@ const router = express.Router();
 
 // List companies
 router.get('/', async (req, res) => {
-  const db = req.db;
   try {
-    const [companies] = await db.execute('SELECT * FROM companies ORDER BY name');
+    const [companies] = await req.db.execute('SELECT * FROM companies ORDER BY name');
     res.json(companies);
   } catch (error) {
     logger.error('Error fetching companies:', error);
@@ -17,7 +16,6 @@ router.get('/', async (req, res) => {
 
 // Create company
 router.post('/', async (req, res) => {
-  const db = req.db;
   const { name, cnpj, logo } = req.body;
   
   if (!name || !cnpj) {
@@ -25,7 +23,7 @@ router.post('/', async (req, res) => {
   }
   
   try {
-    const [result] = await db.execute(
+    const [result] = await req.db.execute(
       'INSERT INTO companies (name, cnpj, logo) VALUES (?, ?, ?)',
       [name, cnpj, logo]
     );

@@ -17,13 +17,16 @@ const createApp = () => {
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.use(securityMiddleware);
 
-  // Mount all routes under /api
-  app.use('/api', withDatabase, routes);
-
   // Health check endpoint (without database middleware)
   app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
   });
+
+  // Apply database middleware to all API routes
+  app.use('/api', withDatabase);
+  
+  // Mount all routes under /api
+  app.use('/api', routes);
 
   // Error handling
   app.use((err, req, res, next) => {
