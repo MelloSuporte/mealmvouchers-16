@@ -3,6 +3,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
+// Listar empresas
 router.get('/', async (req, res) => {
   try {
     const [companies] = await req.db.execute('SELECT * FROM companies ORDER BY name');
@@ -13,6 +14,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Cadastrar empresa
 router.post('/', async (req, res) => {
   const { name, cnpj, logo } = req.body;
   
@@ -28,11 +30,11 @@ router.post('/', async (req, res) => {
       cnpj, 
       logo,
       success: true,
-      message: 'Company registered successfully'
+      message: 'Empresa cadastrada com sucesso'
     });
   } catch (error) {
     logger.error('Error creating company:', error);
-    res.status(500).json({ error: 'Error registering company' });
+    res.status(500).json({ error: 'Erro ao cadastrar empresa' });
   }
 });
 

@@ -8,7 +8,7 @@ export const startServer = (app) => {
       logger.info(`Server running on port ${port}`);
     });
 
-    // Handle server errors
+    // Tratamento de erros do servidor
     server.on('error', (error) => {
       if (error.code === 'EADDRINUSE') {
         logger.error(`Port ${port} is already in use`);
@@ -18,7 +18,7 @@ export const startServer = (app) => {
       process.exit(1);
     });
 
-    // Graceful shutdown
+    // Desligamento gracioso
     process.on('SIGTERM', () => {
       logger.info('SIGTERM received. Shutting down gracefully...');
       server.close(() => {
