@@ -5,7 +5,6 @@ import { securityMiddleware } from '../middleware/security.js';
 import { withDatabase } from '../middleware/database.js';
 import apiRoutes from '../routes/api.js';
 import logger from './logger.js';
-import { testConnection } from './database.js';
 
 dotenv.config();
 

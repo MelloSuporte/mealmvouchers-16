@@ -9,10 +9,10 @@ import extraVouchersRoutes from './extraVouchers.js';
 
 const router = express.Router();
 
-// Health check route should be first and without database middleware
+// Health check route
 router.use('/health', healthRoutes);
 
-// Other routes
+// API routes
 router.use('/vouchers', voucherRoutes);
 router.use('/reports', reportRoutes);
 router.use('/meals', mealsRoutes);
