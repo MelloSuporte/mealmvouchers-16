@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   } catch (error) {
     logger.error('Error fetching companies:', error);
     res.status(500).json({ 
-      error: 'Erro ao buscar empresas. Por favor, tente novamente.' 
+      error: 'Error fetching companies. Please try again.' 
     });
   }
 });
@@ -35,12 +35,12 @@ router.post('/', async (req, res) => {
       cnpj, 
       logo,
       success: true,
-      message: 'Empresa cadastrada com sucesso'
+      message: 'Company registered successfully'
     });
   } catch (error) {
     logger.error('Error creating company:', error);
     res.status(500).json({ 
-      error: 'Erro ao cadastrar empresa. Por favor, tente novamente.' 
+      error: 'Error registering company. Please try again.' 
     });
   } finally {
     if (db) db.release();

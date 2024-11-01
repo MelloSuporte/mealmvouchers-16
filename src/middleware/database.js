@@ -10,7 +10,7 @@ export const withDatabase = async (req, res, next) => {
       const connection = await pool.getConnection();
       req.db = connection;
       
-      // Garantir que a conexão seja liberada após a requisição
+      // Ensure connection is released after request
       res.on('finish', () => {
         if (req.db) {
           req.db.release();
@@ -21,15 +21,15 @@ export const withDatabase = async (req, res, next) => {
     } catch (err) {
       if (retries > 0) {
         retries--;
-        logger.warn(`Tentando reconectar... (${retries} tentativas restantes)`);
+        logger.warn(`Attempting to reconnect... (${retries} attempts remaining)`);
         await new Promise(resolve => setTimeout(resolve, delay));
         delay *= 2; // Exponential backoff
         return tryConnection();
       }
       
-      logger.error('Erro de conexão com o banco de dados:', err);
+      logger.error('Database connection error:', err);
       res.status(503).json({ 
-        error: 'Serviço temporariamente indisponível. Por favor, tente novamente em alguns instantes.'
+        error: 'Service temporarily unavailable. Please try again in a few moments.'
       });
     }
   };

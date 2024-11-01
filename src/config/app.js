@@ -1,8 +1,9 @@
 import express from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
-import { configureExpress } from './express.js';
-import { configureRoutes } from '../routes/index.js';
-import { errorHandler } from '../middleware/errorHandler.js';
+import { securityMiddleware } from '../middleware/security.js';
+import { withDatabase } from '../middleware/database.js';
+import apiRoutes from '../routes/api.js';
 import logger from './logger.js';
 
 dotenv.config();
@@ -10,14 +11,26 @@ dotenv.config();
 const createApp = () => {
   const app = express();
 
-  // Configure Express middleware
-  configureExpress(app);
+  // Configure middleware
+  app.use(cors());
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+  app.use(securityMiddleware);
+  app.use(withDatabase);
 
-  // Configure routes
-  configureRoutes(app);
+  // Routes
+  app.use('/api', apiRoutes);
+
+  // Health check
+  app.get('/health', (req, res) => {
+    res.json({ status: 'OK', message: 'Server is running' });
+  });
 
   // Error handling
-  app.use(errorHandler);
+  app.use((err, req, res, next) => {
+    logger.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
 
   return app;
 };
