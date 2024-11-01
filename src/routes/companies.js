@@ -5,8 +5,9 @@ const router = express.Router();
 
 // List companies
 router.get('/', async (req, res) => {
+  const db = req.db;
   try {
-    const [companies] = await req.db.execute('SELECT * FROM companies ORDER BY name');
+    const [companies] = await db.execute('SELECT * FROM companies ORDER BY name');
     res.json(companies);
   } catch (error) {
     logger.error('Error fetching companies:', error);
@@ -16,10 +17,15 @@ router.get('/', async (req, res) => {
 
 // Create company
 router.post('/', async (req, res) => {
+  const db = req.db;
   const { name, cnpj, logo } = req.body;
   
+  if (!name || !cnpj) {
+    return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
+  }
+  
   try {
-    const [result] = await req.db.execute(
+    const [result] = await db.execute(
       'INSERT INTO companies (name, cnpj, logo) VALUES (?, ?, ?)',
       [name, cnpj, logo]
     );
@@ -34,6 +40,11 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error creating company:', error);
+    
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'CNPJ já cadastrado' });
+    }
+    
     res.status(500).json({ error: 'Erro ao cadastrar empresa' });
   }
 });
