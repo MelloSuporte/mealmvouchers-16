@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { securityMiddleware } from '../middleware/security.js';
 import { withDatabase } from '../middleware/database.js';
+import apiRoutes from '../routes/api.js';
 
 export const configureExpress = (app) => {
   // Enable CORS for all routes
@@ -14,8 +15,8 @@ export const configureExpress = (app) => {
   // Security middleware
   app.use(securityMiddleware);
   
-  // Database middleware
-  app.use(withDatabase);
+  // Mount API routes
+  app.use('/api', apiRoutes);
   
   // Basic health check route
   app.get('/health', (req, res) => {

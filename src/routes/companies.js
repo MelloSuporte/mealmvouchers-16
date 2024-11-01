@@ -5,16 +5,18 @@ import logger from '../config/logger.js';
 const router = express.Router();
 
 router.get('/', async (req, res) => {
+  let db;
   try {
-    const db = await pool.getConnection();
+    db = await pool.getConnection();
     const [companies] = await db.execute('SELECT * FROM companies ORDER BY name');
-    db.release();
     res.json(companies);
   } catch (error) {
     logger.error('Error fetching companies:', error);
     res.status(500).json({ 
       error: 'Error fetching companies. Please try again.' 
     });
+  } finally {
+    if (db) db.release();
   }
 });
 
