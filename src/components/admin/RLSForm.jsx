@@ -15,7 +15,7 @@ const RLSForm = () => {
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const response = await api.get('/users');
+      const response = await api.get('/api/users');
       return response.data || [];
     }
   });
@@ -23,7 +23,7 @@ const RLSForm = () => {
   const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      const response = await api.get('/companies');
+      const response = await api.get('/api/companies');
       return response.data || [];
     }
   });
@@ -35,7 +35,7 @@ const RLSForm = () => {
     }
     
     try {
-      await api.post('/extra-vouchers', {
+      await api.post('/api/extra-vouchers', {
         userId: selectedUser,
         companyId: selectedCompany,
         dates: selectedDates
