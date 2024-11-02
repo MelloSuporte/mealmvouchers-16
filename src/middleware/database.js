@@ -10,7 +10,6 @@ export const withDatabase = async (req, res, next) => {
     res.on('finish', () => {
       if (req.db) {
         req.db.release();
-        logger.debug('Database connection released');
       }
     });
     
