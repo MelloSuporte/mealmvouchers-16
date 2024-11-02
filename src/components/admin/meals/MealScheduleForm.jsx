@@ -18,10 +18,24 @@ const MealScheduleForm = () => {
   });
 
   const handleInputChange = (field, value) => {
-    setMealSchedule(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    if (field === 'value') {
+      // Remove qualquer caractere que não seja número
+      const numericValue = value.replace(/[^0-9]/g, '');
+      // Converte para centavos e formata
+      const formattedValue = (numericValue / 100).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+      setMealSchedule(prev => ({
+        ...prev,
+        [field]: formattedValue
+      }));
+    } else {
+      setMealSchedule(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -33,7 +47,13 @@ const MealScheduleForm = () => {
     }
 
     try {
-      const response = await api.post('/meals', mealSchedule);
+      // Remove a formatação do valor antes de enviar
+      const numericValue = parseFloat(mealSchedule.value.replace(/[^0-9,]/g, '').replace(',', '.'));
+      
+      const response = await api.post('/meals', {
+        ...mealSchedule,
+        value: numericValue
+      });
       
       if (response.data.success) {
         toast.success("Refeição cadastrada com sucesso!");
@@ -89,11 +109,9 @@ const MealScheduleForm = () => {
         <Label htmlFor="value">Valor (R$)</Label>
         <Input
           id="value"
-          type="number"
-          step="0.01"
           value={mealSchedule.value}
           onChange={(e) => handleInputChange('value', e.target.value)}
-          placeholder="0.00"
+          placeholder="R$ 0,00"
         />
       </div>
 
