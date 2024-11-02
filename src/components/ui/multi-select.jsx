@@ -23,7 +23,7 @@ const MultiSelect = React.forwardRef(({ className, value, onChange, placeholder 
   const { data: options = [] } = useQuery({
     queryKey: ['meal-types'],
     queryFn: async () => {
-      const response = await api.get('/meals');
+      const response = await api.get('/api/meals');
       return response.data.map(meal => ({
         value: meal.id.toString(),
         label: meal.name
