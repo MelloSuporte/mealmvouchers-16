@@ -30,6 +30,9 @@ CREATE TABLE IF NOT EXISTS meal_types (
   start_time TIME,
   end_time TIME,
   value DECIMAL(10,2) NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  max_users_per_day INT,
+  tolerance_minutes INT DEFAULT 15,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -60,15 +63,6 @@ CREATE TABLE IF NOT EXISTS background_images (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Inserir tipos de refeição padrão
-INSERT INTO meal_types (name, start_time, end_time, value) VALUES
-('Café', '06:00:00', '08:00:00', 10.00),
-('Almoço', '11:00:00', '14:00:00', 25.00),
-('Lanche', '15:00:00', '16:00:00', 8.00),
-('Jantar', '18:00:00', '20:00:00', 25.00),
-('Ceia', '22:00:00', '23:00:00', 15.00),
-('Extra', NULL, NULL, 25.00);
-
 CREATE TABLE IF NOT EXISTS disposable_vouchers (
   id INT AUTO_INCREMENT PRIMARY KEY,
   code VARCHAR(8) NOT NULL UNIQUE,
@@ -83,9 +77,3 @@ CREATE TABLE IF NOT EXISTS disposable_vouchers (
   FOREIGN KEY (meal_type_id) REFERENCES meal_types(id),
   FOREIGN KEY (created_by) REFERENCES users(id)
 );
-
--- Adicionar novos campos à tabela meal_types
-ALTER TABLE meal_types
-ADD COLUMN is_active BOOLEAN DEFAULT TRUE,
-ADD COLUMN max_users_per_day INT,
-ADD COLUMN tolerance_minutes INT DEFAULT 15;

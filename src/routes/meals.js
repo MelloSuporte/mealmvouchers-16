@@ -3,8 +3,8 @@ import { getMeals, createMeal, updateMealStatus } from '../controllers/mealsCont
 
 const router = express.Router();
 
-router.get('/', getMeals);
-router.post('/', createMeal);
-router.patch('/:id', updateMealStatus);
+router.get('/meals', getMeals);
+router.post('/meals', createMeal);
+router.patch('/meals/:id', updateMealStatus);
 
 export default router;
