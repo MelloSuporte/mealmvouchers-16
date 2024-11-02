@@ -1,5 +1,4 @@
 import express from 'express';
-import pool from '../config/database.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
