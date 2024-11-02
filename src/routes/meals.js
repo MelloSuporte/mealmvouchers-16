@@ -7,7 +7,9 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const db = await pool.getConnection();
-    const [results] = await db.execute('SELECT * FROM meal_types ORDER BY start_time');
+    const [results] = await db.execute(
+      'SELECT * FROM meal_types WHERE is_active = TRUE ORDER BY start_time'
+    );
     db.release();
     res.json(results);
   } catch (error) {
@@ -23,7 +25,7 @@ router.post('/', async (req, res) => {
     const db = await pool.getConnection();
     const [result] = await db.execute(
       'INSERT INTO meal_types (name, start_time, end_time, value, is_active, max_users_per_day, tolerance_minutes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, startTime, endTime, value, isActive, maxUsersPerDay || null, toleranceMinutes]
+      [name, startTime, endTime, value, isActive ?? true, maxUsersPerDay || null, toleranceMinutes || 15]
     );
     db.release();
     

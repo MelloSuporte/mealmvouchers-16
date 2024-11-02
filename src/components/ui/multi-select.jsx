@@ -14,9 +14,22 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { useQuery } from "@tanstack/react-query"
+import api from "../../utils/api"
 
-const MultiSelect = React.forwardRef(({ className, options, value, onChange, placeholder }, ref) => {
+const MultiSelect = React.forwardRef(({ className, value, onChange, placeholder }, ref) => {
   const [open, setOpen] = React.useState(false)
+
+  const { data: options = [] } = useQuery({
+    queryKey: ['meal-types'],
+    queryFn: async () => {
+      const response = await api.get('/meals');
+      return response.data.map(meal => ({
+        value: meal.id.toString(),
+        label: meal.name
+      }));
+    }
+  });
 
   const selectedLabels = options
     .filter((option) => value.includes(option.value))
