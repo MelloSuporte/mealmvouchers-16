@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/database.js';
 import logger from '../config/logger.js';
+import { format } from 'date-fns';
 
 const router = express.Router();
 
@@ -13,9 +14,12 @@ router.post('/', async (req, res) => {
     const vouchers = [];
     
     for (const date of dates) {
+      // Format the date to MySQL date format (YYYY-MM-DD)
+      const formattedDate = format(new Date(date), 'yyyy-MM-dd');
+      
       const [result] = await db.execute(
         'INSERT INTO extra_vouchers (user_id, authorized_by, valid_until) VALUES (?, ?, ?)',
-        [userId, 1, date] // authorized_by hardcoded como 1 por enquanto
+        [userId, 1, formattedDate]
       );
 
       const [voucherData] = await db.execute(
