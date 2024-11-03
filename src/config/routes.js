@@ -7,6 +7,7 @@ import mealsRoutes from '../routes/meals.js';
 import usersRoutes from '../routes/users.js';
 import extraVouchersRoutes from '../routes/extraVouchers.js';
 import backgroundImagesRoutes from '../routes/backgroundImages.js';
+import shiftConfigurationsRoutes from '../routes/shiftConfigurations.js';
 
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.use('/meals', mealsRoutes);
 router.use('/users', usersRoutes);
 router.use('/extra-vouchers', extraVouchersRoutes);
 router.use('/background-images', backgroundImagesRoutes);
+router.use('/shift-configurations', shiftConfigurationsRoutes);
 
 export default router;

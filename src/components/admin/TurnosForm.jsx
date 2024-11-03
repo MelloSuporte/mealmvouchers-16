@@ -1,50 +1,72 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/utils/api";
 
 const TurnosForm = () => {
-  const [turnos, setTurnos] = useState([
-    { id: "central", label: "Turno Central", entrada: "08:00", saida: "17:00" },
-    { id: "primeiro", label: "Primeiro Turno", entrada: "06:00", saida: "14:00" },
-    { id: "segundo", label: "Segundo Turno", entrada: "14:00", saida: "22:00" },
-    { id: "terceiro", label: "Terceiro Turno", entrada: "22:00", saida: "06:00" },
-  ]);
+  const queryClient = useQueryClient();
+
+  // Buscar configurações dos turnos
+  const { data: turnos = [], isLoading } = useQuery({
+    queryKey: ['shift-configurations'],
+    queryFn: async () => {
+      const response = await api.get('/api/shift-configurations');
+      return response.data;
+    }
+  });
+
+  // Mutation para atualizar turnos
+  const updateTurnosMutation = useMutation({
+    mutationFn: async (updatedTurnos) => {
+      const response = await api.put('/api/shift-configurations', updatedTurnos);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['shift-configurations']);
+      toast.success("Turnos atualizados com sucesso!");
+    },
+    onError: (error) => {
+      toast.error("Erro ao atualizar turnos: " + error.message);
+    }
+  });
 
   const handleTurnoChange = (id, field, value) => {
-    setTurnos(turnos.map(turno => 
+    const updatedTurnos = turnos.map(turno => 
       turno.id === id ? { ...turno, [field]: value } : turno
-    ));
+    );
+    updateTurnosMutation.mutate(updatedTurnos);
   };
 
-  const handleSaveTurnos = () => {
-    console.log('Salvando turnos:', turnos);
-    toast.success("Turnos salvos com sucesso!");
-  };
+  if (isLoading) {
+    return <div>Carregando configurações dos turnos...</div>;
+  }
 
   return (
     <form className="space-y-4">
       {turnos.map((turno) => (
         <div key={turno.id} className="space-y-2">
-          <Label>{turno.label}</Label>
+          <Label>{turno.shift_type === 'central' ? 'Turno Central' :
+                 turno.shift_type === 'primeiro' ? 'Primeiro Turno' :
+                 turno.shift_type === 'segundo' ? 'Segundo Turno' : 'Terceiro Turno'}</Label>
           <div className="flex space-x-2">
             <Input
               type="time"
-              value={turno.entrada}
-              onChange={(e) => handleTurnoChange(turno.id, 'entrada', e.target.value)}
+              value={turno.start_time}
+              onChange={(e) => handleTurnoChange(turno.id, 'start_time', e.target.value)}
               placeholder="Entrada"
             />
             <Input
               type="time"
-              value={turno.saida}
-              onChange={(e) => handleTurnoChange(turno.id, 'saida', e.target.value)}
+              value={turno.end_time}
+              onChange={(e) => handleTurnoChange(turno.id, 'end_time', e.target.value)}
               placeholder="Saída"
             />
           </div>
         </div>
       ))}
-      <Button type="button" onClick={handleSaveTurnos}>Salvar Turnos</Button>
     </form>
   );
 };
