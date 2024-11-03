@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 30000,
+  timeout: 60000, // Aumentado para 60 segundos
   headers: {
     'Content-Type': 'application/json',
   },
@@ -16,7 +16,6 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   config => {
-    // Ensure URL starts with /api
     if (!config.url.startsWith('/')) {
       config.url = '/' + config.url;
     }
@@ -42,8 +41,8 @@ api.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
-    // Retry logic for network errors
-    if (error.message === 'Network Error' && !originalRequest._retry) {
+    // Retry logic for network errors and timeouts
+    if ((error.message === 'Network Error' || error.code === 'ECONNABORTED') && !originalRequest._retry) {
       originalRequest._retry = true;
       toast.error('Erro de conexão. Tentando novamente...');
       

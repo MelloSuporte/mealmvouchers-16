@@ -3,21 +3,29 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Search user by CPF
+// Search users by term (name, CPF, or email)
 router.get('/search', async (req, res) => {
-  const { cpf } = req.query;
+  const { term } = req.query;
+  
+  if (!term || term.length < 3) {
+    return res.json([]);
+  }
+
   try {
     const [rows] = await req.db.execute(
-      'SELECT u.*, c.name as company_name FROM users u LEFT JOIN companies c ON u.company_id = c.id WHERE u.cpf = ?',
-      [cpf]
+      `SELECT u.*, c.name as company_name 
+       FROM users u 
+       LEFT JOIN companies c ON u.company_id = c.id 
+       WHERE u.name LIKE ? 
+       OR u.cpf LIKE ? 
+       OR u.email LIKE ?
+       LIMIT 10`,
+      [`%${term}%`, `%${term}%`, `%${term}%`]
     );
-    if (rows.length > 0) {
-      res.json(rows[0]);
-    } else {
-      res.status(404).json({ message: 'Usuário não encontrado' });
-    }
+    
+    res.json(rows);
   } catch (error) {
-    logger.error('Error searching user:', error);
+    logger.error('Error searching users:', error);
     res.status(500).json({ error: error.message });
   }
 });
