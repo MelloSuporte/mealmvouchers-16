@@ -26,8 +26,8 @@ const RLSForm = () => {
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['users', searchTerm, selectedCompany],
     queryFn: async () => {
-      if (!searchTerm) return [];
-      const response = await api.get(`/users/search?term=${searchTerm}&type=cpf${selectedCompany ? `&company_id=${selectedCompany}` : ''}`);
+      if (!searchTerm || searchTerm.length < 3) return [];
+      const response = await api.get(`/users/search?term=${searchTerm}${selectedCompany ? `&company_id=${selectedCompany}` : ''}`);
       return response.data || [];
     },
     enabled: searchTerm.length >= 3
@@ -40,19 +40,20 @@ const RLSForm = () => {
     }
     
     try {
-      const response = await api.post('/extra-vouchers', {
-        userId: selectedUser,
-        dates: selectedDates
-      });
+      const promises = selectedDates.map(date => 
+        api.post('/extra-vouchers', {
+          userId: selectedUser,
+          dates: [date]
+        })
+      );
       
-      if (response.data.success) {
-        toast.success("Vouchers extras liberados com sucesso!");
-        setSelectedUser("");
-        setSelectedDates([]);
-        setSearchTerm("");
-      }
+      await Promise.all(promises);
+      toast.success("Vouchers extras liberados com sucesso!");
+      setSelectedUser("");
+      setSelectedDates([]);
+      setSearchTerm("");
     } catch (error) {
-      toast.error("Erro ao liberar vouchers extras: " + error.message);
+      toast.error("Erro ao liberar vouchers extras: " + (error.response?.data?.error || error.message));
     }
   };
 
