@@ -8,6 +8,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import api from '../../utils/api';
 
 const DisposableVoucherForm = () => {
@@ -17,14 +25,16 @@ const DisposableVoucherForm = () => {
   const [mealTypes, setMealTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [generatedVouchers, setGeneratedVouchers] = useState([]);
+  const [allVouchers, setAllVouchers] = useState([]);
 
   useEffect(() => {
     loadMealTypes();
+    loadAllVouchers();
   }, []);
 
   const loadMealTypes = async () => {
     try {
-      const response = await api.get('/meals');
+      const response = await api.get('/api/meals');
       if (Array.isArray(response.data)) {
         setMealTypes(response.data.filter(meal => meal.is_active));
       } else {
@@ -39,6 +49,15 @@ const DisposableVoucherForm = () => {
     }
   };
 
+  const loadAllVouchers = async () => {
+    try {
+      const response = await api.get('/api/vouchers/disposable');
+      setAllVouchers(response.data || []);
+    } catch (error) {
+      console.error('Error loading vouchers:', error);
+    }
+  };
+
   const handleMealTypeToggle = (typeId) => {
     setSelectedMealTypes(current => {
       if (current.includes(typeId)) {
@@ -50,17 +69,16 @@ const DisposableVoucherForm = () => {
   };
 
   const generateUniqueVoucherCode = async () => {
-    while (true) {
+    try {
       const code = Math.floor(1000 + Math.random() * 9000).toString();
-      try {
-        const result = await api.post('/vouchers/check', { code });
-        if (!result.data.exists) {
-          return code;
-        }
-      } catch (error) {
-        console.error('Error checking voucher code:', error);
-        throw new Error('Erro ao verificar código do voucher');
+      const result = await api.post('/api/vouchers/check', { code });
+      if (!result.data.exists) {
+        return code;
       }
+      return generateUniqueVoucherCode(); // Try again if code exists
+    } catch (error) {
+      console.error('Error checking voucher code:', error);
+      throw new Error('Erro ao verificar código do voucher');
     }
   };
 
@@ -77,27 +95,25 @@ const DisposableVoucherForm = () => {
       }
 
       const totalVouchers = quantity * selectedDates.length * selectedMealTypes.length;
-      const generatedCodes = [];
+      const newVouchers = [];
 
       for (let i = 0; i < totalVouchers; i++) {
         const code = await generateUniqueVoucherCode();
-        generatedCodes.push(code);
-      }
-
-      const newVouchers = [];
-      for (const code of generatedCodes) {
-        const response = await api.post('/vouchers/create', {
+        const response = await api.post('/api/vouchers/create', {
           code,
           meal_type_id: selectedMealTypes[0],
           created_by: 1 // Assuming created_by = 1 for now
         });
+
         if (response.data.success) {
           newVouchers.push(response.data.voucher);
         }
       }
 
       setGeneratedVouchers(newVouchers);
+      setAllVouchers(prev => [...newVouchers, ...prev]);
       toast.success(`${totalVouchers} voucher(s) descartável(is) gerado(s) com sucesso!`);
+      
       setQuantity(1);
       setSelectedMealTypes([]);
       setSelectedDates([]);
@@ -170,24 +186,38 @@ const DisposableVoucherForm = () => {
         </Button>
       </div>
 
-      {generatedVouchers.length > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <Label>Vouchers Descartáveis Gerados</Label>
-            <ScrollArea className="h-[200px] mt-2">
-              <div className="space-y-2">
-                {generatedVouchers.map((voucher, index) => (
-                  <div key={index} className="p-2 bg-gray-100 rounded-md">
-                    <p>Código: {voucher.code}</p>
-                    <p>Tipo de Refeição: {voucher.meal_type_name}</p>
-                    <p>Data de Expiração: {new Date(voucher.expired_at).toLocaleDateString()}</p>
-                  </div>
+      {/* Tabela de Vouchers Gerados */}
+      <Card>
+        <CardContent className="pt-6">
+          <Label className="text-lg font-bold">Vouchers Descartáveis</Label>
+          <div className="mt-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Tipo de Refeição</TableHead>
+                  <TableHead>Data de Expiração</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allVouchers.map((voucher, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{voucher.code}</TableCell>
+                    <TableCell>{voucher.meal_type_name}</TableCell>
+                    <TableCell>
+                      {new Date(voucher.expired_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {voucher.is_used ? 'Utilizado' : 'Disponível'}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
