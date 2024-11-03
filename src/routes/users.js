@@ -3,7 +3,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Search users by term (name, CPF, or email)
+// Search users by term (name or CPF)
 router.get('/search', async (req, res) => {
   const { term } = req.query;
   
@@ -17,10 +17,9 @@ router.get('/search', async (req, res) => {
        FROM users u 
        LEFT JOIN companies c ON u.company_id = c.id 
        WHERE u.name LIKE ? 
-       OR u.cpf LIKE ? 
-       OR u.email LIKE ?
+       OR u.cpf LIKE ?
        LIMIT 10`,
-      [`%${term}%`, `%${term}%`, `%${term}%`]
+      [`%${term}%`, `%${term}%`]
     );
     
     res.json(rows);

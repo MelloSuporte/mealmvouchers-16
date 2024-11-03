@@ -7,6 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
 import api from '../../utils/api';
 
 const DisposableVoucherForm = () => {
@@ -15,6 +16,7 @@ const DisposableVoucherForm = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [mealTypes, setMealTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [generatedVouchers, setGeneratedVouchers] = useState([]);
 
   useEffect(() => {
     loadMealTypes();
@@ -75,21 +77,26 @@ const DisposableVoucherForm = () => {
       }
 
       const totalVouchers = quantity * selectedDates.length * selectedMealTypes.length;
-      const generatedVouchers = [];
+      const generatedCodes = [];
 
       for (let i = 0; i < totalVouchers; i++) {
         const code = await generateUniqueVoucherCode();
-        generatedVouchers.push(code);
+        generatedCodes.push(code);
       }
 
-      for (const code of generatedVouchers) {
-        await api.post('/vouchers/create', {
+      const newVouchers = [];
+      for (const code of generatedCodes) {
+        const response = await api.post('/vouchers/create', {
           code,
           meal_type_id: selectedMealTypes[0],
           created_by: 1 // Assuming created_by = 1 for now
         });
+        if (response.data.success) {
+          newVouchers.push(response.data.voucher);
+        }
       }
 
+      setGeneratedVouchers(newVouchers);
       toast.success(`${totalVouchers} voucher(s) descartável(is) gerado(s) com sucesso!`);
       setQuantity(1);
       setSelectedMealTypes([]);
@@ -162,6 +169,25 @@ const DisposableVoucherForm = () => {
           Gerar Vouchers Descartáveis
         </Button>
       </div>
+
+      {generatedVouchers.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <Label>Vouchers Descartáveis Gerados</Label>
+            <ScrollArea className="h-[200px] mt-2">
+              <div className="space-y-2">
+                {generatedVouchers.map((voucher, index) => (
+                  <div key={index} className="p-2 bg-gray-100 rounded-md">
+                    <p>Código: {voucher.code}</p>
+                    <p>Tipo de Refeição: {voucher.meal_type_name}</p>
+                    <p>Data de Expiração: {new Date(voucher.expired_at).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

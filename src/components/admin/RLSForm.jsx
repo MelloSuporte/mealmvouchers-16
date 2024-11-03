@@ -21,7 +21,7 @@ const RLSForm = () => {
     queryKey: ['users', searchTerm],
     queryFn: async () => {
       if (!searchTerm) return [];
-      const response = await api.get(`/api/users/search?term=${searchTerm}`);
+      const response = await api.get(`/users/search?term=${searchTerm}`);
       return response.data || [];
     },
     enabled: searchTerm.length >= 3
@@ -34,7 +34,7 @@ const RLSForm = () => {
     }
     
     try {
-      const response = await api.post('/api/extra-vouchers', {
+      const response = await api.post('/extra-vouchers', {
         userId: selectedUser,
         dates: selectedDates
       });
@@ -59,7 +59,7 @@ const RLSForm = () => {
             id="searchUser"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Digite nome, CPF ou email"
+            placeholder="Digite nome ou CPF"
             className="mb-2"
           />
           {searchTerm.length < 3 && (
