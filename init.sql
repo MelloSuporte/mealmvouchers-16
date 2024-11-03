@@ -77,3 +77,20 @@ CREATE TABLE IF NOT EXISTS disposable_vouchers (
   FOREIGN KEY (meal_type_id) REFERENCES meal_types(id),
   FOREIGN KEY (created_by) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS shift_configurations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  shift_type ENUM('central', 'primeiro', 'segundo', 'terceiro') NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default shift configurations
+INSERT INTO shift_configurations (shift_type, start_time, end_time) VALUES
+  ('central', '08:00:00', '17:00:00'),
+  ('primeiro', '06:00:00', '14:00:00'),
+  ('segundo', '14:00:00', '22:00:00'),
+  ('terceiro', '22:00:00', '06:00:00');
