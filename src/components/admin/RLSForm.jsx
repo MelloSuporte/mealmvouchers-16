@@ -8,14 +8,11 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../utils/api';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 const RLSForm = () => {
   const [selectedUser, setSelectedUser] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [generatedVouchers, setGeneratedVouchers] = useState([]);
 
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['users', searchTerm],
@@ -41,9 +38,9 @@ const RLSForm = () => {
       
       if (response.data.success) {
         toast.success("Vouchers extras liberados com sucesso!");
-        setGeneratedVouchers(response.data.vouchers || []);
         setSelectedUser("");
         setSelectedDates([]);
+        setSearchTerm("");
       }
     } catch (error) {
       toast.error("Erro ao liberar vouchers extras: " + error.message);
@@ -120,24 +117,6 @@ const RLSForm = () => {
           </Button>
         </div>
       </div>
-
-      {generatedVouchers.length > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <Label>Vouchers Gerados</Label>
-            <ScrollArea className="h-[200px] mt-2">
-              <div className="space-y-2">
-                {generatedVouchers.map((voucher, index) => (
-                  <div key={index} className="p-2 bg-gray-100 rounded-md">
-                    <p>Data: {new Date(voucher.valid_until).toLocaleDateString()}</p>
-                    <p>Código: {voucher.code}</p>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
