@@ -15,7 +15,7 @@ const RLSForm = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
 
-  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
+  const { data: companiesData = [], isLoading: isLoadingCompanies, error: companiesError } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       const response = await api.get('/companies');
@@ -56,6 +56,14 @@ const RLSForm = () => {
       toast.error("Erro ao liberar vouchers extras: " + (error.response?.data?.error || error.message));
     }
   };
+
+  // Ensure companies is always an array
+  const companies = Array.isArray(companiesData) ? companiesData : [];
+
+  if (companiesError) {
+    toast.error("Erro ao carregar empresas");
+    return null;
+  }
 
   return (
     <div className="space-y-6">
