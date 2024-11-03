@@ -20,7 +20,7 @@ const MealScheduleList = () => {
   const loadMeals = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/api/meals');
+      const response = await api.get('/meals');
       setMeals(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       toast.error("Erro ao carregar refeições: " + error.message);
@@ -32,7 +32,7 @@ const MealScheduleList = () => {
 
   const handleToggleActive = async (id, currentStatus) => {
     try {
-      await api.patch(`/api/meals/${id}`, { 
+      await api.patch(`/meals/${id}`, { 
         is_active: !currentStatus 
       });
       await loadMeals();
@@ -66,7 +66,7 @@ const MealScheduleList = () => {
     }
 
     try {
-      await Promise.all(selectedMeals.map(id => api.delete(`/api/meals/${id}`)));
+      await Promise.all(selectedMeals.map(id => api.delete(`/meals/${id}`)));
       toast.success("Refeições selecionadas excluídas com sucesso!");
       setSelectedMeals([]);
       await loadMeals();
