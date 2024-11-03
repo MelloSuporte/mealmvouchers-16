@@ -7,7 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { executeQuery } from '../../utils/db';
+import api from '../../utils/api';
 
 const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
@@ -22,11 +22,17 @@ const DisposableVoucherForm = () => {
 
   const loadMealTypes = async () => {
     try {
-      const result = await executeQuery('SELECT * FROM meal_types WHERE is_active = TRUE ORDER BY name');
-      setMealTypes(result);
-      setIsLoading(false);
+      const response = await api.get('/meals');
+      if (Array.isArray(response.data)) {
+        setMealTypes(response.data.filter(meal => meal.is_active));
+      } else {
+        toast.error("Formato inválido de dados recebidos");
+        setMealTypes([]);
+      }
     } catch (error) {
       toast.error("Erro ao carregar tipos de refeição: " + error.message);
+      setMealTypes([]);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -43,17 +49,10 @@ const DisposableVoucherForm = () => {
 
   const generateUniqueVoucherCode = async () => {
     while (true) {
-      // Generate a 4-digit numeric code
       const code = Math.floor(1000 + Math.random() * 9000).toString();
-      
-      // Check if code exists in database
       try {
-        const result = await executeQuery(
-          'SELECT code FROM disposable_vouchers WHERE code = ?',
-          [code]
-        );
-        
-        if (result.length === 0) {
+        const result = await api.post('/vouchers/check', { code });
+        if (!result.data.exists) {
           return code;
         }
       } catch (error) {
@@ -83,12 +82,12 @@ const DisposableVoucherForm = () => {
         generatedVouchers.push(code);
       }
 
-      // Save vouchers to database
       for (const code of generatedVouchers) {
-        await executeQuery(
-          'INSERT INTO disposable_vouchers (code, meal_type_id, created_by) VALUES (?, ?, ?)',
-          [code, selectedMealTypes[0], 1] // Assuming created_by = 1 for now
-        );
+        await api.post('/vouchers/create', {
+          code,
+          meal_type_id: selectedMealTypes[0],
+          created_by: 1 // Assuming created_by = 1 for now
+        });
       }
 
       toast.success(`${totalVouchers} voucher(s) descartável(is) gerado(s) com sucesso!`);

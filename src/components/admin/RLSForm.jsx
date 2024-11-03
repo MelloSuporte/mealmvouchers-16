@@ -6,18 +6,23 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from "sonner";
 import { useQuery } from '@tanstack/react-query';
 import api from '../../utils/api';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const RLSForm = () => {
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedCompany, setSelectedCompany] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['users'],
+    queryKey: ['users', searchTerm],
     queryFn: async () => {
-      const response = await api.get('/api/users');
+      if (!searchTerm) return [];
+      const response = await api.get(`/users/search?term=${searchTerm}`);
       return response.data || [];
-    }
+    },
+    enabled: searchTerm.length >= 3
   });
 
   const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
@@ -52,6 +57,22 @@ const RLSForm = () => {
 
   return (
     <form className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="searchUser">Buscar Usuário</Label>
+        <Input
+          id="searchUser"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Digite nome, CPF ou email"
+          className="mb-2"
+        />
+        {searchTerm.length < 3 && (
+          <p className="text-sm text-gray-500">
+            Digite pelo menos 3 caracteres para buscar
+          </p>
+        )}
+      </div>
+
       <Select 
         value={selectedUser} 
         onValueChange={setSelectedUser}

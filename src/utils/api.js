@@ -20,6 +20,15 @@ api.interceptors.request.use(
     if (!config.url.startsWith('/')) {
       config.url = '/' + config.url;
     }
+    
+    // Add timestamp to prevent caching
+    if (config.method === 'get') {
+      config.params = {
+        ...config.params,
+        _t: new Date().getTime()
+      };
+    }
+    
     return config;
   },
   error => {
@@ -33,38 +42,31 @@ api.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
+    // Retry logic for network errors
+    if (error.message === 'Network Error' && !originalRequest._retry) {
+      originalRequest._retry = true;
+      toast.error('Erro de conexão. Tentando novamente...');
+      
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve(api(originalRequest));
+        }, 2000);
+      });
+    }
+
     if (error.response?.status === 404) {
       console.error('API Endpoint not found:', originalRequest.url);
       toast.error('Erro: Endpoint não encontrado. Por favor, contate o suporte.');
-    } else if (error.response?.status === 502) {
-      toast.error('Erro de conexão com o servidor. Tentando reconectar...');
-      
-      if (!originalRequest._retry && originalRequest.retry > 0) {
-        originalRequest._retry = true;
-        originalRequest.retry--;
-        
-        await new Promise(resolve => setTimeout(resolve, originalRequest.retryDelay(originalRequest._retryCount || 1)));
-        
-        return api(originalRequest);
-      }
     }
 
     console.error('API Error:', {
       url: originalRequest?.url,
       status: error.response?.status,
       data: error.response?.data,
-      message: error.message,
-      code: error.code
+      message: error.message
     });
 
-    if (error.code === 'ECONNABORTED') {
-      toast.error('Tempo limite de conexão excedido. Por favor, tente novamente.');
-    } else if (error.response?.status === 502) {
-      toast.error('Servidor indisponível. Por favor, tente novamente mais tarde.');
-    } else {
-      toast.error(error.response?.data?.error || 'Erro ao processar sua requisição');
-    }
-
+    toast.error(error.response?.data?.error || 'Erro ao processar sua requisição');
     throw error;
   }
 );

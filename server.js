@@ -6,19 +6,26 @@ import { startServer } from './src/config/server.js';
 import createApp from './src/config/app.js';
 
 /**
- * IMPORTANT: DO NOT MODIFY EXISTING FUNCTIONALITY
- * The following features are working correctly and should not be changed:
- * 1. Company Registration (Cadastro de empresas)
- * 2. User Registration (Cadastro de usuários)
- * 3. Meal Registration (Cadastro de refeições)
+ * SISTEMA DE VOUCHERS - DOCUMENTAÇÃO DE FUNCIONALIDADES ESTÁVEIS
  * 
- * Any modifications to other parts of the system should be done with extreme
- * caution to avoid affecting these stable functionalities.
+ * FUNCIONALIDADES PROTEGIDAS (NÃO MODIFICAR):
+ * 1. Cadastro de Empresas
+ *    - Arquivo: src/components/admin/CompanyForm.jsx
+ *    - Status: ESTÁVEL
  * 
- * To protect these features during maintenance:
- * 1. Set MAINTENANCE_MODE=true in .env file
- * 2. This will block modifications to protected features
- * 3. Reading operations will still work normally
+ * 2. Cadastro de Usuários
+ *    - Arquivo: src/components/admin/UserForm.jsx
+ *    - Status: ESTÁVEL
+ * 
+ * 3. Cadastro de Refeições
+ *    - Arquivo: src/components/admin/meals/MealScheduleForm.jsx
+ *    - Status: ESTÁVEL
+ * 
+ * MODO DE MANUTENÇÃO:
+ * Para proteger estas funcionalidades durante manutenção:
+ * 1. Defina MAINTENANCE_MODE=true no arquivo .env
+ * 2. Isso bloqueará modificações nas funcionalidades protegidas
+ * 3. Operações de leitura continuarão funcionando normalmente
  */
 
 dotenv.config();
