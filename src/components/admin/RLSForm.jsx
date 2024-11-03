@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 
 const RLSForm = () => {
   const [selectedUser, setSelectedUser] = useState("");
-  const [selectedCompany, setSelectedCompany] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState("all"); // Changed from empty string to "all"
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
 
@@ -27,7 +27,7 @@ const RLSForm = () => {
     queryKey: ['users', searchTerm, selectedCompany],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 3) return [];
-      const response = await api.get(`/users/search?term=${searchTerm}${selectedCompany ? `&company_id=${selectedCompany}` : ''}`);
+      const response = await api.get(`/users/search?term=${searchTerm}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
       return response.data || [];
     },
     enabled: searchTerm.length >= 3
@@ -79,7 +79,7 @@ const RLSForm = () => {
               <SelectValue placeholder="Selecione a empresa" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as empresas</SelectItem>
+              <SelectItem value="all">Todas as empresas</SelectItem>
               {companies.map((company) => (
                 <SelectItem key={company.id} value={company.id.toString()}>
                   {company.name}
