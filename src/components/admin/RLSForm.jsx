@@ -11,14 +11,23 @@ import { Label } from "@/components/ui/label";
 
 const RLSForm = () => {
   const [selectedUser, setSelectedUser] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
 
+  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const response = await api.get('/companies');
+      return response.data || [];
+    }
+  });
+
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['users', searchTerm],
+    queryKey: ['users', searchTerm, selectedCompany],
     queryFn: async () => {
       if (!searchTerm) return [];
-      const response = await api.get(`/users/search?term=${searchTerm}&type=cpf`);
+      const response = await api.get(`/users/search?term=${searchTerm}&type=cpf${selectedCompany ? `&company_id=${selectedCompany}` : ''}`);
       return response.data || [];
     },
     enabled: searchTerm.length >= 3
@@ -50,6 +59,27 @@ const RLSForm = () => {
   return (
     <div className="space-y-6">
       <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="company">Empresa</Label>
+          <Select 
+            value={selectedCompany} 
+            onValueChange={setSelectedCompany}
+            disabled={isLoadingCompanies}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a empresa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todas as empresas</SelectItem>
+              {companies.map((company) => (
+                <SelectItem key={company.id} value={company.id.toString()}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="searchUser">Buscar Usuário (CPF)</Label>
           <Input
