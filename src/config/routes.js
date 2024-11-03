@@ -6,6 +6,7 @@ import healthRoutes from '../routes/health.js';
 import mealsRoutes from '../routes/meals.js';
 import usersRoutes from '../routes/users.js';
 import extraVouchersRoutes from '../routes/extraVouchers.js';
+import backgroundImagesRoutes from '../routes/backgroundImages.js';
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use('/reports', reportRoutes);
 router.use('/meals', mealsRoutes);
 router.use('/users', usersRoutes);
 router.use('/extra-vouchers', extraVouchersRoutes);
+router.use('/background-images', backgroundImagesRoutes);
 
 export default router;

@@ -18,6 +18,8 @@ const BackgroundImageForm = () => {
     bomApetite: ''
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     loadSavedBackgrounds();
   }, []);
@@ -40,14 +42,14 @@ const BackgroundImageForm = () => {
   const handleFileChange = (page, event) => {
     const file = event.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
         toast.error("Arquivo muito grande. Limite máximo: 5MB");
         return;
       }
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setBackgrounds(prev => ({ ...prev, [page]: file }));
+        setBackgrounds(prev => ({ ...prev, [page]: reader.result }));
         setPreviews(prev => ({ ...prev, [page]: reader.result }));
       };
       reader.readAsDataURL(file);
@@ -56,24 +58,22 @@ const BackgroundImageForm = () => {
 
   const handleSaveBackgrounds = async () => {
     try {
-      const formData = new FormData();
+      setIsLoading(true);
       
-      Object.entries(backgrounds).forEach(([page, file]) => {
-        if (file) {
-          formData.append(page, file);
-        }
+      const response = await api.post('/background-images', {
+        voucher: backgrounds.voucher,
+        userConfirmation: backgrounds.userConfirmation,
+        bomApetite: backgrounds.bomApetite
       });
 
-      await api.post('/background-images', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      toast.success("Imagens de fundo atualizadas com sucesso!");
-      loadSavedBackgrounds();
+      if (response.data.success) {
+        toast.success("Imagens de fundo atualizadas com sucesso!");
+        loadSavedBackgrounds();
+      }
     } catch (error) {
-      toast.error("Erro ao salvar imagens de fundo");
+      toast.error("Erro ao salvar imagens de fundo. Por favor, tente novamente.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -91,6 +91,7 @@ const BackgroundImageForm = () => {
             type="file"
             accept="image/*"
             onChange={(e) => handleFileChange(key, e)}
+            disabled={isLoading}
           />
           {previews[key] && (
             <div className="mt-2">
@@ -107,9 +108,9 @@ const BackgroundImageForm = () => {
       <Button 
         type="button" 
         onClick={handleSaveBackgrounds}
-        disabled={!Object.values(backgrounds).some(Boolean)}
+        disabled={isLoading || !Object.values(backgrounds).some(Boolean)}
       >
-        Salvar Imagens de Fundo
+        {isLoading ? "Salvando..." : "Salvar Imagens de Fundo"}
       </Button>
     </form>
   );
