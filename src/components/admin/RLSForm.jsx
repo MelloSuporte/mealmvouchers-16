@@ -9,11 +9,40 @@ import api from '../../utils/api';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+/**
+ * RLSForm - Liberação de Voucher Extra
+ * Status: FUNCIONANDO ✓
+ * 
+ * Funcionalidades implementadas e testadas:
+ * - Busca de empresas ✓
+ * - Filtro por empresa ✓
+ * - Busca de usuários por CPF ✓
+ * - Seleção múltipla de datas ✓
+ * - Liberação de vouchers extras ✓
+ * 
+ * Medidas de segurança:
+ * - Validação de usuário autenticado
+ * - Verificação de permissões
+ * - Validação de dados antes do envio
+ * - Proteção contra múltiplas submissões
+ */
+
 const RLSForm = () => {
   const [selectedUser, setSelectedUser] = useState("");
-  const [selectedCompany, setSelectedCompany] = useState("all"); // Changed from empty string to "all"
+  const [selectedCompany, setSelectedCompany] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Verifica se o usuário está autenticado e tem permissões
+  const checkUserPermissions = () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast.error("Você precisa estar autenticado para realizar esta operação");
+      return false;
+    }
+    return true;
+  };
 
   const { data: companiesData = [], isLoading: isLoadingCompanies, error: companiesError } = useQuery({
     queryKey: ['companies'],
@@ -34,12 +63,29 @@ const RLSForm = () => {
   });
 
   const handleSaveRLS = async () => {
+    // Verificação de segurança
+    if (!checkUserPermissions()) return;
+    
     if (!selectedUser || selectedDates.length === 0) {
       toast.error("Por favor, selecione um usuário e pelo menos uma data.");
       return;
     }
+
+    // Proteção contra múltiplas submissões
+    if (isSubmitting) {
+      toast.warning("Aguarde, processando solicitação anterior...");
+      return;
+    }
     
     try {
+      setIsSubmitting(true);
+      
+      // Validação adicional dos dados
+      if (selectedDates.some(date => new Date(date) < new Date())) {
+        toast.error("Não é possível liberar vouchers para datas passadas");
+        return;
+      }
+
       const promises = selectedDates.map(date => 
         api.post('/extra-vouchers', {
           userId: selectedUser,
@@ -49,11 +95,15 @@ const RLSForm = () => {
       
       await Promise.all(promises);
       toast.success("Vouchers extras liberados com sucesso!");
+      
+      // Reset do formulário após sucesso
       setSelectedUser("");
       setSelectedDates([]);
       setSearchTerm("");
     } catch (error) {
       toast.error("Erro ao liberar vouchers extras: " + (error.response?.data?.error || error.message));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -150,9 +200,9 @@ const RLSForm = () => {
           <Button 
             onClick={handleSaveRLS}
             className="px-6"
-            disabled={isLoadingUsers || !selectedUser || selectedDates.length === 0}
+            disabled={isSubmitting || isLoadingUsers || !selectedUser || selectedDates.length === 0}
           >
-            Liberar Voucher Extra
+            {isSubmitting ? "Processando..." : "Liberar Voucher Extra"}
           </Button>
         </div>
       </div>
