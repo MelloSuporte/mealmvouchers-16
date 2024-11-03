@@ -18,7 +18,7 @@ const RLSForm = () => {
     queryKey: ['users', searchTerm],
     queryFn: async () => {
       if (!searchTerm) return [];
-      const response = await api.get(`/users/search?term=${searchTerm}`);
+      const response = await api.get(`/users/search?term=${searchTerm}&type=cpf`);
       return response.data || [];
     },
     enabled: searchTerm.length >= 3
@@ -51,12 +51,12 @@ const RLSForm = () => {
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="searchUser">Buscar Usuário</Label>
+          <Label htmlFor="searchUser">Buscar Usuário (CPF)</Label>
           <Input
             id="searchUser"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Digite nome ou CPF"
+            placeholder="Digite o CPF do usuário"
             className="mb-2"
           />
           {searchTerm.length < 3 && (
