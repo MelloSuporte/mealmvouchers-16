@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
   try {
     connection = await pool.getConnection();
     const [rows] = await connection.execute(
-      'SELECT * FROM background_images WHERE active = true'
+      'SELECT * FROM background_images WHERE active = true ORDER BY created_at DESC'
     );
     res.json(rows);
   } catch (error) {
@@ -31,15 +31,18 @@ router.get('/', async (req, res) => {
 router.post('/', upload.any(), async (req, res) => {
   let connection;
   try {
-    const files = req.files;
     connection = await pool.getConnection();
-
     await connection.beginTransaction();
 
     // Desativa imagens antigas
     await connection.execute(
       'UPDATE background_images SET active = false WHERE page IN ("voucher", "userConfirmation", "bomApetite")'
     );
+
+    const files = req.files;
+    if (!files || files.length === 0) {
+      throw new Error('Nenhum arquivo foi enviado');
+    }
 
     // Processa cada arquivo
     for (const file of files) {
@@ -48,7 +51,7 @@ router.post('/', upload.any(), async (req, res) => {
       const base64Image = `data:${file.mimetype};base64,${imageBuffer.toString('base64')}`;
 
       await connection.execute(
-        'INSERT INTO background_images (page, image_url, active) VALUES (?, ?, true)',
+        'INSERT INTO background_images (page, image_url, active, created_at) VALUES (?, ?, true, NOW(3))',
         [page, base64Image]
       );
     }
@@ -60,7 +63,10 @@ router.post('/', upload.any(), async (req, res) => {
       await connection.rollback();
     }
     logger.error('Error saving background images:', error);
-    res.status(500).json({ error: 'Erro ao salvar imagens de fundo' });
+    res.status(500).json({ 
+      error: 'Erro ao salvar imagens de fundo',
+      details: error.message 
+    });
   } finally {
     if (connection) connection.release();
   }
