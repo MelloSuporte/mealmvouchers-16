@@ -20,13 +20,16 @@ const TurnosForm = () => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: turnos = [], isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
       const response = await api.get('/shift-configurations');
-      return response.data;
+      return response.data || [];
     }
   });
+
+  // Ensure turnos is always an array
+  const turnos = Array.isArray(data) ? data : [];
 
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
