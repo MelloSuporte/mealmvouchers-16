@@ -1,29 +1,12 @@
 import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/utils/api";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Plus } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
+import TurnoCard from './turnos/TurnoCard';
+import NewTurnoDialog from './turnos/NewTurnoDialog';
 
 const TurnosForm = () => {
   const queryClient = useQueryClient();
@@ -125,16 +108,6 @@ const TurnosForm = () => {
     createTurnoMutation.mutate(newTurno);
   };
 
-  const getTurnoLabel = (shiftType) => {
-    const labels = {
-      'central': 'Turno Central (Administrativo)',
-      'primeiro': 'Primeiro Turno',
-      'segundo': 'Segundo Turno',
-      'terceiro': 'Terceiro Turno'
-    };
-    return labels[shiftType] || shiftType;
-  };
-
   if (error) {
     return (
       <div className="p-4">
@@ -166,115 +139,22 @@ const TurnosForm = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Configuração de Turnos</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Turno
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Criar Novo Turno</DialogTitle>
-              <DialogDescription>
-                Preencha as informações para criar um novo turno
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Tipo de Turno</Label>
-                <Select
-                  value={newTurno.shift_type}
-                  onValueChange={(value) => setNewTurno({ ...newTurno, shift_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo de turno" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="central">Turno Central (Administrativo)</SelectItem>
-                    <SelectItem value="primeiro">Primeiro Turno</SelectItem>
-                    <SelectItem value="segundo">Segundo Turno</SelectItem>
-                    <SelectItem value="terceiro">Terceiro Turno</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Horário de Entrada</Label>
-                <Input
-                  type="time"
-                  value={newTurno.start_time}
-                  onChange={(e) => setNewTurno({ ...newTurno, start_time: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Horário de Saída</Label>
-                <Input
-                  type="time"
-                  value={newTurno.end_time}
-                  onChange={(e) => setNewTurno({ ...newTurno, end_time: e.target.value })}
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={newTurno.is_active}
-                  onCheckedChange={(checked) => setNewTurno({ ...newTurno, is_active: checked })}
-                />
-                <Label>Turno Ativo</Label>
-              </div>
-              <Button onClick={handleCreateTurno} className="w-full">
-                Criar Turno
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <NewTurnoDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          newTurno={newTurno}
+          setNewTurno={setNewTurno}
+          onCreateTurno={handleCreateTurno}
+        />
       </div>
 
       <div className="grid gap-4">
         {turnos.map((turno) => (
-          <Card key={turno.id}>
-            <CardHeader>
-              <CardTitle>{getTurnoLabel(turno.shift_type)}</CardTitle>
-              <CardDescription>Configure os horários de entrada e saída</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor={`entrada-${turno.id}`}>Horário de Entrada</Label>
-                  <Input
-                    id={`entrada-${turno.id}`}
-                    type="time"
-                    value={turno.start_time}
-                    onChange={(e) => handleTurnoChange(turno.id, 'start_time', e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor={`saida-${turno.id}`}>Horário de Saída</Label>
-                  <Input
-                    id={`saida-${turno.id}`}
-                    type="time"
-                    value={turno.end_time}
-                    onChange={(e) => handleTurnoChange(turno.id, 'end_time', e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor={`active-${turno.id}`}>Status do Turno</Label>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id={`active-${turno.id}`}
-                      checked={turno.is_active}
-                      onCheckedChange={(checked) => handleTurnoChange(turno.id, 'is_active', checked)}
-                    />
-                    <Label htmlFor={`active-${turno.id}`}>
-                      {turno.is_active ? 'Ativo' : 'Inativo'}
-                    </Label>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TurnoCard
+            key={turno.id}
+            turno={turno}
+            onTurnoChange={handleTurnoChange}
+          />
         ))}
       </div>
     </div>
