@@ -18,10 +18,23 @@ const Voucher = () => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-    const savedBackground = localStorage.getItem('voucherBackground');
-    if (savedBackground) {
-      setBackgroundImage(savedBackground);
-    }
+    
+    // Fetch background image from API
+    const fetchBackgroundImage = async () => {
+      try {
+        const response = await api.get('/background-images');
+        const images = response.data;
+        const voucherBackground = images.find(img => img.page === 'voucher')?.image_url;
+        if (voucherBackground) {
+          setBackgroundImage(voucherBackground);
+          localStorage.setItem('voucherBackground', voucherBackground);
+        }
+      } catch (error) {
+        console.error('Error fetching background image:', error);
+      }
+    };
+
+    fetchBackgroundImage();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -97,7 +110,7 @@ const Voucher = () => {
     <div 
       className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4 relative bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: `url(${backgroundImage})`,
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
       }}
     >
       <Button

@@ -1,63 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import api from '../utils/api';
 
 const UserConfirmation = () => {
-  const [countdown, setCountdown] = useState(5);
-  const navigate = useNavigate();
   const location = useLocation();
-  const { userName, userTurno, mealType } = location.state || {};
+  const navigate = useNavigate();
   const [backgroundImage, setBackgroundImage] = useState('');
+  const { userName, userTurno, mealType } = location.state || {};
 
   useEffect(() => {
-    const savedBackground = localStorage.getItem('userConfirmationBackground');
-    if (savedBackground) {
-      setBackgroundImage(savedBackground);
-    }
+    // Fetch background image from API
+    const fetchBackgroundImage = async () => {
+      try {
+        const response = await api.get('/background-images');
+        const images = response.data;
+        const userConfirmationBackground = images.find(img => img.page === 'userConfirmation')?.image_url;
+        if (userConfirmationBackground) {
+          setBackgroundImage(userConfirmationBackground);
+          localStorage.setItem('userConfirmationBackground', userConfirmationBackground);
+        }
+      } catch (error) {
+        console.error('Error fetching background image:', error);
+      }
+    };
+
+    fetchBackgroundImage();
   }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prevCount) => prevCount - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (countdown === 0) {
-      handleCancel();
-    }
-  }, [countdown]);
 
   const handleConfirm = () => {
-    toast.success("Usuário confirmado!");
-    navigate('/self-services');
+    navigate(`/bom-apetite/${userName}`, { state: { mealType } });
   };
 
   const handleCancel = () => {
-    toast.error("Confirmação cancelada. Retornando à página de voucher.");
     navigate('/voucher');
   };
 
+  if (!userName) {
+    toast.error("Informações do usuário não encontradas");
+    navigate('/voucher');
+    return null;
+  }
+
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center p-4 relative bg-blue-600 bg-cover bg-center bg-no-repeat"
+      className="min-h-screen flex items-center justify-center p-4 bg-blue-600 bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: `url(${backgroundImage})`,
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
       }}
     >
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
-        <h2 className="text-2xl font-bold mb-4">Confirme sua identidade</h2>
-        <p className="mb-2">Olá, {userName}!</p>
-        <p className="mb-4 text-gray-600">Turno: {userTurno}</p>
-        <p className="mb-4">Refeição selecionada: {mealType}</p>
-        <p className="mb-4">É você mesmo?</p>
-        <p className="mb-4">Retorno automático à página de voucher em: {countdown} segundos</p>
-        <div className="flex justify-between">
-          <Button onClick={handleCancel} variant="outline">Cancelar</Button>
-          <Button onClick={handleConfirm}>Confirmar</Button>
+      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
+        <h2 className="text-2xl font-bold text-center mb-6">Confirmar Usuário</h2>
+        <div className="space-y-4">
+          <p className="text-lg">Nome: <span className="font-semibold">{userName}</span></p>
+          <p className="text-lg">Turno: <span className="font-semibold">{userTurno}</span></p>
+          <p className="text-lg">Refeição: <span className="font-semibold">{mealType}</span></p>
+        </div>
+        <div className="mt-8 space-x-4 flex justify-center">
+          <Button onClick={handleCancel} variant="outline">
+            Cancelar
+          </Button>
+          <Button onClick={handleConfirm}>
+            Confirmar
+          </Button>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
+import api from '../utils/api';
 
 const BomApetite = () => {
   const { userName } = useParams();
@@ -11,10 +12,22 @@ const BomApetite = () => {
   const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
-    const savedBackground = localStorage.getItem('bomApetiteBackground');
-    if (savedBackground) {
-      setBackgroundImage(savedBackground);
-    }
+    // Fetch background image from API
+    const fetchBackgroundImage = async () => {
+      try {
+        const response = await api.get('/background-images');
+        const images = response.data;
+        const bomApetiteBackground = images.find(img => img.page === 'bomApetite')?.image_url;
+        if (bomApetiteBackground) {
+          setBackgroundImage(bomApetiteBackground);
+          localStorage.setItem('bomApetiteBackground', bomApetiteBackground);
+        }
+      } catch (error) {
+        console.error('Error fetching background image:', error);
+      }
+    };
+
+    fetchBackgroundImage();
   }, []);
 
   useEffect(() => {
@@ -36,7 +49,7 @@ const BomApetite = () => {
     <div 
       className="flex flex-col items-center justify-center min-h-screen bg-blue-600 p-4 bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: `url(${backgroundImage})`,
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
       }}
     >
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
