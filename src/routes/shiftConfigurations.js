@@ -6,26 +6,27 @@ const router = express.Router();
 // Buscar todas as configurações de turno
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await req.db.query('SELECT * FROM shift_configurations ORDER BY id');
+    const [rows] = await req.db.query('SELECT * FROM shift_configurations WHERE is_active = true ORDER BY id');
     res.json(rows);
   } catch (error) {
+    console.error('Erro ao buscar configurações de turno:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Atualizar configurações de turno
-router.put('/', async (req, res) => {
-  const turnos = req.body;
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { start_time, end_time } = req.body;
   
   try {
-    for (const turno of turnos) {
-      await req.db.query(
-        'UPDATE shift_configurations SET start_time = ?, end_time = ? WHERE id = ?',
-        [turno.start_time, turno.end_time, turno.id]
-      );
-    }
+    await req.db.query(
+      'UPDATE shift_configurations SET start_time = ?, end_time = ? WHERE id = ?',
+      [start_time, end_time, id]
+    );
     res.json({ message: 'Configurações atualizadas com sucesso' });
   } catch (error) {
+    console.error('Erro ao atualizar configuração de turno:', error);
     res.status(500).json({ error: error.message });
   }
 });

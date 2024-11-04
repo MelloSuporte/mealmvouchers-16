@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,27 +12,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-/**
- * TurnosForm - Configuração de Turnos
- * Status: FUNCIONANDO ✓
- * 
- * Funcionalidades implementadas:
- * - Visualização dos turnos cadastrados ✓
- * - Edição de horários de entrada e saída ✓
- * - Atualização em tempo real ✓
- * - Validação de horários ✓
- */
-
 const TurnosForm = () => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Buscar configurações dos turnos
-  const { data: turnos = [], isLoading } = useQuery({
+  const { data: turnos = [], isLoading, error } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
-      const response = await api.get('/api/shift-configurations');
-      return response.data;
+      try {
+        const response = await api.get('/api/shift-configurations');
+        return response.data;
+      } catch (error) {
+        toast.error("Erro ao carregar configurações dos turnos");
+        throw error;
+      }
     }
   });
 
@@ -63,18 +56,6 @@ const TurnosForm = () => {
     setIsSubmitting(true);
     const turno = turnos.find(t => t.id === id);
     
-    // Validação básica de horários
-    if (field === 'start_time' && turno.end_time && value >= turno.end_time) {
-      toast.error("Horário de entrada deve ser menor que o de saída");
-      setIsSubmitting(false);
-      return;
-    }
-    if (field === 'end_time' && turno.start_time && value <= turno.start_time) {
-      toast.error("Horário de saída deve ser maior que o de entrada");
-      setIsSubmitting(false);
-      return;
-    }
-
     const updatedTurno = {
       ...turno,
       [field]: value
@@ -93,8 +74,16 @@ const TurnosForm = () => {
     return labels[shiftType] || shiftType;
   };
 
+  if (error) {
+    return <div className="flex items-center justify-center p-8 text-red-500">Erro ao carregar configurações dos turnos</div>;
+  }
+
   if (isLoading) {
     return <div className="flex items-center justify-center p-8">Carregando configurações dos turnos...</div>;
+  }
+
+  if (!turnos.length) {
+    return <div className="flex items-center justify-center p-8">Nenhuma configuração de turno encontrada.</div>;
   }
 
   return (
