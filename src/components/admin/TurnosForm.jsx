@@ -14,11 +14,27 @@ import {
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const TurnosForm = () => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newTurno, setNewTurno] = useState({
+    shift_type: '',
+    start_time: '',
+    end_time: '',
+    is_active: true
+  });
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['shift-configurations'],
@@ -44,6 +60,27 @@ const TurnosForm = () => {
     onError: (error) => {
       toast.error("Erro ao atualizar turno: " + error.message);
       setIsSubmitting(false);
+    }
+  });
+
+  const createTurnoMutation = useMutation({
+    mutationFn: async (newTurno) => {
+      const response = await api.post('/shift-configurations', newTurno);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['shift-configurations']);
+      toast.success("Novo turno criado com sucesso!");
+      setIsDialogOpen(false);
+      setNewTurno({
+        shift_type: '',
+        start_time: '',
+        end_time: '',
+        is_active: true
+      });
+    },
+    onError: (error) => {
+      toast.error("Erro ao criar turno: " + error.message);
     }
   });
 
@@ -73,6 +110,20 @@ const TurnosForm = () => {
     };
 
     updateTurnosMutation.mutate(updatedTurno);
+  };
+
+  const handleCreateTurno = () => {
+    if (!newTurno.shift_type || !newTurno.start_time || !newTurno.end_time) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    if (newTurno.start_time >= newTurno.end_time) {
+      toast.error("Horário de entrada deve ser menor que o de saída");
+      return;
+    }
+
+    createTurnoMutation.mutate(newTurno);
   };
 
   const getTurnoLabel = (shiftType) => {
@@ -113,21 +164,74 @@ const TurnosForm = () => {
     );
   }
 
-  if (!turnos.length) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Alert>
-          <AlertDescription>
-            Nenhuma configuração de turno encontrada.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Configuração de Turnos</h2>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Turno
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Criar Novo Turno</DialogTitle>
+              <DialogDescription>
+                Preencha as informações para criar um novo turno
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tipo de Turno</Label>
+                <Select
+                  value={newTurno.shift_type}
+                  onValueChange={(value) => setNewTurno({ ...newTurno, shift_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo de turno" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="central">Turno Central (Administrativo)</SelectItem>
+                    <SelectItem value="primeiro">Primeiro Turno</SelectItem>
+                    <SelectItem value="segundo">Segundo Turno</SelectItem>
+                    <SelectItem value="terceiro">Terceiro Turno</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Horário de Entrada</Label>
+                <Input
+                  type="time"
+                  value={newTurno.start_time}
+                  onChange={(e) => setNewTurno({ ...newTurno, start_time: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Horário de Saída</Label>
+                <Input
+                  type="time"
+                  value={newTurno.end_time}
+                  onChange={(e) => setNewTurno({ ...newTurno, end_time: e.target.value })}
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={newTurno.is_active}
+                  onCheckedChange={(checked) => setNewTurno({ ...newTurno, is_active: checked })}
+                />
+                <Label>Turno Ativo</Label>
+              </div>
+              <Button onClick={handleCreateTurno} className="w-full">
+                Criar Turno
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid gap-4">
         {turnos.map((turno) => (
           <Card key={turno.id}>
             <CardHeader>

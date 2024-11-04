@@ -1,5 +1,6 @@
 import express from 'express';
 import pool from '../config/database.js';
+import logger from '../config/logger.js';
 
 const router = express.Router();
 
@@ -9,10 +10,35 @@ router.get('/', async (req, res) => {
     const [rows] = await req.db.query('SELECT * FROM shift_configurations ORDER BY id');
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching shift configurations:', error);
+    logger.error('Error fetching shift configurations:', error);
     res.status(500).json({ 
       error: 'Database error',
       message: 'Failed to fetch shift configurations'
+    });
+  }
+});
+
+// Create new shift configuration
+router.post('/', async (req, res) => {
+  const { shift_type, start_time, end_time, is_active } = req.body;
+  
+  try {
+    const [result] = await req.db.query(
+      'INSERT INTO shift_configurations (shift_type, start_time, end_time, is_active) VALUES (?, ?, ?, ?)',
+      [shift_type, start_time, end_time, is_active]
+    );
+    
+    const [newShift] = await req.db.query(
+      'SELECT * FROM shift_configurations WHERE id = ?',
+      [result.insertId]
+    );
+    
+    res.status(201).json(newShift[0]);
+  } catch (error) {
+    logger.error('Error creating shift configuration:', error);
+    res.status(500).json({ 
+      error: 'Database error',
+      message: 'Failed to create shift configuration'
     });
   }
 });
@@ -27,9 +53,19 @@ router.put('/:id', async (req, res) => {
       'UPDATE shift_configurations SET start_time = ?, end_time = ?, is_active = ? WHERE id = ?',
       [start_time, end_time, is_active, id]
     );
-    res.json({ message: 'Shift configuration updated successfully' });
+    
+    const [updatedShift] = await req.db.query(
+      'SELECT * FROM shift_configurations WHERE id = ?',
+      [id]
+    );
+    
+    if (updatedShift.length === 0) {
+      return res.status(404).json({ error: 'Shift configuration not found' });
+    }
+    
+    res.json(updatedShift[0]);
   } catch (error) {
-    console.error('Error updating shift configuration:', error);
+    logger.error('Error updating shift configuration:', error);
     res.status(500).json({ 
       error: 'Database error',
       message: 'Failed to update shift configuration'
