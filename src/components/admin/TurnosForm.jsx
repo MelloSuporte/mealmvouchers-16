@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 
 const TurnosForm = () => {
   const queryClient = useQueryClient();
@@ -56,6 +58,18 @@ const TurnosForm = () => {
     setIsSubmitting(true);
     const turno = turnos.find(t => t.id === id);
     
+    // Validação básica de horários
+    if (field === 'start_time' && turno.end_time && value >= turno.end_time) {
+      toast.error("Horário de entrada deve ser menor que o de saída");
+      setIsSubmitting(false);
+      return;
+    }
+    if (field === 'end_time' && turno.start_time && value <= turno.start_time) {
+      toast.error("Horário de saída deve ser maior que o de entrada");
+      setIsSubmitting(false);
+      return;
+    }
+
     const updatedTurno = {
       ...turno,
       [field]: value
@@ -96,7 +110,7 @@ const TurnosForm = () => {
               <CardDescription>Configure os horários de entrada e saída</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor={`entrada-${turno.id}`}>Horário de Entrada</Label>
                   <Input
@@ -116,6 +130,19 @@ const TurnosForm = () => {
                     onChange={(e) => handleTurnoChange(turno.id, 'end_time', e.target.value)}
                     className="w-full"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`active-${turno.id}`}>Status do Turno</Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id={`active-${turno.id}`}
+                      checked={turno.is_active}
+                      onCheckedChange={(checked) => handleTurnoChange(turno.id, 'is_active', checked)}
+                    />
+                    <Label htmlFor={`active-${turno.id}`}>
+                      {turno.is_active ? 'Ativo' : 'Inativo'}
+                    </Label>
+                  </div>
                 </div>
               </div>
             </CardContent>
