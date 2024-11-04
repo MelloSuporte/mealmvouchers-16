@@ -11,17 +11,11 @@ import api from '../../utils/api';
 const UserFormMain = ({
   formData,
   onInputChange,
-  onSave,
-  turnos = [
-    { id: "central", label: "Turno Central", entrada: "08:00", saida: "17:00" },
-    { id: "primeiro", label: "Primeiro Turno", entrada: "06:00", saida: "14:00" },
-    { id: "segundo", label: "Segundo Turno", entrada: "14:00", saida: "22:00" },
-    { id: "terceiro", label: "Terceiro Turno", entrada: "22:00", saida: "06:00" }
-  ]
+  onSave
 }) => {
   const [showVoucher, setShowVoucher] = React.useState(false);
 
-  const { data: companiesData, isLoading } = useQuery({
+  const { data: companiesData, isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       const response = await api.get('/companies');
@@ -29,7 +23,16 @@ const UserFormMain = ({
     }
   });
 
+  const { data: turnosData, isLoading: isLoadingTurnos } = useQuery({
+    queryKey: ['shift-configurations'],
+    queryFn: async () => {
+      const response = await api.get('/api/shift-configurations');
+      return response.data || [];
+    }
+  });
+
   const companies = Array.isArray(companiesData) ? companiesData : [];
+  const turnos = Array.isArray(turnosData) ? turnosData.filter(turno => turno.is_active) : [];
 
   const handlePhotoUpload = (event) => {
     const file = event.target.files[0];
@@ -40,12 +43,17 @@ const UserFormMain = ({
 
   const generateVoucher = () => {
     if (formData.userCPF) {
-      const cpfNumbers = formData.userCPF.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+      const cpfNumbers = formData.userCPF.replace(/\D/g, '');
       if (cpfNumbers.length >= 5) {
         const newVoucher = cpfNumbers.substring(1, 5);
         onInputChange('voucher', newVoucher);
       }
     }
+  };
+
+  const formatTime = (time) => {
+    if (!time) return '';
+    return time.substring(0, 5); // Format HH:mm
   };
 
   return (
@@ -70,7 +78,7 @@ const UserFormMain = ({
             value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
             onInputChange('userCPF', value);
             if (value.length >= 5) {
-              const cpfNumbers = value.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+              const cpfNumbers = value.replace(/\D/g, '');
               onInputChange('voucher', cpfNumbers.substring(1, 5));
             }
           }
@@ -79,10 +87,10 @@ const UserFormMain = ({
       <Select 
         value={formData.company} 
         onValueChange={(value) => onInputChange('company', value)}
-        disabled={isLoading}
+        disabled={isLoadingCompanies}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder={isLoading ? "Carregando empresas..." : "Selecione a empresa"} />
+          <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
         </SelectTrigger>
         <SelectContent>
           {companies.map((company) => (
@@ -108,14 +116,15 @@ const UserFormMain = ({
       <Select 
         value={formData.selectedTurno} 
         onValueChange={(value) => onInputChange('selectedTurno', value)}
+        disabled={isLoadingTurnos}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Selecione o turno" />
+          <SelectValue placeholder={isLoadingTurnos ? "Carregando turnos..." : "Selecione o turno"} />
         </SelectTrigger>
         <SelectContent>
           {turnos.map((turno) => (
-            <SelectItem key={turno.id} value={turno.id}>
-              {turno.label} ({turno.entrada} - {turno.saida})
+            <SelectItem key={turno.id} value={turno.shift_type}>
+              {turno.shift_type.charAt(0).toUpperCase() + turno.shift_type.slice(1)} Turno ({formatTime(turno.start_time)} - {formatTime(turno.end_time)})
             </SelectItem>
           ))}
         </SelectContent>
