@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { Loader2 } from "lucide-react";
 
 const TurnosForm = () => {
   const queryClient = useQueryClient();
@@ -104,7 +104,7 @@ const TurnosForm = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         Carregando configurações dos turnos...
       </div>
     );
