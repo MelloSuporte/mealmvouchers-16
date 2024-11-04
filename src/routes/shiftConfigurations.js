@@ -3,18 +3,21 @@ import pool from '../config/database.js';
 
 const router = express.Router();
 
-// Buscar todas as configurações de turno
+// Get all shift configurations
 router.get('/', async (req, res) => {
   try {
     const [rows] = await req.db.query('SELECT * FROM shift_configurations ORDER BY id');
     res.json(rows);
   } catch (error) {
-    console.error('Erro ao buscar configurações de turno:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error fetching shift configurations:', error);
+    res.status(500).json({ 
+      error: 'Database error',
+      message: 'Failed to fetch shift configurations'
+    });
   }
 });
 
-// Atualizar configurações de turno
+// Update shift configuration
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { start_time, end_time, is_active } = req.body;
@@ -24,10 +27,13 @@ router.put('/:id', async (req, res) => {
       'UPDATE shift_configurations SET start_time = ?, end_time = ?, is_active = ? WHERE id = ?',
       [start_time, end_time, is_active, id]
     );
-    res.json({ message: 'Configurações atualizadas com sucesso' });
+    res.json({ message: 'Shift configuration updated successfully' });
   } catch (error) {
-    console.error('Erro ao atualizar configuração de turno:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error updating shift configuration:', error);
+    res.status(500).json({ 
+      error: 'Database error',
+      message: 'Failed to update shift configuration'
+    });
   }
 });
 

@@ -13,26 +13,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ReloadIcon } from "@radix-ui/react-icons";
 
 const TurnosForm = () => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Buscar configurações dos turnos
-  const { data: turnos = [], isLoading, error } = useQuery({
+  const { data: turnos = [], isLoading, error, refetch } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
-      try {
-        const response = await api.get('/api/shift-configurations');
-        return response.data;
-      } catch (error) {
-        toast.error("Erro ao carregar configurações dos turnos");
-        throw error;
-      }
+      const response = await api.get('/api/shift-configurations');
+      return response.data;
     }
   });
 
-  // Mutation para atualizar turnos
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
       const response = await api.put(`/api/shift-configurations/${updatedTurno.id}`, updatedTurno);
@@ -58,7 +53,6 @@ const TurnosForm = () => {
     setIsSubmitting(true);
     const turno = turnos.find(t => t.id === id);
     
-    // Validação básica de horários
     if (field === 'start_time' && turno.end_time && value >= turno.end_time) {
       toast.error("Horário de entrada deve ser menor que o de saída");
       setIsSubmitting(false);
@@ -89,15 +83,43 @@ const TurnosForm = () => {
   };
 
   if (error) {
-    return <div className="flex items-center justify-center p-8 text-red-500">Erro ao carregar configurações dos turnos</div>;
+    return (
+      <div className="p-4">
+        <Alert variant="destructive">
+          <AlertDescription>
+            Erro ao carregar configurações dos turnos. 
+            <Button 
+              variant="link" 
+              onClick={() => refetch()} 
+              className="pl-2"
+            >
+              Tentar novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Carregando configurações dos turnos...</div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+        Carregando configurações dos turnos...
+      </div>
+    );
   }
 
   if (!turnos.length) {
-    return <div className="flex items-center justify-center p-8">Nenhuma configuração de turno encontrada.</div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Alert>
+          <AlertDescription>
+            Nenhuma configuração de turno encontrada.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
