@@ -6,16 +6,13 @@ const generateUniqueCode = async (db) => {
   const maxAttempts = 10;
   
   while (attempts < maxAttempts) {
-    // Gera número entre 1000 e 9999
     const code = String(Math.floor(1000 + Math.random() * 9000));
     
-    // Verifica se existe na tabela de vouchers descartáveis
     const [disposableVouchers] = await db.execute(
       'SELECT id FROM disposable_vouchers WHERE code = ?',
       [code]
     );
 
-    // Verifica se existe na tabela de usuários (vouchers regulares)
     const [userVouchers] = await db.execute(
       'SELECT id FROM users WHERE voucher = ?',
       [code]
@@ -75,7 +72,6 @@ export const createDisposableVoucher = async (req, res) => {
   try {
     db = await pool.getConnection();
     
-    // Verifica se o tipo de refeição existe e está ativo
     const [mealTypes] = await db.execute(
       'SELECT id FROM meal_types WHERE id = ? AND is_active = TRUE',
       [meal_type_id]
@@ -88,18 +84,18 @@ export const createDisposableVoucher = async (req, res) => {
       });
     }
 
-    // Gera código único
+    // Formata a data para o formato aceito pelo MySQL (YYYY-MM-DD)
+    const formattedDate = new Date(expired_at).toISOString().split('T')[0];
+
     const code = await generateUniqueCode(db);
 
-    // Insere o novo voucher
     const [result] = await db.execute(
       `INSERT INTO disposable_vouchers 
        (code, meal_type_id, created_by, expired_at) 
        VALUES (?, ?, ?, ?)`,
-      [code, meal_type_id, created_by, expired_at]
+      [code, meal_type_id, created_by, formattedDate]
     );
 
-    // Busca o voucher criado com informações completas
     const [voucher] = await db.execute(
       `SELECT dv.*, mt.name as meal_type_name 
        FROM disposable_vouchers dv 
@@ -142,7 +138,7 @@ export const validateDisposableVoucher = async (req, res) => {
        FROM disposable_vouchers dv 
        JOIN meal_types mt ON dv.meal_type_id = mt.id 
        WHERE dv.code = ? AND dv.is_used = FALSE 
-       AND (dv.expired_at IS NULL OR dv.expired_at > NOW())`,
+       AND (dv.expired_at IS NULL OR dv.expired_at > CURDATE())`,
       [code]
     );
 
