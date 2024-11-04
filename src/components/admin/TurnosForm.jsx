@@ -44,7 +44,6 @@ const TurnosForm = () => {
     }
   });
 
-  // Ensure turnos is always an array
   const turnos = Array.isArray(data) ? data : [];
 
   const updateTurnosMutation = useMutation({
