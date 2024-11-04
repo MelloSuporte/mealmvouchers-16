@@ -48,9 +48,10 @@ const BackgroundImageForm = () => {
         return;
       }
 
+      setBackgrounds(prev => ({ ...prev, [page]: file }));
+      
       const reader = new FileReader();
       reader.onloadend = () => {
-        setBackgrounds(prev => ({ ...prev, [page]: reader.result }));
         setPreviews(prev => ({ ...prev, [page]: reader.result }));
       };
       reader.readAsDataURL(file);

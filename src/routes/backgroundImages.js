@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
 router.post('/', upload.any(), async (req, res) => {
   let connection;
   try {
-    const { voucher, userConfirmation, bomApetite } = req.body;
+    const files = req.files;
     connection = await pool.getConnection();
 
     await connection.beginTransaction();
@@ -41,17 +41,15 @@ router.post('/', upload.any(), async (req, res) => {
       'UPDATE background_images SET active = false WHERE page IN ("voucher", "userConfirmation", "bomApetite")'
     );
 
-    // Insere novas imagens
-    const images = [
-      { page: 'voucher', image: voucher },
-      { page: 'userConfirmation', image: userConfirmation },
-      { page: 'bomApetite', image: bomApetite }
-    ].filter(img => img.image);
+    // Processa cada arquivo
+    for (const file of files) {
+      const page = file.fieldname;
+      const imageBuffer = file.buffer;
+      const base64Image = `data:${file.mimetype};base64,${imageBuffer.toString('base64')}`;
 
-    for (const img of images) {
       await connection.execute(
         'INSERT INTO background_images (page, image_url, active) VALUES (?, ?, true)',
-        [img.page, img.image]
+        [page, base64Image]
       );
     }
 
