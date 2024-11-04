@@ -6,6 +6,7 @@ import { Eye, EyeOff, Upload } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 import api from '../../utils/api';
 
 const UserFormMain = ({
@@ -41,19 +42,60 @@ const UserFormMain = ({
     }
   };
 
-  const generateVoucher = () => {
-    if (formData.userCPF) {
-      const cpfNumbers = formData.userCPF.replace(/\D/g, '');
-      if (cpfNumbers.length >= 5) {
-        const newVoucher = cpfNumbers.substring(1, 5);
-        onInputChange('voucher', newVoucher);
+  const generateUniqueVoucher = async (cpf) => {
+    const maxAttempts = 10;
+    let attempts = 0;
+
+    // Remove caracteres não numéricos do CPF
+    const cpfNumbers = cpf.replace(/\D/g, '');
+    
+    // Extrai a faixa de dígitos (2 a 13)
+    const digitRange = cpfNumbers.substring(1, 13);
+    
+    while (attempts < maxAttempts) {
+      // Seleciona 4 dígitos aleatórios da faixa
+      let voucher = '';
+      for (let i = 0; i < 4; i++) {
+        const randomIndex = Math.floor(Math.random() * digitRange.length);
+        voucher += digitRange[randomIndex];
+      }
+
+      try {
+        // Verifica se o voucher já existe
+        const response = await api.post('/vouchers/check', { code: voucher });
+        if (!response.data.exists) {
+          return voucher;
+        }
+      } catch (error) {
+        if (error.response?.status === 404) {
+          return voucher;
+        }
+      }
+      attempts++;
+    }
+    
+    toast.error('Não foi possível gerar um voucher único após várias tentativas');
+    return null;
+  };
+
+  const handleCPFChange = async (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+      onInputChange('userCPF', value);
+      
+      if (value.length >= 11) {
+        const newVoucher = await generateUniqueVoucher(value);
+        if (newVoucher) {
+          onInputChange('voucher', newVoucher);
+        }
       }
     }
   };
 
   const formatTime = (time) => {
     if (!time) return '';
-    return time.substring(0, 5); // Format HH:mm
+    return time.substring(0, 5);
   };
 
   return (
@@ -72,17 +114,7 @@ const UserFormMain = ({
       <Input 
         placeholder="CPF (000.000.000-00)" 
         value={formData.userCPF}
-        onChange={(e) => {
-          let value = e.target.value.replace(/\D/g, '');
-          if (value.length <= 11) {
-            value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
-            onInputChange('userCPF', value);
-            if (value.length >= 5) {
-              const cpfNumbers = value.replace(/\D/g, '');
-              onInputChange('voucher', cpfNumbers.substring(1, 5));
-            }
-          }
-        }}
+        onChange={handleCPFChange}
       />
       <Select 
         value={formData.company} 
@@ -108,9 +140,6 @@ const UserFormMain = ({
         />
         <Button type="button" onClick={() => setShowVoucher(!showVoucher)}>
           {showVoucher ? <EyeOff size={20} /> : <Eye size={20} />}
-        </Button>
-        <Button type="button" onClick={generateVoucher}>
-          Gerar Voucher
         </Button>
       </div>
       <Select 
