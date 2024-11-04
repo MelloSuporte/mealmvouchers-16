@@ -1,7 +1,11 @@
 import express from 'express';
-import { validateVoucher, validateDisposableVoucher, checkVoucherCode, createDisposableVoucher } from '../controllers/voucherController';
+import { validateVoucher } from '../controllers/voucherController';
+import { 
+  checkVoucherCode, 
+  createDisposableVoucher, 
+  validateDisposableVoucher 
+} from '../controllers/disposableVoucherController';
 import logger from '../config/logger.js';
-import pool from '../config/database.js';
 
 const router = express.Router();
 
