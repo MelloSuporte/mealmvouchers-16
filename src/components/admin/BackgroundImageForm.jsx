@@ -35,6 +35,7 @@ const BackgroundImageForm = () => {
         bomApetite: images.find(img => img.page === 'bomApetite')?.image_url || ''
       });
     } catch (error) {
+      console.error('Erro ao carregar imagens:', error);
       toast.error("Erro ao carregar imagens de fundo");
     }
   };
@@ -60,10 +61,17 @@ const BackgroundImageForm = () => {
     try {
       setIsLoading(true);
       
-      const response = await api.post('/background-images', {
-        voucher: backgrounds.voucher,
-        userConfirmation: backgrounds.userConfirmation,
-        bomApetite: backgrounds.bomApetite
+      const formData = new FormData();
+      Object.entries(backgrounds).forEach(([key, value]) => {
+        if (value) {
+          formData.append(key, value);
+        }
+      });
+      
+      const response = await api.post('/background-images', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
       if (response.data.success) {
@@ -71,6 +79,7 @@ const BackgroundImageForm = () => {
         loadSavedBackgrounds();
       }
     } catch (error) {
+      console.error('Erro ao salvar imagens:', error);
       toast.error("Erro ao salvar imagens de fundo. Por favor, tente novamente.");
     } finally {
       setIsLoading(false);

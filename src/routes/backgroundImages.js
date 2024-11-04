@@ -1,8 +1,14 @@
 import express from 'express';
 import logger from '../config/logger.js';
 import pool from '../config/database.js';
+import multer from 'multer';
 
 const router = express.Router();
+const upload = multer({
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB
+  }
+});
 
 // Buscar todas as imagens de fundo
 router.get('/', async (req, res) => {
@@ -22,11 +28,13 @@ router.get('/', async (req, res) => {
 });
 
 // Salvar novas imagens de fundo
-router.post('/', async (req, res) => {
+router.post('/', upload.any(), async (req, res) => {
   let connection;
   try {
     const { voucher, userConfirmation, bomApetite } = req.body;
     connection = await pool.getConnection();
+
+    await connection.beginTransaction();
 
     // Desativa imagens antigas
     await connection.execute(
@@ -47,8 +55,12 @@ router.post('/', async (req, res) => {
       );
     }
 
+    await connection.commit();
     res.json({ success: true, message: 'Imagens de fundo atualizadas com sucesso' });
   } catch (error) {
+    if (connection) {
+      await connection.rollback();
+    }
     logger.error('Error saving background images:', error);
     res.status(500).json({ error: 'Erro ao salvar imagens de fundo' });
   } finally {
