@@ -4,18 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { ptBR } from "date-fns/locale";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import VoucherTypeSelector from './vouchers/VoucherTypeSelector';
+import VoucherTable from './vouchers/VoucherTable';
 import api from '../../utils/api';
 
 const DisposableVoucherForm = () => {
@@ -34,7 +24,7 @@ const DisposableVoucherForm = () => {
 
   const loadMealTypes = async () => {
     try {
-      const response = await api.get('/api/meals');
+      const response = await api.get('/meals');
       if (Array.isArray(response.data)) {
         setMealTypes(response.data.filter(meal => meal.is_active));
       } else {
@@ -51,7 +41,7 @@ const DisposableVoucherForm = () => {
 
   const loadAllVouchers = async () => {
     try {
-      const response = await api.get('/api/vouchers/disposable');
+      const response = await api.get('/vouchers/disposable');
       setAllVouchers(response.data || []);
     } catch (error) {
       console.error('Error loading vouchers:', error);
@@ -71,11 +61,11 @@ const DisposableVoucherForm = () => {
   const generateUniqueVoucherCode = async () => {
     try {
       const code = Math.floor(1000 + Math.random() * 9000).toString();
-      const result = await api.post('/api/vouchers/check', { code });
+      const result = await api.post('/vouchers/check', { code });
       if (!result.data.exists) {
         return code;
       }
-      return generateUniqueVoucherCode(); // Try again if code exists
+      return generateUniqueVoucherCode();
     } catch (error) {
       console.error('Error checking voucher code:', error);
       throw new Error('Erro ao verificar código do voucher');
@@ -99,10 +89,10 @@ const DisposableVoucherForm = () => {
 
       for (let i = 0; i < totalVouchers; i++) {
         const code = await generateUniqueVoucherCode();
-        const response = await api.post('/api/vouchers/create', {
+        const response = await api.post('/vouchers/create', {
           code,
           meal_type_id: selectedMealTypes[0],
-          created_by: 1 // Assuming created_by = 1 for now
+          created_by: 1
         });
 
         if (response.data.success) {
@@ -138,23 +128,11 @@ const DisposableVoucherForm = () => {
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Tipos de Refeição</label>
-        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-          <div className="space-y-2">
-            {mealTypes.map((type) => (
-              <div key={type.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`meal-type-${type.id}`}
-                  checked={selectedMealTypes.includes(type.id)}
-                  onCheckedChange={() => handleMealTypeToggle(type.id)}
-                />
-                <Label htmlFor={`meal-type-${type.id}`}>{type.name}</Label>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
+      <VoucherTypeSelector 
+        mealTypes={mealTypes}
+        selectedMealTypes={selectedMealTypes}
+        onMealTypeToggle={handleMealTypeToggle}
+      />
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Datas de Expiração</label>
@@ -186,38 +164,7 @@ const DisposableVoucherForm = () => {
         </Button>
       </div>
 
-      {/* Tabela de Vouchers Gerados */}
-      <Card>
-        <CardContent className="pt-6">
-          <Label className="text-lg font-bold">Vouchers Descartáveis</Label>
-          <div className="mt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Tipo de Refeição</TableHead>
-                  <TableHead>Data de Expiração</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {allVouchers.map((voucher, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{voucher.code}</TableCell>
-                    <TableCell>{voucher.meal_type_name}</TableCell>
-                    <TableCell>
-                      {new Date(voucher.expired_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {voucher.is_used ? 'Utilizado' : 'Disponível'}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <VoucherTable vouchers={allVouchers} />
     </div>
   );
 };
