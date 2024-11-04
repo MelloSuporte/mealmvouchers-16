@@ -15,7 +15,9 @@ const createPool = () => {
       connectionLimit: 10,
       queueLimit: 0,
       enableKeepAlive: true,
-      keepAliveInitialDelay: 0
+      keepAliveInitialDelay: 0,
+      timezone: 'UTC', // Ensure UTC timezone for consistency
+      dateStrings: true // Return dates as strings to avoid timezone issues
     });
 
     logger.info('MySQL connection pool created successfully');
@@ -32,6 +34,11 @@ export const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
     await connection.ping();
+    
+    // Test timezone settings
+    const [rows] = await connection.execute('SELECT NOW() as server_time');
+    logger.info(`Database server time: ${rows[0].server_time}`);
+    
     connection.release();
     logger.info('Database connection test successful');
     return true;

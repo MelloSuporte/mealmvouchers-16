@@ -4,11 +4,14 @@ import { isWithinShiftHours, getAllowedMealsByShift } from '../utils/shiftUtils'
 
 export const validateVoucher = async (req, res) => {
   const { cpf, voucherCode, mealType } = req.body;
-  const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false }).slice(0, 5);
   let db;
   
   try {
     db = await pool.getConnection();
+    
+    // Get current server time
+    const [timeResult] = await db.execute('SELECT TIME(NOW()) as current_time');
+    const currentTime = timeResult[0].current_time.slice(0, 5); // Format: HH:mm
     
     // Get user and their shift
     const [users] = await db.execute(
@@ -36,9 +39,9 @@ export const validateVoucher = async (req, res) => {
       });
     }
 
-    // Check if user is within their shift hours
+    // Check if user is within their shift hours using server time
     if (!isWithinShiftHours(user.turno, currentTime)) {
-      logger.warn(`Out of shift attempt - User: ${user.name}, Shift: ${user.turno}`);
+      logger.warn(`Out of shift attempt - User: ${user.name}, Shift: ${user.turno}, Time: ${currentTime}`);
       return res.status(403).json({
         error: `${user.name}, você está fora do horário do ${user.turno} turno`,
         userName: user.name,
@@ -46,20 +49,18 @@ export const validateVoucher = async (req, res) => {
       });
     }
 
-    // Get today's meal usage
-    const today = new Date().toISOString().slice(0, 10);
+    // Get today's meal usage using server date
     const [usedMeals] = await db.execute(
       `SELECT mt.name 
        FROM voucher_usage vu 
        JOIN meal_types mt ON vu.meal_type_id = mt.id 
        WHERE vu.user_id = ? 
-       AND DATE(vu.used_at) = ?`,
-      [user.id, today]
+       AND DATE(vu.used_at) = DATE(NOW())`,
+      [user.id]
     );
 
     const allowedMeals = getAllowedMealsByShift(user.turno);
     
-    // Check if meal type is allowed for user's shift
     if (!allowedMeals.includes(mealType)) {
       logger.warn(`Invalid meal type attempt - User: ${user.name}, Meal: ${mealType}`);
       return res.status(403).json({
@@ -69,7 +70,6 @@ export const validateVoucher = async (req, res) => {
       });
     }
 
-    // Check daily meal limits and rules
     if (usedMeals.length >= 2) {
       // Check if this is an extra voucher request
       const [extraVoucher] = await db.execute(
@@ -98,9 +98,9 @@ export const validateVoucher = async (req, res) => {
       });
     }
 
-    // Record the meal usage
+    // Record the meal usage with server timestamp
     await db.execute(
-      'INSERT INTO voucher_usage (user_id, meal_type_id) VALUES (?, (SELECT id FROM meal_types WHERE name = ?))',
+      'INSERT INTO voucher_usage (user_id, meal_type_id, used_at) VALUES (?, (SELECT id FROM meal_types WHERE name = ?), NOW())',
       [user.id, mealType]
     );
 
