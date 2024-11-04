@@ -45,6 +45,7 @@ const DisposableVoucherForm = () => {
       setAllVouchers(response.data || []);
     } catch (error) {
       console.error('Error loading vouchers:', error);
+      toast.error("Erro ao carregar vouchers existentes");
     }
   };
 
@@ -60,15 +61,28 @@ const DisposableVoucherForm = () => {
 
   const generateUniqueVoucherCode = async () => {
     try {
-      const code = Math.floor(1000 + Math.random() * 9000).toString();
-      const result = await api.post('/vouchers/check', { code });
-      if (!result.data.exists) {
-        return code;
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (attempts < maxAttempts) {
+        const code = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
+        try {
+          const result = await api.post('/vouchers/check', { code });
+          if (!result.data.exists) {
+            return code;
+          }
+        } catch (error) {
+          if (error.response?.status === 404) {
+            // Se o endpoint retornar 404, assumimos que o código não existe
+            return code;
+          }
+          throw error;
+        }
+        attempts++;
       }
-      return generateUniqueVoucherCode();
+      throw new Error('Não foi possível gerar um código único após várias tentativas');
     } catch (error) {
-      console.error('Error checking voucher code:', error);
-      throw new Error('Erro ao verificar código do voucher');
+      throw new Error('Erro ao verificar código do voucher: ' + error.message);
     }
   };
 
@@ -88,25 +102,33 @@ const DisposableVoucherForm = () => {
       const newVouchers = [];
 
       for (let i = 0; i < totalVouchers; i++) {
-        const code = await generateUniqueVoucherCode();
-        const response = await api.post('/vouchers/create', {
-          code,
-          meal_type_id: selectedMealTypes[0],
-          created_by: 1
-        });
+        try {
+          const code = await generateUniqueVoucherCode();
+          const response = await api.post('/vouchers/create', {
+            code,
+            meal_type_id: selectedMealTypes[0],
+            created_by: 1,
+            expired_at: selectedDates[0]
+          });
 
-        if (response.data.success) {
-          newVouchers.push(response.data.voucher);
+          if (response.data.success) {
+            newVouchers.push(response.data.voucher);
+          }
+        } catch (error) {
+          toast.error(`Erro ao gerar voucher ${i + 1}: ${error.message}`);
+          return;
         }
       }
 
-      setGeneratedVouchers(newVouchers);
-      setAllVouchers(prev => [...newVouchers, ...prev]);
-      toast.success(`${totalVouchers} voucher(s) descartável(is) gerado(s) com sucesso!`);
-      
-      setQuantity(1);
-      setSelectedMealTypes([]);
-      setSelectedDates([]);
+      if (newVouchers.length > 0) {
+        setGeneratedVouchers(newVouchers);
+        setAllVouchers(prev => [...newVouchers, ...prev]);
+        toast.success(`${newVouchers.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
+        
+        setQuantity(1);
+        setSelectedMealTypes([]);
+        setSelectedDates([]);
+      }
     } catch (error) {
       toast.error("Erro ao gerar vouchers: " + error.message);
     }
