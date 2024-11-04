@@ -23,14 +23,14 @@ const TurnosForm = () => {
   const { data: turnos = [], isLoading, error, refetch } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
-      const response = await api.get('/api/shift-configurations');
+      const response = await api.get('/shift-configurations');
       return response.data;
     }
   });
 
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
-      const response = await api.put(`/api/shift-configurations/${updatedTurno.id}`, updatedTurno);
+      const response = await api.put(`/shift-configurations/${updatedTurno.id}`, updatedTurno);
       return response.data;
     },
     onSuccess: () => {
@@ -87,7 +87,7 @@ const TurnosForm = () => {
       <div className="p-4">
         <Alert variant="destructive">
           <AlertDescription>
-            Erro ao carregar configurações dos turnos. 
+            Erro ao carregar configurações dos turnos.
             <Button 
               variant="link" 
               onClick={() => refetch()} 
