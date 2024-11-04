@@ -9,9 +9,10 @@ export const validateVoucher = async (req, res) => {
   try {
     db = await pool.getConnection();
     
-    // Get current server time
-    const [timeResult] = await db.execute('SELECT TIME(NOW()) as current_time');
-    const currentTime = timeResult[0].current_time.slice(0, 5); // Format: HH:mm
+    // Get current server time with seconds precision
+    const [timeResult] = await db.execute('SELECT NOW() as current_time');
+    const currentTime = timeResult[0].current_time;
+    const currentTimeFormatted = currentTime.slice(11, 16); // Format: HH:mm
     
     // Get user and their shift
     const [users] = await db.execute(
@@ -40,7 +41,7 @@ export const validateVoucher = async (req, res) => {
     }
 
     // Check if user is within their shift hours using server time
-    if (!isWithinShiftHours(user.turno, currentTime)) {
+    if (!isWithinShiftHours(user.turno, currentTimeFormatted)) {
       logger.warn(`Out of shift attempt - User: ${user.name}, Shift: ${user.turno}, Time: ${currentTime}`);
       return res.status(403).json({
         error: `${user.name}, você está fora do horário do ${user.turno} turno`,
@@ -49,13 +50,13 @@ export const validateVoucher = async (req, res) => {
       });
     }
 
-    // Get today's meal usage using server date
+    // Get today's meal usage using server date/time
     const [usedMeals] = await db.execute(
-      `SELECT mt.name 
+      `SELECT mt.name, vu.used_at
        FROM voucher_usage vu 
        JOIN meal_types mt ON vu.meal_type_id = mt.id 
        WHERE vu.user_id = ? 
-       AND DATE(vu.used_at) = DATE(NOW())`,
+       AND DATE(vu.used_at) = CURDATE()`,
       [user.id]
     );
 
@@ -73,8 +74,8 @@ export const validateVoucher = async (req, res) => {
     if (usedMeals.length >= 2) {
       // Check if this is an extra voucher request
       const [extraVoucher] = await db.execute(
-        'SELECT * FROM extra_vouchers WHERE user_id = ? AND valid_until >= ? AND used = FALSE',
-        [user.id, today]
+        'SELECT * FROM extra_vouchers WHERE user_id = ? AND valid_until >= CURDATE() AND used = FALSE',
+        [user.id]
       );
 
       if (!extraVoucher.length) {
@@ -98,13 +99,13 @@ export const validateVoucher = async (req, res) => {
       });
     }
 
-    // Record the meal usage with server timestamp
+    // Record the meal usage with exact server timestamp
     await db.execute(
-      'INSERT INTO voucher_usage (user_id, meal_type_id, used_at) VALUES (?, (SELECT id FROM meal_types WHERE name = ?), NOW())',
+      'INSERT INTO voucher_usage (user_id, meal_type_id, used_at) VALUES (?, (SELECT id FROM meal_types WHERE name = ?), NOW(3))',
       [user.id, mealType]
     );
 
-    logger.info(`Successful voucher validation - User: ${user.name}, Meal: ${mealType}`);
+    logger.info(`Successful voucher validation - User: ${user.name}, Meal: ${mealType}, Time: ${currentTime}`);
     res.json({ 
       success: true, 
       message: 'Voucher validado com sucesso',
@@ -149,8 +150,9 @@ export const validateDisposableVoucher = async (req, res) => {
       return res.status(400).json({ error: 'Tipo de refeição inválido para este voucher' });
     }
 
+    // Update with exact server timestamp
     await db.execute(
-      'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
+      'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW(3) WHERE id = ?',
       [voucher.id]
     );
 
