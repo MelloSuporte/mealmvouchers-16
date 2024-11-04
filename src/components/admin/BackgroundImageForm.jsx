@@ -40,22 +40,52 @@ const BackgroundImageForm = () => {
     }
   };
 
+  // Função para validar o tipo e tamanho da imagem
+  const validateImage = (file) => {
+    // Verifica o tipo do arquivo
+    if (!file.type.startsWith('image/')) {
+      toast.error("Arquivo inválido. Por favor, envie apenas imagens.");
+      return false;
+    }
+
+    // Verifica o tamanho do arquivo (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Limite máximo: 5MB");
+      return false;
+    }
+
+    // Verifica extensões permitidas
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (!allowedExtensions.includes(extension)) {
+      toast.error("Formato de arquivo não permitido. Use: JPG, PNG, GIF ou WEBP");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleFileChange = (page, event) => {
     const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Arquivo muito grande. Limite máximo: 5MB");
-        return;
-      }
+    if (!file) return;
 
-      setBackgrounds(prev => ({ ...prev, [page]: file }));
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviews(prev => ({ ...prev, [page]: reader.result }));
-      };
-      reader.readAsDataURL(file);
+    // Valida a imagem antes de processá-la
+    if (!validateImage(file)) {
+      event.target.value = ''; // Limpa o input
+      return;
     }
+
+    setBackgrounds(prev => ({ ...prev, [page]: file }));
+    
+    // Cria preview seguro da imagem
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviews(prev => ({ ...prev, [page]: reader.result }));
+    };
+    reader.onerror = () => {
+      toast.error("Erro ao ler o arquivo. Tente novamente.");
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSaveBackgrounds = async () => {

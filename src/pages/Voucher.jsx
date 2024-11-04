@@ -19,23 +19,45 @@ const Voucher = () => {
       inputRef.current.focus();
     }
     
-    // Fetch background image from API
+    // Função para buscar e validar a imagem de fundo da página de voucher
     const fetchBackgroundImage = async () => {
       try {
         const response = await api.get('/background-images');
         const images = response.data;
+        
+        // Busca especificamente a imagem para a página de voucher
         const voucherBackground = images.find(img => img.page === 'voucher')?.image_url;
-        if (voucherBackground) {
+        
+        // Verifica se a URL da imagem é válida e segura
+        if (voucherBackground && isValidImageUrl(voucherBackground)) {
           setBackgroundImage(voucherBackground);
           localStorage.setItem('voucherBackground', voucherBackground);
+        } else {
+          console.warn('Invalid or unsafe background image URL detected');
         }
       } catch (error) {
         console.error('Error fetching background image:', error);
+        // Usa imagem em cache do localStorage como fallback
+        const cachedImage = localStorage.getItem('voucherBackground');
+        if (cachedImage) setBackgroundImage(cachedImage);
       }
     };
 
     fetchBackgroundImage();
   }, []);
+
+  // Função auxiliar para validar URLs de imagem
+  const isValidImageUrl = (url) => {
+    // Verifica se a URL é uma string base64 válida de imagem
+    if (url.startsWith('data:image/')) {
+      const [header, content] = url.split(',');
+      if (!header.includes('image/') || !content) {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -110,7 +132,10 @@ const Voucher = () => {
     <div 
       className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4 relative bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        // Aplica a imagem de fundo apenas se for válida
+        backgroundImage: backgroundImage && isValidImageUrl(backgroundImage) 
+          ? `url(${backgroundImage})` 
+          : undefined,
       }}
     >
       <Button
