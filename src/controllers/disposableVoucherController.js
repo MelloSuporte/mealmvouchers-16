@@ -1,6 +1,36 @@
 import pool from '../config/database';
 import logger from '../config/logger';
 
+const generateUniqueCode = async (db) => {
+  let attempts = 0;
+  const maxAttempts = 10;
+  
+  while (attempts < maxAttempts) {
+    // Gera número entre 1000 e 9999
+    const code = String(Math.floor(1000 + Math.random() * 9000));
+    
+    // Verifica se existe na tabela de vouchers descartáveis
+    const [disposableVouchers] = await db.execute(
+      'SELECT id FROM disposable_vouchers WHERE code = ?',
+      [code]
+    );
+
+    // Verifica se existe na tabela de usuários (vouchers regulares)
+    const [userVouchers] = await db.execute(
+      'SELECT id FROM users WHERE voucher = ?',
+      [code]
+    );
+
+    if (disposableVouchers.length === 0 && userVouchers.length === 0) {
+      return code;
+    }
+
+    attempts++;
+  }
+  
+  throw new Error('Não foi possível gerar um código único após várias tentativas');
+};
+
 export const checkVoucherCode = async (req, res) => {
   const { code } = req.body;
   let db;
@@ -8,24 +38,27 @@ export const checkVoucherCode = async (req, res) => {
   try {
     db = await pool.getConnection();
     
-    // Validar formato do código
     if (!/^\d{4}$/.test(code)) {
-      logger.warn(`Invalid voucher code format: ${code}`);
+      logger.warn(`Formato inválido de código: ${code}`);
       return res.status(400).json({ 
-        error: 'Código deve conter exatamente 4 dígitos',
+        error: 'Código deve conter exatamente 4 dígitos numéricos',
         exists: false 
       });
     }
 
-    // Verificar se o código já existe
-    const [vouchers] = await db.execute(
+    const [disposableVouchers] = await db.execute(
       'SELECT id FROM disposable_vouchers WHERE code = ?',
       [code]
     );
 
-    return res.json({ exists: vouchers.length > 0 });
+    const [userVouchers] = await db.execute(
+      'SELECT id FROM users WHERE voucher = ?',
+      [code]
+    );
+
+    return res.json({ exists: disposableVouchers.length > 0 || userVouchers.length > 0 });
   } catch (error) {
-    logger.error('Error checking voucher code:', error);
+    logger.error('Erro ao verificar código do voucher:', error);
     return res.status(500).json({ 
       error: 'Erro interno ao verificar código do voucher',
       exists: false
@@ -36,47 +69,29 @@ export const checkVoucherCode = async (req, res) => {
 };
 
 export const createDisposableVoucher = async (req, res) => {
-  const { code, meal_type_id, created_by, expired_at } = req.body;
+  const { meal_type_id, created_by, expired_at } = req.body;
   let db;
   
   try {
     db = await pool.getConnection();
     
-    // Validar formato do código
-    if (!/^\d{4}$/.test(code)) {
-      logger.warn(`Invalid voucher code format: ${code}`);
-      return res.status(400).json({ 
-        error: 'Código do voucher deve conter 4 dígitos numéricos'
-      });
-    }
-
-    // Verificar se o código já existe
-    const [existingVouchers] = await db.execute(
-      'SELECT id FROM disposable_vouchers WHERE code = ?',
-      [code]
-    );
-
-    if (existingVouchers.length > 0) {
-      logger.warn(`Duplicate voucher code attempt: ${code}`);
-      return res.status(400).json({ 
-        error: 'Código de voucher já existe'
-      });
-    }
-
-    // Verificar se o tipo de refeição existe e está ativo
+    // Verifica se o tipo de refeição existe e está ativo
     const [mealTypes] = await db.execute(
       'SELECT id FROM meal_types WHERE id = ? AND is_active = TRUE',
       [meal_type_id]
     );
 
     if (mealTypes.length === 0) {
-      logger.warn(`Invalid or inactive meal type: ${meal_type_id}`);
+      logger.warn(`Tipo de refeição inválido ou inativo: ${meal_type_id}`);
       return res.status(400).json({ 
         error: 'Tipo de refeição inválido ou inativo'
       });
     }
 
-    // Inserir o novo voucher
+    // Gera código único
+    const code = await generateUniqueCode(db);
+
+    // Insere o novo voucher
     const [result] = await db.execute(
       `INSERT INTO disposable_vouchers 
        (code, meal_type_id, created_by, expired_at) 
@@ -84,7 +99,7 @@ export const createDisposableVoucher = async (req, res) => {
       [code, meal_type_id, created_by, expired_at]
     );
 
-    // Buscar o voucher criado com informações completas
+    // Busca o voucher criado com informações completas
     const [voucher] = await db.execute(
       `SELECT dv.*, mt.name as meal_type_name 
        FROM disposable_vouchers dv 
@@ -93,16 +108,16 @@ export const createDisposableVoucher = async (req, res) => {
       [result.insertId]
     );
 
-    logger.info(`Disposable voucher created successfully: ${code}`);
+    logger.info(`Voucher descartável criado com sucesso: ${code}`);
     return res.json({ 
       success: true, 
       message: 'Voucher criado com sucesso',
       voucher: voucher[0]
     });
   } catch (error) {
-    logger.error('Error creating disposable voucher:', error);
+    logger.error('Erro ao criar voucher descartável:', error);
     return res.status(500).json({ 
-      error: 'Erro interno ao criar voucher descartável'
+      error: 'Erro ao criar voucher descartável: ' + error.message
     });
   } finally {
     if (db) db.release();
@@ -155,7 +170,7 @@ export const validateDisposableVoucher = async (req, res) => {
       message: 'Voucher validado com sucesso'
     });
   } catch (error) {
-    logger.error('Error validating disposable voucher:', error);
+    logger.error('Erro ao validar voucher descartável:', error);
     return res.status(500).json({ 
       error: 'Erro interno ao validar voucher descartável'
     });

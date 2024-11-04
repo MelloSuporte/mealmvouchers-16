@@ -59,28 +59,6 @@ const DisposableVoucherForm = () => {
     });
   };
 
-  const generateUniqueVoucherCode = async () => {
-    let attempts = 0;
-    const maxAttempts = 10;
-    
-    while (attempts < maxAttempts) {
-      const code = Math.floor(1000 + Math.random() * 9000).toString();
-      try {
-        const response = await api.post('/vouchers/check', { code });
-        if (!response.data.exists) {
-          return code;
-        }
-      } catch (error) {
-        if (error.response?.status === 404) {
-          return code;
-        }
-        throw new Error('Erro ao verificar código do voucher');
-      }
-      attempts++;
-    }
-    throw new Error('Não foi possível gerar um código único após várias tentativas');
-  };
-
   const handleGenerateVouchers = async () => {
     if (selectedDates.length === 0) {
       toast.error("Selecione pelo menos uma data");
@@ -100,11 +78,9 @@ const DisposableVoucherForm = () => {
         for (const mealTypeId of selectedMealTypes) {
           for (let i = 0; i < quantity; i++) {
             try {
-              const code = await generateUniqueVoucherCode();
               const response = await api.post('/vouchers/create', {
-                code,
                 meal_type_id: mealTypeId,
-                created_by: 1,
+                created_by: 1, // TODO: Get actual user ID
                 expired_at: date
               });
 
@@ -112,7 +88,7 @@ const DisposableVoucherForm = () => {
                 newVouchers.push(response.data.voucher);
               }
             } catch (error) {
-              toast.error(`Erro ao gerar voucher: ${error.message}`);
+              toast.error(`Erro ao gerar voucher: ${error.response?.data?.error || error.message}`);
             }
           }
         }
