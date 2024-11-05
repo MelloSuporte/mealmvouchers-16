@@ -13,15 +13,15 @@ export const validateVoucherTime = (currentTime, mealType, toleranceMinutes) => 
 };
 
 export const validateVoucherCode = (code) => {
-  if (!/^\d{4}$/.test(code)) {
+  if (!code || !/^\d{4}$/.test(code)) {
     logger.warn(`Formato inválido de código: ${code}`);
     throw new Error('Código deve conter exatamente 4 dígitos numéricos');
   }
 };
 
 export const validateMealType = (voucher, mealType) => {
-  if (voucher.meal_type_id !== mealType.id) {
-    logger.warn(`Tipo de refeição não corresponde ao voucher: ${mealType.name}`);
+  if (!voucher || !mealType || voucher.meal_type_id !== mealType.id) {
+    logger.warn(`Tipo de refeição não corresponde ao voucher: ${mealType?.name}`);
     throw new Error('Tipo de refeição não corresponde ao voucher');
   }
 };

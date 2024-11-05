@@ -7,6 +7,12 @@ export const validateVoucher = async (req, res) => {
   let db;
   
   try {
+    if (!cpf || !voucherCode || !mealType) {
+      return res.status(400).json({ 
+        error: 'CPF, código do voucher e tipo de refeição são obrigatórios'
+      });
+    }
+
     db = await pool.getConnection();
     
     // Get current server time with seconds precision
@@ -16,33 +22,24 @@ export const validateVoucher = async (req, res) => {
     
     // Get user and their shift
     const [users] = await db.execute(
-      'SELECT * FROM users WHERE cpf = ? AND voucher = ?',
+      'SELECT * FROM users WHERE cpf = ? AND voucher = ? AND is_suspended = FALSE',
       [cpf, voucherCode]
     );
 
     if (users.length === 0) {
-      logger.warn(`Invalid voucher attempt - CPF: ${cpf}, Code: ${voucherCode}`);
+      logger.warn(`Tentativa inválida de voucher - CPF: ${cpf}, Código: ${voucherCode}`);
       return res.status(401).json({ 
-        error: 'Voucher inválido',
+        error: 'Usuário não encontrado ou voucher inválido',
         userName: null,
         turno: null 
       });
     }
 
     const user = users[0];
-    
-    if (user.is_suspended) {
-      logger.warn(`Suspended user attempt - User: ${user.name}`);
-      return res.status(403).json({ 
-        error: 'Usuário suspenso',
-        userName: user.name,
-        turno: user.turno 
-      });
-    }
 
     // Check if user is within their shift hours using server time
     if (!isWithinShiftHours(user.turno, currentTimeFormatted)) {
-      logger.warn(`Out of shift attempt - User: ${user.name}, Shift: ${user.turno}, Time: ${currentTime}`);
+      logger.warn(`Tentativa fora do turno - Usuário: ${user.name}, Turno: ${user.turno}, Hora: ${currentTime}`);
       return res.status(403).json({
         error: `${user.name}, você está fora do horário do ${user.turno} turno`,
         userName: user.name,
@@ -63,9 +60,40 @@ export const validateVoucher = async (req, res) => {
     const allowedMeals = getAllowedMealsByShift(user.turno);
     
     if (!allowedMeals.includes(mealType)) {
-      logger.warn(`Invalid meal type attempt - User: ${user.name}, Meal: ${mealType}`);
+      logger.warn(`Tipo de refeição inválido - Usuário: ${user.name}, Refeição: ${mealType}`);
       return res.status(403).json({
         error: `${mealType} não está disponível para o ${user.turno} turno`,
+        userName: user.name,
+        turno: user.turno
+      });
+    }
+
+    // Verifica se o tipo de refeição está ativo e dentro do horário
+    const [mealTypeInfo] = await db.execute(
+      'SELECT * FROM meal_types WHERE name = ? AND is_active = TRUE',
+      [mealType]
+    );
+
+    if (mealTypeInfo.length === 0) {
+      return res.status(400).json({
+        error: 'Tipo de refeição inválido ou inativo',
+        userName: user.name,
+        turno: user.turno
+      });
+    }
+
+    const currentMealType = mealTypeInfo[0];
+    const toleranceMinutes = currentMealType.tolerance_minutes || 15;
+    
+    // Adiciona tolerância ao horário de término
+    const endTime = new Date();
+    const [endHours, endMinutes] = currentMealType.end_time.split(':');
+    endTime.setHours(parseInt(endHours), parseInt(endMinutes) + toleranceMinutes);
+    const endTimeWithTolerance = endTime.toTimeString().slice(0, 5);
+
+    if (currentTimeFormatted < currentMealType.start_time || currentTimeFormatted > endTimeWithTolerance) {
+      return res.status(400).json({
+        error: `Esta refeição só pode ser utilizada entre ${currentMealType.start_time} e ${currentMealType.end_time} (tolerância de ${toleranceMinutes} minutos)`,
         userName: user.name,
         turno: user.turno
       });
@@ -78,20 +106,26 @@ export const validateVoucher = async (req, res) => {
         [user.id]
       );
 
-      if (!extraVoucher.length) {
-        logger.warn(`Daily limit exceeded - User: ${user.name}`);
+      if (extraVoucher.length === 0) {
+        logger.warn(`Limite diário excedido - Usuário: ${user.name}`);
         return res.status(403).json({
           error: 'Limite diário de refeições atingido',
           userName: user.name,
           turno: user.turno
         });
       }
+
+      // Marca o voucher extra como usado
+      await db.execute(
+        'UPDATE extra_vouchers SET used = TRUE WHERE id = ?',
+        [extraVoucher[0].id]
+      );
     }
 
     // Validate meal combination rules
     const usedMealTypes = usedMeals.map(m => m.name);
     if (usedMealTypes.includes(mealType)) {
-      logger.warn(`Duplicate meal attempt - User: ${user.name}, Meal: ${mealType}`);
+      logger.warn(`Tentativa de refeição duplicada - Usuário: ${user.name}, Refeição: ${mealType}`);
       return res.status(403).json({
         error: 'Não é permitido repetir o mesmo tipo de refeição',
         userName: user.name,
@@ -105,7 +139,7 @@ export const validateVoucher = async (req, res) => {
       [user.id, mealType]
     );
 
-    logger.info(`Successful voucher validation - User: ${user.name}, Meal: ${mealType}, Time: ${currentTime}`);
+    logger.info(`Voucher validado com sucesso - Usuário: ${user.name}, Refeição: ${mealType}, Hora: ${currentTime}`);
     return res.json({ 
       success: true, 
       message: 'Voucher validado com sucesso',
@@ -113,8 +147,10 @@ export const validateVoucher = async (req, res) => {
       turno: user.turno
     });
   } catch (error) {
-    logger.error('Error validating voucher:', error);
-    throw error;
+    logger.error('Erro ao validar voucher:', error);
+    return res.status(400).json({ 
+      error: error.message || 'Erro ao validar voucher. Tente novamente.'
+    });
   } finally {
     if (db) db.release();
   }

@@ -72,6 +72,12 @@ export const createDisposableVoucher = async (req, res) => {
   let db;
   
   try {
+    if (!meal_type_id || !created_by || !expired_at) {
+      return res.status(400).json({ 
+        error: 'Todos os campos são obrigatórios'
+      });
+    }
+
     db = await pool.getConnection();
     
     const [mealTypes] = await db.execute(
@@ -112,7 +118,7 @@ export const createDisposableVoucher = async (req, res) => {
     });
   } catch (error) {
     logger.error('Erro ao criar voucher descartável:', error);
-    return res.status(500).json({ 
+    return res.status(400).json({ 
       error: 'Erro ao criar voucher descartável: ' + error.message
     });
   } finally {
@@ -125,6 +131,12 @@ export const validateDisposableVoucher = async (req, res) => {
   let db;
   
   try {
+    if (!code || !mealType) {
+      return res.status(400).json({ 
+        error: 'Código do voucher e tipo de refeição são obrigatórios'
+      });
+    }
+
     db = await pool.getConnection();
     validateVoucherCode(code);
 
