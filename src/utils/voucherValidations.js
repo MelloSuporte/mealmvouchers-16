@@ -13,6 +13,22 @@ export const validateVoucherTime = (currentTime, mealType, toleranceMinutes) => 
   }
 };
 
+export const validateDisposableVoucherRules = (voucher) => {
+  // Verificar se o voucher está expirado
+  if (voucher.expired_at && new Date(voucher.expired_at) < new Date()) {
+    throw new Error('Voucher expirado');
+  }
+
+  // Verificar se o voucher já foi usado
+  if (voucher.is_used) {
+    throw new Error('Este voucher já foi utilizado');
+  }
+
+  // Verificar horário da refeição
+  const currentTime = new Date().toTimeString().slice(0, 5);
+  validateVoucherTime(currentTime, voucher, voucher.tolerance_minutes || 15);
+};
+
 export const validateVoucherByType = (voucherType, { code, cpf, mealType, user }) => {
   switch (voucherType) {
     case VOUCHER_TYPES.NORMAL:

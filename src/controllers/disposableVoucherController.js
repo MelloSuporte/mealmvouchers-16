@@ -1,7 +1,7 @@
 import pool from '../config/database';
 import logger from '../config/logger';
 import { generateUniqueCode } from '../utils/voucherGenerationUtils';
-import { validateVoucherTime } from '../utils/voucherValidations';
+import { validateDisposableVoucherRules } from '../utils/voucherValidations';
 
 export const checkVoucherCode = async (req, res) => {
   const { code } = req.body;
@@ -10,17 +10,33 @@ export const checkVoucherCode = async (req, res) => {
   try {
     db = await pool.getConnection();
     const [vouchers] = await db.execute(
-      `SELECT dv.*, mt.name as meal_type_name 
+      `SELECT dv.*, mt.name as meal_type_name, mt.start_time, mt.end_time, 
+              mt.tolerance_minutes, mt.value
        FROM disposable_vouchers dv 
        JOIN meal_types mt ON dv.meal_type_id = mt.id 
        WHERE dv.code = ? AND dv.is_used = FALSE`,
       [code]
     );
 
-    return res.json({ 
-      exists: vouchers.length > 0,
-      voucher: vouchers[0] || null
-    });
+    if (vouchers.length === 0) {
+      return res.json({ 
+        exists: false,
+        message: 'Voucher não encontrado ou já utilizado'
+      });
+    }
+
+    try {
+      validateDisposableVoucherRules(vouchers[0]);
+      return res.json({ 
+        exists: true,
+        voucher: vouchers[0]
+      });
+    } catch (validationError) {
+      return res.json({
+        exists: false,
+        message: validationError.message
+      });
+    }
   } catch (error) {
     logger.error('Erro ao verificar código do voucher:', error);
     return res.status(500).json({ 

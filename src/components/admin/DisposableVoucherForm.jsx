@@ -73,6 +73,16 @@ const DisposableVoucherForm = () => {
       return;
     }
 
+    // Verificar se as datas selecionadas são futuras
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const invalidDates = selectedDates.filter(date => date < today);
+    if (invalidDates.length > 0) {
+      toast.error("Não é possível gerar vouchers para datas passadas");
+      return;
+    }
+
     setIsGenerating(true);
     const newVouchers = [];
 
