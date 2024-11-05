@@ -85,15 +85,14 @@ const DisposableVoucherForm = () => {
 
     try {
       for (const date of selectedDates) {
-        // Formata a data mantendo o dia exato selecionado
-        const formattedDate = format(date, 'yyyy-MM-dd', { locale: ptBR });
+        const formattedDate = format(date, 'yyyy-MM-dd');
         
         for (const mealTypeId of selectedMealTypes) {
           for (let i = 0; i < quantity; i++) {
             try {
               const response = await api.post('/vouchers/create', {
                 meal_type_id: mealTypeId,
-                expired_at: formattedDate + 'T23:59:59' // Adiciona horário final do dia
+                expired_at: `${formattedDate}T23:59:59` // Ajustado para 23:59:59
               });
 
               if (response.data.success) {
