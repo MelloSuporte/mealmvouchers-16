@@ -118,9 +118,9 @@ export const validateDisposableVoucher = async (req, res) => {
 
     db = await pool.getConnection();
     
-    // Buscar o voucher descartável
     const [vouchers] = await db.execute(
-      `SELECT dv.*, mt.name as meal_type_name, mt.start_time, mt.end_time, mt.tolerance_minutes
+      `SELECT dv.*, mt.name as meal_type_name, mt.start_time, mt.end_time, 
+              mt.tolerance_minutes
        FROM disposable_vouchers dv 
        JOIN meal_types mt ON dv.meal_type_id = mt.id 
        WHERE dv.code = ? AND dv.meal_type_id = ? AND dv.is_used = FALSE`,
@@ -134,17 +134,7 @@ export const validateDisposableVoucher = async (req, res) => {
     }
 
     const voucher = vouchers[0];
-
-    // Verificar se o voucher está expirado
-    if (voucher.expired_at && new Date(voucher.expired_at) < new Date()) {
-      return res.status(400).json({ 
-        error: 'Voucher expirado'
-      });
-    }
-
-    // Validar horário da refeição
-    const currentTime = new Date().toTimeString().slice(0, 5);
-    validateVoucherTime(currentTime, voucher, voucher.tolerance_minutes || 15);
+    validateDisposableVoucherRules(voucher);
 
     // Marcar voucher como usado
     await db.execute(

@@ -20,7 +20,7 @@ const Voucher = () => {
         const images = response.data;
         const voucherBackground = images.find(img => img.page === 'voucher')?.image_url;
         
-        if (voucherBackground && isValidImageUrl(voucherBackground)) {
+        if (voucherBackground) {
           setBackgroundImage(voucherBackground);
           localStorage.setItem('voucherBackground', voucherBackground);
         }
@@ -34,21 +34,11 @@ const Voucher = () => {
     fetchBackgroundImage();
   }, []);
 
-  const isValidImageUrl = (url) => {
-    if (url.startsWith('data:image/')) {
-      const [header, content] = url.split(',');
-      if (!header.includes('image/') || !content) {
-        return false;
-      }
-      return true;
-    }
-    return false;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     try {
+      // Primeiro, verifica se é um voucher descartável
       const checkResponse = await api.post('/vouchers/check', { 
         code: voucherCode
       });
@@ -56,15 +46,18 @@ const Voucher = () => {
       if (checkResponse.data.exists) {
         const voucher = checkResponse.data.voucher;
         
+        // Armazena informações do voucher descartável para uso posterior
         localStorage.setItem('disposableVoucher', JSON.stringify({
           code: voucherCode,
           mealTypeId: voucher.meal_type_id
         }));
 
+        // Redireciona para a página de seleção de refeição
         navigate('/self-services');
         return;
       }
 
+      // Se não for descartável, tenta validar como voucher normal
       const response = await api.post('/vouchers/validate', { 
         voucherCode,
         cpf: localStorage.getItem('userCPF') || '',

@@ -15,8 +15,14 @@ export const validateVoucherTime = (currentTime, mealType, toleranceMinutes) => 
 
 export const validateDisposableVoucherRules = (voucher) => {
   // Verificar se o voucher está expirado
-  if (voucher.expired_at && new Date(voucher.expired_at) < new Date()) {
-    throw new Error('Voucher expirado');
+  if (voucher.expired_at) {
+    const expirationDate = new Date(voucher.expired_at);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (expirationDate < today) {
+      throw new Error('Voucher expirado');
+    }
   }
 
   // Verificar se o voucher já foi usado
