@@ -11,6 +11,7 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
 
   const handleLogin = () => {
     if (password === '0001000') {
+      localStorage.setItem('adminToken', 'admin-authenticated');
       onClose();
       navigate('/admin');
       toast.success("Login bem-sucedido!");
