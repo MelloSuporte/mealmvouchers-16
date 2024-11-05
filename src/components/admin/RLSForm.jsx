@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useQuery } from '@tanstack/react-query';
 import api from '../../utils/api';
 import CompanyUserSelector from './rls/CompanyUserSelector';
+import { startOfDay, isBefore } from 'date-fns';
 
 const RLSForm = () => {
   const [selectedUser, setSelectedUser] = useState("");
@@ -46,7 +47,9 @@ const RLSForm = () => {
     try {
       setIsSubmitting(true);
       
-      if (selectedDates.some(date => new Date(date) < new Date())) {
+      // Verifica se alguma data é anterior ao início do dia atual
+      const today = startOfDay(new Date());
+      if (selectedDates.some(date => isBefore(date, today))) {
         toast.error("Não é possível liberar vouchers para datas passadas");
         return;
       }
