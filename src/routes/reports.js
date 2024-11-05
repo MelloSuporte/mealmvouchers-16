@@ -9,8 +9,8 @@ router.get('/metrics', async (req, res) => {
     const [results] = await pool.execute(`
       SELECT 
         COUNT(*) as total_vouchers,
-        SUM(CASE WHEN voucher_type = 'regular' THEN 1 ELSE 0 END) as regular_vouchers,
-        SUM(CASE WHEN voucher_type = 'disposable' THEN 1 ELSE 0 END) as disposable_vouchers,
+        SUM(CASE WHEN vu.user_id IN (SELECT id FROM users WHERE voucher IS NOT NULL) THEN 1 ELSE 0 END) as regular_vouchers,
+        SUM(CASE WHEN vu.user_id IN (SELECT user_id FROM disposable_vouchers) THEN 1 ELSE 0 END) as disposable_vouchers,
         SUM(mt.value) as total_cost
       FROM voucher_usage vu
       JOIN meal_types mt ON vu.meal_type_id = mt.id
@@ -41,12 +41,16 @@ router.get('/usage', async (req, res) => {
         u.name as userName,
         c.name as company,
         mt.name as mealType,
-        vu.voucher_type,
+        CASE 
+          WHEN dv.id IS NOT NULL THEN 'Descartável'
+          ELSE 'Regular'
+        END as voucherType,
         mt.value as cost
       FROM voucher_usage vu
       JOIN users u ON vu.user_id = u.id
       JOIN companies c ON u.company_id = c.id
       JOIN meal_types mt ON vu.meal_type_id = mt.id
+      LEFT JOIN disposable_vouchers dv ON vu.user_id = dv.user_id AND DATE(vu.used_at) = DATE(dv.used_at)
       WHERE u.name LIKE ? OR c.name LIKE ?
       ORDER BY vu.used_at DESC
     `, [`%${search}%`, `%${search}%`]);
@@ -69,9 +73,8 @@ router.get('/weekly', async (req, res) => {
       FROM voucher_usage vu
       JOIN meal_types mt ON vu.meal_type_id = mt.id
       WHERE used_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-      GROUP BY DATE_FORMAT(used_at, '%W')
-      ORDER BY FIELD(DATE_FORMAT(used_at, '%W'), 
-        'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')
+      GROUP BY DATE_FORMAT(used_at, '%W'), DATE(used_at)
+      ORDER BY DATE(used_at)
     `);
     
     res.json(results);
@@ -89,7 +92,7 @@ router.get('/distribution', async (req, res) => {
         COUNT(*) as value
       FROM voucher_usage vu
       JOIN meal_types mt ON vu.meal_type_id = mt.id
-      GROUP BY mt.name
+      GROUP BY mt.id, mt.name
     `);
     
     res.json(results);
@@ -103,11 +106,11 @@ router.get('/trend', async (req, res) => {
   try {
     const [results] = await pool.execute(`
       SELECT 
-        DATE_FORMAT(used_at, '%d/%m') as name,
+        DATE_FORMAT(DATE(used_at), '%d/%m') as name,
         COUNT(*) as total
       FROM voucher_usage
       WHERE used_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-      GROUP BY DATE_FORMAT(used_at, '%d/%m'), DATE(used_at)
+      GROUP BY DATE(used_at)
       ORDER BY DATE(used_at)
     `);
     
@@ -127,12 +130,16 @@ router.get('/export', async (req, res) => {
         u.name as Usuario,
         c.name as Empresa,
         mt.name as Refeicao,
-        vu.voucher_type as Tipo,
+        CASE 
+          WHEN dv.id IS NOT NULL THEN 'Descartável'
+          ELSE 'Regular'
+        END as Tipo,
         mt.value as Custo
       FROM voucher_usage vu
       JOIN users u ON vu.user_id = u.id
       JOIN companies c ON u.company_id = c.id
       JOIN meal_types mt ON vu.meal_type_id = mt.id
+      LEFT JOIN disposable_vouchers dv ON vu.user_id = dv.user_id AND DATE(vu.used_at) = DATE(dv.used_at)
       ORDER BY vu.used_at DESC
     `);
     
