@@ -2,7 +2,7 @@ import logger from '../config/logger';
 
 export const findValidVoucher = async (db, code) => {
   const [timeResult] = await db.execute('SELECT NOW() as server_time');
-  const currentServerTime = new Date(timeResult[0].server_time);
+  const currentTime = timeResult[0].server_time;
 
   const [vouchers] = await db.execute(
     `SELECT dv.*, mt.name as meal_type_name, mt.id as meal_type_id,
@@ -11,7 +11,7 @@ export const findValidVoucher = async (db, code) => {
      JOIN meal_types mt ON dv.meal_type_id = mt.id 
      WHERE dv.code = ? AND dv.is_used = FALSE 
      AND (dv.expired_at IS NULL OR dv.expired_at >= ?)`,
-    [code, currentServerTime]
+    [code, currentTime]
   );
 
   if (vouchers.length === 0) {
@@ -37,11 +37,8 @@ export const findActiveMealType = async (db, mealType) => {
 };
 
 export const markVoucherAsUsed = async (db, voucherId) => {
-  const [timeResult] = await db.execute('SELECT NOW() as server_time');
-  const currentServerTime = new Date(timeResult[0].server_time);
-  
   await db.execute(
-    'UPDATE disposable_vouchers SET is_used = TRUE, used_at = ? WHERE id = ?',
-    [currentServerTime, voucherId]
+    'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
+    [voucherId]
   );
 };
