@@ -9,7 +9,7 @@ import TurnoCard from './turnos/TurnoCard';
 
 const TurnosForm = () => {
   const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingTurnoId, setSubmittingTurnoId] = useState(null);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['shift-configurations'],
@@ -30,11 +30,11 @@ const TurnosForm = () => {
       });
       return response.data;
     },
-    onMutate: () => {
-      setIsSubmitting(true);
+    onMutate: (variables) => {
+      setSubmittingTurnoId(variables.id);
     },
     onSettled: () => {
-      setIsSubmitting(false);
+      setSubmittingTurnoId(null);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['shift-configurations']);
@@ -46,7 +46,7 @@ const TurnosForm = () => {
   });
 
   const handleTurnoChange = (id, field, value) => {
-    if (isSubmitting) {
+    if (submittingTurnoId === id) {
       toast.warning("Aguarde, processando alteração anterior...");
       return;
     }
@@ -106,6 +106,7 @@ const TurnosForm = () => {
             key={turno.id}
             turno={turno}
             onTurnoChange={handleTurnoChange}
+            isSubmitting={submittingTurnoId === turno.id}
           />
         ))}
       </div>

@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Loader2 } from "lucide-react";
 
-const TurnoCard = ({ turno, onTurnoChange }) => {
+const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
   const getTurnoLabel = (shiftType) => {
     const labels = {
       'central': 'Turno Central (Administrativo)',
@@ -18,7 +19,12 @@ const TurnoCard = ({ turno, onTurnoChange }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{getTurnoLabel(turno.shift_type)}</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>{getTurnoLabel(turno.shift_type)}</CardTitle>
+          {isSubmitting && (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          )}
+        </div>
         <CardDescription>Configure os horários de entrada e saída</CardDescription>
       </CardHeader>
       <CardContent>
@@ -31,6 +37,7 @@ const TurnoCard = ({ turno, onTurnoChange }) => {
               value={turno.start_time}
               onChange={(e) => onTurnoChange(turno.id, 'start_time', e.target.value)}
               className="w-full"
+              disabled={isSubmitting}
             />
           </div>
           <div className="space-y-2">
@@ -41,6 +48,7 @@ const TurnoCard = ({ turno, onTurnoChange }) => {
               value={turno.end_time}
               onChange={(e) => onTurnoChange(turno.id, 'end_time', e.target.value)}
               className="w-full"
+              disabled={isSubmitting}
             />
           </div>
           <div className="space-y-2">
@@ -50,6 +58,7 @@ const TurnoCard = ({ turno, onTurnoChange }) => {
                 id={`active-${turno.id}`}
                 checked={turno.is_active}
                 onCheckedChange={(checked) => onTurnoChange(turno.id, 'is_active', checked)}
+                disabled={isSubmitting}
               />
               <Label htmlFor={`active-${turno.id}`}>
                 {turno.is_active ? 'Ativo' : 'Inativo'}
