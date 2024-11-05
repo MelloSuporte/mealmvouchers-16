@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Coffee, Utensils, Moon, Plus, Sandwich } from 'lucide-react';
 import { toast } from "sonner";
+import api from '../utils/api';
 
 const SelfServices = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
@@ -14,33 +14,41 @@ const SelfServices = () => {
     if (savedBackground) {
       setBackgroundImage(savedBackground);
     }
-  }, []);
 
-  const handleMealSelection = (mealType) => {
-    const today = new Date().toISOString().split('T')[0];
-    const usedVouchers = JSON.parse(localStorage.getItem('usedVouchers') || '{}');
-
-    if (!usedVouchers[today]) {
-      usedVouchers[today] = [];
+    // Check if there's a disposable voucher in localStorage
+    const disposableVoucher = localStorage.getItem('disposableVoucher');
+    if (!disposableVoucher) {
+      toast.error('Nenhum voucher válido encontrado');
+      navigate('/');
     }
+  }, [navigate]);
 
-    if (usedVouchers[today].includes(mealType)) {
-      toast.error(`Você já utilizou um voucher para ${mealType} hoje.`);
-      return;
+  const handleMealSelection = async (mealType) => {
+    try {
+      const disposableVoucher = JSON.parse(localStorage.getItem('disposableVoucher') || '{}');
+      
+      const response = await api.post('/vouchers/validate-disposable', {
+        code: disposableVoucher.code,
+        meal_type_id: disposableVoucher.mealTypeId
+      });
+
+      if (response.data.success) {
+        navigate(`/bom-apetite/Usuario`, { state: { mealType } });
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Erro ao validar voucher');
+      navigate('/');
+    } finally {
+      // Clear disposable voucher from localStorage
+      localStorage.removeItem('disposableVoucher');
     }
-
-    usedVouchers[today].push(mealType);
-    localStorage.setItem('usedVouchers', JSON.stringify(usedVouchers));
-
-    const userName = "User"; // Substitua isso pela lógica real de obtenção do nome do usuário
-    navigate(`/bom-apetite/${userName}`, { state: { mealType } });
   };
 
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-start p-4 relative bg-blue-600 bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: `url(${backgroundImage})`,
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined
       }}
     >
       <div className="absolute top-0 right-0 w-full h-1/3 bg-blue-600 rounded-bl-[30%] flex items-start justify-center pt-8">

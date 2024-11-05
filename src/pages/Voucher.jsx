@@ -63,10 +63,30 @@ const Voucher = () => {
     e.preventDefault();
     
     try {
+      // First check if it's a disposable voucher
+      const checkResponse = await api.post('/vouchers/check', { 
+        code: voucherCode
+      });
+
+      if (checkResponse.data.exists) {
+        const voucher = checkResponse.data.voucher;
+        
+        // Store voucher info for validation in SelfServices
+        localStorage.setItem('disposableVoucher', JSON.stringify({
+          code: voucherCode,
+          mealTypeId: voucher.meal_type_id
+        }));
+
+        // Navigate to self-services page
+        navigate('/self-services');
+        return;
+      }
+
+      // If not a disposable voucher, proceed with regular voucher validation
       const response = await api.post('/vouchers/validate', { 
         voucherCode,
         cpf: localStorage.getItem('userCPF') || '',
-        mealType: localStorage.getItem('selectedMealType') || ''
+        mealType: localStorage.getItem('selectedMealType')
       });
 
       if (response.data.success) {
@@ -132,10 +152,7 @@ const Voucher = () => {
     <div 
       className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4 relative bg-cover bg-center bg-no-repeat"
       style={{
-        // Aplica a imagem de fundo apenas se for válida
-        backgroundImage: backgroundImage && isValidImageUrl(backgroundImage) 
-          ? `url(${backgroundImage})` 
-          : undefined,
+        backgroundImage: backgroundImage && `url(${backgroundImage})`
       }}
     >
       <Button
