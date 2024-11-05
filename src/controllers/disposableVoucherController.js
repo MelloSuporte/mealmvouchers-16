@@ -1,7 +1,7 @@
 import pool from '../config/database';
 import logger from '../config/logger';
-import { validateVoucherTime, validateVoucherCode, validateMealType } from '../utils/voucherValidations';
-import { findValidVoucher, findActiveMealType, markVoucherAsUsed } from '../services/voucherQueries';
+import { validateVoucherTime, validateMealType } from '../utils/voucherValidations';
+import { findActiveMealType, markVoucherAsUsed } from '../services/voucherQueries';
 
 const generateUniqueCode = async (db) => {
   let attempts = 0;
@@ -127,25 +127,53 @@ export const createDisposableVoucher = async (req, res) => {
 };
 
 export const validateDisposableVoucher = async (req, res) => {
-  const { code, mealType } = req.body;
+  const { code, meal_type_id } = req.body;
   let db;
   
   try {
-    if (!code || !mealType) {
+    if (!code || !meal_type_id) {
       return res.status(400).json({ 
         error: 'Código do voucher e tipo de refeição são obrigatórios'
       });
     }
 
     db = await pool.getConnection();
-    validateVoucherCode(code);
 
-    const voucher = await findValidVoucher(db, code);
-    const mealTypeData = await findActiveMealType(db, mealType);
-    
-    validateMealType(voucher, mealTypeData);
+    // Buscar o voucher descartável
+    const [vouchers] = await db.execute(
+      `SELECT dv.*, mt.* 
+       FROM disposable_vouchers dv
+       JOIN meal_types mt ON dv.meal_type_id = mt.id
+       WHERE dv.code = ? AND dv.is_used = FALSE`,
+      [code]
+    );
 
+    if (vouchers.length === 0) {
+      logger.warn(`Voucher descartável não encontrado ou já utilizado: ${code}`);
+      return res.status(400).json({ 
+        error: 'Voucher não encontrado ou já utilizado'
+      });
+    }
+
+    const voucher = vouchers[0];
+
+    // Verificar se o voucher está expirado
+    const expirationDate = new Date(voucher.expired_at);
     const now = new Date();
+    if (expirationDate < now) {
+      return res.status(400).json({ 
+        error: 'Voucher expirado'
+      });
+    }
+
+    // Verificar se o tipo de refeição corresponde
+    if (voucher.meal_type_id !== parseInt(meal_type_id)) {
+      return res.status(400).json({ 
+        error: 'Tipo de refeição não corresponde ao voucher'
+      });
+    }
+
+    const mealTypeData = await findActiveMealType(db, voucher.name);
     const currentTime = now.toTimeString().slice(0, 5);
     const toleranceMinutes = voucher.tolerance_minutes || 15;
 
