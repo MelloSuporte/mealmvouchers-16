@@ -1,18 +1,19 @@
 import express from 'express';
-import pool from '../config/database';
+import pool from '../config/database.js';
+import logger from '../config/logger.js';
 
 const router = express.Router();
 
 router.get('/metrics', async (req, res) => {
   try {
-    const db = await pool.getConnection();
-    const [results] = await db.execute(`
+    const [results] = await pool.execute(`
       SELECT 
         COUNT(*) as total_vouchers,
         SUM(CASE WHEN voucher_type = 'regular' THEN 1 ELSE 0 END) as regular_vouchers,
         SUM(CASE WHEN voucher_type = 'disposable' THEN 1 ELSE 0 END) as disposable_vouchers,
-        SUM(cost) as total_cost
-      FROM voucher_usage
+        SUM(mt.value) as total_cost
+      FROM voucher_usage vu
+      JOIN meal_types mt ON vu.meal_type_id = mt.id
     `);
     
     const metrics = {
@@ -24,15 +25,15 @@ router.get('/metrics', async (req, res) => {
     
     res.json(metrics);
   } catch (error) {
+    logger.error('Erro ao buscar métricas:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 router.get('/usage', async (req, res) => {
-  const { search } = req.query;
+  const { search = '' } = req.query;
   try {
-    const db = await pool.getConnection();
-    const [results] = await db.execute(`
+    const [results] = await pool.execute(`
       SELECT 
         vu.id,
         DATE_FORMAT(vu.used_at, '%Y-%m-%d') as date,
@@ -52,36 +53,37 @@ router.get('/usage', async (req, res) => {
     
     res.json(results);
   } catch (error) {
+    logger.error('Erro ao buscar histórico de uso:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 router.get('/weekly', async (req, res) => {
   try {
-    const db = await pool.getConnection();
-    const [results] = await db.execute(`
+    const [results] = await pool.execute(`
       SELECT 
-        DAYNAME(used_at) as name,
-        COUNT(CASE WHEN mt.name = 'Almoço' THEN 1 END) as Almoço,
-        COUNT(CASE WHEN mt.name = 'Jantar' THEN 1 END) as Jantar,
-        COUNT(CASE WHEN mt.name = 'Café' THEN 1 END) as Café
+        DATE_FORMAT(used_at, '%W') as name,
+        SUM(CASE WHEN mt.name = 'Almoço' THEN 1 ELSE 0 END) as Almoço,
+        SUM(CASE WHEN mt.name = 'Jantar' THEN 1 ELSE 0 END) as Jantar,
+        SUM(CASE WHEN mt.name = 'Café' THEN 1 ELSE 0 END) as Café
       FROM voucher_usage vu
       JOIN meal_types mt ON vu.meal_type_id = mt.id
       WHERE used_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-      GROUP BY DAYNAME(used_at)
-      ORDER BY DAYOFWEEK(used_at)
+      GROUP BY DATE_FORMAT(used_at, '%W')
+      ORDER BY FIELD(DATE_FORMAT(used_at, '%W'), 
+        'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')
     `);
     
     res.json(results);
   } catch (error) {
+    logger.error('Erro ao buscar dados semanais:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 router.get('/distribution', async (req, res) => {
   try {
-    const db = await pool.getConnection();
-    const [results] = await db.execute(`
+    const [results] = await pool.execute(`
       SELECT 
         mt.name,
         COUNT(*) as value
@@ -92,33 +94,33 @@ router.get('/distribution', async (req, res) => {
     
     res.json(results);
   } catch (error) {
+    logger.error('Erro ao buscar distribuição:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 router.get('/trend', async (req, res) => {
   try {
-    const db = await pool.getConnection();
-    const [results] = await db.execute(`
+    const [results] = await pool.execute(`
       SELECT 
         DATE_FORMAT(used_at, '%d/%m') as name,
         COUNT(*) as total
       FROM voucher_usage
       WHERE used_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-      GROUP BY DATE(used_at)
-      ORDER BY used_at
+      GROUP BY DATE_FORMAT(used_at, '%d/%m'), DATE(used_at)
+      ORDER BY DATE(used_at)
     `);
     
     res.json(results);
   } catch (error) {
+    logger.error('Erro ao buscar tendência:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 router.get('/export', async (req, res) => {
   try {
-    const db = await pool.getConnection();
-    const [results] = await db.execute(`
+    const [results] = await pool.execute(`
       SELECT 
         DATE_FORMAT(vu.used_at, '%Y-%m-%d') as Data,
         DATE_FORMAT(vu.used_at, '%H:%i') as Hora,
@@ -136,6 +138,7 @@ router.get('/export', async (req, res) => {
     
     res.json(results);
   } catch (error) {
+    logger.error('Erro ao exportar dados:', error);
     res.status(500).json({ error: error.message });
   }
 });
