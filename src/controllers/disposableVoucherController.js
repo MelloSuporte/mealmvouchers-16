@@ -82,7 +82,7 @@ export const validateDisposableVoucher = async (req, res) => {
 
     // Get current server time
     const [timeResult] = await db.execute('SELECT NOW() as server_time');
-    const currentServerTime = new Date(timeResult[0].server_time);
+    const currentTime = timeResult[0].server_time;
 
     // Buscar o voucher descartável
     const [vouchers] = await db.execute(
@@ -104,7 +104,7 @@ export const validateDisposableVoucher = async (req, res) => {
 
     // Verificar se o voucher está expirado
     const expirationDate = new Date(voucher.expired_at);
-    if (expirationDate < currentServerTime) {
+    if (expirationDate < currentTime) {
       return res.status(400).json({ 
         error: 'Voucher expirado'
       });
@@ -118,7 +118,7 @@ export const validateDisposableVoucher = async (req, res) => {
     }
 
     const mealTypeData = await findActiveMealType(db, voucher.name);
-    const currentTimeFormatted = currentServerTime.toTimeString().slice(0, 5);
+    const currentTimeFormatted = currentTime.toTimeString().slice(0, 5);
     const toleranceMinutes = voucher.tolerance_minutes || 15;
 
     validateVoucherTime(currentTimeFormatted, mealTypeData, toleranceMinutes);

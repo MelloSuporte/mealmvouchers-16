@@ -13,8 +13,8 @@ export const validateVoucher = async (req, res) => {
     
     // Get current server time with seconds precision
     const [timeResult] = await db.execute('SELECT NOW() as server_time');
-    const currentServerTime = new Date(timeResult[0].server_time);
-    const currentTimeFormatted = currentServerTime.toTimeString().slice(0, 5); // Format: HH:mm
+    const currentTime = timeResult[0].server_time;
+    const currentTimeFormatted = currentTime.toString().slice(11, 16); // Format: HH:mm
     
     // Get user and their shift
     const [users] = await db.execute(
@@ -33,6 +33,7 @@ export const validateVoucher = async (req, res) => {
 
     const user = users[0];
 
+    // Validação específica para voucher normal
     validateVoucherByType(VOUCHER_TYPES.NORMAL, { 
       code, 
       cpf, 
@@ -40,8 +41,9 @@ export const validateVoucher = async (req, res) => {
       user 
     });
 
+    // Check if user is within their shift hours using server time
     if (!isWithinShiftHours(user.turno, currentTimeFormatted)) {
-      logger.warn(`Tentativa fora do turno - Usuário: ${user.name}, Turno: ${user.turno}, Hora: ${currentTimeFormatted}`);
+      logger.warn(`Tentativa fora do turno - Usuário: ${user.name}, Turno: ${user.turno}, Hora: ${currentTime}`);
       return res.status(403).json({
         error: `${user.name}, você está fora do horário do ${user.turno} turno`,
         userName: user.name,
@@ -55,8 +57,8 @@ export const validateVoucher = async (req, res) => {
        FROM voucher_usage vu 
        JOIN meal_types mt ON vu.meal_type_id = mt.id 
        WHERE vu.user_id = ? 
-       AND DATE(vu.used_at) = DATE(?)`,
-      [user.id, currentServerTime]
+       AND DATE(vu.used_at) = CURDATE()`,
+      [user.id]
     );
 
     const allowedMeals = getAllowedMealsByShift(user.turno);
@@ -88,7 +90,7 @@ export const validateVoucher = async (req, res) => {
     const toleranceMinutes = currentMealType.tolerance_minutes || 15;
     
     // Adiciona tolerância ao horário de término
-    const endTime = new Date(currentServerTime);
+    const endTime = new Date();
     const [endHours, endMinutes] = currentMealType.end_time.split(':');
     endTime.setHours(parseInt(endHours), parseInt(endMinutes) + toleranceMinutes);
     const endTimeWithTolerance = endTime.toTimeString().slice(0, 5);
@@ -104,8 +106,8 @@ export const validateVoucher = async (req, res) => {
     if (usedMeals.length >= 2) {
       // Check if this is an extra voucher request
       const [extraVoucher] = await db.execute(
-        'SELECT * FROM extra_vouchers WHERE user_id = ? AND valid_until >= DATE(?) AND used = FALSE',
-        [user.id, currentServerTime]
+        'SELECT * FROM extra_vouchers WHERE user_id = ? AND valid_until >= CURDATE() AND used = FALSE',
+        [user.id]
       );
 
       if (extraVoucher.length === 0) {
@@ -137,11 +139,11 @@ export const validateVoucher = async (req, res) => {
 
     // Record the meal usage with exact server timestamp
     await db.execute(
-      'INSERT INTO voucher_usage (user_id, meal_type_id, used_at) VALUES (?, (SELECT id FROM meal_types WHERE name = ?), ?)',
-      [user.id, mealType, currentServerTime]
+      'INSERT INTO voucher_usage (user_id, meal_type_id, used_at) VALUES (?, (SELECT id FROM meal_types WHERE name = ?), NOW(3))',
+      [user.id, mealType]
     );
 
-    logger.info(`Voucher validado com sucesso - Usuário: ${user.name}, Refeição: ${mealType}, Hora: ${currentTimeFormatted}`);
+    logger.info(`Voucher validado com sucesso - Usuário: ${user.name}, Refeição: ${mealType}, Hora: ${currentTime}`);
     return res.json({ 
       success: true, 
       message: 'Voucher validado com sucesso',
