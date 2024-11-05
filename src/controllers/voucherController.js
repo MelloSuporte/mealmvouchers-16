@@ -99,7 +99,6 @@ export const validateVoucher = async (req, res) => {
       return res.json(disposableResult);
     }
 
-    // Se não for descartável, precisa ter CPF
     if (!cleanCpf) {
       return res.status(400).json({ 
         error: 'CPF é obrigatório para vouchers normais e extras'
@@ -155,6 +154,7 @@ export const validateVoucher = async (req, res) => {
       userName: user.name,
       turno: user.turno
     });
+
   } catch (error) {
     logger.error('Erro ao validar voucher:', error);
     return res.status(400).json({ 
