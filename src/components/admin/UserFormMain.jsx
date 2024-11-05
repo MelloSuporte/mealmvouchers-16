@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Upload } from 'lucide-react';
+import { Eye, EyeOff, Upload, Search } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +15,7 @@ const UserFormMain = ({
   onSave
 }) => {
   const [showVoucher, setShowVoucher] = React.useState(false);
+  const [searchCPF, setSearchCPF] = React.useState('');
 
   const { data: companiesData, isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies'],
@@ -39,6 +40,31 @@ const UserFormMain = ({
     const file = event.target.files[0];
     if (file) {
       onInputChange('userPhoto', file);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchCPF) {
+      toast.error('Por favor, digite um CPF para pesquisar');
+      return;
+    }
+
+    try {
+      const response = await api.get(`/users/search?cpf=${searchCPF}`);
+      if (response.data) {
+        const userData = response.data;
+        onInputChange('userName', userData.name);
+        onInputChange('userEmail', userData.email);
+        onInputChange('userCPF', userData.cpf);
+        onInputChange('company', userData.company_id?.toString());
+        onInputChange('voucher', userData.voucher);
+        onInputChange('selectedTurno', userData.turno);
+        onInputChange('isSuspended', userData.is_suspended);
+        onInputChange('userPhoto', userData.photo);
+        toast.success('Usuário encontrado!');
+      }
+    } catch (error) {
+      toast.error('Usuário não encontrado ou erro na busca');
     }
   };
 
@@ -100,6 +126,18 @@ const UserFormMain = ({
 
   return (
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+      <div className="flex gap-2">
+        <Input 
+          placeholder="Pesquisar por CPF" 
+          value={searchCPF}
+          onChange={(e) => setSearchCPF(e.target.value)}
+        />
+        <Button type="button" onClick={handleSearch}>
+          <Search size={20} className="mr-2" />
+          Buscar
+        </Button>
+      </div>
+      
       <Input 
         placeholder="Nome do usuário" 
         value={formData.userName}
@@ -180,7 +218,7 @@ const UserFormMain = ({
             Upload Foto
           </Button>
           <Button type="button" onClick={onSave}>
-            Cadastrar Usuário
+            {formData.userCPF ? 'Atualizar Usuário' : 'Cadastrar Usuário'}
           </Button>
         </div>
         {formData.userPhoto && (
