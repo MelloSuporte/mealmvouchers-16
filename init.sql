@@ -94,3 +94,37 @@ INSERT INTO shift_configurations (shift_type, start_time, end_time) VALUES
   ('primeiro', '06:00:00', '14:00:00'),
   ('segundo', '14:00:00', '22:00:00'),
   ('terceiro', '22:00:00', '06:00:00');
+
+CREATE TABLE IF NOT EXISTS admin_users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  cpf VARCHAR(14) NOT NULL UNIQUE,
+  company_id INT,
+  password VARCHAR(255) NOT NULL,
+  is_master BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (company_id) REFERENCES companies(id)
+);
+
+CREATE TABLE IF NOT EXISTS admin_permissions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  admin_id INT NOT NULL,
+  manage_extra_vouchers BOOLEAN DEFAULT FALSE,
+  manage_disposable_vouchers BOOLEAN DEFAULT FALSE,
+  manage_users BOOLEAN DEFAULT FALSE,
+  manage_reports BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (admin_id) REFERENCES admin_users(id)
+);
+
+CREATE TABLE IF NOT EXISTS admin_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  admin_id INT NOT NULL,
+  action_type ENUM('create', 'update', 'delete') NOT NULL,
+  entity_type VARCHAR(50) NOT NULL,
+  entity_id INT NOT NULL,
+  details JSON,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (admin_id) REFERENCES admin_users(id)
+);

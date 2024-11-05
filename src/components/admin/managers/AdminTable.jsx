@@ -1,0 +1,62 @@
+import React from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Edit2, Trash2 } from 'lucide-react';
+
+const AdminTable = ({ admins, isLoading }) => {
+  if (isLoading) {
+    return <div>Carregando...</div>;
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Nome</TableHead>
+          <TableHead>E-mail</TableHead>
+          <TableHead>CPF</TableHead>
+          <TableHead>Empresa</TableHead>
+          <TableHead>Permissões</TableHead>
+          <TableHead>Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {admins.map((admin) => (
+          <TableRow key={admin.id}>
+            <TableCell>{admin.name}</TableCell>
+            <TableCell>{admin.email}</TableCell>
+            <TableCell>{admin.cpf}</TableCell>
+            <TableCell>{admin.company?.name}</TableCell>
+            <TableCell>
+              <ul className="list-disc list-inside">
+                {admin.permissions.manage_extra_vouchers && <li>Vouchers Extra</li>}
+                {admin.permissions.manage_disposable_vouchers && <li>Vouchers Descartáveis</li>}
+                {admin.permissions.manage_users && <li>Usuários</li>}
+                {admin.permissions.manage_reports && <li>Relatórios</li>}
+              </ul>
+            </TableCell>
+            <TableCell>
+              <div className="flex space-x-2">
+                <Button variant="outline" size="icon">
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+};
+
+export default AdminTable;

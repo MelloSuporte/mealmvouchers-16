@@ -15,6 +15,7 @@ import Voucher from "./pages/Voucher";
 import BomApetite from "./pages/BomApetite";
 import Admin from "./pages/Admin";
 import UserConfirmation from "./pages/UserConfirmation";
+import AdminManagement from "./pages/AdminManagement";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/user" element={<User />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/managers" element={<AdminManagement />} />
           <Route path="/app" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="search" element={<Search />} />
