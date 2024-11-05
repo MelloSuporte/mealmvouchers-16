@@ -12,14 +12,22 @@ export const useAdmin = () => {
 
 export const AdminProvider = ({ children }) => {
   const [isMasterAdmin, setIsMasterAdmin] = useState(false);
+  const [adminPermissions, setAdminPermissions] = useState({
+    manage_extra_vouchers: false,
+    manage_disposable_vouchers: false,
+    manage_users: false,
+    manage_reports: false
+  });
 
   const checkMasterAdmin = () => {
     const adminToken = localStorage.getItem('adminToken');
-    return adminToken === 'admin-authenticated';
+    return adminToken === '0001000'; // Token do admin master
   };
 
   const value = {
     isMasterAdmin: checkMasterAdmin(),
+    adminPermissions,
+    setAdminPermissions,
     setIsMasterAdmin
   };
 

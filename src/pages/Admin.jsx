@@ -17,7 +17,7 @@ import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
   const navigate = useNavigate();
-  const { isMasterAdmin } = useAdmin();
+  const { isMasterAdmin, adminPermissions } = useAdmin();
 
   useEffect(() => {
     if (!localStorage.getItem('adminToken')) {
@@ -31,20 +31,22 @@ const Admin = () => {
     navigate('/voucher');
   };
 
-  const renderRestrictedTab = (value, component) => {
-    if (!isMasterAdmin) {
+  // Renderiza tab apenas se admin master ou se tiver permissão específica
+  const renderTab = (value, component, requiredPermission = null) => {
+    if (!isMasterAdmin && requiredPermission && !adminPermissions[requiredPermission]) {
       return (
         <TabsContent value={value}>
           <Card>
             <CardContent className="pt-6">
               <div className="text-center text-red-500">
-                Acesso restrito ao administrador master
+                Você não tem permissão para acessar esta funcionalidade
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       );
     }
+
     return (
       <TabsContent value={value}>
         <Card>
@@ -59,74 +61,41 @@ const Admin = () => {
     );
   };
 
+  // Renderiza trigger apenas se admin master ou se tiver permissão
+  const renderTrigger = (value, requiredPermission = null) => {
+    if (!isMasterAdmin && requiredPermission && !adminPermissions[requiredPermission]) {
+      return null;
+    }
+    return <TabsTrigger value={value}>{value}</TabsTrigger>;
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Painel de Administração</h1>
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
+
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="users">Usuários</TabsTrigger>
-          <TabsTrigger value="companies">Empresas</TabsTrigger>
-          <TabsTrigger value="meals">Refeições</TabsTrigger>
-          <TabsTrigger value="rls">Voucher Extra</TabsTrigger>
-          <TabsTrigger value="disposable">Vouchers Descartáveis</TabsTrigger>
-          <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>
-          <TabsTrigger value="reports">Relatórios</TabsTrigger>
-          <TabsTrigger value="turnos">Turnos</TabsTrigger>
+          {renderTrigger("users", "manage_users")}
+          {isMasterAdmin && <TabsTrigger value="companies">Empresas</TabsTrigger>}
+          {isMasterAdmin && <TabsTrigger value="meals">Refeições</TabsTrigger>}
+          {renderTrigger("rls", "manage_extra_vouchers")}
+          {renderTrigger("disposable", "manage_disposable_vouchers")}
+          {isMasterAdmin && <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>}
+          {renderTrigger("reports", "manage_reports")}
+          {isMasterAdmin && <TabsTrigger value="turnos">Turnos</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="users">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cadastro de Usuário</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <UserForm />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {renderRestrictedTab("companies", <CompanyForm />)}
-        {renderRestrictedTab("meals", <MealScheduleManager />)}
-        
-        <TabsContent value="rls">
-          <Card>
-            <CardHeader>
-              <CardTitle>Liberação de Voucher Extra</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RLSForm />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {renderRestrictedTab("backgrounds", <BackgroundImageForm />)}
-
-        <TabsContent value="disposable">
-          <Card>
-            <CardHeader>
-              <CardTitle>Vouchers Descartáveis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DisposableVoucherForm />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="reports">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gerar Relatórios</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ReportForm />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {renderRestrictedTab("turnos", <TurnosForm />)}
+        {renderTab("users", <UserForm />, "manage_users")}
+        {isMasterAdmin && renderTab("companies", <CompanyForm />)}
+        {isMasterAdmin && renderTab("meals", <MealScheduleManager />)}
+        {renderTab("rls", <RLSForm />, "manage_extra_vouchers")}
+        {renderTab("disposable", <DisposableVoucherForm />, "manage_disposable_vouchers")}
+        {isMasterAdmin && renderTab("backgrounds", <BackgroundImageForm />)}
+        {renderTab("reports", <ReportForm />, "manage_reports")}
+        {isMasterAdmin && renderTab("turnos", <TurnosForm />)}
       </Tabs>
     </div>
   );
