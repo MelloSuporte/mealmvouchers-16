@@ -4,13 +4,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import api from '../../../utils/api';
 
 const UsageTable = ({ searchTerm }) => {
-  const { data: usageData } = useQuery({
+  const { data: usageData = [] } = useQuery({
     queryKey: ['usage-data', searchTerm],
     queryFn: async () => {
       const response = await api.get(`/reports/usage?search=${searchTerm}`);
-      return response.data;
+      return response.data || [];
     }
   });
+
+  // Garante que usageData seja sempre um array
+  const dataArray = Array.isArray(usageData) ? usageData : [];
 
   return (
     <Table>
@@ -26,7 +29,7 @@ const UsageTable = ({ searchTerm }) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {usageData?.map((item) => (
+        {dataArray.map((item) => (
           <TableRow key={item.id}>
             <TableCell>{item.date}</TableCell>
             <TableCell>{item.time}</TableCell>
