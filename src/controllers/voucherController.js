@@ -11,12 +11,14 @@ export const validateVoucher = async (req, res) => {
   try {
     db = await pool.getConnection();
     
+    // Obter hora do servidor uma única vez
+    const [timeResult] = await db.execute('SELECT NOW() as current_time');
+    const currentTime = timeResult[0].current_time;
+    const formattedTime = new Date(currentTime).toTimeString().slice(0, 5);
+    
+    // Buscar usuário com uma única query
     const [users] = await db.execute(
-      `SELECT u.*, mt.id as meal_type_id, mt.name as meal_type_name, 
-              mt.start_time, mt.end_time, mt.tolerance_minutes 
-       FROM users u 
-       LEFT JOIN meal_types mt ON mt.name = ? 
-       WHERE u.cpf = ? AND u.voucher = ? AND u.is_suspended = FALSE`,
+      'SELECT u.*, mt.id as meal_type_id, mt.name as meal_type_name, mt.start_time, mt.end_time, mt.tolerance_minutes FROM users u LEFT JOIN meal_types mt ON mt.name = ? WHERE u.cpf = ? AND u.voucher = ? AND u.is_suspended = FALSE',
       [mealType, cpf, code]
     );
 
@@ -30,20 +32,26 @@ export const validateVoucher = async (req, res) => {
 
     validateVoucherByType(VOUCHER_TYPES.NORMAL, { code, cpf, mealType, user });
 
+    if (!isWithinShiftHours(user.turno, formattedTime)) {
+      return res.status(403).json({
+        error: `${user.name}, você está fora do horário do ${user.turno} turno`,
+        userName: user.name,
+        turno: user.turno
+      });
+    }
+
+    // Verificar uso diário em uma única query
     const [usedMeals] = await db.execute(
-      `SELECT COUNT(*) as count 
-       FROM voucher_usage 
-       WHERE user_id = ? AND DATE(used_at) = CURDATE()`,
-      [user.id]
+      `SELECT COUNT(*) as count FROM voucher_usage 
+       WHERE user_id = ? AND DATE(used_at) = DATE(?)`,
+      [user.id, currentTime]
     );
 
     if (usedMeals[0].count >= 2) {
+      // Verificar voucher extra apenas se necessário
       const [extraVoucher] = await db.execute(
-        `SELECT id 
-         FROM extra_vouchers 
-         WHERE user_id = ? AND valid_until >= CURDATE() 
-         AND used = FALSE LIMIT 1`,
-        [user.id]
+        'SELECT id FROM extra_vouchers WHERE user_id = ? AND valid_until >= DATE(?) AND used = FALSE LIMIT 1',
+        [user.id, currentTime]
       );
 
       if (extraVoucher.length === 0) {
@@ -60,9 +68,10 @@ export const validateVoucher = async (req, res) => {
       );
     }
 
+    // Registrar uso do voucher
     await db.execute(
-      'INSERT INTO voucher_usage (user_id, meal_type_id) VALUES (?, ?)',
-      [user.id, user.meal_type_id]
+      'INSERT INTO voucher_usage (user_id, meal_type_id, used_at) VALUES (?, ?, ?)',
+      [user.id, user.meal_type_id, currentTime]
     );
 
     return res.json({ 

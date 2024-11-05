@@ -10,14 +10,12 @@ export const validateDisposableVoucher = async (req, res) => {
   try {
     db = await pool.getConnection();
 
+    // Buscar voucher e tipo de refeição em uma única query
     const [vouchers] = await db.execute(
-      `SELECT dv.*, mt.* 
-       FROM disposable_vouchers dv
+      `SELECT dv.*, mt.* FROM disposable_vouchers dv
        JOIN meal_types mt ON dv.meal_type_id = mt.id
-       WHERE dv.code = ? 
-       AND dv.is_used = FALSE 
-       AND dv.meal_type_id = ?
-       AND (dv.expired_at IS NULL OR dv.expired_at >= CURDATE())`,
+       WHERE dv.code = ? AND dv.is_used = FALSE AND dv.meal_type_id = ?
+       AND (dv.expired_at IS NULL OR dv.expired_at >= NOW())`,
       [code, meal_type_id]
     );
 
@@ -28,7 +26,14 @@ export const validateDisposableVoucher = async (req, res) => {
     }
 
     const voucher = vouchers[0];
+    const currentTime = new Date().toTimeString().slice(0, 5);
+    
+    validateVoucherTime(currentTime, {
+      start_time: voucher.start_time,
+      end_time: voucher.end_time
+    }, voucher.tolerance_minutes || 15);
 
+    // Marcar voucher como usado
     await db.execute(
       'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
       [voucher.id]
