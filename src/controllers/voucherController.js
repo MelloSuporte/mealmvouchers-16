@@ -11,14 +11,29 @@ export const validateVoucher = async (req, res) => {
   try {
     db = await pool.getConnection();
     
-    // Get user and their shift - Corrigindo a consulta SQL
+    // Remover caracteres especiais do CPF antes da consulta
+    const cleanCpf = cpf.replace(/\D/g, '');
+    const cleanCode = code.trim();
+
+    // Log para debug
+    logger.info(`Tentativa de validação - CPF: ${cleanCpf}, Código: ${cleanCode}`);
+    
+    // Consulta SQL melhorada com LOGGING
     const [users] = await db.execute(
       'SELECT * FROM users WHERE cpf = ? AND voucher = ? AND is_suspended = FALSE',
-      [cpf.replace(/\D/g, ''), code]
+      [cleanCpf, cleanCode]
     );
 
+    // Log do resultado da consulta
+    logger.info(`Resultado da consulta: ${users.length} usuários encontrados`);
+
     if (users.length === 0) {
-      logger.warn(`Tentativa inválida de voucher - CPF: ${cpf}, Código: ${code}`);
+      // Verificar separadamente para identificar o problema específico
+      const [userCheck] = await db.execute('SELECT * FROM users WHERE cpf = ?', [cleanCpf]);
+      const [voucherCheck] = await db.execute('SELECT * FROM users WHERE voucher = ?', [cleanCode]);
+      
+      logger.warn(`Validação falhou - CPF existe: ${userCheck.length > 0}, Voucher existe: ${voucherCheck.length > 0}`);
+      
       return res.status(401).json({ 
         error: 'Usuário não encontrado ou voucher inválido',
         userName: null,
