@@ -27,8 +27,10 @@ const DisposableVoucherForm = () => {
     try {
       const response = await api.get('/meals');
       if (Array.isArray(response.data)) {
-        // Filtra os tipos de refeição, excluindo o tipo "Extra"
-        setMealTypes(response.data.filter(meal => meal.is_active && meal.name.toLowerCase() !== 'extra'));
+        // Filtra os tipos de refeição, excluindo explicitamente o tipo "Extra"
+        setMealTypes(response.data.filter(meal => 
+          meal.is_active && meal.name.toLowerCase() !== 'extra'
+        ));
       } else {
         toast.error("Formato inválido de dados recebidos");
         setMealTypes([]);

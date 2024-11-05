@@ -25,6 +25,11 @@ const handleDisposableVoucher = async (db, cleanCode, mealType) => {
     mealType 
   });
 
+  // Verifica se é um voucher Extra
+  if (mealType.toLowerCase() === 'extra') {
+    throw new Error('Voucher Descartável não disponível para uso Extra');
+  }
+
   // Verifica se o tipo de refeição corresponde
   if (disposableVoucher[0].meal_type_id !== parseInt(mealType)) {
     throw new Error('Tipo de refeição não corresponde ao voucher descartável');
