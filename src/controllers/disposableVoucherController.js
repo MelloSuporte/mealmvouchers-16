@@ -131,8 +131,10 @@ export const validateDisposableVoucher = async (req, res) => {
       });
     }
 
+    // Primeiro, verifica se o voucher existe e está válido
     const [vouchers] = await db.execute(
-      `SELECT dv.*, mt.name as meal_type_name, mt.id as meal_type_id
+      `SELECT dv.*, mt.name as meal_type_name, mt.id as meal_type_id,
+              mt.start_time, mt.end_time, mt.tolerance_minutes
        FROM disposable_vouchers dv 
        JOIN meal_types mt ON dv.meal_type_id = mt.id 
        WHERE dv.code = ? AND dv.is_used = FALSE 
@@ -141,6 +143,7 @@ export const validateDisposableVoucher = async (req, res) => {
     );
 
     if (vouchers.length === 0) {
+      logger.warn(`Tentativa de uso de voucher inválido ou expirado: ${code}`);
       return res.status(401).json({ 
         error: 'Voucher inválido, já utilizado ou expirado'
       });
@@ -150,11 +153,12 @@ export const validateDisposableVoucher = async (req, res) => {
 
     // Busca o tipo de refeição pelo nome
     const [mealTypes] = await db.execute(
-      'SELECT id, name FROM meal_types WHERE name = ? AND is_active = TRUE',
+      'SELECT id, name, start_time, end_time FROM meal_types WHERE name = ? AND is_active = TRUE',
       [mealType]
     );
 
     if (mealTypes.length === 0) {
+      logger.warn(`Tipo de refeição inválido ou inativo: ${mealType}`);
       return res.status(400).json({ 
         error: 'Tipo de refeição inválido ou inativo'
       });
@@ -162,8 +166,29 @@ export const validateDisposableVoucher = async (req, res) => {
 
     // Verifica se o tipo de refeição corresponde ao voucher
     if (voucher.meal_type_id !== mealTypes[0].id) {
+      logger.warn(`Tipo de refeição não corresponde ao voucher: ${mealType}`);
       return res.status(400).json({ 
         error: 'Tipo de refeição não corresponde ao voucher'
+      });
+    }
+
+    // Verifica o horário atual
+    const now = new Date();
+    const currentTime = now.toTimeString().slice(0, 5); // HH:mm format
+
+    const mealType0 = mealTypes[0];
+    const toleranceMinutes = voucher.tolerance_minutes || 15; // Default tolerance of 15 minutes
+
+    // Adiciona tolerância ao horário de término
+    const endTime = new Date();
+    const [endHours, endMinutes] = mealType0.end_time.split(':');
+    endTime.setHours(parseInt(endHours), parseInt(endMinutes) + toleranceMinutes);
+    const endTimeWithTolerance = endTime.toTimeString().slice(0, 5);
+
+    if (currentTime < mealType0.start_time || currentTime > endTimeWithTolerance) {
+      logger.warn(`Tentativa de uso fora do horário permitido: ${currentTime}`);
+      return res.status(400).json({
+        error: `Esta refeição só pode ser utilizada entre ${mealType0.start_time} e ${mealType0.end_time} (tolerância de ${toleranceMinutes} minutos)`
       });
     }
 
@@ -173,6 +198,7 @@ export const validateDisposableVoucher = async (req, res) => {
       [voucher.id]
     );
 
+    logger.info(`Voucher descartável utilizado com sucesso: ${code}`);
     return res.json({ 
       success: true, 
       message: 'Voucher validado com sucesso'
@@ -180,7 +206,7 @@ export const validateDisposableVoucher = async (req, res) => {
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
     return res.status(500).json({ 
-      error: 'Erro interno ao validar voucher descartável'
+      error: 'Erro ao validar voucher descartável: ' + error.message
     });
   } finally {
     if (db) db.release();
