@@ -7,21 +7,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import TurnoCard from './turnos/TurnoCard';
 
-/**
- * TurnosForm - Configuração de Turnos
- * Status: FUNCIONANDO ✓
- * 
- * Funcionalidades implementadas e testadas:
- * - Listagem de turnos ✓
- * - Edição de horários ✓
- * - Ativação/desativação de turnos ✓
- * - Integração com banco de dados ✓
- * 
- * Observações:
- * - Performance: Pode apresentar lentidão em algumas operações
- * - Segurança: Implementada trava para evitar alterações simultâneas
- */
-
 const TurnosForm = () => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,12 +23,16 @@ const TurnosForm = () => {
 
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
-      // Trava de segurança para evitar alterações simultâneas
       if (isSubmitting) {
         throw new Error("Alteração em andamento. Aguarde a conclusão.");
       }
       
-      const response = await api.put(`/shift-configurations/${updatedTurno.id}`, updatedTurno);
+      setIsSubmitting(true);
+      const response = await api.put(`/shift-configurations/${updatedTurno.id}`, {
+        start_time: updatedTurno.start_time,
+        end_time: updatedTurno.end_time,
+        is_active: updatedTurno.is_active
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -63,17 +52,14 @@ const TurnosForm = () => {
       return;
     }
 
-    setIsSubmitting(true);
     const turno = turnos.find(t => t.id === id);
     
     if (field === 'start_time' && turno.end_time && value >= turno.end_time) {
       toast.error("Horário de entrada deve ser menor que o de saída");
-      setIsSubmitting(false);
       return;
     }
     if (field === 'end_time' && turno.start_time && value <= turno.start_time) {
       toast.error("Horário de saída deve ser maior que o de entrada");
-      setIsSubmitting(false);
       return;
     }
 
