@@ -3,7 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useQuery } from '@tanstack/react-query';
 import api from '../../../utils/api';
 
 const AdminForm = ({ onClose, adminToEdit = null }) => {
@@ -21,9 +23,22 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
     }
   });
 
+  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const response = await api.get('/companies');
+      return response.data;
+    }
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      if (!formData.company_id) {
+        toast.error('Por favor, selecione uma empresa');
+        return;
+      }
+
       if (adminToEdit) {
         await api.put(`/api/admin-users/${adminToEdit.id}`, formData);
         toast.success('Gestor atualizado com sucesso!');
@@ -61,6 +76,26 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
         value={formData.password}
         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
       />
+
+      <div className="space-y-2">
+        <Label>Empresa</Label>
+        <Select 
+          value={formData.company_id} 
+          onValueChange={(value) => setFormData({ ...formData, company_id: value })}
+          disabled={isLoadingCompanies}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
+          </SelectTrigger>
+          <SelectContent>
+            {companies.map((company) => (
+              <SelectItem key={company.id} value={company.id.toString()}>
+                {company.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="space-y-2">
         <Label>Permissões</Label>
