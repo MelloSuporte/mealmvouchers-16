@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { ptBR } from "date-fns/locale";
+import { Download } from "lucide-react";
 import VoucherTypeSelector from './vouchers/VoucherTypeSelector';
 import VoucherTable from './vouchers/VoucherTable';
 import api from '../../utils/api';
@@ -16,6 +17,7 @@ const DisposableVoucherForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [allVouchers, setAllVouchers] = useState([]);
+  const [showDownloadButton, setShowDownloadButton] = useState(false);
 
   useEffect(() => {
     loadMealTypes();
@@ -43,6 +45,7 @@ const DisposableVoucherForm = () => {
     try {
       const response = await api.get('/vouchers/disposable');
       setAllVouchers(response.data || []);
+      setShowDownloadButton(response.data && response.data.length > 0);
     } catch (error) {
       console.error('Error loading vouchers:', error);
       toast.error("Erro ao carregar vouchers existentes");
@@ -80,7 +83,7 @@ const DisposableVoucherForm = () => {
             try {
               const response = await api.post('/vouchers/create', {
                 meal_type_id: mealTypeId,
-                created_by: 1, // TODO: Get actual user ID
+                created_by: 1,
                 expired_at: date
               });
 
@@ -95,7 +98,9 @@ const DisposableVoucherForm = () => {
       }
 
       if (newVouchers.length > 0) {
-        setAllVouchers(prev => [...newVouchers, ...prev]);
+        const updatedVouchers = [...newVouchers, ...allVouchers];
+        setAllVouchers(updatedVouchers);
+        setShowDownloadButton(true);
         toast.success(`${newVouchers.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
         
         setQuantity(1);
@@ -151,7 +156,7 @@ const DisposableVoucherForm = () => {
         </p>
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex justify-center gap-4">
         <Button 
           onClick={handleGenerateVouchers}
           disabled={selectedMealTypes.length === 0 || quantity < 1 || selectedDates.length === 0 || isGenerating}
