@@ -20,23 +20,15 @@ const CompanyForm = () => {
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogo(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
       toast.error("Por favor, selecione uma imagem válida.");
-      return;
     }
-
-    if (file.size > 5242880) { // 5MB
-      toast.error("A imagem deve ter no máximo 5MB");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setLogo(reader.result);
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSaveCompany = async () => {
@@ -61,8 +53,7 @@ const CompanyForm = () => {
       }
     } catch (error) {
       console.error('Error details:', error);
-      const errorMessage = error.response?.data?.error || 'Erro ao cadastrar empresa';
-      toast.error(errorMessage);
+      toast.error("Erro ao cadastrar empresa: " + (error.response?.data?.error || error.message));
     } finally {
       setIsSubmitting(false);
     }
@@ -84,7 +75,7 @@ const CompanyForm = () => {
       />
       <div>
         <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-2">
-          Logo da Empresa (máx. 5MB)
+          Logo da Empresa
         </label>
         <Input
           id="logo"

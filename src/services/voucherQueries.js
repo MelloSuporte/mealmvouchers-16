@@ -1,5 +1,27 @@
 import logger from '../config/logger';
 
+export const findValidVoucher = async (db, code) => {
+  const [timeResult] = await db.execute('SELECT NOW() as server_time');
+  const currentServerTime = new Date(timeResult[0].server_time);
+
+  const [vouchers] = await db.execute(
+    `SELECT dv.*, mt.name as meal_type_name, mt.id as meal_type_id,
+            mt.start_time, mt.end_time, mt.tolerance_minutes
+     FROM disposable_vouchers dv 
+     JOIN meal_types mt ON dv.meal_type_id = mt.id 
+     WHERE dv.code = ? AND dv.is_used = FALSE 
+     AND (dv.expired_at IS NULL OR dv.expired_at >= ?)`,
+    [code, currentServerTime]
+  );
+
+  if (vouchers.length === 0) {
+    logger.warn(`Tentativa de uso de voucher inválido ou expirado: ${code}`);
+    throw new Error('Voucher inválido, já utilizado ou expirado');
+  }
+
+  return vouchers[0];
+};
+
 export const findActiveMealType = async (db, mealType) => {
   const [mealTypes] = await db.execute(
     'SELECT id, name, start_time, end_time FROM meal_types WHERE name = ? AND is_active = TRUE',
@@ -15,8 +37,11 @@ export const findActiveMealType = async (db, mealType) => {
 };
 
 export const markVoucherAsUsed = async (db, voucherId) => {
+  const [timeResult] = await db.execute('SELECT NOW() as server_time');
+  const currentServerTime = new Date(timeResult[0].server_time);
+  
   await db.execute(
-    'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
-    [voucherId]
+    'UPDATE disposable_vouchers SET is_used = TRUE, used_at = ? WHERE id = ?',
+    [currentServerTime, voucherId]
   );
 };
