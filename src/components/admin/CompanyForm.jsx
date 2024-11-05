@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil } from "lucide-react";
 import api from '../../utils/api';
+import { validateCNPJ, validateImageFile } from '../../utils/validations';
 
 const CompanyForm = () => {
   const [companyName, setCompanyName] = useState("");
@@ -33,14 +34,17 @@ const CompanyForm = () => {
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogo(reader.result);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      toast.error("Por favor, selecione uma imagem válida.");
+    if (file) {
+      try {
+        validateImageFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setLogo(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        toast.error(error.message);
+      }
     }
   };
 
@@ -58,17 +62,25 @@ const CompanyForm = () => {
     setEditingCompany(null);
   };
 
-  const handleSaveCompany = async () => {
-    if (!companyName || !cnpj) {
-      toast.error("Por favor, preencha todos os campos obrigatórios.");
-      return;
+  const validateForm = () => {
+    if (!companyName.trim()) {
+      throw new Error("Nome da empresa é obrigatório");
     }
+    if (companyName.length < 3) {
+      throw new Error("Nome da empresa deve ter no mínimo 3 caracteres");
+    }
+    if (!cnpj) {
+      throw new Error("CNPJ é obrigatório");
+    }
+    validateCNPJ(cnpj);
+  };
 
+  const handleSaveCompany = async () => {
     try {
+      validateForm();
       setIsSubmitting(true);
       
       if (editingCompany) {
-        // Atualizar empresa existente
         await api.put(`/companies/${editingCompany.id}`, {
           name: companyName,
           cnpj,
@@ -76,7 +88,6 @@ const CompanyForm = () => {
         });
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        // Cadastrar nova empresa
         await api.post('/companies', {
           name: companyName,
           cnpj,
@@ -86,10 +97,9 @@ const CompanyForm = () => {
       }
       
       resetForm();
-      refetch(); // Atualiza a lista de empresas
+      refetch();
     } catch (error) {
-      console.error('Error details:', error);
-      toast.error("Erro ao salvar empresa: " + (error.response?.data?.error || error.message));
+      toast.error(error.message || "Erro ao salvar empresa");
     } finally {
       setIsSubmitting(false);
     }
@@ -103,6 +113,7 @@ const CompanyForm = () => {
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
           required
+          minLength={3}
         />
         <Input
           placeholder="CNPJ (99.999.999/9999-99)"

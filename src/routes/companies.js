@@ -1,32 +1,61 @@
 import express from 'express';
 import logger from '../config/logger.js';
+import { validateCNPJ } from '../utils/validations.js';
 
 const router = express.Router();
 
 // List companies
 router.get('/', async (req, res) => {
+  let connection;
   try {
-    const [companies] = await req.db.execute('SELECT * FROM companies ORDER BY name');
+    connection = await req.db.getConnection();
+    const [companies] = await connection.execute('SELECT * FROM companies ORDER BY name');
     res.json(companies);
   } catch (error) {
     logger.error('Error fetching companies:', error);
     res.status(500).json({ error: 'Error fetching companies' });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
 // Create company
 router.post('/', async (req, res) => {
   const { name, cnpj, logo } = req.body;
-  
-  if (!name || !cnpj) {
-    return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
-  }
+  let connection;
   
   try {
-    const [result] = await req.db.execute(
+    // Validações
+    if (!name?.trim()) {
+      return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
+    }
+    if (name.length < 3) {
+      return res.status(400).json({ error: 'Nome da empresa deve ter no mínimo 3 caracteres' });
+    }
+    if (!cnpj) {
+      return res.status(400).json({ error: 'CNPJ é obrigatório' });
+    }
+    
+    validateCNPJ(cnpj);
+    
+    connection = await req.db.getConnection();
+    
+    // Verifica se já existe empresa com este CNPJ
+    const [existing] = await connection.execute(
+      'SELECT id FROM companies WHERE cnpj = ?',
+      [cnpj]
+    );
+    
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'CNPJ já cadastrado' });
+    }
+    
+    const [result] = await connection.execute(
       'INSERT INTO companies (name, cnpj, logo) VALUES (?, ?, ?)',
       [name, cnpj, logo]
     );
+    
+    logger.info(`Nova empresa cadastrada - ID: ${result.insertId}, Nome: ${name}`);
     
     res.status(201).json({ 
       id: result.insertId, 
@@ -38,12 +67,68 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error creating company:', error);
-    
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ error: 'CNPJ já cadastrado' });
+    res.status(400).json({ error: error.message || 'Erro ao cadastrar empresa' });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Update company
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, cnpj, logo } = req.body;
+  let connection;
+  
+  try {
+    // Validações
+    if (!name?.trim()) {
+      return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
+    }
+    if (name.length < 3) {
+      return res.status(400).json({ error: 'Nome da empresa deve ter no mínimo 3 caracteres' });
+    }
+    if (!cnpj) {
+      return res.status(400).json({ error: 'CNPJ é obrigatório' });
     }
     
-    res.status(500).json({ error: 'Erro ao cadastrar empresa' });
+    validateCNPJ(cnpj);
+    
+    connection = await req.db.getConnection();
+    
+    // Verifica se já existe outra empresa com este CNPJ
+    const [existing] = await connection.execute(
+      'SELECT id FROM companies WHERE cnpj = ? AND id != ?',
+      [cnpj, id]
+    );
+    
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
+    }
+    
+    const [result] = await connection.execute(
+      'UPDATE companies SET name = ?, cnpj = ?, logo = ? WHERE id = ?',
+      [name, cnpj, logo, id]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Empresa não encontrada' });
+    }
+    
+    logger.info(`Empresa atualizada - ID: ${id}, Nome: ${name}`);
+    
+    res.json({ 
+      id: parseInt(id), 
+      name, 
+      cnpj, 
+      logo,
+      success: true,
+      message: 'Empresa atualizada com sucesso'
+    });
+  } catch (error) {
+    logger.error('Error updating company:', error);
+    res.status(400).json({ error: error.message || 'Erro ao atualizar empresa' });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
