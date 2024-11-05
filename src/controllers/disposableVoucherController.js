@@ -1,35 +1,10 @@
 import pool from '../config/database';
 import logger from '../config/logger';
-import { validateVoucherTime, validateVoucherByType } from '../utils/voucherValidations';
+import { generateUniqueCode } from '../utils/voucherGenerationUtils';
+import { validateVoucherCode, validateMealType } from '../services/voucherValidationService';
+import { validateVoucherTime } from '../utils/voucherValidations';
 import { findActiveMealType, markVoucherAsUsed } from '../services/voucherQueries';
 import { VOUCHER_TYPES } from '../utils/voucherTypes';
-
-const generateUniqueCode = async (db) => {
-  let attempts = 0;
-  const maxAttempts = 10;
-  
-  while (attempts < maxAttempts) {
-    const code = String(Math.floor(1000 + Math.random() * 9000));
-    
-    const [disposableVouchers] = await db.execute(
-      'SELECT id FROM disposable_vouchers WHERE code = ?',
-      [code]
-    );
-
-    const [userVouchers] = await db.execute(
-      'SELECT id FROM users WHERE voucher = ?',
-      [code]
-    );
-
-    if (disposableVouchers.length === 0 && userVouchers.length === 0) {
-      return code;
-    }
-
-    attempts++;
-  }
-  
-  throw new Error('Não foi possível gerar um código único após várias tentativas');
-};
 
 export const checkVoucherCode = async (req, res) => {
   const { code } = req.body;
@@ -37,26 +12,8 @@ export const checkVoucherCode = async (req, res) => {
   
   try {
     db = await pool.getConnection();
-    
-    if (!/^\d{4}$/.test(code)) {
-      logger.warn(`Formato inválido de código: ${code}`);
-      return res.status(400).json({ 
-        error: 'Código deve conter exatamente 4 dígitos numéricos',
-        exists: false 
-      });
-    }
-
-    const [disposableVouchers] = await db.execute(
-      'SELECT id FROM disposable_vouchers WHERE code = ?',
-      [code]
-    );
-
-    const [userVouchers] = await db.execute(
-      'SELECT id FROM users WHERE voucher = ?',
-      [code]
-    );
-
-    return res.json({ exists: disposableVouchers.length > 0 || userVouchers.length > 0 });
+    const result = await validateVoucherCode(db, code);
+    return res.json(result);
   } catch (error) {
     logger.error('Erro ao verificar código do voucher:', error);
     return res.status(500).json({ 
@@ -69,63 +26,38 @@ export const checkVoucherCode = async (req, res) => {
 };
 
 export const createDisposableVoucher = async (req, res) => {
-  const { meal_type_id, expired_at, created_by } = req.body;
+  const { meal_type_id, expired_at } = req.body;
   let db;
   
   try {
-    if (!meal_type_id || !expired_at || !created_by) {
+    if (!meal_type_id || !expired_at) {
       return res.status(400).json({ 
-        error: 'Todos os campos são obrigatórios (meal_type_id, expired_at, created_by)'
+        error: 'Tipo de refeição e data de expiração são obrigatórios'
       });
     }
 
     db = await pool.getConnection();
     
-    // Verificar se o usuário criador existe
-    const [users] = await db.execute(
-      'SELECT id FROM users WHERE id = ?',
-      [created_by]
-    );
-
-    if (users.length === 0) {
-      logger.warn(`Usuário criador não encontrado: ${created_by}`);
-      return res.status(400).json({ 
-        error: 'Usuário criador não encontrado'
-      });
-    }
-
-    const [mealTypes] = await db.execute(
-      'SELECT id FROM meal_types WHERE id = ? AND is_active = TRUE',
-      [meal_type_id]
-    );
-
-    if (mealTypes.length === 0) {
-      logger.warn(`Tipo de refeição inválido ou inativo: ${meal_type_id}`);
-      return res.status(400).json({ 
-        error: 'Tipo de refeição inválido ou inativo'
-      });
-    }
-
+    await validateMealType(db, meal_type_id);
     const formattedDate = new Date(expired_at).toISOString().split('T')[0];
     const code = await generateUniqueCode(db);
 
     const [result] = await db.execute(
       `INSERT INTO disposable_vouchers 
-       (code, meal_type_id, expired_at, created_by) 
-       VALUES (?, ?, ?, ?)`,
-      [code, meal_type_id, formattedDate, created_by]
+       (code, meal_type_id, expired_at) 
+       VALUES (?, ?, ?)`,
+      [code, meal_type_id, formattedDate]
     );
 
     const [voucher] = await db.execute(
-      `SELECT dv.*, mt.name as meal_type_name, u.name as created_by_name
+      `SELECT dv.*, mt.name as meal_type_name
        FROM disposable_vouchers dv 
        JOIN meal_types mt ON dv.meal_type_id = mt.id 
-       JOIN users u ON dv.created_by = u.id
        WHERE dv.id = ?`,
       [result.insertId]
     );
 
-    logger.info(`Voucher descartável criado com sucesso: ${code} por usuário ${created_by}`);
+    logger.info(`Voucher descartável criado com sucesso: ${code}`);
     return res.json({ 
       success: true, 
       message: 'Voucher criado com sucesso',
@@ -146,7 +78,6 @@ export const validateDisposableVoucher = async (req, res) => {
   let db;
   
   try {
-    // Validação específica para voucher descartável
     validateVoucherByType(VOUCHER_TYPES.DISPOSABLE, { 
       code, 
       mealType: meal_type_id 
@@ -154,7 +85,6 @@ export const validateDisposableVoucher = async (req, res) => {
 
     db = await pool.getConnection();
 
-    // Buscar o voucher descartável
     const [vouchers] = await db.execute(
       `SELECT dv.*, mt.* 
        FROM disposable_vouchers dv
@@ -171,17 +101,15 @@ export const validateDisposableVoucher = async (req, res) => {
     }
 
     const voucher = vouchers[0];
-
-    // Verificar se o voucher está expirado
     const expirationDate = new Date(voucher.expired_at);
     const now = new Date();
+    
     if (expirationDate < now) {
       return res.status(400).json({ 
         error: 'Voucher expirado'
       });
     }
 
-    // Verificar se o tipo de refeição corresponde
     if (voucher.meal_type_id !== parseInt(meal_type_id)) {
       return res.status(400).json({ 
         error: 'Tipo de refeição não corresponde ao voucher'
