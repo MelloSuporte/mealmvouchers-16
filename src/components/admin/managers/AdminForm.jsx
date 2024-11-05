@@ -23,13 +23,16 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
     }
   });
 
-  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
+  const { data: companiesResponse = [], isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       const response = await api.get('/companies');
-      return response.data;
+      return response.data || [];
     }
   });
+
+  // Ensure companies is always an array
+  const companies = Array.isArray(companiesResponse) ? companiesResponse : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
