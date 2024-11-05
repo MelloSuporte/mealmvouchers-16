@@ -6,6 +6,7 @@ import healthRoutes from './health.js';
 import mealsRoutes from './meals.js';
 import usersRoutes from './users.js';
 import extraVouchersRoutes from './extraVouchers.js';
+import adminRoutes from './admin.js';
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use('/reports', reportRoutes);
 router.use('/meals', mealsRoutes);
 router.use('/users', usersRoutes);
 router.use('/extra-vouchers', extraVouchersRoutes);
+router.use('/admin', adminRoutes);
 
 export default router;

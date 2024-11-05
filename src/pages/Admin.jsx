@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
+import { useAdmin } from '../contexts/AdminContext';
 import UserForm from '../components/admin/UserForm';
 import CompanyForm from '../components/admin/CompanyForm';
 import MealScheduleManager from '../components/admin/meals/MealScheduleManager';
@@ -16,10 +17,46 @@ import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
   const navigate = useNavigate();
+  const { isMasterAdmin } = useAdmin();
+
+  useEffect(() => {
+    if (!localStorage.getItem('adminToken')) {
+      navigate('/admin-login');
+    }
+  }, [navigate]);
 
   const handleLogout = () => {
+    localStorage.removeItem('adminToken');
     toast.success("Logout realizado com sucesso!");
     navigate('/voucher');
+  };
+
+  const renderRestrictedTab = (value, component) => {
+    if (!isMasterAdmin) {
+      return (
+        <TabsContent value={value}>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center text-red-500">
+                Acesso restrito ao administrador master
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      );
+    }
+    return (
+      <TabsContent value={value}>
+        <Card>
+          <CardHeader>
+            <CardTitle>{value.charAt(0).toUpperCase() + value.slice(1)}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {component}
+          </CardContent>
+        </Card>
+      </TabsContent>
+    );
   };
 
   return (
@@ -51,21 +88,9 @@ const Admin = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="companies">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cadastro de Empresa</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CompanyForm />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="meals">
-          <MealScheduleManager />
-        </TabsContent>
-
+        {renderRestrictedTab("companies", <CompanyForm />)}
+        {renderRestrictedTab("meals", <MealScheduleManager />)}
+        
         <TabsContent value="rls">
           <Card>
             <CardHeader>
@@ -77,16 +102,7 @@ const Admin = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="backgrounds">
-          <Card>
-            <CardHeader>
-              <CardTitle>Alterar Imagens de Fundo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BackgroundImageForm />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {renderRestrictedTab("backgrounds", <BackgroundImageForm />)}
 
         <TabsContent value="disposable">
           <Card>
@@ -110,16 +126,7 @@ const Admin = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="turnos">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuração de Turnos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <TurnosForm />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {renderRestrictedTab("turnos", <TurnosForm />)}
       </Tabs>
     </div>
   );
