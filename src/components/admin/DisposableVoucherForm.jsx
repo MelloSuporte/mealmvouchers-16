@@ -4,10 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { ptBR } from "date-fns/locale";
-import { Download } from "lucide-react";
 import VoucherTypeSelector from './vouchers/VoucherTypeSelector';
 import VoucherTable from './vouchers/VoucherTable';
 import api from '../../utils/api';
+import { format } from 'date-fns';
 
 const DisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
@@ -17,7 +17,6 @@ const DisposableVoucherForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [allVouchers, setAllVouchers] = useState([]);
-  const [showDownloadButton, setShowDownloadButton] = useState(false);
 
   useEffect(() => {
     loadMealTypes();
@@ -45,7 +44,6 @@ const DisposableVoucherForm = () => {
     try {
       const response = await api.get('/vouchers/disposable');
       setAllVouchers(response.data || []);
-      setShowDownloadButton(response.data && response.data.length > 0);
     } catch (error) {
       console.error('Error loading vouchers:', error);
       toast.error("Erro ao carregar vouchers existentes");
@@ -73,7 +71,6 @@ const DisposableVoucherForm = () => {
       return;
     }
 
-    // Verificar se as datas selecionadas são futuras
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -88,12 +85,15 @@ const DisposableVoucherForm = () => {
 
     try {
       for (const date of selectedDates) {
+        // Formata a data para YYYY-MM-DD mantendo o dia correto
+        const formattedDate = format(date, 'yyyy-MM-dd');
+        
         for (const mealTypeId of selectedMealTypes) {
           for (let i = 0; i < quantity; i++) {
             try {
               const response = await api.post('/vouchers/create', {
                 meal_type_id: mealTypeId,
-                expired_at: date
+                expired_at: formattedDate
               });
 
               if (response.data.success) {
@@ -109,7 +109,6 @@ const DisposableVoucherForm = () => {
       if (newVouchers.length > 0) {
         const updatedVouchers = [...newVouchers, ...allVouchers];
         setAllVouchers(updatedVouchers);
-        setShowDownloadButton(true);
         toast.success(`${newVouchers.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
         
         setQuantity(1);
