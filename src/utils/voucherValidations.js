@@ -14,20 +14,26 @@ export const validateVoucherTime = (currentTime, mealType, toleranceMinutes) => 
 };
 
 export const validateDisposableVoucherRules = (voucher) => {
+  // Verificar se o voucher já foi usado
+  if (voucher.is_used) {
+    throw new Error('Voucher Descartável já foi utilizado');
+  }
+
   // Verificar se o voucher está expirado
   if (voucher.expired_at) {
     const expirationDate = new Date(voucher.expired_at);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    expirationDate.setHours(0, 0, 0, 0);
     
     if (expirationDate < today) {
-      throw new Error('Voucher expirado');
+      throw new Error('Voucher Expirado');
     }
-  }
 
-  // Verificar se o voucher já foi usado
-  if (voucher.is_used) {
-    throw new Error('Este voucher já foi utilizado');
+    if (expirationDate > today) {
+      const formattedDate = expirationDate.toISOString().split('T')[0];
+      throw new Error(`Voucher Descartável válido para o ${formattedDate}`);
+    }
   }
 
   // Verificar horário da refeição
@@ -58,6 +64,9 @@ export const validateVoucherByType = (voucherType, { code, cpf, mealType, user }
     case VOUCHER_TYPES.DISPOSABLE:
       if (!code || !mealType) {
         throw new Error('Código do voucher e tipo de refeição são obrigatórios para voucher descartável');
+      }
+      if (mealType.toLowerCase() === 'extra') {
+        throw new Error('Voucher Descartável não disponível para uso Extra');
       }
       break;
 
