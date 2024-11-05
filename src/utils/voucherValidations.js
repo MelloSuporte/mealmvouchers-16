@@ -43,10 +43,3 @@ export const validateVoucherByType = (voucherType, { code, cpf, mealType, user }
       throw new Error('Tipo de voucher inválido');
   }
 };
-
-export const validateMealType = (voucher, mealType) => {
-  if (!voucher || !mealType || voucher.meal_type_id !== mealType.id) {
-    logger.warn(`Tipo de refeição não corresponde ao voucher: ${mealType?.name}`);
-    throw new Error('Tipo de refeição não corresponde ao voucher');
-  }
-};

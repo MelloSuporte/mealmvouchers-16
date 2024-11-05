@@ -12,38 +12,59 @@ export const validateVoucher = async (req, res) => {
     db = await pool.getConnection();
     
     // Remover caracteres especiais do CPF antes da consulta
-    const cleanCpf = cpf.replace(/[^\d]/g, '');
+    const cleanCpf = cpf ? cpf.replace(/[^\d]/g, '') : '';
     const cleanCode = code.toString().trim();
 
     // Log para debug dos dados recebidos e limpos
-    logger.info(`Dados recebidos - CPF original: ${cpf}, CPF limpo: ${cleanCpf}`);
-    logger.info(`Dados recebidos - Voucher original: ${code}, Voucher limpo: ${cleanCode}`);
-    
-    // Consulta SQL melhorada com LOGGING
+    logger.info(`Dados recebidos - CPF: ${cleanCpf}, Código: ${cleanCode}, Tipo: ${mealType}`);
+
+    // Primeiro, verificar se é um voucher descartável
+    const [disposableVoucher] = await db.execute(
+      'SELECT * FROM disposable_vouchers WHERE code = ? AND is_used = FALSE',
+      [cleanCode]
+    );
+
+    if (disposableVoucher.length > 0) {
+      // Validação específica para voucher descartável
+      validateVoucherByType(VOUCHER_TYPES.DISPOSABLE, { 
+        code: cleanCode, 
+        mealType 
+      });
+
+      // Verificar se o tipo de refeição corresponde
+      if (disposableVoucher[0].meal_type_id !== parseInt(mealType)) {
+        return res.status(400).json({ 
+          error: 'Tipo de refeição não corresponde ao voucher descartável'
+        });
+      }
+
+      // Marcar voucher como usado
+      await db.execute(
+        'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
+        [disposableVoucher[0].id]
+      );
+
+      return res.json({ 
+        success: true, 
+        message: 'Voucher descartável validado com sucesso'
+      });
+    }
+
+    // Se não for descartável, precisa ter CPF
+    if (!cleanCpf) {
+      return res.status(400).json({ 
+        error: 'CPF é obrigatório para vouchers normais e extras'
+      });
+    }
+
+    // Buscar usuário com CPF e voucher correspondentes
     const [users] = await db.execute(
       'SELECT * FROM users WHERE cpf = ? AND voucher = ? AND is_suspended = FALSE',
       [cleanCpf, cleanCode]
     );
 
-    // Log do resultado da consulta
-    logger.info(`Resultado da consulta: ${users.length} usuários encontrados`);
-
     if (users.length === 0) {
-      // Verificar separadamente para identificar o problema específico
-      const [userCheck] = await db.execute(
-        'SELECT id, name, cpf, voucher FROM users WHERE cpf = ?', 
-        [cleanCpf]
-      );
-      
-      const [voucherCheck] = await db.execute(
-        'SELECT id, name, cpf, voucher FROM users WHERE voucher = ?', 
-        [cleanCode]
-      );
-      
-      logger.warn(`Validação detalhada:`);
-      logger.warn(`CPF check (${cleanCpf}): ${JSON.stringify(userCheck)}`);
-      logger.warn(`Voucher check (${cleanCode}): ${JSON.stringify(voucherCheck)}`);
-      
+      logger.warn(`Usuário não encontrado - CPF: ${cleanCpf}, Voucher: ${cleanCode}`);
       return res.status(401).json({ 
         error: 'Usuário não encontrado ou voucher inválido',
         userName: null,
@@ -53,13 +74,11 @@ export const validateVoucher = async (req, res) => {
 
     const user = users[0];
 
-    // Validação específica para voucher normal
-    validateVoucherByType(VOUCHER_TYPES.NORMAL, { 
-      code, 
-      cpf, 
-      mealType,
-      user 
-    });
+    // Verificar se existe voucher extra para o usuário
+    const [extraVouchers] = await db.execute(
+      'SELECT * FROM extra_vouchers WHERE user_id = ? AND valid_until >= CURDATE() AND used = FALSE',
+      [user.id]
+    );
 
     // Get today's meal usage
     const [usedMeals] = await db.execute(
@@ -71,6 +90,40 @@ export const validateVoucher = async (req, res) => {
       [user.id]
     );
 
+    // Se já usou 2 ou mais refeições, precisa ter voucher extra
+    if (usedMeals.length >= 2) {
+      if (extraVouchers.length === 0) {
+        logger.warn(`Limite diário excedido sem voucher extra - Usuário: ${user.name}`);
+        return res.status(403).json({
+          error: 'Limite diário de refeições atingido',
+          userName: user.name,
+          turno: user.turno
+        });
+      }
+
+      // Validação específica para voucher extra
+      validateVoucherByType(VOUCHER_TYPES.EXTRA, { 
+        code: cleanCode, 
+        cpf: cleanCpf, 
+        mealType,
+        user 
+      });
+
+      // Marca o voucher extra como usado
+      await db.execute(
+        'UPDATE extra_vouchers SET used = TRUE WHERE id = ?',
+        [extraVouchers[0].id]
+      );
+    } else {
+      // Validação específica para voucher normal
+      validateVoucherByType(VOUCHER_TYPES.NORMAL, { 
+        code: cleanCode, 
+        cpf: cleanCpf, 
+        mealType,
+        user 
+      });
+    }
+
     const allowedMeals = getAllowedMealsByShift(user.turno);
     
     if (!allowedMeals.includes(mealType)) {
@@ -80,50 +133,6 @@ export const validateVoucher = async (req, res) => {
         userName: user.name,
         turno: user.turno
       });
-    }
-
-    // Verifica se o tipo de refeição está ativo e dentro do horário
-    const [mealTypeInfo] = await db.execute(
-      'SELECT * FROM meal_types WHERE name = ? AND is_active = TRUE',
-      [mealType]
-    );
-
-    if (mealTypeInfo.length === 0) {
-      return res.status(400).json({
-        error: 'Tipo de refeição inválido ou inativo',
-        userName: user.name,
-        turno: user.turno
-      });
-    }
-
-    const currentMealType = mealTypeInfo[0];
-    const toleranceMinutes = currentMealType.tolerance_minutes || 15;
-
-    // Get current time in HH:mm format
-    const [timeResult] = await db.execute('SELECT TIME_FORMAT(NOW(), "%H:%i") as current_time');
-    const currentTime = timeResult[0].current_time;
-    
-    if (usedMeals.length >= 2) {
-      // Check if this is an extra voucher request
-      const [extraVoucher] = await db.execute(
-        'SELECT * FROM extra_vouchers WHERE user_id = ? AND valid_until >= CURDATE() AND used = FALSE',
-        [user.id]
-      );
-
-      if (extraVoucher.length === 0) {
-        logger.warn(`Limite diário excedido - Usuário: ${user.name}`);
-        return res.status(403).json({
-          error: 'Limite diário de refeições atingido',
-          userName: user.name,
-          turno: user.turno
-        });
-      }
-
-      // Marca o voucher extra como usado
-      await db.execute(
-        'UPDATE extra_vouchers SET used = TRUE WHERE id = ?',
-        [extraVoucher[0].id]
-      );
     }
 
     // Record the meal usage
