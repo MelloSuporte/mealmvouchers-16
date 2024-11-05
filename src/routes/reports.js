@@ -66,14 +66,14 @@ router.get('/weekly', async (req, res) => {
   try {
     const [results] = await pool.execute(`
       SELECT 
-        DATE_FORMAT(used_at, '%W') as name,
+        DATE_FORMAT(DATE(used_at), '%W') as name,
         SUM(CASE WHEN mt.name = 'Almoço' THEN 1 ELSE 0 END) as Almoço,
         SUM(CASE WHEN mt.name = 'Jantar' THEN 1 ELSE 0 END) as Jantar,
         SUM(CASE WHEN mt.name = 'Café' THEN 1 ELSE 0 END) as Café
       FROM voucher_usage vu
       JOIN meal_types mt ON vu.meal_type_id = mt.id
       WHERE used_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-      GROUP BY DATE_FORMAT(used_at, '%W'), DATE(used_at)
+      GROUP BY DATE_FORMAT(DATE(used_at), '%W'), DATE(used_at)
       ORDER BY DATE(used_at)
     `);
     
@@ -110,7 +110,7 @@ router.get('/trend', async (req, res) => {
         COUNT(*) as total
       FROM voucher_usage
       WHERE used_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-      GROUP BY DATE(used_at)
+      GROUP BY DATE_FORMAT(DATE(used_at), '%d/%m'), DATE(used_at)
       ORDER BY DATE(used_at)
     `);
     
