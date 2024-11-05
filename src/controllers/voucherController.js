@@ -14,13 +14,22 @@ export const validateVoucher = async (req, res) => {
     // Get current server time with seconds precision
     const [timeResult] = await db.execute('SELECT NOW() as current_time');
     const currentTime = timeResult[0].current_time;
-    const currentTimeFormatted = currentTime.slice(11, 16); // Format: HH:mm
+    const currentTimeFormatted = currentTime.toString().slice(11, 16); // Format: HH:mm
     
     // Get user and their shift
     const [users] = await db.execute(
       'SELECT * FROM users WHERE cpf = ? AND voucher = ? AND is_suspended = FALSE',
       [cpf, code]
     );
+
+    if (users.length === 0) {
+      logger.warn(`Tentativa inválida de voucher - CPF: ${cpf}, Código: ${code}`);
+      return res.status(401).json({ 
+        error: 'Usuário não encontrado ou voucher inválido',
+        userName: null,
+        turno: null 
+      });
+    }
 
     const user = users[0];
 
