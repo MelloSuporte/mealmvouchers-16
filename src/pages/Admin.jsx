@@ -13,7 +13,7 @@ import BackgroundImageForm from '../components/admin/BackgroundImageForm';
 import ReportForm from '../components/admin/ReportForm';
 import TurnosForm from '../components/admin/TurnosForm';
 import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
-import AdminManagement from '../pages/AdminManagement'; // Importando o componente de gerenciamento de administradores
+import AdminManagement from '../pages/AdminManagement';
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
@@ -32,7 +32,6 @@ const Admin = () => {
     navigate('/voucher');
   };
 
-  // Renderiza tab apenas se admin master ou se tiver permissão específica
   const renderTab = (value, component, requiredPermission = null) => {
     if (!isMasterAdmin && requiredPermission && !adminPermissions[requiredPermission]) {
       return (
@@ -62,12 +61,11 @@ const Admin = () => {
     );
   };
 
-  // Renderiza trigger apenas se admin master ou se tiver permissão
-  const renderTrigger = (value, requiredPermission = null) => {
+  const renderTrigger = (value, label, requiredPermission = null) => {
     if (!isMasterAdmin && requiredPermission && !adminPermissions[requiredPermission]) {
       return null;
     }
-    return <TabsTrigger value={value}>{value}</TabsTrigger>;
+    return <TabsTrigger value={value}>{label}</TabsTrigger>;
   };
 
   return (
@@ -79,13 +77,13 @@ const Admin = () => {
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-9">
-          {renderTrigger("users", "manage_users")}
+          {renderTrigger("users", "Usuário", "manage_users")}
           {isMasterAdmin && <TabsTrigger value="companies">Empresas</TabsTrigger>}
           {isMasterAdmin && <TabsTrigger value="meals">Refeições</TabsTrigger>}
-          {renderTrigger("rls", "manage_extra_vouchers")}
-          {renderTrigger("disposable", "manage_disposable_vouchers")}
+          {renderTrigger("rls", "Vouchers Extras", "manage_extra_vouchers")}
+          {renderTrigger("disposable", "Vouchers Descartáveis", "manage_disposable_vouchers")}
           {isMasterAdmin && <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>}
-          {renderTrigger("reports", "manage_reports")}
+          {renderTrigger("reports", "Relatórios", "manage_reports")}
           {isMasterAdmin && <TabsTrigger value="turnos">Turnos</TabsTrigger>}
           {isMasterAdmin && <TabsTrigger value="managers">Gerentes</TabsTrigger>}
         </TabsList>
