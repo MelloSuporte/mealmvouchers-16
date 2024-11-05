@@ -1,10 +1,9 @@
 import pool from '../config/database';
 import logger from '../config/logger';
 import { generateUniqueCode } from '../utils/voucherGenerationUtils';
-import { validateVoucherCode, validateMealType } from '../services/voucherValidationService';
+import { validateVoucherCode, validateMealType, validateExistingVoucher } from '../services/voucherValidationService';
 import { validateVoucherTime } from '../utils/voucherValidations';
 import { findActiveMealType, markVoucherAsUsed } from '../services/voucherQueries';
-import { VOUCHER_TYPES } from '../utils/voucherTypes';
 
 export const checkVoucherCode = async (req, res) => {
   const { code } = req.body;
@@ -43,9 +42,7 @@ export const createDisposableVoucher = async (req, res) => {
     const code = await generateUniqueCode(db);
 
     const [result] = await db.execute(
-      `INSERT INTO disposable_vouchers 
-       (code, meal_type_id, expired_at) 
-       VALUES (?, ?, ?)`,
+      'INSERT INTO disposable_vouchers (code, meal_type_id, expired_at) VALUES (?, ?, ?)',
       [code, meal_type_id, formattedDate]
     );
 
@@ -78,49 +75,21 @@ export const validateDisposableVoucher = async (req, res) => {
   let db;
   
   try {
-    validateVoucherByType(VOUCHER_TYPES.DISPOSABLE, { 
-      code, 
-      mealType: meal_type_id 
-    });
+    if (!code || !meal_type_id) {
+      return res.status(400).json({ 
+        error: 'Código do voucher e tipo de refeição são obrigatórios'
+      });
+    }
 
     db = await pool.getConnection();
-
-    const [vouchers] = await db.execute(
-      `SELECT dv.*, mt.* 
-       FROM disposable_vouchers dv
-       JOIN meal_types mt ON dv.meal_type_id = mt.id
-       WHERE dv.code = ? AND dv.is_used = FALSE`,
-      [code]
-    );
-
-    if (vouchers.length === 0) {
-      logger.warn(`Voucher descartável não encontrado ou já utilizado: ${code}`);
-      return res.status(400).json({ 
-        error: 'Voucher não encontrado ou já utilizado'
-      });
-    }
-
-    const voucher = vouchers[0];
-    const expirationDate = new Date(voucher.expired_at);
-    const now = new Date();
+    const voucher = await validateExistingVoucher(db, code, meal_type_id);
     
-    if (expirationDate < now) {
-      return res.status(400).json({ 
-        error: 'Voucher expirado'
-      });
-    }
+    // Validar horário da refeição
+    const mealType = await findActiveMealType(db, voucher.meal_type_name);
+    const currentTime = new Date().toTimeString().slice(0, 5);
+    const toleranceMinutes = mealType.tolerance_minutes || 15;
 
-    if (voucher.meal_type_id !== parseInt(meal_type_id)) {
-      return res.status(400).json({ 
-        error: 'Tipo de refeição não corresponde ao voucher'
-      });
-    }
-
-    const mealTypeData = await findActiveMealType(db, voucher.name);
-    const currentTime = now.toTimeString().slice(0, 5);
-    const toleranceMinutes = voucher.tolerance_minutes || 15;
-
-    validateVoucherTime(currentTime, mealTypeData, toleranceMinutes);
+    validateVoucherTime(currentTime, mealType, toleranceMinutes);
     await markVoucherAsUsed(db, voucher.id);
 
     logger.info(`Voucher descartável utilizado com sucesso: ${code}`);
