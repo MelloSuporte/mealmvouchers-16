@@ -13,6 +13,7 @@ import BackgroundImageForm from '../components/admin/BackgroundImageForm';
 import ReportForm from '../components/admin/ReportForm';
 import TurnosForm from '../components/admin/TurnosForm';
 import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
+import AdminManagement from '../pages/AdminManagement'; // Importando o componente de gerenciamento de administradores
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
@@ -77,7 +78,7 @@ const Admin = () => {
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           {renderTrigger("users", "manage_users")}
           {isMasterAdmin && <TabsTrigger value="companies">Empresas</TabsTrigger>}
           {isMasterAdmin && <TabsTrigger value="meals">Refeições</TabsTrigger>}
@@ -86,6 +87,7 @@ const Admin = () => {
           {isMasterAdmin && <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>}
           {renderTrigger("reports", "manage_reports")}
           {isMasterAdmin && <TabsTrigger value="turnos">Turnos</TabsTrigger>}
+          {isMasterAdmin && <TabsTrigger value="managers">Gerentes</TabsTrigger>}
         </TabsList>
 
         {renderTab("users", <UserForm />, "manage_users")}
@@ -96,6 +98,7 @@ const Admin = () => {
         {isMasterAdmin && renderTab("backgrounds", <BackgroundImageForm />)}
         {renderTab("reports", <ReportForm />, "manage_reports")}
         {isMasterAdmin && renderTab("turnos", <TurnosForm />)}
+        {isMasterAdmin && renderTab("managers", <AdminManagement />)}
       </Tabs>
     </div>
   );
