@@ -16,7 +16,7 @@ const CompanyForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
 
-  const { data: companies, refetch } = useQuery({
+  const { data: companies = [] } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       const response = await api.get('/companies');
@@ -154,7 +154,7 @@ const CompanyForm = () => {
         <h2 className="text-lg font-semibold mb-4">Empresas Cadastradas</h2>
         <ScrollArea className="h-[400px] rounded-md border p-4">
           <div className="space-y-4">
-            {companies?.map((company) => (
+            {Array.isArray(companies) && companies.map((company) => (
               <Card key={company.id} className="hover:bg-gray-50">
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex items-center space-x-4">
