@@ -20,11 +20,18 @@ export const validateVoucher = async (req, res) => {
 
     // Primeiro, verificar se é um voucher descartável
     const [disposableVoucher] = await db.execute(
-      'SELECT * FROM disposable_vouchers WHERE code = ? AND is_used = FALSE',
+      'SELECT * FROM disposable_vouchers WHERE code = ?',
       [cleanCode]
     );
 
     if (disposableVoucher.length > 0) {
+      // Se encontrou um voucher descartável, verifica se já foi usado
+      if (disposableVoucher[0].is_used) {
+        return res.status(400).json({ 
+          error: 'Voucher Descartável já foi utilizado'
+        });
+      }
+
       // Validação específica para voucher descartável
       validateVoucherByType(VOUCHER_TYPES.DISPOSABLE, { 
         code: cleanCode, 
