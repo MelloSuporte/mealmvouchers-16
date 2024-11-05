@@ -4,6 +4,83 @@ import { validateVoucherTime, validateVoucherByType } from '../utils/voucherVali
 import { isWithinShiftHours, getAllowedMealsByShift } from '../utils/shiftUtils';
 import { VOUCHER_TYPES } from '../utils/voucherTypes';
 
+const handleDisposableVoucher = async (db, cleanCode, mealType) => {
+  const [disposableVoucher] = await db.execute(
+    'SELECT * FROM disposable_vouchers WHERE code = ?',
+    [cleanCode]
+  );
+
+  if (disposableVoucher.length === 0) {
+    return null;
+  }
+
+  // Verifica se já foi usado
+  if (disposableVoucher[0].is_used) {
+    throw new Error('Voucher Descartável já foi utilizado');
+  }
+
+  // Validação específica para voucher descartável
+  validateVoucherByType(VOUCHER_TYPES.DISPOSABLE, { 
+    code: cleanCode, 
+    mealType 
+  });
+
+  // Verifica se o tipo de refeição corresponde
+  if (disposableVoucher[0].meal_type_id !== parseInt(mealType)) {
+    throw new Error('Tipo de refeição não corresponde ao voucher descartável');
+  }
+
+  // Marca voucher como usado
+  await db.execute(
+    'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
+    [disposableVoucher[0].id]
+  );
+
+  return { success: true, message: 'Voucher descartável validado com sucesso' };
+};
+
+const handleNormalVoucher = async (db, cleanCpf, cleanCode, mealType, user) => {
+  validateVoucherByType(VOUCHER_TYPES.NORMAL, { 
+    code: cleanCode, 
+    cpf: cleanCpf, 
+    mealType,
+    user 
+  });
+
+  const allowedMeals = getAllowedMealsByShift(user.turno);
+  
+  if (!allowedMeals.includes(mealType)) {
+    throw new Error(`${mealType} não está disponível para o ${user.turno} turno`);
+  }
+
+  return { success: true };
+};
+
+const handleExtraVoucher = async (db, cleanCpf, cleanCode, mealType, user) => {
+  const [extraVouchers] = await db.execute(
+    'SELECT * FROM extra_vouchers WHERE user_id = ? AND valid_until >= CURDATE() AND used = FALSE',
+    [user.id]
+  );
+
+  if (extraVouchers.length === 0) {
+    throw new Error('Limite diário de refeições atingido');
+  }
+
+  validateVoucherByType(VOUCHER_TYPES.EXTRA, { 
+    code: cleanCode, 
+    cpf: cleanCpf, 
+    mealType,
+    user 
+  });
+
+  await db.execute(
+    'UPDATE extra_vouchers SET used = TRUE WHERE id = ?',
+    [extraVouchers[0].id]
+  );
+
+  return { success: true };
+};
+
 export const validateVoucher = async (req, res) => {
   const { cpf, voucherCode: code, mealType } = req.body;
   let db;
@@ -11,50 +88,15 @@ export const validateVoucher = async (req, res) => {
   try {
     db = await pool.getConnection();
     
-    // Remover caracteres especiais do CPF antes da consulta
     const cleanCpf = cpf ? cpf.replace(/[^\d]/g, '') : '';
     const cleanCode = code.toString().trim();
 
-    // Log para debug dos dados recebidos e limpos
     logger.info(`Dados recebidos - CPF: ${cleanCpf}, Código: ${cleanCode}, Tipo: ${mealType}`);
 
-    // Primeiro, verificar se é um voucher descartável
-    const [disposableVoucher] = await db.execute(
-      'SELECT * FROM disposable_vouchers WHERE code = ?',
-      [cleanCode]
-    );
-
-    if (disposableVoucher.length > 0) {
-      // Se encontrou um voucher descartável, verifica se já foi usado
-      if (disposableVoucher[0].is_used) {
-        return res.status(400).json({ 
-          error: 'Voucher Descartável já foi utilizado'
-        });
-      }
-
-      // Validação específica para voucher descartável
-      validateVoucherByType(VOUCHER_TYPES.DISPOSABLE, { 
-        code: cleanCode, 
-        mealType 
-      });
-
-      // Verificar se o tipo de refeição corresponde
-      if (disposableVoucher[0].meal_type_id !== parseInt(mealType)) {
-        return res.status(400).json({ 
-          error: 'Tipo de refeição não corresponde ao voucher descartável'
-        });
-      }
-
-      // Marcar voucher como usado
-      await db.execute(
-        'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
-        [disposableVoucher[0].id]
-      );
-
-      return res.json({ 
-        success: true, 
-        message: 'Voucher descartável validado com sucesso'
-      });
+    // Tenta validar como voucher descartável primeiro
+    const disposableResult = await handleDisposableVoucher(db, cleanCode, mealType);
+    if (disposableResult) {
+      return res.json(disposableResult);
     }
 
     // Se não for descartável, precisa ter CPF
@@ -64,7 +106,7 @@ export const validateVoucher = async (req, res) => {
       });
     }
 
-    // Buscar usuário com CPF e voucher correspondentes
+    // Buscar usuário
     const [users] = await db.execute(
       'SELECT * FROM users WHERE cpf = ? AND voucher = ? AND is_suspended = FALSE',
       [cleanCpf, cleanCode]
@@ -81,13 +123,7 @@ export const validateVoucher = async (req, res) => {
 
     const user = users[0];
 
-    // Verificar se existe voucher extra para o usuário
-    const [extraVouchers] = await db.execute(
-      'SELECT * FROM extra_vouchers WHERE user_id = ? AND valid_until >= CURDATE() AND used = FALSE',
-      [user.id]
-    );
-
-    // Get today's meal usage
+    // Verifica uso diário
     const [usedMeals] = await db.execute(
       `SELECT mt.name, vu.used_at
        FROM voucher_usage vu 
@@ -97,52 +133,16 @@ export const validateVoucher = async (req, res) => {
       [user.id]
     );
 
-    // Se já usou 2 ou mais refeições, precisa ter voucher extra
+    let result;
     if (usedMeals.length >= 2) {
-      if (extraVouchers.length === 0) {
-        logger.warn(`Limite diário excedido sem voucher extra - Usuário: ${user.name}`);
-        return res.status(403).json({
-          error: 'Limite diário de refeições atingido',
-          userName: user.name,
-          turno: user.turno
-        });
-      }
-
-      // Validação específica para voucher extra
-      validateVoucherByType(VOUCHER_TYPES.EXTRA, { 
-        code: cleanCode, 
-        cpf: cleanCpf, 
-        mealType,
-        user 
-      });
-
-      // Marca o voucher extra como usado
-      await db.execute(
-        'UPDATE extra_vouchers SET used = TRUE WHERE id = ?',
-        [extraVouchers[0].id]
-      );
+      // Se já usou 2 ou mais refeições, tenta validar como voucher extra
+      result = await handleExtraVoucher(db, cleanCpf, cleanCode, mealType, user);
     } else {
-      // Validação específica para voucher normal
-      validateVoucherByType(VOUCHER_TYPES.NORMAL, { 
-        code: cleanCode, 
-        cpf: cleanCpf, 
-        mealType,
-        user 
-      });
+      // Caso contrário, valida como voucher normal
+      result = await handleNormalVoucher(db, cleanCpf, cleanCode, mealType, user);
     }
 
-    const allowedMeals = getAllowedMealsByShift(user.turno);
-    
-    if (!allowedMeals.includes(mealType)) {
-      logger.warn(`Tipo de refeição inválido - Usuário: ${user.name}, Refeição: ${mealType}`);
-      return res.status(403).json({
-        error: `${mealType} não está disponível para o ${user.turno} turno`,
-        userName: user.name,
-        turno: user.turno
-      });
-    }
-
-    // Record the meal usage
+    // Registra o uso do voucher
     await db.execute(
       'INSERT INTO voucher_usage (user_id, meal_type_id, used_at) VALUES (?, (SELECT id FROM meal_types WHERE name = ?), NOW())',
       [user.id, mealType]
