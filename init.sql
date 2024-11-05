@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS disposable_vouchers (
   code VARCHAR(8) NOT NULL UNIQUE,
   user_id INT,
   meal_type_id INT,
-  created_by INT NOT NULL,
+  created_by INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   used_at TIMESTAMP NULL,
   expired_at TIMESTAMP NULL,

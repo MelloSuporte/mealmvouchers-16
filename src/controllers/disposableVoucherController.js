@@ -69,11 +69,11 @@ export const checkVoucherCode = async (req, res) => {
 };
 
 export const createDisposableVoucher = async (req, res) => {
-  const { meal_type_id, created_by, expired_at } = req.body;
+  const { meal_type_id, expired_at } = req.body;
   let db;
   
   try {
-    if (!meal_type_id || !created_by || !expired_at) {
+    if (!meal_type_id || !expired_at) {
       return res.status(400).json({ 
         error: 'Todos os campos são obrigatórios'
       });
@@ -98,9 +98,9 @@ export const createDisposableVoucher = async (req, res) => {
 
     const [result] = await db.execute(
       `INSERT INTO disposable_vouchers 
-       (code, meal_type_id, created_by, expired_at) 
-       VALUES (?, ?, ?, ?)`,
-      [code, meal_type_id, created_by, formattedDate]
+       (code, meal_type_id, expired_at) 
+       VALUES (?, ?, ?)`,
+      [code, meal_type_id, formattedDate]
     );
 
     const [voucher] = await db.execute(

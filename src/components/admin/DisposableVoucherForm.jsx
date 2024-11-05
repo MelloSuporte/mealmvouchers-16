@@ -83,7 +83,6 @@ const DisposableVoucherForm = () => {
             try {
               const response = await api.post('/vouchers/create', {
                 meal_type_id: mealTypeId,
-                created_by: 1,
                 expired_at: date
               });
 
