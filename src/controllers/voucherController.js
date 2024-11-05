@@ -11,10 +11,10 @@ export const validateVoucher = async (req, res) => {
   try {
     db = await pool.getConnection();
     
-    // Get user and their shift
+    // Get user and their shift - Corrigindo a consulta SQL
     const [users] = await db.execute(
       'SELECT * FROM users WHERE cpf = ? AND voucher = ? AND is_suspended = FALSE',
-      [cpf, code]
+      [cpf.replace(/\D/g, ''), code]
     );
 
     if (users.length === 0) {
