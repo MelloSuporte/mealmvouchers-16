@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../utils/api';
 
 const AdminContext = createContext();
 
@@ -19,13 +20,33 @@ export const AdminProvider = ({ children }) => {
     manage_reports: false
   });
 
-  const checkMasterAdmin = () => {
+  useEffect(() => {
     const adminToken = localStorage.getItem('adminToken');
-    return adminToken === '0001000'; // Token do admin master
-  };
+    const checkMasterAdmin = () => adminToken === '0001000';
+    setIsMasterAdmin(checkMasterAdmin());
+
+    // If not master admin, fetch regular admin permissions
+    if (adminToken && !checkMasterAdmin()) {
+      api.get('/api/admin/permissions')
+        .then(response => {
+          setAdminPermissions(response.data);
+        })
+        .catch(error => {
+          console.error('Error fetching admin permissions:', error);
+        });
+    } else if (checkMasterAdmin()) {
+      // Master admin has all permissions
+      setAdminPermissions({
+        manage_extra_vouchers: true,
+        manage_disposable_vouchers: true,
+        manage_users: true,
+        manage_reports: true
+      });
+    }
+  }, []);
 
   const value = {
-    isMasterAdmin: checkMasterAdmin(),
+    isMasterAdmin,
     adminPermissions,
     setAdminPermissions,
     setIsMasterAdmin

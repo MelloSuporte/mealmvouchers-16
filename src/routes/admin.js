@@ -10,6 +10,7 @@ const checkAdminPermissions = async (req, res, next) => {
   
   // Se for admin master, permite acesso total
   if (adminToken === '0001000') {
+    req.isMasterAdmin = true;
     return next();
   }
 
@@ -27,6 +28,8 @@ const checkAdminPermissions = async (req, res, next) => {
       'SELECT * FROM admin_permissions WHERE admin_id = ?',
       [admin.id]
     );
+
+    req.adminPermissions = permissions;
 
     // Verifica permissões específicas baseado na rota
     const path = req.path;
@@ -58,7 +61,21 @@ router.use([
   '/reports'
 ], checkAdminPermissions);
 
-// Rotas restritas apenas para gestores com permissões específicas
+// Rotas restritas apenas para admin master
+router.use([
+  '/meals',
+  '/companies',
+  '/shift-configurations',
+  '/background-images'
+], (req, res, next) => {
+  if (req.isMasterAdmin) {
+    next();
+  } else {
+    res.status(403).json({ error: 'Acesso restrito ao admin master' });
+  }
+});
+
+// Rotas para obter permissões
 router.get('/permissions', async (req, res) => {
   try {
     const [permissions] = await pool.execute(
