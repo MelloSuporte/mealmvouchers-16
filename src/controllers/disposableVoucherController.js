@@ -1,8 +1,57 @@
 import pool from '../config/database';
 import logger from '../config/logger';
-import { validateVoucherTime, validateVoucherByType } from '../utils/voucherValidations';
-import { findActiveMealType, markVoucherAsUsed } from '../services/voucherQueries';
+import { validateVoucherTime } from '../utils/voucherValidations';
 import { VOUCHER_TYPES } from '../utils/voucherTypes';
+
+export const validateDisposableVoucher = async (req, res) => {
+  const { code, meal_type_id } = req.body;
+  let db;
+  
+  try {
+    db = await pool.getConnection();
+
+    // Buscar voucher e tipo de refeição em uma única query
+    const [vouchers] = await db.execute(
+      `SELECT dv.*, mt.* FROM disposable_vouchers dv
+       JOIN meal_types mt ON dv.meal_type_id = mt.id
+       WHERE dv.code = ? AND dv.is_used = FALSE AND dv.meal_type_id = ?
+       AND (dv.expired_at IS NULL OR dv.expired_at >= NOW())`,
+      [code, meal_type_id]
+    );
+
+    if (vouchers.length === 0) {
+      return res.status(400).json({ 
+        error: 'Voucher não encontrado, já utilizado ou expirado'
+      });
+    }
+
+    const voucher = vouchers[0];
+    const currentTime = new Date().toTimeString().slice(0, 5);
+    
+    validateVoucherTime(currentTime, {
+      start_time: voucher.start_time,
+      end_time: voucher.end_time
+    }, voucher.tolerance_minutes || 15);
+
+    // Marcar voucher como usado
+    await db.execute(
+      'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
+      [voucher.id]
+    );
+
+    return res.json({ 
+      success: true, 
+      message: 'Voucher validado com sucesso'
+    });
+  } catch (error) {
+    logger.error('Erro ao validar voucher descartável:', error);
+    return res.status(400).json({ 
+      error: error.message || 'Erro ao validar voucher descartável'
+    });
+  } finally {
+    if (db) db.release();
+  }
+};
 
 const generateUniqueCode = async (db) => {
   let attempts = 0;
@@ -62,77 +111,6 @@ export const checkVoucherCode = async (req, res) => {
     return res.status(500).json({ 
       error: 'Erro interno ao verificar código do voucher',
       exists: false
-    });
-  } finally {
-    if (db) db.release();
-  }
-};
-
-export const validateDisposableVoucher = async (req, res) => {
-  const { code, meal_type_id } = req.body;
-  let db;
-  
-  try {
-    validateVoucherByType(VOUCHER_TYPES.DISPOSABLE, { 
-      code, 
-      mealType: meal_type_id 
-    });
-
-    db = await pool.getConnection();
-
-    // Get current server time
-    const [timeResult] = await db.execute('SELECT NOW() as server_time');
-    const currentServerTime = new Date(timeResult[0].server_time);
-
-    // Buscar o voucher descartável
-    const [vouchers] = await db.execute(
-      `SELECT dv.*, mt.* 
-       FROM disposable_vouchers dv
-       JOIN meal_types mt ON dv.meal_type_id = mt.id
-       WHERE dv.code = ? AND dv.is_used = FALSE`,
-      [code]
-    );
-
-    if (vouchers.length === 0) {
-      logger.warn(`Voucher descartável não encontrado ou já utilizado: ${code}`);
-      return res.status(400).json({ 
-        error: 'Voucher não encontrado ou já utilizado'
-      });
-    }
-
-    const voucher = vouchers[0];
-
-    // Verificar se o voucher está expirado
-    const expirationDate = new Date(voucher.expired_at);
-    if (expirationDate < currentServerTime) {
-      return res.status(400).json({ 
-        error: 'Voucher expirado'
-      });
-    }
-
-    // Verificar se o tipo de refeição corresponde
-    if (voucher.meal_type_id !== parseInt(meal_type_id)) {
-      return res.status(400).json({ 
-        error: 'Tipo de refeição não corresponde ao voucher'
-      });
-    }
-
-    const mealTypeData = await findActiveMealType(db, voucher.name);
-    const currentTimeFormatted = currentServerTime.toTimeString().slice(0, 5);
-    const toleranceMinutes = voucher.tolerance_minutes || 15;
-
-    validateVoucherTime(currentTimeFormatted, mealTypeData, toleranceMinutes);
-    await markVoucherAsUsed(db, voucher.id);
-
-    logger.info(`Voucher descartável utilizado com sucesso: ${code}`);
-    return res.json({ 
-      success: true, 
-      message: 'Voucher validado com sucesso'
-    });
-  } catch (error) {
-    logger.error('Erro ao validar voucher descartável:', error);
-    return res.status(400).json({ 
-      error: error.message || 'Erro ao validar voucher descartável'
     });
   } finally {
     if (db) db.release();
