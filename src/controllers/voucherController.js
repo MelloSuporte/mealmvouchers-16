@@ -12,8 +12,8 @@ export const validateVoucher = async (req, res) => {
     db = await pool.getConnection();
     
     // Get current server time with seconds precision
-    const [timeResult] = await db.execute('SELECT NOW() as server_time');
-    const currentTime = timeResult[0].server_time;
+    const [timeResult] = await db.execute('SELECT NOW() as current_time');
+    const currentTime = timeResult[0].current_time;
     const currentTimeFormatted = currentTime.toString().slice(11, 16); // Format: HH:mm
     
     // Get user and their shift

@@ -68,21 +68,77 @@ export const checkVoucherCode = async (req, res) => {
   }
 };
 
+export const createDisposableVoucher = async (req, res) => {
+  const { meal_type_id, created_by, expired_at } = req.body;
+  let db;
+  
+  try {
+    if (!meal_type_id || !created_by || !expired_at) {
+      return res.status(400).json({ 
+        error: 'Todos os campos são obrigatórios'
+      });
+    }
+
+    db = await pool.getConnection();
+    
+    const [mealTypes] = await db.execute(
+      'SELECT id FROM meal_types WHERE id = ? AND is_active = TRUE',
+      [meal_type_id]
+    );
+
+    if (mealTypes.length === 0) {
+      logger.warn(`Tipo de refeição inválido ou inativo: ${meal_type_id}`);
+      return res.status(400).json({ 
+        error: 'Tipo de refeição inválido ou inativo'
+      });
+    }
+
+    const formattedDate = new Date(expired_at).toISOString().split('T')[0];
+    const code = await generateUniqueCode(db);
+
+    const [result] = await db.execute(
+      `INSERT INTO disposable_vouchers 
+       (code, meal_type_id, created_by, expired_at) 
+       VALUES (?, ?, ?, ?)`,
+      [code, meal_type_id, created_by, formattedDate]
+    );
+
+    const [voucher] = await db.execute(
+      `SELECT dv.*, mt.name as meal_type_name 
+       FROM disposable_vouchers dv 
+       JOIN meal_types mt ON dv.meal_type_id = mt.id 
+       WHERE dv.id = ?`,
+      [result.insertId]
+    );
+
+    logger.info(`Voucher descartável criado com sucesso: ${code}`);
+    return res.json({ 
+      success: true, 
+      message: 'Voucher criado com sucesso',
+      voucher: voucher[0]
+    });
+  } catch (error) {
+    logger.error('Erro ao criar voucher descartável:', error);
+    return res.status(400).json({ 
+      error: 'Erro ao criar voucher descartável: ' + error.message
+    });
+  } finally {
+    if (db) db.release();
+  }
+};
+
 export const validateDisposableVoucher = async (req, res) => {
   const { code, meal_type_id } = req.body;
   let db;
   
   try {
+    // Validação específica para voucher descartável
     validateVoucherByType(VOUCHER_TYPES.DISPOSABLE, { 
       code, 
       mealType: meal_type_id 
     });
 
     db = await pool.getConnection();
-
-    // Get current server time
-    const [timeResult] = await db.execute('SELECT NOW() as server_time');
-    const currentTime = timeResult[0].server_time;
 
     // Buscar o voucher descartável
     const [vouchers] = await db.execute(
@@ -104,7 +160,8 @@ export const validateDisposableVoucher = async (req, res) => {
 
     // Verificar se o voucher está expirado
     const expirationDate = new Date(voucher.expired_at);
-    if (expirationDate < currentTime) {
+    const now = new Date();
+    if (expirationDate < now) {
       return res.status(400).json({ 
         error: 'Voucher expirado'
       });
@@ -118,10 +175,10 @@ export const validateDisposableVoucher = async (req, res) => {
     }
 
     const mealTypeData = await findActiveMealType(db, voucher.name);
-    const currentTimeFormatted = currentTime.toTimeString().slice(0, 5);
+    const currentTime = now.toTimeString().slice(0, 5);
     const toleranceMinutes = voucher.tolerance_minutes || 15;
 
-    validateVoucherTime(currentTimeFormatted, mealTypeData, toleranceMinutes);
+    validateVoucherTime(currentTime, mealTypeData, toleranceMinutes);
     await markVoucherAsUsed(db, voucher.id);
 
     logger.info(`Voucher descartável utilizado com sucesso: ${code}`);
