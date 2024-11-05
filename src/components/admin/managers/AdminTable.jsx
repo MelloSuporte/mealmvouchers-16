@@ -22,7 +22,6 @@ const AdminTable = ({ admins, isLoading }) => {
           <TableHead>Nome</TableHead>
           <TableHead>E-mail</TableHead>
           <TableHead>CPF</TableHead>
-          <TableHead>Empresa</TableHead>
           <TableHead>Permissões</TableHead>
           <TableHead>Ações</TableHead>
         </TableRow>
@@ -33,7 +32,6 @@ const AdminTable = ({ admins, isLoading }) => {
             <TableCell>{admin.name}</TableCell>
             <TableCell>{admin.email}</TableCell>
             <TableCell>{admin.cpf}</TableCell>
-            <TableCell>{admin.company?.name}</TableCell>
             <TableCell>
               <ul className="list-disc list-inside">
                 {admin.permissions.manage_extra_vouchers && <li>Vouchers Extra</li>}

@@ -1,27 +1,21 @@
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 import AdminList from '../components/admin/managers/AdminList';
-import AdminLogs from '../components/admin/managers/AdminLogs';
+import { useAdminAuth } from '../hooks/useAdminAuth';
 
 const AdminManagement = () => {
+  const { isAuthenticated } = useAdminAuth();
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Gerenciamento de Gestores</h1>
-      
-      <Tabs defaultValue="managers" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="managers">Gestores</TabsTrigger>
-          <TabsTrigger value="logs">Logs de Atividades</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="managers">
-          <AdminList />
-        </TabsContent>
-        
-        <TabsContent value="logs">
-          <AdminLogs />
-        </TabsContent>
-      </Tabs>
+      <h1 className="text-2xl font-bold mb-6">Gerenciamento de Gerentes</h1>
+      <Card className="p-6">
+        <AdminList />
+      </Card>
     </div>
   );
 };
