@@ -23,11 +23,6 @@ const TurnosForm = () => {
 
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
-      if (isSubmitting) {
-        throw new Error("Alteração em andamento. Aguarde a conclusão.");
-      }
-      
-      setIsSubmitting(true);
       const response = await api.put(`/shift-configurations/${updatedTurno.id}`, {
         start_time: updatedTurno.start_time,
         end_time: updatedTurno.end_time,
@@ -35,14 +30,18 @@ const TurnosForm = () => {
       });
       return response.data;
     },
+    onMutate: () => {
+      setIsSubmitting(true);
+    },
+    onSettled: () => {
+      setIsSubmitting(false);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['shift-configurations']);
       toast.success("Horário do turno atualizado com sucesso!");
-      setIsSubmitting(false);
     },
     onError: (error) => {
       toast.error("Erro ao atualizar turno: " + error.message);
-      setIsSubmitting(false);
     }
   });
 
