@@ -12,11 +12,12 @@ export const validateVoucher = async (req, res) => {
     db = await pool.getConnection();
     
     // Remover caracteres especiais do CPF antes da consulta
-    const cleanCpf = cpf.replace(/\D/g, '');
-    const cleanCode = code.trim();
+    const cleanCpf = cpf.replace(/[^\d]/g, '');
+    const cleanCode = code.toString().trim();
 
-    // Log para debug
-    logger.info(`Tentativa de validação - CPF: ${cleanCpf}, Código: ${cleanCode}`);
+    // Log para debug dos dados recebidos e limpos
+    logger.info(`Dados recebidos - CPF original: ${cpf}, CPF limpo: ${cleanCpf}`);
+    logger.info(`Dados recebidos - Voucher original: ${code}, Voucher limpo: ${cleanCode}`);
     
     // Consulta SQL melhorada com LOGGING
     const [users] = await db.execute(
@@ -29,10 +30,19 @@ export const validateVoucher = async (req, res) => {
 
     if (users.length === 0) {
       // Verificar separadamente para identificar o problema específico
-      const [userCheck] = await db.execute('SELECT * FROM users WHERE cpf = ?', [cleanCpf]);
-      const [voucherCheck] = await db.execute('SELECT * FROM users WHERE voucher = ?', [cleanCode]);
+      const [userCheck] = await db.execute(
+        'SELECT id, name, cpf, voucher FROM users WHERE cpf = ?', 
+        [cleanCpf]
+      );
       
-      logger.warn(`Validação falhou - CPF existe: ${userCheck.length > 0}, Voucher existe: ${voucherCheck.length > 0}`);
+      const [voucherCheck] = await db.execute(
+        'SELECT id, name, cpf, voucher FROM users WHERE voucher = ?', 
+        [cleanCode]
+      );
+      
+      logger.warn(`Validação detalhada:`);
+      logger.warn(`CPF check (${cleanCpf}): ${JSON.stringify(userCheck)}`);
+      logger.warn(`Voucher check (${cleanCode}): ${JSON.stringify(voucherCheck)}`);
       
       return res.status(401).json({ 
         error: 'Usuário não encontrado ou voucher inválido',
@@ -114,17 +124,6 @@ export const validateVoucher = async (req, res) => {
         'UPDATE extra_vouchers SET used = TRUE WHERE id = ?',
         [extraVoucher[0].id]
       );
-    }
-
-    // Validate meal combination rules
-    const usedMealTypes = usedMeals.map(m => m.name);
-    if (usedMealTypes.includes(mealType)) {
-      logger.warn(`Tentativa de refeição duplicada - Usuário: ${user.name}, Refeição: ${mealType}`);
-      return res.status(403).json({
-        error: 'Não é permitido repetir o mesmo tipo de refeição',
-        userName: user.name,
-        turno: user.turno
-      });
     }
 
     // Record the meal usage
