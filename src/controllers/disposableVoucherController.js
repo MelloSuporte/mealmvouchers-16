@@ -60,17 +60,24 @@ export const validateDisposableVoucher = async (req, res) => {
               mt.tolerance_minutes
        FROM disposable_vouchers dv 
        JOIN meal_types mt ON dv.meal_type_id = mt.id 
-       WHERE dv.code = ? AND dv.meal_type_id = ? AND dv.is_used = FALSE`,
-      [code, meal_type_id]
+       WHERE dv.code = ? AND dv.is_used = FALSE`,
+      [code]
     );
 
     if (vouchers.length === 0) {
       return res.status(400).json({ 
-        error: 'Voucher não encontrado, já utilizado ou tipo de refeição incorreto'
+        error: 'Voucher não encontrado ou já utilizado'
       });
     }
 
     const voucher = vouchers[0];
+
+    // Verificar se o tipo de refeição corresponde ao voucher
+    if (voucher.meal_type_id !== parseInt(meal_type_id)) {
+      return res.status(400).json({ 
+        error: 'Tipo de refeição não corresponde ao voucher descartável'
+      });
+    }
 
     // Validar regras do voucher descartável
     validateDisposableVoucherRules(voucher);

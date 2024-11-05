@@ -102,7 +102,7 @@ const DisposableVoucherForm = () => {
             try {
               const response = await api.post('/vouchers/create', {
                 meal_type_id: mealTypeId,
-                expired_at: `${formattedDate}T23:59:59` // Ajustado para 23:59:59
+                expired_at: `${formattedDate}T23:59:59`
               });
 
               if (response.data.success) {
