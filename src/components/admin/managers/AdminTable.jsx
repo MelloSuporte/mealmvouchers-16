@@ -10,9 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 
-const AdminTable = ({ admins, isLoading }) => {
+const AdminTable = ({ admins = [], isLoading }) => {
   if (isLoading) {
     return <div>Carregando...</div>;
+  }
+
+  if (!Array.isArray(admins)) {
+    return <div>Nenhum gerente encontrado.</div>;
   }
 
   return (
