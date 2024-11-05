@@ -22,11 +22,15 @@ export const AdminProvider = ({ children }) => {
 
   useEffect(() => {
     const adminToken = localStorage.getItem('adminToken');
-    const checkMasterAdmin = () => adminToken === '0001000';
-    setIsMasterAdmin(checkMasterAdmin());
-
-    // If not master admin, fetch regular admin permissions
-    if (adminToken && !checkMasterAdmin()) {
+    if (adminToken === 'admin-authenticated') {
+      setIsMasterAdmin(true);
+      setAdminPermissions({
+        manage_extra_vouchers: true,
+        manage_disposable_vouchers: true,
+        manage_users: true,
+        manage_reports: true
+      });
+    } else if (adminToken) {
       api.get('/api/admin/permissions')
         .then(response => {
           setAdminPermissions(response.data);
@@ -34,14 +38,6 @@ export const AdminProvider = ({ children }) => {
         .catch(error => {
           console.error('Error fetching admin permissions:', error);
         });
-    } else if (checkMasterAdmin()) {
-      // Master admin has all permissions
-      setAdminPermissions({
-        manage_extra_vouchers: true,
-        manage_disposable_vouchers: true,
-        manage_users: true,
-        manage_reports: true
-      });
     }
   }, []);
 

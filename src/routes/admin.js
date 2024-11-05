@@ -9,7 +9,7 @@ const checkAdminPermissions = async (req, res, next) => {
   const adminToken = req.headers.authorization?.split(' ')[1];
   
   // Se for admin master, permite acesso total
-  if (adminToken === '0001000') {
+  if (adminToken === 'admin-authenticated') {
     req.isMasterAdmin = true;
     return next();
   }
