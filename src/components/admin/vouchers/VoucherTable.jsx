@@ -15,7 +15,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from "sonner";
 
-const VoucherTable = ({ vouchers }) => {
+const VoucherTable = ({ vouchers = [] }) => {
   const downloadPDF = () => {
     try {
       const doc = new jsPDF();
@@ -52,12 +52,15 @@ const VoucherTable = ({ vouchers }) => {
     }
   };
 
+  // Garante que vouchers seja sempre um array
+  const voucherArray = Array.isArray(vouchers) ? vouchers : [];
+
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="flex justify-between items-center mb-4">
           <Label className="text-lg font-bold">Vouchers Descartáveis</Label>
-          {vouchers.length > 0 && (
+          {voucherArray.length > 0 && (
             <Button onClick={downloadPDF} variant="outline" size="sm">
               <Download className="mr-2 h-4 w-4" />
               Baixar PDF
@@ -80,7 +83,7 @@ const VoucherTable = ({ vouchers }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vouchers.map((voucher) => (
+              {voucherArray.map((voucher) => (
                 <TableRow key={voucher.id}>
                   <TableCell>{voucher.id}</TableCell>
                   <TableCell>{voucher.code}</TableCell>
