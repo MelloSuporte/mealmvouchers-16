@@ -35,7 +35,7 @@ export const findActiveMealType = async (db, mealType) => {
 
 export const markVoucherAsUsed = async (db, voucherId) => {
   await db.execute(
-    'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW(3) WHERE id = ?',
+    'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW() WHERE id = ?',
     [voucherId]
   );
 };
