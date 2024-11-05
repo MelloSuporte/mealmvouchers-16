@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { toast } from "sonner";
 import AdminForm from './AdminForm';
 import AdminTable from './AdminTable';
 import api from '../../../utils/api';
+import { useState } from 'react';
 
 const AdminList = () => {
   const [searchCPF, setSearchCPF] = useState('');
@@ -23,7 +23,7 @@ const AdminList = () => {
 
   const handleSearch = () => {
     if (!searchCPF) {
-      toast.error('Informe um CPF para buscar');
+      toast.error('Por favor, informe um CPF para buscar');
       return;
     }
   };
@@ -32,18 +32,20 @@ const AdminList = () => {
     <div className="space-y-6">
       <div className="flex gap-4">
         <Input
-          placeholder="CPF do Gestor"
+          placeholder="CPF do Gerente"
           value={searchCPF}
           onChange={(e) => setSearchCPF(e.target.value)}
         />
         <Button onClick={handleSearch}>Buscar</Button>
         <Button variant="outline" onClick={() => setShowForm(true)}>
-          Novo Gestor
+          Novo Gerente
         </Button>
       </div>
 
       {showForm && (
-        <AdminForm onClose={() => setShowForm(false)} />
+        <AdminForm
+          onClose={() => setShowForm(false)}
+        />
       )}
 
       <AdminTable admins={admins || []} isLoading={isLoading} />

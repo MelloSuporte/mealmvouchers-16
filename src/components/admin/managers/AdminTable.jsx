@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from "lucide-react";
 
 const AdminTable = ({ admins, isLoading }) => {
   if (isLoading) {
@@ -34,18 +34,18 @@ const AdminTable = ({ admins, isLoading }) => {
             <TableCell>{admin.cpf}</TableCell>
             <TableCell>
               <ul className="list-disc list-inside">
-                {admin.permissions.manage_extra_vouchers && <li>Vouchers Extra</li>}
-                {admin.permissions.manage_disposable_vouchers && <li>Vouchers Descartáveis</li>}
-                {admin.permissions.manage_users && <li>Usuários</li>}
-                {admin.permissions.manage_reports && <li>Relatórios</li>}
+                {admin.permissions.manage_extra_vouchers && <li>Gerenciar Vouchers Extra</li>}
+                {admin.permissions.manage_disposable_vouchers && <li>Gerenciar Vouchers Descartáveis</li>}
+                {admin.permissions.manage_users && <li>Gerenciar Usuários</li>}
+                {admin.permissions.manage_reports && <li>Gerenciar Relatórios</li>}
               </ul>
             </TableCell>
             <TableCell>
               <div className="flex space-x-2">
                 <Button variant="outline" size="icon">
-                  <Edit2 className="h-4 w-4" />
+                  <Pencil className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon">
+                <Button variant="destructive" size="icon">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
