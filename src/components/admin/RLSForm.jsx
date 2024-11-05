@@ -6,10 +6,8 @@ import { toast } from "sonner";
 import { useQuery } from '@tanstack/react-query';
 import api from '../../utils/api';
 import CompanyUserSelector from './rls/CompanyUserSelector';
-import { useAdminAuth } from '../../hooks/useAdminAuth';
 
 const RLSForm = () => {
-  const { isAuthenticated } = useAdminAuth();
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedCompany, setSelectedCompany] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,11 +33,6 @@ const RLSForm = () => {
   });
 
   const handleSaveRLS = async () => {
-    if (!isAuthenticated) {
-      toast.error("Você precisa estar autenticado para realizar esta operação");
-      return;
-    }
-    
     if (!selectedUser || selectedDates.length === 0) {
       toast.error("Por favor, selecione um usuário e pelo menos uma data.");
       return;
