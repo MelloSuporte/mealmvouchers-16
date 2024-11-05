@@ -69,18 +69,31 @@ export const checkVoucherCode = async (req, res) => {
 };
 
 export const createDisposableVoucher = async (req, res) => {
-  const { meal_type_id, expired_at } = req.body;
+  const { meal_type_id, expired_at, created_by } = req.body;
   let db;
   
   try {
-    if (!meal_type_id || !expired_at) {
+    if (!meal_type_id || !expired_at || !created_by) {
       return res.status(400).json({ 
-        error: 'Todos os campos são obrigatórios'
+        error: 'Todos os campos são obrigatórios (meal_type_id, expired_at, created_by)'
       });
     }
 
     db = await pool.getConnection();
     
+    // Verificar se o usuário criador existe
+    const [users] = await db.execute(
+      'SELECT id FROM users WHERE id = ?',
+      [created_by]
+    );
+
+    if (users.length === 0) {
+      logger.warn(`Usuário criador não encontrado: ${created_by}`);
+      return res.status(400).json({ 
+        error: 'Usuário criador não encontrado'
+      });
+    }
+
     const [mealTypes] = await db.execute(
       'SELECT id FROM meal_types WHERE id = ? AND is_active = TRUE',
       [meal_type_id]
@@ -98,20 +111,21 @@ export const createDisposableVoucher = async (req, res) => {
 
     const [result] = await db.execute(
       `INSERT INTO disposable_vouchers 
-       (code, meal_type_id, expired_at) 
-       VALUES (?, ?, ?)`,
-      [code, meal_type_id, formattedDate]
+       (code, meal_type_id, expired_at, created_by) 
+       VALUES (?, ?, ?, ?)`,
+      [code, meal_type_id, formattedDate, created_by]
     );
 
     const [voucher] = await db.execute(
-      `SELECT dv.*, mt.name as meal_type_name 
+      `SELECT dv.*, mt.name as meal_type_name, u.name as created_by_name
        FROM disposable_vouchers dv 
        JOIN meal_types mt ON dv.meal_type_id = mt.id 
+       JOIN users u ON dv.created_by = u.id
        WHERE dv.id = ?`,
       [result.insertId]
     );
 
-    logger.info(`Voucher descartável criado com sucesso: ${code}`);
+    logger.info(`Voucher descartável criado com sucesso: ${code} por usuário ${created_by}`);
     return res.json({ 
       success: true, 
       message: 'Voucher criado com sucesso',
