@@ -121,12 +121,16 @@ export const createDisposableVoucher = async (req, res) => {
       });
     }
 
-    const formattedDate = new Date(expired_at).toISOString().split('T')[0];
+    // Ajusta a data de expiração para 23:59:59 do mesmo dia
+    const expirationDate = new Date(expired_at);
+    expirationDate.setHours(23, 59, 59, 999);
+    const formattedExpiration = expirationDate.toISOString().slice(0, 19).replace('T', ' ');
+
     const code = await generateUniqueCode(db);
 
     const [result] = await db.execute(
       'INSERT INTO disposable_vouchers (code, meal_type_id, expired_at) VALUES (?, ?, ?)',
-      [code, meal_type_id, formattedDate]
+      [code, meal_type_id, formattedExpiration]
     );
 
     const [voucher] = await db.execute(
