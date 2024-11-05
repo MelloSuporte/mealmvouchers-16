@@ -16,8 +16,8 @@ const createPool = () => {
       queueLimit: 0,
       enableKeepAlive: true,
       keepAliveInitialDelay: 0,
-      timezone: 'UTC', // Ensure UTC timezone for consistency
-      dateStrings: true // Return dates as strings to avoid timezone issues
+      timezone: '-03:00', // Configurando timezone para GMT-3 (Brasília)
+      dateStrings: true
     });
 
     logger.info('MySQL connection pool created successfully');
