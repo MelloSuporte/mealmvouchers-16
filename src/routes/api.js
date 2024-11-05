@@ -1,11 +1,11 @@
 import express from 'express';
-import companiesRoutes from './companies.js';
+import empresasRoutes from './empresas.js';
 import voucherRoutes from './vouchers.js';
-import reportRoutes from './reports.js';
+import relatoriosRoutes from './relatorios.js';
 import healthRoutes from './health.js';
-import mealsRoutes from './meals.js';
-import usersRoutes from './users.js';
-import extraVouchersRoutes from './extraVouchers.js';
+import refeicoesRoutes from './refeicoes.js';
+import usuariosRoutes from './usuarios.js';
+import vouchersExtraRoutes from './vouchersExtra.js';
 import adminRoutes from './admin.js';
 
 const router = express.Router();
@@ -14,12 +14,12 @@ const router = express.Router();
 router.use('/health', healthRoutes);
 
 // API routes
-router.use('/companies', companiesRoutes);
+router.use('/empresas', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
-router.use('/reports', reportRoutes);
-router.use('/meals', mealsRoutes);
-router.use('/users', usersRoutes);
-router.use('/extra-vouchers', extraVouchersRoutes);
+router.use('/relatorios', relatoriosRoutes);
+router.use('/refeicoes', refeicoesRoutes);
+router.use('/usuarios', usuariosRoutes);
+router.use('/vouchers-extra', vouchersExtraRoutes);
 router.use('/admin', adminRoutes);
 
 export default router;
