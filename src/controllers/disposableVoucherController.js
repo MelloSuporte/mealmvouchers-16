@@ -1,7 +1,8 @@
 import pool from '../config/database';
 import logger from '../config/logger';
-import { validateVoucherTime, validateMealType } from '../utils/voucherValidations';
+import { validateVoucherTime, validateVoucherByType } from '../utils/voucherValidations';
 import { findActiveMealType, markVoucherAsUsed } from '../services/voucherQueries';
+import { VOUCHER_TYPES } from '../utils/voucherTypes';
 
 const generateUniqueCode = async (db) => {
   let attempts = 0;
@@ -131,11 +132,11 @@ export const validateDisposableVoucher = async (req, res) => {
   let db;
   
   try {
-    if (!code || !meal_type_id) {
-      return res.status(400).json({ 
-        error: 'Código do voucher e tipo de refeição são obrigatórios'
-      });
-    }
+    // Validação específica para voucher descartável
+    validateVoucherByType(VOUCHER_TYPES.DISPOSABLE, { 
+      code, 
+      mealType: meal_type_id 
+    });
 
     db = await pool.getConnection();
 

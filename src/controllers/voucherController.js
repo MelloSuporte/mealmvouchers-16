@@ -1,18 +1,14 @@
 import pool from '../config/database';
 import logger from '../config/logger';
+import { validateVoucherTime, validateVoucherByType } from '../utils/voucherValidations';
 import { isWithinShiftHours, getAllowedMealsByShift } from '../utils/shiftUtils';
+import { VOUCHER_TYPES } from '../utils/voucherTypes';
 
 export const validateVoucher = async (req, res) => {
-  const { cpf, voucherCode, mealType } = req.body;
+  const { cpf, voucherCode: code, mealType } = req.body;
   let db;
   
   try {
-    if (!cpf || !voucherCode || !mealType) {
-      return res.status(400).json({ 
-        error: 'CPF, código do voucher e tipo de refeição são obrigatórios'
-      });
-    }
-
     db = await pool.getConnection();
     
     // Get current server time with seconds precision
@@ -23,19 +19,18 @@ export const validateVoucher = async (req, res) => {
     // Get user and their shift
     const [users] = await db.execute(
       'SELECT * FROM users WHERE cpf = ? AND voucher = ? AND is_suspended = FALSE',
-      [cpf, voucherCode]
+      [cpf, code]
     );
 
-    if (users.length === 0) {
-      logger.warn(`Tentativa inválida de voucher - CPF: ${cpf}, Código: ${voucherCode}`);
-      return res.status(401).json({ 
-        error: 'Usuário não encontrado ou voucher inválido',
-        userName: null,
-        turno: null 
-      });
-    }
-
     const user = users[0];
+
+    // Validação específica para voucher normal
+    validateVoucherByType(VOUCHER_TYPES.NORMAL, { 
+      code, 
+      cpf, 
+      mealType,
+      user 
+    });
 
     // Check if user is within their shift hours using server time
     if (!isWithinShiftHours(user.turno, currentTimeFormatted)) {
