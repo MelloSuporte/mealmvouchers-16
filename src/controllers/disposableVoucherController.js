@@ -84,9 +84,7 @@ export const createDisposableVoucher = async (req, res) => {
       });
     }
 
-    // Formata a data para o formato aceito pelo MySQL (YYYY-MM-DD)
     const formattedDate = new Date(expired_at).toISOString().split('T')[0];
-
     const code = await generateUniqueCode(db);
 
     const [result] = await db.execute(
@@ -134,28 +132,42 @@ export const validateDisposableVoucher = async (req, res) => {
     }
 
     const [vouchers] = await db.execute(
-      `SELECT dv.*, mt.name as meal_type_name 
+      `SELECT dv.*, mt.name as meal_type_name, mt.id as meal_type_id
        FROM disposable_vouchers dv 
        JOIN meal_types mt ON dv.meal_type_id = mt.id 
        WHERE dv.code = ? AND dv.is_used = FALSE 
-       AND (dv.expired_at IS NULL OR dv.expired_at > CURDATE())`,
+       AND (dv.expired_at IS NULL OR DATE(dv.expired_at) >= CURDATE())`,
       [code]
     );
 
     if (vouchers.length === 0) {
       return res.status(401).json({ 
-        error: 'Voucher inválido ou expirado'
+        error: 'Voucher inválido, já utilizado ou expirado'
       });
     }
 
     const voucher = vouchers[0];
-    
-    if (voucher.meal_type_name !== mealType) {
+
+    // Busca o tipo de refeição pelo nome
+    const [mealTypes] = await db.execute(
+      'SELECT id, name FROM meal_types WHERE name = ? AND is_active = TRUE',
+      [mealType]
+    );
+
+    if (mealTypes.length === 0) {
       return res.status(400).json({ 
-        error: 'Tipo de refeição inválido para este voucher'
+        error: 'Tipo de refeição inválido ou inativo'
       });
     }
 
+    // Verifica se o tipo de refeição corresponde ao voucher
+    if (voucher.meal_type_id !== mealTypes[0].id) {
+      return res.status(400).json({ 
+        error: 'Tipo de refeição não corresponde ao voucher'
+      });
+    }
+
+    // Marca o voucher como utilizado
     await db.execute(
       'UPDATE disposable_vouchers SET is_used = TRUE, used_at = NOW(3) WHERE id = ?',
       [voucher.id]
