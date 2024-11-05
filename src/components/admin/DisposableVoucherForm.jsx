@@ -27,7 +27,8 @@ const DisposableVoucherForm = () => {
     try {
       const response = await api.get('/meals');
       if (Array.isArray(response.data)) {
-        setMealTypes(response.data.filter(meal => meal.is_active));
+        // Filtra os tipos de refeição, excluindo o tipo "Extra"
+        setMealTypes(response.data.filter(meal => meal.is_active && meal.name.toLowerCase() !== 'extra'));
       } else {
         toast.error("Formato inválido de dados recebidos");
         setMealTypes([]);
@@ -51,6 +52,13 @@ const DisposableVoucherForm = () => {
   };
 
   const handleMealTypeToggle = (typeId) => {
+    const mealType = mealTypes.find(type => type.id === typeId);
+    
+    if (mealType && mealType.name.toLowerCase() === 'extra') {
+      toast.error("Voucher Descartável não disponível para uso Extra");
+      return;
+    }
+
     setSelectedMealTypes(current => {
       if (current.includes(typeId)) {
         return current.filter(id => id !== typeId);
