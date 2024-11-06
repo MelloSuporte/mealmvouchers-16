@@ -22,10 +22,10 @@ export const configureExpress = (app) => {
   app.use(securityMiddleware);
   
   // Apply database middleware to all routes except health check
-  app.use('/api', withDatabase);
+  app.use('/', withDatabase);
   
-  // Mount all routes under /api
-  app.use('/api', routes);
+  // Mount all routes at root level since nginx is handling /api prefix
+  app.use('/', routes);
   
   // Basic health check route
   app.get('/health', (req, res) => {
