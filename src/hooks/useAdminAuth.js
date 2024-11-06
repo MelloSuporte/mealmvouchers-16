@@ -7,10 +7,9 @@ export const useAdminAuth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const adminType = localStorage.getItem('adminType');
+    const adminToken = localStorage.getItem('adminToken');
     
-    if (!adminType) {
-      toast.error("Acesso não autorizado");
+    if (!adminToken) {
       navigate('/admin-login');
       return;
     }
