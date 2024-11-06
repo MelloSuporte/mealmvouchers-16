@@ -7,39 +7,49 @@ import { toast } from "sonner";
 import api from '../../../utils/api';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const MealScheduleList = () => {
-  const [meals, setMeals] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedMeals, setSelectedMeals] = useState([]);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadMeals();
-  }, []);
-
-  const loadMeals = async () => {
-    try {
-      setIsLoading(true);
+  const { data: meals = [], isLoading, error } = useQuery({
+    queryKey: ['meals'],
+    queryFn: async () => {
       const response = await api.get('/meals');
-      setMeals(Array.isArray(response.data) ? response.data : []);
-    } catch (error) {
-      toast.error("Erro ao carregar refeições: " + error.message);
-      setMeals([]);
-    } finally {
-      setIsLoading(false);
+      return Array.isArray(response.data) ? response.data : [];
     }
-  };
+  });
 
-  const handleToggleActive = async (id, currentStatus) => {
-    try {
-      await api.patch(`/meals/${id}`, { 
-        is_active: !currentStatus 
-      });
-      await loadMeals();
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, currentStatus }) => {
+      await api.patch(`/meals/${id}`, { is_active: !currentStatus });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['meals']);
       toast.success("Status atualizado com sucesso!");
-    } catch (error) {
+    },
+    onError: (error) => {
       toast.error("Erro ao atualizar status: " + error.message);
     }
+  });
+
+  const deleteMealsMutation = useMutation({
+    mutationFn: async (ids) => {
+      await Promise.all(ids.map(id => api.delete(`/meals/${id}`)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['meals']);
+      setSelectedMeals([]);
+      toast.success("Refeições selecionadas excluídas com sucesso!");
+    },
+    onError: (error) => {
+      toast.error("Erro ao excluir refeições: " + error.message);
+    }
+  });
+
+  const handleToggleActive = (id, currentStatus) => {
+    toggleActiveMutation.mutate({ id, currentStatus });
   };
 
   const handleSelectMeal = (mealId) => {
@@ -59,21 +69,22 @@ const MealScheduleList = () => {
     }
   };
 
-  const handleDeleteSelected = async () => {
+  const handleDeleteSelected = () => {
     if (selectedMeals.length === 0) {
       toast.error("Selecione pelo menos uma refeição para excluir");
       return;
     }
 
-    try {
-      await Promise.all(selectedMeals.map(id => api.delete(`/meals/${id}`)));
-      toast.success("Refeições selecionadas excluídas com sucesso!");
-      setSelectedMeals([]);
-      await loadMeals();
-    } catch (error) {
-      toast.error("Erro ao excluir refeições: " + error.message);
-    }
+    deleteMealsMutation.mutate(selectedMeals);
   };
+
+  if (error) {
+    return (
+      <div className="text-center py-4 text-red-500">
+        Erro ao carregar refeições: {error.message}
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -101,9 +112,12 @@ const MealScheduleList = () => {
             variant="destructive"
             onClick={handleDeleteSelected}
             className="flex items-center gap-2"
+            disabled={deleteMealsMutation.isLoading}
           >
             <Trash2 size={16} />
-            Excluir Selecionados ({selectedMeals.length})
+            {deleteMealsMutation.isLoading 
+              ? 'Excluindo...' 
+              : `Excluir Selecionados (${selectedMeals.length})`}
           </Button>
         </div>
       )}
@@ -148,6 +162,7 @@ const MealScheduleList = () => {
                   <Switch
                     checked={meal.is_active}
                     onCheckedChange={() => handleToggleActive(meal.id, meal.is_active)}
+                    disabled={toggleActiveMutation.isLoading}
                   />
                 </TableCell>
               </TableRow>
