@@ -20,8 +20,7 @@ const createPool = () => {
       keepAliveInitialDelay: 0,
       timezone: '-03:00',
       dateStrings: true,
-      connectTimeout: 60000,
-      acquireTimeout: 60000
+      connectTimeout: 60000
     });
 
     logger.info('Pool de conexões MySQL criado com sucesso');
