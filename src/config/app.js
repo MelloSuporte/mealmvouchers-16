@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { securityMiddleware } from '../middleware/security.js';
 import routes from './routes.js';
 import logger from './logger.js';
+import { errorHandler } from '../middleware/errorHandler.js';
 import { withDatabase } from '../middleware/database.js';
 
 dotenv.config();
@@ -33,11 +34,8 @@ const createApp = () => {
   // Mount all routes under /api
   app.use('/api', routes);
 
-  // Error handling
-  app.use((err, req, res, next) => {
-    logger.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  });
+  // Global error handler - must be last
+  app.use(errorHandler);
 
   return app;
 };

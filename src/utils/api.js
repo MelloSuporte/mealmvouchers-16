@@ -19,54 +19,11 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // Add retry logic
   retry: 3,
   retryDelay: (retryCount) => {
     return retryCount * 1000;
   }
 });
-
-const syncOfflineData = async () => {
-  if (!navigator.onLine) return;
-  
-  const db = await initDB();
-  const tx = db.transaction(STORE_NAME, 'readwrite');
-  const store = tx.objectStore(STORE_NAME);
-  const pendingOperations = await store.getAll();
-  
-  for (const operation of pendingOperations) {
-    try {
-      await api(operation.request);
-      await store.delete(operation.id);
-    } catch (error) {
-      console.error('Sync failed for operation:', operation);
-    }
-  }
-};
-
-// Try to sync when back online
-window.addEventListener('online', syncOfflineData);
-
-// Request interceptor
-api.interceptors.request.use(
-  async config => {
-    if (!config.url.startsWith('/')) {
-      config.url = '/' + config.url;
-    }
-    
-    if (config.method === 'get') {
-      config.params = {
-        ...config.params,
-        _t: new Date().getTime()
-      };
-    }
-    
-    return config;
-  },
-  error => {
-    return Promise.reject(error);
-  }
-);
 
 // Response interceptor with enhanced error handling
 api.interceptors.response.use(
@@ -82,11 +39,11 @@ api.interceptors.response.use(
         timestamp: new Date().toISOString()
       });
       
-      toast.info('Operação salva para sincronização posterior');
+      toast.info('Operação salva para sincronização quando houver conexão');
       return Promise.resolve({ data: { offline: true } });
     }
 
-    // Retry on network errors or 502 Bad Gateway
+    // Retry on network errors or specific status codes
     if ((error.message === 'Network Error' || 
          error.response?.status === 502 || 
          error.code === 'ECONNABORTED') && 
@@ -96,6 +53,8 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       originalRequest.retry--;
       
+      toast.info('Tentando reconectar ao servidor...');
+      
       return new Promise(resolve => {
         setTimeout(() => {
           resolve(api(originalRequest));
@@ -103,19 +62,28 @@ api.interceptors.response.use(
       });
     }
 
-    // Log error details
-    console.error('API Error:', {
-      url: originalRequest?.url,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    });
+    // Handle specific error types
+    const errorResponse = error.response?.data;
+    let errorMessage = 'Erro ao processar sua requisição';
 
-    // Show user-friendly error message
-    const errorMessage = error.response?.data?.error || 
-                        'Erro ao processar sua requisição. Por favor, tente novamente.';
+    if (error.response?.status === 401) {
+      errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
+    } else if (error.response?.status === 403) {
+      errorMessage = 'Você não tem permissão para realizar esta ação.';
+    } else if (error.response?.status === 404) {
+      errorMessage = 'Recurso não encontrado.';
+    } else if (error.response?.status === 422) {
+      errorMessage = 'Dados inválidos. Verifique as informações e tente novamente.';
+    } else if (error.response?.status >= 500) {
+      errorMessage = 'Erro no servidor. Por favor, tente novamente em alguns instantes.';
+    }
+
+    // Use error message from server if available
+    if (errorResponse?.message) {
+      errorMessage = errorResponse.message;
+    }
+
     toast.error(errorMessage);
-    
     throw error;
   }
 );
