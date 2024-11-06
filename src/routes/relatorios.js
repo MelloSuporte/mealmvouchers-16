@@ -109,51 +109,26 @@ router.get('/usage', async (req, res) => {
   }
 });
 
-router.get('/weekly', async (req, res) => {
+router.get('/export', async (req, res) => {
   try {
-    const results = await executeQueryWithTimeout(`
+    const [data] = await pool.execute(`
       SELECT 
-        DATE_FORMAT(DATE(used_at), '%W') as name,
-        SUM(CASE WHEN mt.name = 'Almoço' THEN 1 ELSE 0 END) as Almoço,
-        SUM(CASE WHEN mt.name = 'Jantar' THEN 1 ELSE 0 END) as Jantar,
-        SUM(CASE WHEN mt.name = 'Café' THEN 1 ELSE 0 END) as Café
-      FROM voucher_usage vu
-      JOIN meal_types mt ON vu.meal_type_id = mt.id
-      WHERE used_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-      GROUP BY DATE_FORMAT(DATE(used_at), '%W'), DATE(used_at)
-      ORDER BY DATE(used_at)
+        v.code,
+        u.name as user_name,
+        c.name as company_name,
+        v.created_at,
+        v.used_at,
+        v.used
+      FROM vouchers v
+      LEFT JOIN users u ON v.user_id = u.id
+      LEFT JOIN companies c ON u.company_id = c.id
+      ORDER BY v.created_at DESC
     `);
     
-    res.json(results);
+    res.json(data);
   } catch (error) {
-    logger.error('Erro ao buscar dados semanais:', error);
-    res.status(500).json({ 
-      error: 'Erro ao buscar dados semanais',
-      details: error.message,
-      type: 'WEEKLY_REPORT_ERROR'
-    });
-  }
-});
-
-router.get('/distribution', async (req, res) => {
-  try {
-    const results = await executeQueryWithTimeout(`
-      SELECT 
-        mt.name,
-        COUNT(*) as value
-      FROM voucher_usage vu
-      JOIN meal_types mt ON vu.meal_type_id = mt.id
-      GROUP BY mt.id, mt.name
-    `);
-    
-    res.json(results);
-  } catch (error) {
-    logger.error('Erro ao buscar distribuição:', error);
-    res.status(500).json({ 
-      error: 'Erro ao buscar distribuição de refeições',
-      details: error.message,
-      type: 'DISTRIBUTION_ERROR'
-    });
+    logger.error('Erro ao exportar dados:', error);
+    res.status(500).json({ error: 'Erro ao exportar dados' });
   }
 });
 

@@ -1,25 +1,53 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Download } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { Search, FileDown } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import ReportMetrics from './reports/ReportMetrics';
 import UsageTable from './reports/UsageTable';
 import ChartTabs from './reports/ChartTabs';
 import api from '../../utils/api';
+import { toast } from "sonner";
 
 const ReportForm = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const exportToExcel = async () => {
+  const exportToPDF = async () => {
     try {
       const response = await api.get('/reports/export');
-      const ws = XLSX.utils.json_to_sheet(response.data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Histórico de Uso");
-      XLSX.writeFile(wb, "relatorio_vouchers.xlsx");
+      const doc = new jsPDF();
+      
+      // Adiciona título
+      doc.setFontSize(16);
+      doc.text('Relatório de Uso de Vouchers', 14, 15);
+      
+      // Configura os dados para a tabela
+      const tableData = response.data.map(item => [
+        item.code,
+        item.user_name || 'N/A',
+        item.company_name || 'N/A',
+        new Date(item.created_at).toLocaleString(),
+        item.used_at ? new Date(item.used_at).toLocaleString() : 'N/A',
+        item.used ? 'Sim' : 'Não'
+      ]);
+
+      // Adiciona a tabela ao PDF
+      autoTable(doc, {
+        head: [['Código', 'Usuário', 'Empresa', 'Data Criação', 'Data Uso', 'Utilizado']],
+        body: tableData,
+        startY: 25,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [41, 128, 185] }
+      });
+
+      // Salva o PDF
+      doc.save('relatorio_vouchers.pdf');
+      toast.success('PDF gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao exportar dados:', error);
+      toast.error('Erro ao gerar PDF');
     }
   };
 
@@ -39,9 +67,9 @@ const ReportForm = () => {
             className="pl-8"
           />
         </div>
-        <Button onClick={exportToExcel}>
-          <Download className="mr-2 h-4 w-4" />
-          Exportar Excel
+        <Button onClick={exportToPDF}>
+          <FileDown className="mr-2 h-4 w-4" />
+          Exportar PDF
         </Button>
       </div>
 
