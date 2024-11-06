@@ -14,11 +14,17 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
     try {
       // First check if it's a master admin
       if (password === '0001000') {
-        localStorage.setItem('adminToken', 'admin-authenticated');
+        localStorage.setItem('adminToken', 'master-admin-token');
         localStorage.setItem('adminType', 'master');
+        localStorage.setItem('adminPermissions', JSON.stringify({
+          manage_extra_vouchers: true,
+          manage_disposable_vouchers: true,
+          manage_users: true,
+          manage_reports: true
+        }));
         onClose();
         navigate('/admin');
-        toast.success("Login bem-sucedido!");
+        toast.success("Login bem-sucedido como Admin Master!");
         return;
       }
 

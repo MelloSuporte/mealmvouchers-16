@@ -22,7 +22,9 @@ export const AdminProvider = ({ children }) => {
 
   useEffect(() => {
     const adminToken = localStorage.getItem('adminToken');
-    if (adminToken === 'admin-authenticated') {
+    const adminType = localStorage.getItem('adminType');
+
+    if (adminType === 'master') {
       setIsMasterAdmin(true);
       setAdminPermissions({
         manage_extra_vouchers: true,
@@ -31,13 +33,18 @@ export const AdminProvider = ({ children }) => {
         manage_reports: true
       });
     } else if (adminToken) {
-      api.get('/api/admin/permissions')
-        .then(response => {
-          setAdminPermissions(response.data);
-        })
-        .catch(error => {
-          console.error('Error fetching admin permissions:', error);
-        });
+      const storedPermissions = localStorage.getItem('adminPermissions');
+      if (storedPermissions) {
+        setAdminPermissions(JSON.parse(storedPermissions));
+      } else {
+        api.get('/api/admin/permissions')
+          .then(response => {
+            setAdminPermissions(response.data);
+          })
+          .catch(error => {
+            console.error('Error fetching admin permissions:', error);
+          });
+      }
     }
   }, []);
 
