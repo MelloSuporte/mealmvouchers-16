@@ -1,24 +1,36 @@
 import express from 'express';
-import { getMeals, createMeal, updateMealStatus } from '../controllers/mealsController.js';
+import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Changed from '/' to match the frontend's expected endpoint
-router.get('/meals', getMeals);
-router.post('/meals', createMeal);
-router.patch('/meals/:id', updateMealStatus);
-router.delete('/meals/:id', async (req, res) => {
-  const { id } = req.params;
-  let connection;
+router.post('/', async (req, res) => {
+  const { name, startTime, endTime, value, isActive, maxUsersPerDay, toleranceMinutes } = req.body;
   
   try {
-    connection = await req.db.getConnection();
-    await connection.execute('DELETE FROM meal_types WHERE id = ?', [id]);
-    res.json({ success: true });
+    const [result] = await req.db.execute(
+      'INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor, ativo, max_usuarios_por_dia, minutos_tolerancia) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, startTime, endTime, value, isActive, maxUsersPerDay, toleranceMinutes]
+    );
+    
+    res.status(201).json({ 
+      success: true, 
+      id: result.insertId,
+      message: 'Refeição cadastrada com sucesso'
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
-  } finally {
-    if (connection) connection.release();
+    logger.error('Error creating meal:', error);
+    res.status(500).json({ error: 'Erro ao cadastrar refeição' });
+  }
+});
+
+// Get all meals
+router.get('/', async (req, res) => {
+  try {
+    const [rows] = await req.db.execute('SELECT * FROM tipos_refeicao ORDER BY nome');
+    res.json(rows);
+  } catch (error) {
+    logger.error('Error fetching meals:', error);
+    res.status(500).json({ error: 'Erro ao buscar refeições' });
   }
 });
 

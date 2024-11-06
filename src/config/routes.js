@@ -8,7 +8,7 @@ import usersRoutes from '../routes/usuarios.js';
 import extraVouchersRoutes from '../routes/vouchersExtra.js';
 import backgroundImagesRoutes from '../routes/backgroundImages.js';
 import shiftConfigurationsRoutes from '../routes/shiftConfigurations.js';
-import adminUsersRoutes from '../routes/adminUsers.js';  // Add this import
+import adminUsersRoutes from '../routes/adminUsers.js';
 
 const router = express.Router();
 
@@ -19,11 +19,11 @@ router.use('/health', healthRoutes);
 router.use('/companies', companiesRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/reports', reportRoutes);
-router.use('/meals', mealsRoutes);
+router.use('/meals', mealsRoutes);  // This maps to /api/meals
 router.use('/users', usersRoutes);
 router.use('/extra-vouchers', extraVouchersRoutes);
 router.use('/background-images', backgroundImagesRoutes);
 router.use('/shift-configurations', shiftConfigurationsRoutes);
-router.use('/admin-users', adminUsersRoutes);  // Add this line
+router.use('/admin-users', adminUsersRoutes);
 
 export default router;
