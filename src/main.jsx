@@ -2,17 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-import { Workbox } from 'workbox-window';
-
-if ('serviceWorker' in navigator) {
-  const wb = new Workbox('/sw.js');
-  wb.register();
-}
 
 const container = document.getElementById('root');
 
 if (!container) {
-  throw new Error('Elemento root não encontrado! Verifique se existe um elemento com id="root" no seu HTML.');
+  throw new Error('Root element not found. Did you forget to add it to your index.html?');
 }
 
 const root = ReactDOM.createRoot(container);
