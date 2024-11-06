@@ -11,15 +11,23 @@ export const errorHandler = (err, req, res, next) => {
     timestamp: new Date().toISOString()
   });
 
-  // Database connection errors
-  if (err.code === 'ECONNREFUSED') {
+  // Erros de conexão com banco de dados
+  if (err.code === 'ECONNREFUSED' || err.code === 'PROTOCOL_CONNECTION_LOST') {
     return res.status(503).json({
       error: 'Erro de conexão com o banco de dados',
-      message: 'Por favor, tente novamente em alguns instantes'
+      message: 'O sistema está temporariamente indisponível. Tentando reconectar automaticamente...'
     });
   }
 
-  // Query/SQL errors
+  // Erros de timeout
+  if (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') {
+    return res.status(504).json({
+      error: 'Tempo limite excedido',
+      message: 'A operação demorou muito para responder. Por favor, tente novamente.'
+    });
+  }
+
+  // Erros de consulta SQL
   if (err.code === 'ER_PARSE_ERROR' || err.code === 'ER_BAD_FIELD_ERROR') {
     return res.status(400).json({
       error: 'Erro na consulta ao banco de dados',
@@ -27,7 +35,7 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Validation errors
+  // Erros de validação
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       error: 'Erro de validação',
@@ -36,7 +44,7 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Authentication errors
+  // Erros de autenticação
   if (err.name === 'UnauthorizedError') {
     return res.status(401).json({
       error: 'Erro de autenticação',
@@ -44,7 +52,7 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Default error response
+  // Resposta padrão para outros erros
   res.status(err.status || 500).json({
     error: 'Erro interno do servidor',
     message: process.env.NODE_ENV === 'development' 

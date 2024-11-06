@@ -12,12 +12,14 @@ const createPool = () => {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME || 'sis_voucher',
       waitForConnections: true,
-      connectionLimit: 10,
+      connectionLimit: 20, // Aumentado o limite de conexões
       queueLimit: 0,
       enableKeepAlive: true,
       keepAliveInitialDelay: 0,
-      timezone: '-03:00', // Configurando timezone para GMT-3 (Brasília)
-      dateStrings: true
+      timezone: '-03:00',
+      dateStrings: true,
+      connectTimeout: 60000, // Aumentado timeout de conexão
+      acquireTimeout: 60000 // Aumentado timeout de aquisição
     });
 
     logger.info('MySQL connection pool created successfully');
@@ -30,12 +32,31 @@ const createPool = () => {
 
 const pool = createPool();
 
+// Função para verificar e reconectar se necessário
+const ensureConnection = async () => {
+  try {
+    const connection = await pool.getConnection();
+    await connection.ping();
+    connection.release();
+    return true;
+  } catch (error) {
+    logger.error('Database connection lost, attempting to reconnect:', error);
+    pool.end(); // Fecha todas as conexões
+    createPool(); // Recria o pool
+    return false;
+  }
+};
+
+// Verifica conexão a cada 30 segundos
+setInterval(async () => {
+  await ensureConnection();
+}, 30000);
+
 export const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
     await connection.ping();
     
-    // Test timezone settings
     const [rows] = await connection.execute('SELECT NOW() as server_time');
     logger.info(`Database server time: ${rows[0].server_time}`);
     
@@ -47,13 +68,5 @@ export const testConnection = async () => {
     return false;
   }
 };
-
-// Test connection periodically
-setInterval(async () => {
-  const isConnected = await testConnection();
-  if (!isConnected) {
-    logger.error('Periodic database connection check failed');
-  }
-}, 30000);
 
 export default pool;
