@@ -84,7 +84,7 @@ const Admin = () => {
           {renderTrigger("disposable", "Vouchers Descartáveis", "manage_disposable_vouchers")}
           {isMasterAdmin && <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>}
           {renderTrigger("reports", "Relatórios", "manage_reports")}
-          {isMasterAdmin && <TabsTrigger value="turnos">Turnos</TabsTrigger>}
+          {isMasterAdmin && <TabsTrigger value="turnos"></TabsTrigger>}
           {isMasterAdmin && <TabsTrigger value="managers">Gerentes</TabsTrigger>}
         </TabsList>
 
