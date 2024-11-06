@@ -3,10 +3,11 @@ import { getMeals, createMeal, updateMealStatus } from '../controllers/mealsCont
 
 const router = express.Router();
 
-router.get('/', getMeals);
-router.post('/', createMeal);
-router.patch('/:id', updateMealStatus);
-router.delete('/:id', async (req, res) => {
+// Changed from '/' to match the frontend's expected endpoint
+router.get('/meals', getMeals);
+router.post('/meals', createMeal);
+router.patch('/meals/:id', updateMealStatus);
+router.delete('/meals/:id', async (req, res) => {
   const { id } = req.params;
   let connection;
   

@@ -14,14 +14,14 @@ const router = express.Router();
 // Health check route
 router.use('/health', healthRoutes);
 
-// API routes
-router.use('/companies', companiesRoutes);
-router.use('/vouchers', voucherRoutes);
-router.use('/reports', reportRoutes);
-router.use('/meals', mealsRoutes);
-router.use('/users', usersRoutes);
-router.use('/extra-vouchers', extraVouchersRoutes);
-router.use('/background-images', backgroundImagesRoutes);
-router.use('/shift-configurations', shiftConfigurationsRoutes);
+// API routes - Note: removing the /api prefix since it's already added in the main app configuration
+router.use('/', companiesRoutes);
+router.use('/', voucherRoutes);
+router.use('/', reportRoutes);
+router.use('/', mealsRoutes);  // Changed to use root path since endpoints are defined in the route file
+router.use('/', usersRoutes);
+router.use('/', extraVouchersRoutes);
+router.use('/', backgroundImagesRoutes);
+router.use('/', shiftConfigurationsRoutes);
 
 export default router;
