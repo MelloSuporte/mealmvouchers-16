@@ -9,8 +9,7 @@ if ('serviceWorker' in navigator) {
   wb.register();
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
