@@ -1,5 +1,4 @@
 import express from 'express';
-import pool from '../config/database.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
@@ -7,25 +6,25 @@ const router = express.Router();
 // List companies
 router.get('/', async (req, res) => {
   try {
-    const [companies] = await pool.execute('SELECT * FROM companies ORDER BY name');
+    const [companies] = await req.db.execute('SELECT * FROM empresas ORDER BY nome');
     res.json(companies);
   } catch (error) {
     logger.error('Error listing companies:', error);
-    res.status(500).json({ error: 'Failed to fetch companies' });
+    res.status(500).json({ error: 'Erro ao buscar empresas' });
   }
 });
 
 // Get company by ID
 router.get('/:id', async (req, res) => {
   try {
-    const [company] = await pool.execute('SELECT * FROM companies WHERE id = ?', [req.params.id]);
+    const [company] = await req.db.execute('SELECT * FROM empresas WHERE id = ?', [req.params.id]);
     if (company.length === 0) {
-      return res.status(404).json({ error: 'Company not found' });
+      return res.status(404).json({ error: 'Empresa não encontrada' });
     }
     res.json(company[0]);
   } catch (error) {
     logger.error('Error fetching company:', error);
-    res.status(500).json({ error: 'Failed to fetch company' });
+    res.status(500).json({ error: 'Erro ao buscar empresa' });
   }
 });
 
@@ -35,16 +34,20 @@ router.post('/', async (req, res) => {
   
   try {
     if (!name || !cnpj) {
-      return res.status(400).json({ error: 'Name and CNPJ are required' });
+      return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
     }
 
-    const [existingCompany] = await pool.execute('SELECT id FROM companies WHERE cnpj = ?', [cnpj]);
+    const [existingCompany] = await req.db.execute(
+      'SELECT id FROM empresas WHERE cnpj = ?', 
+      [cnpj]
+    );
+    
     if (existingCompany.length > 0) {
-      return res.status(409).json({ error: 'CNPJ already registered' });
+      return res.status(409).json({ error: 'CNPJ já cadastrado' });
     }
 
-    const [result] = await pool.execute(
-      'INSERT INTO companies (name, cnpj, logo) VALUES (?, ?, ?)',
+    const [result] = await req.db.execute(
+      'INSERT INTO empresas (nome, cnpj, logo) VALUES (?, ?, ?)',
       [name, cnpj, logo]
     );
 
@@ -53,12 +56,12 @@ router.post('/', async (req, res) => {
       name, 
       cnpj, 
       logo,
-      message: 'Company registered successfully'
+      message: 'Empresa cadastrada com sucesso'
     });
   } catch (error) {
     logger.error('Error creating company:', error);
     res.status(500).json({ 
-      error: 'Failed to create company',
+      error: 'Erro ao cadastrar empresa',
       details: error.message
     });
   }
@@ -69,20 +72,20 @@ router.put('/:id', async (req, res) => {
   const { name, cnpj, logo } = req.body;
   try {
     if (!name || !cnpj) {
-      return res.status(400).json({ error: 'Name and CNPJ are required' });
+      return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
     }
 
-    const [existingCompany] = await pool.execute(
-      'SELECT id FROM companies WHERE cnpj = ? AND id != ?', 
+    const [existingCompany] = await req.db.execute(
+      'SELECT id FROM empresas WHERE cnpj = ? AND id != ?', 
       [cnpj, req.params.id]
     );
     
     if (existingCompany.length > 0) {
-      return res.status(409).json({ error: 'CNPJ already registered for another company' });
+      return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
 
-    await pool.execute(
-      'UPDATE companies SET name = ?, cnpj = ?, logo = ? WHERE id = ?',
+    await req.db.execute(
+      'UPDATE empresas SET nome = ?, cnpj = ?, logo = ? WHERE id = ?',
       [name, cnpj, logo, req.params.id]
     );
     
@@ -91,25 +94,25 @@ router.put('/:id', async (req, res) => {
       name, 
       cnpj, 
       logo,
-      message: 'Company updated successfully'
+      message: 'Empresa atualizada com sucesso'
     });
   } catch (error) {
     logger.error('Error updating company:', error);
-    res.status(500).json({ error: 'Failed to update company' });
+    res.status(500).json({ error: 'Erro ao atualizar empresa' });
   }
 });
 
 // Delete company
 router.delete('/:id', async (req, res) => {
   try {
-    const [result] = await pool.execute('DELETE FROM companies WHERE id = ?', [req.params.id]);
+    const [result] = await req.db.execute('DELETE FROM empresas WHERE id = ?', [req.params.id]);
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Company not found' });
+      return res.status(404).json({ error: 'Empresa não encontrada' });
     }
     res.status(204).send();
   } catch (error) {
     logger.error('Error deleting company:', error);
-    res.status(500).json({ error: 'Failed to delete company' });
+    res.status(500).json({ error: 'Erro ao excluir empresa' });
   }
 });
 
