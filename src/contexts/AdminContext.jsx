@@ -52,10 +52,8 @@ export const AdminProvider = ({ children }) => {
 
     if (adminToken === 'master-admin-token' || adminType === 'master') {
       setIsMasterAdmin(true);
-      // Cria uma cópia das permissões padrão para evitar modificações
       const masterPermissions = { ...DEFAULT_ADMIN_PERMISSIONS };
       
-      // Verifica se todas as permissões estão intactas
       const hasAllPermissions = Object.entries(masterPermissions)
         .every(([key, value]) => value === true);
       
@@ -70,7 +68,6 @@ export const AdminProvider = ({ children }) => {
       try {
         const parsedPermissions = JSON.parse(storedPermissions);
         
-        // Verifica se as permissões são válidas
         const hasValidPermissions = Object.keys(parsedPermissions)
           .every(key => key in DEFAULT_ADMIN_PERMISSIONS);
         
@@ -81,7 +78,6 @@ export const AdminProvider = ({ children }) => {
         setAdminPermissions(parsedPermissions);
       } catch (error) {
         console.error('Erro ao processar permissões:', error);
-        // Em caso de erro, define permissões padrão limitadas
         const defaultPermissions = {
           manage_extra_vouchers: true,
           manage_disposable_vouchers: true,
@@ -94,46 +90,11 @@ export const AdminProvider = ({ children }) => {
     }
   }, []);
 
-  // Função protegida para atualizar permissões
-  const updateAdminPermissions = (newPermissions) => {
-    const adminToken = localStorage.getItem('adminToken');
-    const adminType = localStorage.getItem('adminType');
-
-    if (!adminToken || (adminType !== 'master' && adminToken !== 'master-admin-token')) {
-      console.error('ALERTA DE SEGURANÇA: Tentativa não autorizada de modificar permissões');
-      return;
-    }
-
-    // Verifica se as novas permissões são válidas
-    const hasValidPermissions = Object.keys(newPermissions)
-      .every(key => key in DEFAULT_ADMIN_PERMISSIONS);
-
-    if (!hasValidPermissions) {
-      console.error('ALERTA DE SEGURANÇA: Tentativa de adicionar permissões inválidas');
-      return;
-    }
-
-    setAdminPermissions(newPermissions);
-  };
-
-  // Função protegida para atualizar status de admin master
-  const updateMasterAdminStatus = (status) => {
-    const adminToken = localStorage.getItem('adminToken');
-    const adminType = localStorage.getItem('adminType');
-
-    if (!adminToken || (adminType !== 'master' && adminToken !== 'master-admin-token')) {
-      console.error('ALERTA DE SEGURANÇA: Tentativa não autorizada de modificar status de admin master');
-      return;
-    }
-
-    setIsMasterAdmin(status);
-  };
-
   const value = {
     isMasterAdmin,
     adminPermissions,
-    setAdminPermissions: updateAdminPermissions,
-    setIsMasterAdmin: updateMasterAdminStatus
+    setAdminPermissions,
+    setIsMasterAdmin
   };
 
   return (
@@ -142,3 +103,5 @@ export const AdminProvider = ({ children }) => {
     </AdminContext.Provider>
   );
 };
+
+export default AdminProvider;
