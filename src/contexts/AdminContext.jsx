@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/api';
 
-const AdminContext = createContext();
+const AdminContext = createContext(null);
 
 export const useAdmin = () => {
   const context = useContext(AdminContext);
