@@ -16,60 +16,40 @@ const initDB = async () => {
 // Configuração do axios com timeout aumentado e retries
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 60000, // Aumentado para 60 segundos
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
-  retry: 5, // Aumentado número de tentativas
+  retry: 3,
   retryDelay: (retryCount) => {
-    return Math.min(1000 * Math.pow(2, retryCount), 30000);
+    return Math.min(1000 * Math.pow(2, retryCount), 10000);
   }
 });
 
-// Log detalhado de requisições
+// Interceptador de requisições
 api.interceptors.request.use(
   config => {
     const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] [API Request] ${config.method?.toUpperCase()} ${config.url}`, {
-      headers: config.headers,
-      data: config.data,
-      timeout: config.timeout
-    });
+    console.log(`[${timestamp}] Requisição API: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   error => {
-    console.error('[API Request Error]', error);
+    console.error('Erro na requisição:', error);
     return Promise.reject(error);
   }
 );
 
-// Log detalhado de respostas e tratamento de erros melhorado
+// Interceptador de respostas com tratamento de erros melhorado
 api.interceptors.response.use(
   response => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] [API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
-      status: response.status,
-      data: response.data,
-      duration: response.headers['x-response-time']
-    });
     return response;
   },
   async error => {
-    const timestamp = new Date().toISOString();
-    console.error(`[${timestamp}] [API Error Details]`, {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-      stack: error.stack
-    });
-
     const originalRequest = error.config;
 
     // Modo offline
     if (!navigator.onLine) {
-      console.log('[API] Dispositivo offline, salvando operação para sincronização posterior');
+      console.log('Dispositivo offline, salvando operação para sincronização posterior');
       const db = await initDB();
       await db.add(STORE_NAME, {
         request: originalRequest,
@@ -81,29 +61,25 @@ api.interceptors.response.use(
     }
 
     // Lógica de retry para erros de rede
-    if ((error.message === 'Network Error' || 
-         error.response?.status === 502 || 
-         error.code === 'ECONNABORTED') && 
-        !originalRequest._retry && 
-        originalRequest.retry > 0) {
+    if (error.message === 'Network Error' || 
+        error.response?.status === 502 || 
+        error.code === 'ECONNABORTED') {
       
-      originalRequest._retry = true;
-      originalRequest.retry--;
-      
-      const retryCount = 5 - originalRequest.retry;
-      const delayMs = originalRequest.retryDelay(retryCount);
-      
-      console.log(`[${timestamp}] [API] Tentativa ${retryCount + 1} de reconexão em ${delayMs}ms`);
-      
-      toast.info(`Tentando reconectar ao servidor... (${retryCount + 1}/5)`, {
-        duration: delayMs,
-      });
-      
-      return new Promise(resolve => {
-        setTimeout(() => {
-          resolve(api(originalRequest));
-        }, delayMs);
-      });
+      if (!originalRequest._retry && originalRequest.retry > 0) {
+        originalRequest._retry = true;
+        originalRequest.retry--;
+        
+        const retryCount = 3 - originalRequest.retry;
+        const delayMs = originalRequest.retryDelay(retryCount);
+        
+        toast.info(`Tentando reconectar ao servidor... (${retryCount + 1}/3)`);
+        
+        return new Promise(resolve => {
+          setTimeout(() => {
+            resolve(api(originalRequest));
+          }, delayMs);
+        });
+      }
     }
 
     // Mensagens de erro específicas
@@ -148,17 +124,14 @@ api.interceptors.response.use(
       }
     }
 
-    if (!originalRequest._retry || originalRequest.retry === 0) {
-      toast.error(errorMessage);
-    }
-
+    toast.error(errorMessage);
     return Promise.reject(error);
   }
 );
 
 // Sincronização de operações offline
 window.addEventListener('online', async () => {
-  console.log('[API] Conexão restaurada, sincronizando operações pendentes');
+  console.log('Conexão restaurada, sincronizando operações pendentes');
   const db = await initDB();
   const tx = db.transaction(STORE_NAME, 'readwrite');
   const store = tx.objectStore(STORE_NAME);
@@ -172,7 +145,7 @@ window.addEventListener('online', async () => {
         await api(op.request);
         await store.delete(op.id);
       } catch (error) {
-        console.error('[API] Erro ao sincronizar operação:', error);
+        console.error('Erro ao sincronizar operação:', error);
       }
     }
     
