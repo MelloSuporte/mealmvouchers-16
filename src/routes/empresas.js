@@ -5,7 +5,7 @@ import { validateCNPJ } from '../utils/validations.js';
 const router = express.Router();
 
 // List companies
-router.get('/', async (req, res) => {
+router.get('/companies', async (req, res) => {
   let connection;
   try {
     connection = await req.db.getConnection();
@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create company
-router.post('/', async (req, res) => {
+router.post('/companies', async (req, res) => {
   const { name, cnpj, logo } = req.body;
   let connection;
   
@@ -89,7 +89,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update company
-router.put('/:id', async (req, res) => {
+router.put('/companies/:id', async (req, res) => {
   const { id } = req.params;
   const { name, cnpj, logo } = req.body;
   let connection;
