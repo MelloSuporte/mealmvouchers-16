@@ -18,7 +18,7 @@ router.use('/empresas', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/relatorios', relatoriosRoutes);
 router.use('/refeicoes', refeicoesRoutes);
-router.use('/usuarios', usuariosRoutes);
+router.use('/users', usuariosRoutes);  // Map /api/users to usuarios routes
 router.use('/vouchers-extra', vouchersExtraRoutes);
 router.use('/admin', adminRoutes);
 

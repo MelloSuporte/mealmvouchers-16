@@ -3,12 +3,12 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Search users
+// Search users by CPF
 router.get('/search', async (req, res) => {
-  const { cpf } = req.query;
+  const { term } = req.query;
   
-  if (!cpf) {
-    return res.status(400).json({ error: 'CPF é obrigatório para a busca' });
+  if (!term) {
+    return res.status(400).json({ error: 'Termo de busca é obrigatório' });
   }
 
   try {
@@ -16,18 +16,14 @@ router.get('/search', async (req, res) => {
       `SELECT u.*, e.nome as company_name 
        FROM usuarios u 
        LEFT JOIN empresas e ON u.empresa_id = e.id 
-       WHERE u.cpf = ?`,
-      [cpf]
+       WHERE u.cpf LIKE ? OR u.nome LIKE ?`,
+      [`%${term}%`, `%${term}%`]
     );
     
-    if (users.length === 0) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
-    }
-    
-    res.json(users[0]);
+    res.json(users);
   } catch (error) {
     logger.error('Error searching users:', error);
-    res.status(500).json({ error: 'Erro ao buscar usuário' });
+    res.status(500).json({ error: 'Erro ao buscar usuários' });
   }
 });
 
