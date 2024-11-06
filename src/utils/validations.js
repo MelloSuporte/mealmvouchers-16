@@ -6,7 +6,7 @@ export const validateCNPJ = (cnpj) => {
   }
 
   if (/^(\d)\1+$/.test(cleanCNPJ)) {
-    throw new Error('CNPJ inválido: todos os dígitos são iguais');
+    throw new Error('CNPJ inválido');
   }
 
   let sum = 0;
@@ -19,7 +19,7 @@ export const validateCNPJ = (cnpj) => {
 
   let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
   if (result !== parseInt(cleanCNPJ[12])) {
-    throw new Error('CNPJ inválido: primeiro dígito verificador incorreto');
+    throw new Error('CNPJ inválido');
   }
 
   sum = 0;
@@ -31,16 +31,9 @@ export const validateCNPJ = (cnpj) => {
 
   result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
   if (result !== parseInt(cleanCNPJ[13])) {
-    throw new Error('CNPJ inválido: segundo dígito verificador incorreto');
+    throw new Error('CNPJ inválido');
   }
 
-  return true;
-};
-
-export const validateVoucherCode = (code) => {
-  if (!code) throw new Error('Código do voucher é obrigatório');
-  if (code.length !== 4) throw new Error('Código do voucher deve ter 4 dígitos');
-  if (!/^\d+$/.test(code)) throw new Error('Código do voucher deve conter apenas números');
   return true;
 };
 
@@ -52,7 +45,7 @@ export const validateCPF = (cpf) => {
   }
 
   if (/^(\d)\1+$/.test(cleanCPF)) {
-    throw new Error('CPF inválido: todos os dígitos são iguais');
+    throw new Error('CPF inválido');
   }
 
   let sum = 0;
@@ -61,7 +54,7 @@ export const validateCPF = (cpf) => {
   }
   let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
   if (result !== parseInt(cleanCPF[9])) {
-    throw new Error('CPF inválido: primeiro dígito verificador incorreto');
+    throw new Error('CPF inválido');
   }
 
   sum = 0;
@@ -70,7 +63,7 @@ export const validateCPF = (cpf) => {
   }
   result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
   if (result !== parseInt(cleanCPF[10])) {
-    throw new Error('CPF inválido: segundo dígito verificador incorreto');
+    throw new Error('CPF inválido');
   }
 
   return true;
@@ -81,19 +74,12 @@ export const validateEmail = (email) => {
   if (!emailRegex.test(email)) {
     throw new Error('Email inválido');
   }
-  if (email.length > 255) {
-    throw new Error('Email deve ter no máximo 255 caracteres');
-  }
   return true;
 };
 
 export const validateImageFile = (file) => {
   const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
   const maxSize = 5 * 1024 * 1024; // 5MB
-
-  if (!file) {
-    throw new Error('Arquivo de imagem é obrigatório');
-  }
 
   if (!validTypes.includes(file.type)) {
     throw new Error('Formato de imagem inválido. Use JPEG, PNG ou GIF');
