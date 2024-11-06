@@ -22,6 +22,7 @@ import api from '../utils/api';
 
 const AdminLoginDialog = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   // Objeto imutável com as permissões do admin master
@@ -39,17 +40,24 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
     full_access: true
   });
 
+  const verifyMasterAdminPermissions = (permissions) => {
+    return Object.entries(MASTER_ADMIN_PERMISSIONS)
+      .every(([key, value]) => permissions[key] === value);
+  };
+
   const handleLogin = async () => {
+    if (isSubmitting) return;
+    
     try {
+      setIsSubmitting(true);
+
       // Verificação do admin master com senha protegida
       if (password === '0001000') {
         // Cria uma cópia das permissões para evitar modificações
         const adminPermissions = { ...MASTER_ADMIN_PERMISSIONS };
         
         // Verifica se todas as permissões estão intactas
-        const hasAllPermissions = Object.values(adminPermissions).every(value => value === true);
-        
-        if (!hasAllPermissions) {
+        if (!verifyMasterAdminPermissions(adminPermissions)) {
           toast.error("Erro de segurança: Permissões do admin master foram alteradas!");
           return;
         }
@@ -67,9 +75,19 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
       const response = await api.post('/api/admin/login', { password });
       
       if (response.data.success) {
+        // Verifica integridade das permissões recebidas
+        const receivedPermissions = response.data.permissions;
+        const hasValidPermissions = Object.keys(receivedPermissions)
+          .every(key => typeof receivedPermissions[key] === 'boolean');
+
+        if (!hasValidPermissions) {
+          toast.error("Erro de segurança: Permissões inválidas detectadas");
+          return;
+        }
+
         localStorage.setItem('adminToken', response.data.token);
         localStorage.setItem('adminType', 'manager');
-        localStorage.setItem('adminPermissions', JSON.stringify(response.data.permissions));
+        localStorage.setItem('adminPermissions', JSON.stringify(receivedPermissions));
         onClose();
         navigate('/admin');
         toast.success("Login bem-sucedido!");
@@ -77,7 +95,10 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         toast.error("Senha incorreta. Tente novamente.");
       }
     } catch (error) {
-      toast.error("Senha incorreta. Tente novamente.");
+      console.error('Erro no login:', error);
+      toast.error("Erro ao realizar login. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -92,9 +113,15 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
           placeholder="Digite a senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          disabled={isSubmitting}
         />
         <DialogFooter>
-          <Button onClick={handleLogin}>Entrar</Button>
+          <Button 
+            onClick={handleLogin} 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Processando..." : "Entrar"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

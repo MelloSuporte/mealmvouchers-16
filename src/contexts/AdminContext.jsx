@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../utils/api';
+import { toast } from "sonner";
 
 const AdminContext = createContext(null);
 
@@ -27,6 +27,7 @@ export const useAdmin = () => {
 
 export const AdminProvider = ({ children }) => {
   const [isMasterAdmin, setIsMasterAdmin] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Objeto imutável com as permissões padrão do admin
   const DEFAULT_ADMIN_PERMISSIONS = Object.freeze({
@@ -45,96 +46,83 @@ export const AdminProvider = ({ children }) => {
 
   const [adminPermissions, setAdminPermissions] = useState(DEFAULT_ADMIN_PERMISSIONS);
 
+  // Função para verificar a integridade das permissões
+  const verifyPermissionsIntegrity = (permissions) => {
+    const requiredPermissions = Object.keys(DEFAULT_ADMIN_PERMISSIONS);
+    const hasAllPermissions = requiredPermissions.every(key => key in permissions);
+    
+    if (!hasAllPermissions) {
+      console.error('ALERTA DE SEGURANÇA: Permissões incompletas detectadas');
+      return false;
+    }
+    
+    return true;
+  };
+
   useEffect(() => {
-    const adminToken = localStorage.getItem('adminToken');
-    const adminType = localStorage.getItem('adminType');
-    const storedPermissions = localStorage.getItem('adminPermissions');
-
-    if (adminToken === 'master-admin-token' || adminType === 'master') {
-      setIsMasterAdmin(true);
-      // Cria uma cópia das permissões padrão para evitar modificações
-      const masterPermissions = { ...DEFAULT_ADMIN_PERMISSIONS };
-      
-      // Verifica se todas as permissões estão intactas
-      const hasAllPermissions = Object.entries(masterPermissions)
-        .every(([key, value]) => value === true);
-      
-      if (!hasAllPermissions) {
-        console.error('ALERTA DE SEGURANÇA: Tentativa de modificar permissões do admin master detectada!');
-        return;
-      }
-
-      setAdminPermissions(masterPermissions);
-      localStorage.setItem('adminPermissions', JSON.stringify(masterPermissions));
-    } else if (adminToken && storedPermissions) {
+    const initializeAdminContext = () => {
       try {
-        const parsedPermissions = JSON.parse(storedPermissions);
-        
-        // Verifica se as permissões são válidas
-        const hasValidPermissions = Object.keys(parsedPermissions)
-          .every(key => key in DEFAULT_ADMIN_PERMISSIONS);
-        
-        if (!hasValidPermissions) {
-          throw new Error('Permissões inválidas detectadas');
+        const adminToken = localStorage.getItem('adminToken');
+        const adminType = localStorage.getItem('adminType');
+        const storedPermissions = localStorage.getItem('adminPermissions');
+
+        if (adminToken === 'master-admin-token' || adminType === 'master') {
+          // Verificação de segurança para admin master
+          const masterPermissions = { ...DEFAULT_ADMIN_PERMISSIONS };
+          
+          if (!verifyPermissionsIntegrity(masterPermissions)) {
+            toast.error("Erro crítico de segurança: Permissões do admin master comprometidas");
+            localStorage.clear();
+            window.location.reload();
+            return;
+          }
+
+          setIsMasterAdmin(true);
+          setAdminPermissions(masterPermissions);
+          localStorage.setItem('adminPermissions', JSON.stringify(masterPermissions));
+        } else if (adminToken && storedPermissions) {
+          try {
+            const parsedPermissions = JSON.parse(storedPermissions);
+            
+            if (!verifyPermissionsIntegrity(parsedPermissions)) {
+              toast.error("Erro de segurança: Permissões inválidas detectadas");
+              localStorage.clear();
+              window.location.reload();
+              return;
+            }
+
+            setAdminPermissions(parsedPermissions);
+          } catch (error) {
+            console.error('Erro ao processar permissões:', error);
+            toast.error("Erro ao processar permissões do administrador");
+            localStorage.clear();
+            window.location.reload();
+            return;
+          }
         }
 
-        setAdminPermissions(parsedPermissions);
+        setIsInitialized(true);
       } catch (error) {
-        console.error('Erro ao processar permissões:', error);
-        // Em caso de erro, define permissões padrão limitadas
-        const defaultPermissions = {
-          manage_extra_vouchers: true,
-          manage_disposable_vouchers: true,
-          manage_users: true,
-          manage_reports: true
-        };
-        setAdminPermissions(defaultPermissions);
-        localStorage.setItem('adminPermissions', JSON.stringify(defaultPermissions));
+        console.error('Erro crítico ao inicializar contexto:', error);
+        toast.error("Erro crítico ao inicializar sistema administrativo");
+        localStorage.clear();
+        window.location.reload();
       }
-    }
+    };
+
+    initializeAdminContext();
   }, []);
-
-  // Função protegida para atualizar permissões
-  const updateAdminPermissions = (newPermissions) => {
-    const adminToken = localStorage.getItem('adminToken');
-    const adminType = localStorage.getItem('adminType');
-
-    if (!adminToken || (adminType !== 'master' && adminToken !== 'master-admin-token')) {
-      console.error('ALERTA DE SEGURANÇA: Tentativa não autorizada de modificar permissões');
-      return;
-    }
-
-    // Verifica se as novas permissões são válidas
-    const hasValidPermissions = Object.keys(newPermissions)
-      .every(key => key in DEFAULT_ADMIN_PERMISSIONS);
-
-    if (!hasValidPermissions) {
-      console.error('ALERTA DE SEGURANÇA: Tentativa de adicionar permissões inválidas');
-      return;
-    }
-
-    setAdminPermissions(newPermissions);
-  };
-
-  // Função protegida para atualizar status de admin master
-  const updateMasterAdminStatus = (status) => {
-    const adminToken = localStorage.getItem('adminToken');
-    const adminType = localStorage.getItem('adminType');
-
-    if (!adminToken || (adminType !== 'master' && adminToken !== 'master-admin-token')) {
-      console.error('ALERTA DE SEGURANÇA: Tentativa não autorizada de modificar status de admin master');
-      return;
-    }
-
-    setIsMasterAdmin(status);
-  };
 
   const value = React.useMemo(() => ({
     isMasterAdmin,
     adminPermissions,
-    setAdminPermissions: updateAdminPermissions,
-    setIsMasterAdmin: updateMasterAdminStatus
-  }), [isMasterAdmin, adminPermissions]);
+    isInitialized,
+    verifyPermissionsIntegrity
+  }), [isMasterAdmin, adminPermissions, isInitialized]);
+
+  if (!isInitialized) {
+    return <div>Inicializando sistema administrativo...</div>;
+  }
 
   return (
     <AdminContext.Provider value={value}>
