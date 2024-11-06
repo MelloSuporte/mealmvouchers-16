@@ -10,6 +10,7 @@ const upload = multer({
   }
 });
 
+// GET endpoint for fetching background images
 router.get('/background-images', async (req, res) => {
   let connection;
   try {
@@ -31,12 +32,14 @@ router.get('/background-images', async (req, res) => {
   }
 });
 
+// POST endpoint for saving background images
 router.post('/background-images', upload.any(), async (req, res) => {
   let connection;
   try {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
+    // Deactivate existing images
     await connection.execute(
       'UPDATE imagens_fundo SET ativo = false WHERE pagina IN (?, ?, ?)',
       ['voucher', 'userConfirmation', 'bomApetite']
@@ -47,6 +50,7 @@ router.post('/background-images', upload.any(), async (req, res) => {
       throw new Error('Nenhum arquivo foi enviado');
     }
 
+    // Save new images
     for (const file of files) {
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       await connection.execute(
