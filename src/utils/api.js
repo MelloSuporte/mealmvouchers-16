@@ -19,6 +19,11 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add retry logic
+  retry: 3,
+  retryDelay: (retryCount) => {
+    return retryCount * 1000;
+  }
 });
 
 const syncOfflineData = async () => {
@@ -39,9 +44,10 @@ const syncOfflineData = async () => {
   }
 };
 
-// Tenta sincronizar quando voltar online
+// Try to sync when back online
 window.addEventListener('online', syncOfflineData);
 
+// Request interceptor
 api.interceptors.request.use(
   async config => {
     if (!config.url.startsWith('/')) {
@@ -62,11 +68,13 @@ api.interceptors.request.use(
   }
 );
 
+// Response interceptor with enhanced error handling
 api.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config;
 
+    // Handle offline mode
     if (!navigator.onLine) {
       const db = await initDB();
       await db.add(STORE_NAME, {
@@ -78,17 +86,24 @@ api.interceptors.response.use(
       return Promise.resolve({ data: { offline: true } });
     }
 
-    if ((error.message === 'Network Error' || error.code === 'ECONNABORTED') && !originalRequest._retry) {
+    // Retry on network errors or 502 Bad Gateway
+    if ((error.message === 'Network Error' || 
+         error.response?.status === 502 || 
+         error.code === 'ECONNABORTED') && 
+        !originalRequest._retry && 
+        originalRequest.retry > 0) {
+      
       originalRequest._retry = true;
-      toast.error('Erro de conexão. Tentando novamente...');
+      originalRequest.retry--;
       
       return new Promise(resolve => {
         setTimeout(() => {
           resolve(api(originalRequest));
-        }, 2000);
+        }, originalRequest.retryDelay(originalRequest.retry));
       });
     }
 
+    // Log error details
     console.error('API Error:', {
       url: originalRequest?.url,
       status: error.response?.status,
@@ -96,7 +111,11 @@ api.interceptors.response.use(
       message: error.message
     });
 
-    toast.error(error.response?.data?.error || 'Erro ao processar sua requisição');
+    // Show user-friendly error message
+    const errorMessage = error.response?.data?.error || 
+                        'Erro ao processar sua requisição. Por favor, tente novamente.';
+    toast.error(errorMessage);
+    
     throw error;
   }
 );

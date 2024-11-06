@@ -1,22 +1,32 @@
-import createApp from './config/app.js';
-import { startServer } from './config/server.js';
-import { testConnection } from './config/database.js';
-import logger from './config/logger.js';
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { configureExpress } from './src/config/express.js';
+import { startServer } from './src/config/server.js';
+import createApp from './src/config/app.js';
 
-const initializeServer = async () => {
-  try {
-    // Test database connection before starting
-    const isConnected = await testConnection();
-    if (!isConnected) {
-      throw new Error('Unable to connect to database');
-    }
-    
-    const app = createApp();
-    startServer(app);
-  } catch (error) {
-    logger.error('Failed to initialize server:', error);
-    process.exit(1);
-  }
-};
+dotenv.config();
 
-initializeServer();
+const app = createApp();
+
+// Enhanced error handling
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
+  });
+});
+
+configureExpress(app);
+startServer(app);
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.info('SIGTERM signal received.');
+  console.log('Closing HTTP server...');
+  server.close(() => {
+    console.log('HTTP server closed.');
+    process.exit(0);
+  });
+});
