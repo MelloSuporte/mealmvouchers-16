@@ -54,6 +54,7 @@
     "framer-motion": "^11.3.9",
     "helmet": "^8.0.0",
     "html-to-image": "^1.11.11",
+    "idb": "^8.0.0",
     "input-otp": "^1.2.4",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
@@ -73,6 +74,7 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.1",
     "winston": "^3.15.0",
+    "workbox-window": "^7.3.0",
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
