@@ -21,7 +21,7 @@ router.use('/reports', reportRoutes);
 router.use('/meals', mealsRoutes);
 router.use('/users', usersRoutes);
 router.use('/extra-vouchers', extraVouchersRoutes);
-router.use('/', backgroundImagesRoutes); // Changed to use root path since endpoints are defined in the route file
+router.use('/background-images', backgroundImagesRoutes);
 router.use('/shift-configurations', shiftConfigurationsRoutes);
 
 export default router;
