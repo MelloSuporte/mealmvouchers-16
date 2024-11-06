@@ -25,10 +25,11 @@ const UserFormMain = ({
     }
   });
 
+  // Fixed the API endpoint by removing the extra /api prefix
   const { data: turnosData, isLoading: isLoadingTurnos } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
-      const response = await api.get('/api/shift-configurations');
+      const response = await api.get('/shift-configurations');
       return response.data || [];
     }
   });
@@ -72,14 +73,10 @@ const UserFormMain = ({
     const maxAttempts = 10;
     let attempts = 0;
 
-    // Remove caracteres não numéricos do CPF
     const cpfNumbers = cpf.replace(/\D/g, '');
-    
-    // Extrai a faixa de dígitos (2 a 13)
     const digitRange = cpfNumbers.substring(1, 13);
     
     while (attempts < maxAttempts) {
-      // Seleciona 4 dígitos aleatórios da faixa
       let voucher = '';
       for (let i = 0; i < 4; i++) {
         const randomIndex = Math.floor(Math.random() * digitRange.length);
@@ -87,7 +84,6 @@ const UserFormMain = ({
       }
 
       try {
-        // Verifica se o voucher já existe
         const response = await api.post('/vouchers/check', { code: voucher });
         if (!response.data.exists) {
           return voucher;
@@ -163,7 +159,7 @@ const UserFormMain = ({
           <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
         </SelectTrigger>
         <SelectContent>
-          {companies.map((company) => (
+          {companiesData?.map((company) => (
             <SelectItem key={company.id} value={company.id.toString()}>
               {company.name}
             </SelectItem>
@@ -189,7 +185,7 @@ const UserFormMain = ({
           <SelectValue placeholder={isLoadingTurnos ? "Carregando turnos..." : "Selecione o turno"} />
         </SelectTrigger>
         <SelectContent>
-          {turnos.map((turno) => (
+          {turnosData?.map((turno) => (
             <SelectItem key={turno.id} value={turno.shift_type}>
               {turno.shift_type.charAt(0).toUpperCase() + turno.shift_type.slice(1)} Turno ({formatTime(turno.start_time)} - {formatTime(turno.end_time)})
             </SelectItem>
