@@ -21,11 +21,11 @@ const api = axios.create({
   },
   retry: 3,
   retryDelay: (retryCount) => {
-    return retryCount * 1000;
+    return Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff with 10s max
   }
 });
 
-// Response interceptor with enhanced error handling
+// Response interceptor with enhanced error handling and retry logic
 api.interceptors.response.use(
   response => response,
   async error => {
@@ -43,7 +43,7 @@ api.interceptors.response.use(
       return Promise.resolve({ data: { offline: true } });
     }
 
-    // Retry on network errors or specific status codes
+    // Enhanced retry logic for network errors
     if ((error.message === 'Network Error' || 
          error.response?.status === 502 || 
          error.code === 'ECONNABORTED') && 
@@ -53,12 +53,17 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       originalRequest.retry--;
       
-      toast.info('Tentando reconectar ao servidor...');
+      const retryCount = 3 - originalRequest.retry;
+      const delayMs = originalRequest.retryDelay(retryCount);
+      
+      toast.info(`Tentativa ${retryCount + 1} de 3 de reconexão ao servidor...`, {
+        duration: delayMs,
+      });
       
       return new Promise(resolve => {
         setTimeout(() => {
           resolve(api(originalRequest));
-        }, originalRequest.retryDelay(originalRequest.retry));
+        }, delayMs);
       });
     }
 
@@ -83,7 +88,10 @@ api.interceptors.response.use(
       errorMessage = errorResponse.message;
     }
 
-    toast.error(errorMessage);
+    if (!originalRequest._retry || originalRequest.retry === 0) {
+      toast.error(errorMessage);
+    }
+
     throw error;
   }
 );
