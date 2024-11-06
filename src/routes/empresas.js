@@ -9,11 +9,16 @@ router.get('/', async (req, res) => {
   let connection;
   try {
     connection = await req.db.getConnection();
-    const [companies] = await connection.execute('SELECT * FROM companies ORDER BY name');
+    const [companies] = await connection.execute(
+      'SELECT * FROM companies ORDER BY name'
+    );
     res.json(companies);
   } catch (error) {
     logger.error('Error fetching companies:', error);
-    res.status(500).json({ error: 'Error fetching companies' });
+    res.status(500).json({ 
+      error: 'Database error',
+      message: 'Error fetching companies'
+    });
   } finally {
     if (connection) connection.release();
   }
@@ -25,7 +30,7 @@ router.post('/', async (req, res) => {
   let connection;
   
   try {
-    // Validações
+    // Validations
     if (!name?.trim()) {
       return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
     }
@@ -39,22 +44,26 @@ router.post('/', async (req, res) => {
     validateCNPJ(cnpj);
     
     connection = await req.db.getConnection();
+    await connection.beginTransaction();
     
-    // Verifica se já existe empresa com este CNPJ
+    // Check if company already exists
     const [existing] = await connection.execute(
       'SELECT id FROM companies WHERE cnpj = ?',
       [cnpj]
     );
     
     if (existing.length > 0) {
+      await connection.rollback();
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
     }
     
+    // Insert new company
     const [result] = await connection.execute(
       'INSERT INTO companies (name, cnpj, logo) VALUES (?, ?, ?)',
       [name, cnpj, logo]
     );
     
+    await connection.commit();
     logger.info(`Nova empresa cadastrada - ID: ${result.insertId}, Nome: ${name}`);
     
     res.status(201).json({ 
@@ -66,8 +75,14 @@ router.post('/', async (req, res) => {
       message: 'Empresa cadastrada com sucesso'
     });
   } catch (error) {
+    if (connection) {
+      await connection.rollback();
+    }
     logger.error('Error creating company:', error);
-    res.status(400).json({ error: error.message || 'Erro ao cadastrar empresa' });
+    res.status(400).json({ 
+      error: error.message || 'Erro ao cadastrar empresa',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   } finally {
     if (connection) connection.release();
   }
@@ -80,7 +95,7 @@ router.put('/:id', async (req, res) => {
   let connection;
   
   try {
-    // Validações
+    // Validations
     if (!name?.trim()) {
       return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
     }
@@ -94,26 +109,31 @@ router.put('/:id', async (req, res) => {
     validateCNPJ(cnpj);
     
     connection = await req.db.getConnection();
+    await connection.beginTransaction();
     
-    // Verifica se já existe outra empresa com este CNPJ
+    // Check if another company has this CNPJ
     const [existing] = await connection.execute(
       'SELECT id FROM companies WHERE cnpj = ? AND id != ?',
       [cnpj, id]
     );
     
     if (existing.length > 0) {
+      await connection.rollback();
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
     
+    // Update company
     const [result] = await connection.execute(
       'UPDATE companies SET name = ?, cnpj = ?, logo = ? WHERE id = ?',
       [name, cnpj, logo, id]
     );
     
     if (result.affectedRows === 0) {
+      await connection.rollback();
       return res.status(404).json({ error: 'Empresa não encontrada' });
     }
     
+    await connection.commit();
     logger.info(`Empresa atualizada - ID: ${id}, Nome: ${name}`);
     
     res.json({ 
@@ -125,8 +145,14 @@ router.put('/:id', async (req, res) => {
       message: 'Empresa atualizada com sucesso'
     });
   } catch (error) {
+    if (connection) {
+      await connection.rollback();
+    }
     logger.error('Error updating company:', error);
-    res.status(400).json({ error: error.message || 'Erro ao atualizar empresa' });
+    res.status(400).json({ 
+      error: error.message || 'Erro ao atualizar empresa',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   } finally {
     if (connection) connection.release();
   }
