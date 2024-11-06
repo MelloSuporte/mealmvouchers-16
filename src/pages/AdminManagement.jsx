@@ -12,7 +12,6 @@ const AdminManagement = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Gerenciamento de Gerentes</h1>
       <Card className="p-6">
         <AdminList />
       </Card>
