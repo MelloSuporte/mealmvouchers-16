@@ -23,8 +23,8 @@ const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <AdminProvider>
           <TooltipProvider>
             <Toaster />
@@ -48,8 +48,8 @@ const App = () => {
             </Routes>
           </TooltipProvider>
         </AdminProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
