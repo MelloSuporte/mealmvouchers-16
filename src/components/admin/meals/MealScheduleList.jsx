@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,14 @@ const MealScheduleList = () => {
   const { data: meals = [], isLoading, error } = useQuery({
     queryKey: ['meals'],
     queryFn: async () => {
-      const response = await api.get('/meals');
-      return Array.isArray(response.data) ? response.data : [];
+      try {
+        const response = await api.get('/meals');
+        // Ensure we always return an array
+        return Array.isArray(response.data) ? response.data : [];
+      } catch (error) {
+        console.error('Error fetching meals:', error);
+        return [];
+      }
     }
   });
 
@@ -96,7 +102,7 @@ const MealScheduleList = () => {
     );
   }
 
-  if (meals.length === 0) {
+  if (!Array.isArray(meals) || meals.length === 0) {
     return (
       <div className="text-center py-4 text-gray-500">
         Nenhuma refeição cadastrada
