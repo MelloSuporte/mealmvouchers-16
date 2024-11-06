@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil } from "lucide-react";
@@ -15,12 +15,19 @@ const CompanyForm = () => {
   const [logo, setLogo] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
+  const queryClient = useQueryClient();
 
-  const { data: companies = [] } = useQuery({
+  const { data: companies = [], refetch } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      const response = await api.get('/companies');
-      return response.data;
+      try {
+        const response = await api.get('/api/companies');
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+        toast.error('Erro ao carregar empresas. Tente novamente.');
+        return [];
+      }
     }
   });
 
@@ -80,26 +87,26 @@ const CompanyForm = () => {
       validateForm();
       setIsSubmitting(true);
       
+      const companyData = {
+        name: companyName,
+        cnpj,
+        logo
+      };
+
       if (editingCompany) {
-        await api.put(`/companies/${editingCompany.id}`, {
-          name: companyName,
-          cnpj,
-          logo
-        });
+        await api.put(`/api/companies/${editingCompany.id}`, companyData);
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        await api.post('/companies', {
-          name: companyName,
-          cnpj,
-          logo
-        });
+        await api.post('/api/companies', companyData);
         toast.success('Empresa cadastrada com sucesso!');
       }
       
       resetForm();
-      refetch();
+      queryClient.invalidateQueries(['companies']);
     } catch (error) {
-      toast.error(error.message || "Erro ao salvar empresa");
+      console.error('Error saving company:', error);
+      const errorMessage = error.response?.data?.error || error.message || "Erro ao salvar empresa";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
