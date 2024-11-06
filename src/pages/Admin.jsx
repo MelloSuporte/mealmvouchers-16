@@ -82,7 +82,7 @@ const Admin = () => {
           {isMasterAdmin && <TabsTrigger value="meals">Refeições</TabsTrigger>}
           {renderTrigger("rls", "Vouchers Extras", "manage_extra_vouchers")}
           {renderTrigger("disposable", "Vouchers Descartáveis", "manage_disposable_vouchers")}
-          {isMasterAdmin && <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>}
+          {isMasterAdmin && <TabsTrigger value="backgrounds"></TabsTrigger>}
           {renderTrigger("reports", "", "manage_reports")}
           {isMasterAdmin && <TabsTrigger value="turnos"></TabsTrigger>}
           {isMasterAdmin && <TabsTrigger value="managers"></TabsTrigger>}
