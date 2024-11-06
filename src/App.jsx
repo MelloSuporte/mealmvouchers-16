@@ -23,41 +23,43 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      cacheTime: 10 * 60 * 1000, // 10 minutos
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
     },
   },
 });
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AdminProvider>
-        <BrowserRouter>
-          <TooltipProvider>
-            <Toaster position="top-right" richColors />
-            <Routes>
-              <Route path="/" element={<Navigate to="/voucher" />} />
-              <Route path="/admin-login" element={<AdminLogin />} />
-              <Route path="/voucher" element={<Voucher />} />
-              <Route path="/user-confirmation" element={<UserConfirmation />} />
-              <Route path="/self-services" element={<SelfServices />} />
-              <Route path="/bom-apetite/:userName" element={<BomApetite />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/user" element={<User />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/managers" element={<AdminManagement />} />
-              <Route path="/app" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="search" element={<Search />} />
-                <Route path="menu" element={<Menu />} />
-                <Route path="profile" element={<Profile />} />
-              </Route>
-            </Routes>
-          </TooltipProvider>
-        </BrowserRouter>
-      </AdminProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AdminProvider>
+            <BrowserRouter>
+              <Toaster position="top-right" richColors />
+              <Routes>
+                <Route path="/" element={<Navigate to="/voucher" />} />
+                <Route path="/admin-login" element={<AdminLogin />} />
+                <Route path="/voucher" element={<Voucher />} />
+                <Route path="/user-confirmation" element={<UserConfirmation />} />
+                <Route path="/self-services" element={<SelfServices />} />
+                <Route path="/bom-apetite/:userName" element={<BomApetite />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/user" element={<User />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/managers" element={<AdminManagement />} />
+                <Route path="/app" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="search" element={<Search />} />
+                  <Route path="menu" element={<Menu />} />
+                  <Route path="profile" element={<Profile />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </AdminProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 
