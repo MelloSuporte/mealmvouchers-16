@@ -23,11 +23,11 @@ const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AdminProvider>
-          <React.Fragment>
-            <TooltipProvider delayDuration={0}>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AdminProvider>
               <Toaster />
               <Routes>
                 <Route path="/" element={<Navigate to="/voucher" />} />
@@ -47,11 +47,11 @@ const App = () => {
                   <Route path="profile" element={<Profile />} />
                 </Route>
               </Routes>
-            </TooltipProvider>
-          </React.Fragment>
-        </AdminProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+            </AdminProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 
