@@ -3,8 +3,11 @@ import helmet from 'helmet';
 import compression from 'compression';
 
 export const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100 // limite de 100 requisições por IP
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // increased from 100 to 1000 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Too many requests from this IP, please try again later."
 });
 
 export const securityMiddleware = [
