@@ -8,6 +8,7 @@ import usersRoutes from '../routes/usuarios.js';
 import extraVouchersRoutes from '../routes/vouchersExtra.js';
 import backgroundImagesRoutes from '../routes/backgroundImages.js';
 import shiftConfigurationsRoutes from '../routes/shiftConfigurations.js';
+import adminUsersRoutes from '../routes/adminUsers.js';  // Add this import
 
 const router = express.Router();
 
@@ -23,5 +24,6 @@ router.use('/users', usersRoutes);
 router.use('/extra-vouchers', extraVouchersRoutes);
 router.use('/background-images', backgroundImagesRoutes);
 router.use('/shift-configurations', shiftConfigurationsRoutes);
+router.use('/admin-users', adminUsersRoutes);  // Add this line
 
 export default router;
