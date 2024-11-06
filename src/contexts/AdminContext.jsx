@@ -48,11 +48,39 @@ export const AdminProvider = ({ children }) => {
     }
   }, []);
 
+  // Função protegida para atualizar permissões
+  const updateAdminPermissions = (newPermissions) => {
+    const adminToken = localStorage.getItem('adminToken');
+    const adminType = localStorage.getItem('adminType');
+
+    // Impede alterações se não houver token ou se não for admin master
+    if (!adminToken || (adminType !== 'master' && adminToken !== 'master-admin-token')) {
+      console.error('Tentativa não autorizada de modificar permissões de admin');
+      return;
+    }
+
+    setAdminPermissions(newPermissions);
+  };
+
+  // Função protegida para atualizar status de admin master
+  const updateMasterAdminStatus = (status) => {
+    const adminToken = localStorage.getItem('adminToken');
+    const adminType = localStorage.getItem('adminType');
+
+    // Impede alterações se não houver token ou se não for admin master
+    if (!adminToken || (adminType !== 'master' && adminToken !== 'master-admin-token')) {
+      console.error('Tentativa não autorizada de modificar status de admin master');
+      return;
+    }
+
+    setIsMasterAdmin(status);
+  };
+
   const value = {
     isMasterAdmin,
     adminPermissions,
-    setAdminPermissions,
-    setIsMasterAdmin
+    setAdminPermissions: updateAdminPermissions,
+    setIsMasterAdmin: updateMasterAdminStatus
   };
 
   return (
