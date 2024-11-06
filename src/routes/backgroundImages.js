@@ -10,15 +10,19 @@ const upload = multer({
   }
 });
 
-// Buscar todas as imagens de fundo
-router.get('/', async (req, res) => {
+router.get('/background-images', async (req, res) => {
   let connection;
   try {
     connection = await pool.getConnection();
     const [rows] = await connection.execute(
-      'SELECT * FROM background_images WHERE active = true ORDER BY created_at DESC'
+      'SELECT * FROM imagens_fundo WHERE ativo = true ORDER BY criado_em DESC'
     );
-    res.json(rows);
+    res.json(rows.map(row => ({
+      page: row.pagina,
+      image_url: row.url_imagem,
+      active: row.ativo,
+      created_at: row.criado_em
+    })));
   } catch (error) {
     logger.error('Error fetching background images:', error);
     res.status(500).json({ error: 'Erro ao buscar imagens de fundo' });
@@ -27,16 +31,15 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Salvar novas imagens de fundo
-router.post('/', upload.any(), async (req, res) => {
+router.post('/background-images', upload.any(), async (req, res) => {
   let connection;
   try {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Desativa imagens antigas
     await connection.execute(
-      'UPDATE background_images SET active = false WHERE page IN ("voucher", "userConfirmation", "bomApetite")'
+      'UPDATE imagens_fundo SET ativo = false WHERE pagina IN (?, ?, ?)',
+      ['voucher', 'userConfirmation', 'bomApetite']
     );
 
     const files = req.files;
@@ -44,15 +47,11 @@ router.post('/', upload.any(), async (req, res) => {
       throw new Error('Nenhum arquivo foi enviado');
     }
 
-    // Processa cada arquivo
     for (const file of files) {
-      const page = file.fieldname;
-      const imageBuffer = file.buffer;
-      const base64Image = `data:${file.mimetype};base64,${imageBuffer.toString('base64')}`;
-
+      const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       await connection.execute(
-        'INSERT INTO background_images (page, image_url, active, created_at) VALUES (?, ?, true, NOW(3))',
-        [page, base64Image]
+        'INSERT INTO imagens_fundo (pagina, url_imagem, ativo, criado_em) VALUES (?, ?, true, NOW())',
+        [file.fieldname, base64Image]
       );
     }
 
