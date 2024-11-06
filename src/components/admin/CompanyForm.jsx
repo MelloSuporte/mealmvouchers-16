@@ -7,7 +7,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil } from "lucide-react";
 import api from '../../utils/api';
-import { validateCNPJ } from '../../utils/validations';
 import CompanyList from './company/CompanyList';
 import CompanyFormFields from './company/CompanyFormFields';
 
@@ -27,14 +26,6 @@ const CompanyForm = () => {
     }
   });
 
-  const validateForm = () => {
-    if (!companyName || !cnpj) {
-      toast.error("Digite o nome e CNPJ");
-      return false;
-    }
-    return true;
-  };
-
   const handleEditCompany = (company) => {
     setEditingCompany(company);
     setCompanyName(company.name);
@@ -50,8 +41,6 @@ const CompanyForm = () => {
   };
 
   const handleSaveCompany = async () => {
-    if (!validateForm()) return;
-
     try {
       setIsSubmitting(true);
       
@@ -63,16 +52,16 @@ const CompanyForm = () => {
 
       if (editingCompany) {
         await api.put(`/api/companies/${editingCompany.id}`, companyData);
-        toast.success('Empresa atualizada!');
+        toast.success('Salvo!');
       } else {
         await api.post('/api/companies', companyData);
-        toast.success('Empresa cadastrada!');
+        toast.success('Salvo!');
       }
       
       resetForm();
       queryClient.invalidateQueries(['companies']);
     } catch (error) {
-      toast.error("Erro ao salvar empresa");
+      toast.error("Erro ao salvar");
     } finally {
       setIsSubmitting(false);
     }
