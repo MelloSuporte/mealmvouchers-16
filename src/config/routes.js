@@ -1,11 +1,11 @@
 import express from 'express';
 import companiesRoutes from '../routes/companies.js';
 import voucherRoutes from '../routes/vouchers.js';
-import reportRoutes from '../routes/reports.js';
+import reportRoutes from '../routes/relatorios.js';
 import healthRoutes from '../routes/health.js';
-import mealsRoutes from '../routes/meals.js';
-import usersRoutes from '../routes/users.js';
-import extraVouchersRoutes from '../routes/extraVouchers.js';
+import mealsRoutes from '../routes/refeicoes.js';
+import usersRoutes from '../routes/usuarios.js';
+import extraVouchersRoutes from '../routes/vouchersExtra.js';
 import backgroundImagesRoutes from '../routes/backgroundImages.js';
 import shiftConfigurationsRoutes from '../routes/shiftConfigurations.js';
 

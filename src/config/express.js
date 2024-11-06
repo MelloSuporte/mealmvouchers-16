@@ -8,7 +8,7 @@ export const configureExpress = (app) => {
   // Enable CORS with specific options
   app.use(cors({
     origin: process.env.ALLOWED_ORIGINS || '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', DELETE, 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
     maxAge: 86400 // 24 hours
