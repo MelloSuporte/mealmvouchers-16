@@ -20,7 +20,11 @@ const createPool = () => {
       keepAliveInitialDelay: 0,
       timezone: '-03:00',
       dateStrings: true,
-      connectTimeout: 60000
+      connectTimeout: 60000,
+      // Novas configurações para maior estabilidade
+      multipleStatements: false, // Previne SQL injection
+      debug: process.env.NODE_ENV === 'development',
+      trace: process.env.NODE_ENV === 'development'
     });
 
     logger.info('Pool de conexões MySQL criado com sucesso');
@@ -41,9 +45,14 @@ const ensureConnection = async () => {
     return true;
   } catch (error) {
     logger.error('Conexão com banco perdida, tentando reconectar:', error);
-    await pool.end();
-    pool = createPool();
-    return false;
+    try {
+      await pool.end();
+      pool = createPool();
+      return false;
+    } catch (endError) {
+      logger.error('Erro ao finalizar pool antigo:', endError);
+      return false;
+    }
   }
 };
 

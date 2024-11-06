@@ -14,9 +14,34 @@ const UserForm = () => {
     isSuspended: false,
     userPhoto: null
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = () => {
+    if (!formData.userName || !formData.userEmail || !formData.userCPF || !formData.company || !formData.voucher || !formData.selectedTurno) {
+      toast.error("Por favor, preencha todos os campos obrigatórios");
+      return false;
+    }
+
+    if (!formData.userEmail.includes('@')) {
+      toast.error("Por favor, insira um email válido");
+      return false;
+    }
+
+    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+    if (!cpfRegex.test(formData.userCPF)) {
+      toast.error("Por favor, insira um CPF válido no formato XXX.XXX.XXX-XX");
+      return false;
+    }
+
+    return true;
+  };
 
   const handleSaveUser = async () => {
+    if (!validateForm() || isSubmitting) return;
+
     try {
+      setIsSubmitting(true);
+      
       const userData = {
         name: formData.userName,
         email: formData.userEmail,
@@ -29,12 +54,10 @@ const UserForm = () => {
       };
 
       let response;
-      if (formData.userCPF) {
-        // Atualizar usuário existente
-        response = await api.put(`/users/${formData.userCPF}`, userData);
+      if (formData.id) {
+        response = await api.put(`/users/${formData.id}`, userData);
         toast.success("Usuário atualizado com sucesso!");
       } else {
-        // Criar novo usuário
         response = await api.post('/users', userData);
         toast.success("Usuário cadastrado com sucesso!");
       }
@@ -43,7 +66,11 @@ const UserForm = () => {
         resetForm();
       }
     } catch (error) {
-      toast.error("Erro ao salvar usuário: " + (error.response?.data?.error || error.message));
+      const errorMessage = error.response?.data?.error || "Erro ao salvar usuário. Tente novamente.";
+      toast.error(errorMessage);
+      logger.error('Erro ao salvar usuário:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -82,6 +109,7 @@ const UserForm = () => {
         formData={formData}
         onInputChange={handleInputChange}
         onSave={handleSaveUser}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

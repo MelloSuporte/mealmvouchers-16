@@ -2,45 +2,47 @@ import pool from '../config/database.js';
 import logger from '../config/logger.js';
 
 export const withDatabase = async (req, res, next) => {
-  let retries = 5;
-  let delay = 1000; // Start with 1 second
+  let retries = 3;
   
-  while (retries > 0) {
+  const tryConnection = async () => {
     try {
       const connection = await pool.getConnection();
+      
+      // Teste a conexão
+      await connection.ping();
+      
       req.db = connection;
       
-      // Ensure connection is released after request
+      // Garante que a conexão seja liberada após a resposta
       res.on('finish', () => {
         if (req.db) {
           req.db.release();
         }
       });
 
+      // Libera conexão em caso de erro
       res.on('error', () => {
         if (req.db) {
           req.db.release();
         }
       });
-      
-      // Add timeout for request
-      req.setTimeout(60000);
-      
-      return next();
-    } catch (err) {
-      retries--;
-      logger.error(`Database connection error (${retries} retries left):`, err);
-      
-      if (retries === 0) {
-        return res.status(503).json({ 
-          error: 'Service temporarily unavailable',
-          message: 'Could not connect to database. Please try again in a few moments.'
-        });
+
+      next();
+    } catch (error) {
+      if (retries > 0) {
+        retries--;
+        logger.warn(`Tentativa de reconexão com banco de dados. Tentativas restantes: ${retries}`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return tryConnection();
       }
       
-      // Wait exponentially longer between retries (1s, 2s, 4s, 8s, 16s)
-      await new Promise(resolve => setTimeout(resolve, delay));
-      delay *= 2;
+      logger.error('Erro fatal de conexão com banco de dados:', error);
+      res.status(503).json({
+        error: 'Serviço temporariamente indisponível',
+        message: 'Não foi possível conectar ao banco de dados. Tente novamente em alguns instantes.'
+      });
     }
-  }
+  };
+
+  await tryConnection();
 };
