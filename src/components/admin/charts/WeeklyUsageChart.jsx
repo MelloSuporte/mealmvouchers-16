@@ -1,9 +1,18 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { COLORS } from './ChartColors';
 
-const WeeklyUsageChart = ({ data = [] }) => {
-  // Ensure data is always an array
+const WeeklyUsageChart = ({ data }) => {
+  // Ensure data is always an array and has a default value
   const chartData = Array.isArray(data) ? data : [];
+
+  // If there's no data, show empty state
+  if (chartData.length === 0) {
+    return (
+      <div className="w-full h-[300px] flex items-center justify-center text-gray-500">
+        Nenhum dado disponível
+      </div>
+    );
+  }
 
   return (
     <div className="w-full overflow-x-auto">

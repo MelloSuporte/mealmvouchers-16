@@ -8,7 +8,7 @@ import { COLORS } from '../charts/ChartColors';
 import api from '../../../utils/api';
 
 const ChartTabs = () => {
-  const { data: weeklyData = [] } = useQuery({
+  const { data: weeklyData } = useQuery({
     queryKey: ['weekly-data'],
     queryFn: async () => {
       const response = await api.get('/reports/weekly');
@@ -16,7 +16,7 @@ const ChartTabs = () => {
     }
   });
 
-  const { data: distributionData = [] } = useQuery({
+  const { data: distributionData } = useQuery({
     queryKey: ['distribution-data'],
     queryFn: async () => {
       const response = await api.get('/reports/distribution');
@@ -24,7 +24,7 @@ const ChartTabs = () => {
     }
   });
 
-  const { data: trendData = [] } = useQuery({
+  const { data: trendData } = useQuery({
     queryKey: ['trend-data'],
     queryFn: async () => {
       const response = await api.get('/reports/trend');
@@ -41,23 +41,29 @@ const ChartTabs = () => {
       </TabsList>
 
       <TabsContent value="usage">
-        <WeeklyUsageChart data={weeklyData} />
+        <WeeklyUsageChart data={weeklyData || []} />
       </TabsContent>
 
       <TabsContent value="distribution">
-        <MealDistributionChart data={distributionData} />
+        <MealDistributionChart data={distributionData || []} />
       </TabsContent>
 
       <TabsContent value="trend">
         <div className="w-full overflow-x-auto">
-          <LineChart width={800} height={300} data={trendData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="total" stroke={COLORS.ALMOCO} />
-          </LineChart>
+          {Array.isArray(trendData) && trendData.length > 0 ? (
+            <LineChart width={800} height={300} data={trendData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="total" stroke={COLORS.ALMOCO} />
+            </LineChart>
+          ) : (
+            <div className="w-full h-[300px] flex items-center justify-center text-gray-500">
+              Nenhum dado disponível
+            </div>
+          )}
         </div>
       </TabsContent>
     </Tabs>
