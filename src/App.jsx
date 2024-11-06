@@ -34,7 +34,14 @@ function App() {
       <TooltipProvider>
         <AdminProvider>
           <BrowserRouter>
-            <Toaster position="top-right" richColors />
+            <Toaster 
+              position="top-right" 
+              richColors
+              toastOptions={{
+                success: { position: "top-right" },
+                error: { position: "bottom-right" },
+              }} 
+            />
             <Routes>
               <Route path="/" element={<Navigate to="/voucher" />} />
               <Route path="/voucher" element={<Voucher />} />
