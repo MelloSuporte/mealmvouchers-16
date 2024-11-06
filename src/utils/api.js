@@ -26,6 +26,25 @@ const api = axios.create({
   }
 });
 
+// Função para testar a conexão com a API e banco de dados
+export const testApiConnection = async () => {
+  try {
+    const response = await api.get('/health');
+    const status = response.data;
+    
+    if (status.status === 'OK') {
+      toast.success('Conexão com API e banco de dados OK!');
+      return true;
+    } else {
+      toast.error(`Erro de conexão: ${status.message}`);
+      return false;
+    }
+  } catch (error) {
+    toast.error('Falha ao testar conexão com API');
+    return false;
+  }
+};
+
 // Interceptador de requisições
 api.interceptors.request.use(
   config => {
