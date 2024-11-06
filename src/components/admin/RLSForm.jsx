@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useQuery } from '@tanstack/react-query';
 import api from '../../utils/api';
 import CompanyUserSelector from './rls/CompanyUserSelector';
-import { startOfDay, isBefore } from 'date-fns';
+import { startOfDay, isBefore, isAfter, addMonths } from 'date-fns';
 
 const RLSForm = () => {
   const [selectedUser, setSelectedUser] = useState("");
@@ -15,23 +15,51 @@ const RLSForm = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: companiesData = [], isLoading: isLoadingCompanies } = useQuery({
+  const { data: companiesData = [], isLoading: isLoadingCompanies, error: companiesError } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      const response = await api.get('/companies');
-      return response.data || [];
-    }
+      try {
+        const response = await api.get('/companies');
+        return response.data || [];
+      } catch (error) {
+        toast.error("Erro ao carregar empresas: " + (error.response?.data?.message || error.message));
+        return [];
+      }
+    },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 30000)
   });
 
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
+  const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useQuery({
     queryKey: ['users', searchTerm, selectedCompany],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 3) return [];
-      const response = await api.get(`/users/search?term=${searchTerm}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
-      return response.data || [];
+      try {
+        const response = await api.get(`/users/search?term=${searchTerm}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
+        return response.data || [];
+      } catch (error) {
+        toast.error("Erro ao buscar usuários: " + (error.response?.data?.message || error.message));
+        return [];
+      }
     },
-    enabled: searchTerm.length >= 3
+    enabled: searchTerm.length >= 3,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 30000)
   });
+
+  const validateDates = (dates) => {
+    const today = startOfDay(new Date());
+    const maxDate = addMonths(today, 3); // Limite de 3 meses para vouchers extras
+
+    for (const date of dates) {
+      if (isBefore(date, today)) {
+        throw new Error("Não é possível liberar vouchers para datas passadas");
+      }
+      if (isAfter(date, maxDate)) {
+        throw new Error("Vouchers extras podem ser liberados apenas para os próximos 3 meses");
+      }
+    }
+  };
 
   const handleSaveRLS = async () => {
     if (!selectedUser || selectedDates.length === 0) {
@@ -46,13 +74,7 @@ const RLSForm = () => {
     
     try {
       setIsSubmitting(true);
-      
-      // Verifica se alguma data é anterior ao início do dia atual
-      const today = startOfDay(new Date());
-      if (selectedDates.some(date => isBefore(date, today))) {
-        toast.error("Não é possível liberar vouchers para datas passadas");
-        return;
-      }
+      validateDates(selectedDates);
 
       const promises = selectedDates.map(date => 
         api.post('/extra-vouchers', {
@@ -68,13 +90,20 @@ const RLSForm = () => {
       setSelectedDates([]);
       setSearchTerm("");
     } catch (error) {
-      toast.error("Erro ao liberar vouchers extras: " + (error.response?.data?.error || error.message));
+      const errorMessage = error.response?.data?.error || error.message;
+      toast.error("Erro ao liberar vouchers extras: " + errorMessage);
+      
+      if (error.response?.status === 503) {
+        toast.error("Servidor temporariamente indisponível. Tente novamente em alguns instantes.");
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const companies = Array.isArray(companiesData) ? companiesData : [];
+  if (companiesError || usersError) {
+    toast.error("Erro ao carregar dados. Por favor, recarregue a página.");
+  }
 
   return (
     <div className="space-y-6">
@@ -85,7 +114,7 @@ const RLSForm = () => {
         setSearchTerm={setSearchTerm}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
-        companies={companies}
+        companies={companiesData}
         users={users}
         isLoadingCompanies={isLoadingCompanies}
         isLoadingUsers={isLoadingUsers}
@@ -105,6 +134,7 @@ const RLSForm = () => {
               return `${month.charAt(0).toUpperCase() + month.slice(1)} ${date.getFullYear()}`;
             }
           }}
+          disabled={(date) => isBefore(date, startOfDay(new Date()))}
           ISOWeek
         />
       </div>
