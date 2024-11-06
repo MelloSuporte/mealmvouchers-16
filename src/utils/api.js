@@ -16,22 +16,24 @@ const initDB = async () => {
 // Configuração do axios com timeout aumentado e retries
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 30000, // Aumentado para 30 segundos
+  timeout: 60000, // Aumentado para 60 segundos
   headers: {
     'Content-Type': 'application/json',
   },
-  retry: 3,
+  retry: 5, // Aumentado número de tentativas
   retryDelay: (retryCount) => {
-    return Math.min(1000 * Math.pow(2, retryCount), 10000);
+    return Math.min(1000 * Math.pow(2, retryCount), 30000);
   }
 });
 
-// Log de requisições
+// Log detalhado de requisições
 api.interceptors.request.use(
   config => {
-    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] [API Request] ${config.method?.toUpperCase()} ${config.url}`, {
       headers: config.headers,
-      data: config.data
+      data: config.data,
+      timeout: config.timeout
     });
     return config;
   },
@@ -41,22 +43,26 @@ api.interceptors.request.use(
   }
 );
 
-// Log de respostas e tratamento de erros melhorado
+// Log detalhado de respostas e tratamento de erros melhorado
 api.interceptors.response.use(
   response => {
-    console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] [API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
       status: response.status,
-      data: response.data
+      data: response.data,
+      duration: response.headers['x-response-time']
     });
     return response;
   },
   async error => {
-    console.error('[API Error Details]', {
+    const timestamp = new Date().toISOString();
+    console.error(`[${timestamp}] [API Error Details]`, {
       url: error.config?.url,
       method: error.config?.method,
       status: error.response?.status,
       data: error.response?.data,
-      message: error.message
+      message: error.message,
+      stack: error.stack
     });
 
     const originalRequest = error.config;
@@ -84,12 +90,12 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       originalRequest.retry--;
       
-      const retryCount = 3 - originalRequest.retry;
+      const retryCount = 5 - originalRequest.retry;
       const delayMs = originalRequest.retryDelay(retryCount);
       
-      console.log(`[API] Tentativa ${retryCount + 1} de reconexão em ${delayMs}ms`);
+      console.log(`[${timestamp}] [API] Tentativa ${retryCount + 1} de reconexão em ${delayMs}ms`);
       
-      toast.info(`Tentando reconectar ao servidor... (${retryCount + 1}/3)`, {
+      toast.info(`Tentando reconectar ao servidor... (${retryCount + 1}/5)`, {
         duration: delayMs,
       });
       
@@ -131,6 +137,8 @@ api.interceptors.response.use(
           errorMessage = 'Erro interno do servidor. Nossa equipe foi notificada.';
           break;
         case 502:
+          errorMessage = 'Servidor temporariamente indisponível. Tentando reconectar automaticamente...';
+          break;
         case 503:
         case 504:
           errorMessage = 'Servidor temporariamente indisponível. Tente novamente em alguns instantes.';
