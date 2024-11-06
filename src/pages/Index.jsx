@@ -18,7 +18,6 @@ const Index = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Voucher submitted:', voucherCode);
-    // Simulating a user name for demonstration purposes
     const userName = "User";
     navigate(`/bom-apetite/${userName}`);
   };
@@ -92,7 +91,7 @@ const Index = () => {
           </form>
           <div className="text-center">
             <Button
-              onClick={() => navigate('/admin-login')}
+              onClick={() => navigate('/admin')}
               variant="link"
               className="text-blue-600 hover:text-blue-800 font-medium transition duration-300 ease-in-out text-lg"
             >

@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminProvider } from "./contexts/AdminContext";
 import Layout from "./components/Layout";
-import AdminLogin from "./pages/AdminLogin";
 import SelfServices from "./pages/SelfServices";
 import Home from "./pages/Home";
 import Search from "./pages/Search";
@@ -38,7 +37,6 @@ function App() {
             <Toaster position="top-right" richColors />
             <Routes>
               <Route path="/" element={<Navigate to="/voucher" />} />
-              <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/voucher" element={<Voucher />} />
               <Route path="/user-confirmation" element={<UserConfirmation />} />
               <Route path="/self-services" element={<SelfServices />} />
