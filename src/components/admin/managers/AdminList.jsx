@@ -14,7 +14,7 @@ const AdminList = () => {
   const { data: admins, isLoading } = useQuery({
     queryKey: ['admins', searchCPF],
     queryFn: async () => {
-      const response = await api.get('/api/admin-users', {
+      const response = await api.get('api/admin-users', {
         params: { cpf: searchCPF }
       });
       return response.data;

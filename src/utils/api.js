@@ -15,7 +15,8 @@ const initDB = async () => {
 
 // Configuração do axios com timeout aumentado e retries
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  // Remove the /api prefix since it's already in the nginx configuration
+  baseURL: '/',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
