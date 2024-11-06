@@ -85,7 +85,7 @@ const Admin = () => {
           {isMasterAdmin && <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>}
           {renderTrigger("reports", "Relatórios", "manage_reports")}
           {isMasterAdmin && <TabsTrigger value="turnos"></TabsTrigger>}
-          {isMasterAdmin && <TabsTrigger value="managers">Gerentes</TabsTrigger>}
+          {isMasterAdmin && <TabsTrigger value="managers"></TabsTrigger>}
         </TabsList>
 
         {renderTab("users", <UserForm />, "manage_users")}
