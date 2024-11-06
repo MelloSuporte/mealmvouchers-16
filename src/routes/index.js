@@ -6,6 +6,7 @@ import refeicoesRoutes from './refeicoes.js';
 import empresasRoutes from './empresas.js';
 import usuariosRoutes from './usuarios.js';
 import vouchersExtraRoutes from './vouchersExtra.js';
+import backgroundImagesRoutes from './backgroundImages.js';
 
 const router = express.Router();
 
@@ -17,7 +18,8 @@ router.use('/companies', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/reports', relatoriosRoutes);
 router.use('/meals', refeicoesRoutes);
-router.use('/users', usuariosRoutes);  // This maps /api/users to the usuarios routes
+router.use('/users', usuariosRoutes);
 router.use('/extra-vouchers', vouchersExtraRoutes);
+router.use('/background-images', backgroundImagesRoutes);
 
 export default router;
