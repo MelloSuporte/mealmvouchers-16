@@ -2,12 +2,15 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Upload, Search } from 'lucide-react';
+import { Eye, EyeOff, Upload } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import api from '../../utils/api';
+import UserSearchSection from './user/UserSearchSection';
+import UserBasicInfo from './user/UserBasicInfo';
+import CompanySelect from './user/CompanySelect';
 
 const UserFormMain = ({
   formData,
@@ -17,24 +20,19 @@ const UserFormMain = ({
   const [showVoucher, setShowVoucher] = React.useState(false);
   const [searchCPF, setSearchCPF] = React.useState('');
 
-  const { data: companiesData, isLoading: isLoadingCompanies } = useQuery({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      const response = await api.get('/companies');
-      return response.data || [];
-    }
-  });
-
-  // Fixed the API endpoint by removing the extra /api prefix
   const { data: turnosData, isLoading: isLoadingTurnos } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
-      const response = await api.get('/shift-configurations');
-      return response.data || [];
+      try {
+        const response = await api.get('/shift-configurations');
+        return Array.isArray(response.data) ? response.data : [];
+      } catch (error) {
+        console.error('Error fetching turnos:', error);
+        return [];
+      }
     }
   });
 
-  const companies = Array.isArray(companiesData) ? companiesData : [];
   const turnos = Array.isArray(turnosData) ? turnosData.filter(turno => turno.is_active) : [];
 
   const handlePhotoUpload = (event) => {
@@ -69,37 +67,6 @@ const UserFormMain = ({
     }
   };
 
-  const generateUniqueVoucher = async (cpf) => {
-    const maxAttempts = 10;
-    let attempts = 0;
-
-    const cpfNumbers = cpf.replace(/\D/g, '');
-    const digitRange = cpfNumbers.substring(1, 13);
-    
-    while (attempts < maxAttempts) {
-      let voucher = '';
-      for (let i = 0; i < 4; i++) {
-        const randomIndex = Math.floor(Math.random() * digitRange.length);
-        voucher += digitRange[randomIndex];
-      }
-
-      try {
-        const response = await api.post('/vouchers/check', { code: voucher });
-        if (!response.data.exists) {
-          return voucher;
-        }
-      } catch (error) {
-        if (error.response?.status === 404) {
-          return voucher;
-        }
-      }
-      attempts++;
-    }
-    
-    toast.error('Não foi possível gerar um voucher único após várias tentativas');
-    return null;
-  };
-
   const handleCPFChange = async (e) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length <= 11) {
@@ -122,50 +89,23 @@ const UserFormMain = ({
 
   return (
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-      <div className="flex gap-2">
-        <Input 
-          placeholder="Pesquisar por CPF" 
-          value={searchCPF}
-          onChange={(e) => setSearchCPF(e.target.value)}
-        />
-        <Button type="button" onClick={handleSearch}>
-          <Search size={20} className="mr-2" />
-          Buscar
-        </Button>
-      </div>
+      <UserSearchSection 
+        searchCPF={searchCPF}
+        setSearchCPF={setSearchCPF}
+        onSearch={handleSearch}
+      />
       
-      <Input 
-        placeholder="Nome do usuário" 
-        value={formData.userName}
-        onChange={(e) => onInputChange('userName', e.target.value)}
+      <UserBasicInfo 
+        formData={formData}
+        onInputChange={onInputChange}
+        handleCPFChange={handleCPFChange}
       />
-      <Input 
-        placeholder="E-mail do usuário" 
-        type="email"
-        value={formData.userEmail}
-        onChange={(e) => onInputChange('userEmail', e.target.value)}
-      />
-      <Input 
-        placeholder="CPF (000.000.000-00)" 
-        value={formData.userCPF}
-        onChange={handleCPFChange}
-      />
-      <Select 
-        value={formData.company} 
+
+      <CompanySelect 
+        value={formData.company}
         onValueChange={(value) => onInputChange('company', value)}
-        disabled={isLoadingCompanies}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
-        </SelectTrigger>
-        <SelectContent>
-          {companiesData?.map((company) => (
-            <SelectItem key={company.id} value={company.id.toString()}>
-              {company.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      />
+
       <div className="flex items-center space-x-2">
         <Input 
           placeholder="Voucher" 
@@ -176,6 +116,7 @@ const UserFormMain = ({
           {showVoucher ? <EyeOff size={20} /> : <Eye size={20} />}
         </Button>
       </div>
+
       <Select 
         value={formData.selectedTurno} 
         onValueChange={(value) => onInputChange('selectedTurno', value)}
@@ -185,13 +126,14 @@ const UserFormMain = ({
           <SelectValue placeholder={isLoadingTurnos ? "Carregando turnos..." : "Selecione o turno"} />
         </SelectTrigger>
         <SelectContent>
-          {turnosData?.map((turno) => (
+          {turnos.map((turno) => (
             <SelectItem key={turno.id} value={turno.shift_type}>
               {turno.shift_type.charAt(0).toUpperCase() + turno.shift_type.slice(1)} Turno ({formatTime(turno.start_time)} - {formatTime(turno.end_time)})
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
+
       <div className="flex items-center space-x-2">
         <Switch
           id="suspend-user"
@@ -200,6 +142,7 @@ const UserFormMain = ({
         />
         <Label htmlFor="suspend-user">Suspender acesso</Label>
       </div>
+
       <div className="flex items-center justify-between space-x-4">
         <input
           type="file"
