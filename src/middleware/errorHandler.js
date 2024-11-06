@@ -1,7 +1,7 @@
 import logger from '../config/logger.js';
 
 export const errorHandler = (err, req, res, next) => {
-  logger.error('Error details:', {
+  logger.error('Detalhes do erro:', {
     message: err.message,
     stack: err.stack,
     path: req.path,

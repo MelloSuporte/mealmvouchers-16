@@ -2,7 +2,8 @@ import pool from '../config/database.js';
 import logger from '../config/logger.js';
 
 export const withDatabase = async (req, res, next) => {
-  let retries = 3;
+  let retries = 5;
+  let delay = 1000; // Começa com 1 segundo
   
   while (retries > 0) {
     try {
@@ -15,14 +16,20 @@ export const withDatabase = async (req, res, next) => {
           req.db.release();
         }
       });
+
+      res.on('error', () => {
+        if (req.db) {
+          req.db.release();
+        }
+      });
       
       // Adiciona timeout para a requisição
-      req.setTimeout(60000); // 60 segundos
+      req.setTimeout(60000);
       
       return next();
     } catch (err) {
       retries--;
-      logger.error(`Database connection error (${retries} retries left):`, err);
+      logger.error(`Erro de conexão com banco (${retries} tentativas restantes):`, err);
       
       if (retries === 0) {
         return res.status(503).json({ 
@@ -31,8 +38,9 @@ export const withDatabase = async (req, res, next) => {
         });
       }
       
-      // Aguarda 2 segundos antes de tentar novamente
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Espera um tempo exponencial entre tentativas (1s, 2s, 4s, 8s, 16s)
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay *= 2;
     }
   }
 };

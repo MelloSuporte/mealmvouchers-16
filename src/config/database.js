@@ -12,27 +12,28 @@ const createPool = () => {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME || 'sis_voucher',
       waitForConnections: true,
-      connectionLimit: 20, // Aumentado o limite de conexões
+      connectionLimit: 50,
+      maxIdle: 10,
+      idleTimeout: 60000,
       queueLimit: 0,
       enableKeepAlive: true,
       keepAliveInitialDelay: 0,
       timezone: '-03:00',
       dateStrings: true,
-      connectTimeout: 60000, // Aumentado timeout de conexão
-      acquireTimeout: 60000 // Aumentado timeout de aquisição
+      connectTimeout: 60000,
+      acquireTimeout: 60000
     });
 
-    logger.info('MySQL connection pool created successfully');
+    logger.info('Pool de conexões MySQL criado com sucesso');
     return pool;
   } catch (error) {
-    logger.error('Error creating connection pool:', error);
+    logger.error('Erro ao criar pool de conexões:', error);
     throw error;
   }
 };
 
-const pool = createPool();
+let pool = createPool();
 
-// Função para verificar e reconectar se necessário
 const ensureConnection = async () => {
   try {
     const connection = await pool.getConnection();
@@ -40,17 +41,17 @@ const ensureConnection = async () => {
     connection.release();
     return true;
   } catch (error) {
-    logger.error('Database connection lost, attempting to reconnect:', error);
-    pool.end(); // Fecha todas as conexões
-    createPool(); // Recria o pool
+    logger.error('Conexão com banco perdida, tentando reconectar:', error);
+    await pool.end();
+    pool = createPool();
     return false;
   }
 };
 
-// Verifica conexão a cada 30 segundos
+// Verifica conexão a cada 15 segundos
 setInterval(async () => {
   await ensureConnection();
-}, 30000);
+}, 15000);
 
 export const testConnection = async () => {
   try {
@@ -58,13 +59,13 @@ export const testConnection = async () => {
     await connection.ping();
     
     const [rows] = await connection.execute('SELECT NOW() as server_time');
-    logger.info(`Database server time: ${rows[0].server_time}`);
+    logger.info(`Horário do servidor de banco: ${rows[0].server_time}`);
     
     connection.release();
-    logger.info('Database connection test successful');
+    logger.info('Teste de conexão com banco realizado com sucesso');
     return true;
   } catch (error) {
-    logger.error('Database connection test failed:', error);
+    logger.error('Teste de conexão com banco falhou:', error);
     return false;
   }
 };
