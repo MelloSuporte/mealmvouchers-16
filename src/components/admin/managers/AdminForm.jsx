@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../../utils/api';
 
 const AdminForm = ({ onClose, adminToEdit = null }) => {
@@ -23,16 +23,19 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
     }
   });
 
-  const { data: companiesResponse = [], isLoading: isLoadingCompanies } = useQuery({
+  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      const response = await api.get('/companies');
-      return response.data || [];
+      try {
+        const response = await api.get('/api/companies');
+        return response.data || [];
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+        toast.error('Erro ao carregar empresas');
+        return [];
+      }
     }
   });
-
-  // Ensure companies is always an array
-  const companies = Array.isArray(companiesResponse) ? companiesResponse : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
