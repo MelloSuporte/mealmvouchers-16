@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Pencil } from "lucide-react";
 import api from '../../utils/api';
 import { validateCNPJ, validateImageFile } from '../../utils/validations';
+import CompanyList from './company/CompanyList';
+import CompanyFormFields from './company/CompanyFormFields';
 
 const CompanyForm = () => {
   const [companyName, setCompanyName] = useState("");
@@ -17,12 +19,12 @@ const CompanyForm = () => {
   const [editingCompany, setEditingCompany] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: companies = [], refetch } = useQuery({
+  const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       try {
         const response = await api.get('/api/companies');
-        return response.data;
+        return response.data || [];
       } catch (error) {
         console.error('Error fetching companies:', error);
         toast.error('Erro ao carregar empresas. Tente novamente.');
@@ -30,30 +32,6 @@ const CompanyForm = () => {
       }
     }
   });
-
-  const handleCNPJChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 14) {
-      value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
-      setCnpj(value);
-    }
-  };
-
-  const handleLogoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      try {
-        validateImageFile(file);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setLogo(reader.result);
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        toast.error(error.message);
-      }
-    }
-  };
 
   const handleEditCompany = (company) => {
     setEditingCompany(company);
@@ -69,22 +47,19 @@ const CompanyForm = () => {
     setEditingCompany(null);
   };
 
-  const validateForm = () => {
-    if (!companyName.trim()) {
-      throw new Error("Nome da empresa é obrigatório");
-    }
-    if (companyName.length < 3) {
-      throw new Error("Nome da empresa deve ter no mínimo 3 caracteres");
-    }
-    if (!cnpj) {
-      throw new Error("CNPJ é obrigatório");
-    }
-    validateCNPJ(cnpj);
-  };
-
   const handleSaveCompany = async () => {
     try {
-      validateForm();
+      if (!companyName.trim()) {
+        throw new Error("Nome da empresa é obrigatório");
+      }
+      if (companyName.length < 3) {
+        throw new Error("Nome da empresa deve ter no mínimo 3 caracteres");
+      }
+      if (!cnpj) {
+        throw new Error("CNPJ é obrigatório");
+      }
+      validateCNPJ(cnpj);
+      
       setIsSubmitting(true);
       
       const companyData = {
@@ -114,82 +89,23 @@ const CompanyForm = () => {
 
   return (
     <div className="space-y-6">
-      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-        <Input
-          placeholder="Nome da empresa"
-          value={companyName}
-          onChange={(e) => setCompanyName(e.target.value)}
-          required
-          minLength={3}
-        />
-        <Input
-          placeholder="CNPJ (99.999.999/9999-99)"
-          value={cnpj}
-          onChange={handleCNPJChange}
-          required
-        />
-        <div>
-          <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-2">
-            Logo da Empresa
-          </label>
-          <Input
-            id="logo"
-            type="file"
-            accept="image/*"
-            onChange={handleLogoChange}
-            className="mb-2"
-          />
-          {logo && (
-            <img 
-              src={logo} 
-              alt="Preview" 
-              className="w-32 h-32 object-contain border rounded-lg"
-            />
-          )}
-        </div>
-        <Button 
-          type="button" 
-          onClick={handleSaveCompany}
-          disabled={isSubmitting}
-          className="w-full"
-        >
-          {isSubmitting ? "Salvando..." : (editingCompany ? "Atualizar Empresa" : "Cadastrar Empresa")}
-        </Button>
-      </form>
+      <CompanyFormFields
+        companyName={companyName}
+        setCompanyName={setCompanyName}
+        cnpj={cnpj}
+        setCnpj={setCnpj}
+        logo={logo}
+        setLogo={setLogo}
+        isSubmitting={isSubmitting}
+        editingCompany={editingCompany}
+        onSave={handleSaveCompany}
+      />
 
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold mb-4">Empresas Cadastradas</h2>
-        <ScrollArea className="h-[400px] rounded-md border p-4">
-          <div className="space-y-4">
-            {Array.isArray(companies) && companies.map((company) => (
-              <Card key={company.id} className="hover:bg-gray-50">
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center space-x-4">
-                    {company.logo && (
-                      <img 
-                        src={company.logo} 
-                        alt={company.name} 
-                        className="w-12 h-12 object-contain rounded"
-                      />
-                    )}
-                    <div>
-                      <h3 className="font-medium">{company.name}</h3>
-                      <p className="text-sm text-gray-500">{company.cnpj}</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEditCompany(company)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
+      <CompanyList
+        companies={companies}
+        isLoading={isLoading}
+        onEdit={handleEditCompany}
+      />
     </div>
   );
 };
