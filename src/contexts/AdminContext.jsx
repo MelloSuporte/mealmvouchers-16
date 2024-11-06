@@ -129,12 +129,12 @@ export const AdminProvider = ({ children }) => {
     setIsMasterAdmin(status);
   };
 
-  const value = {
+  const value = React.useMemo(() => ({
     isMasterAdmin,
     adminPermissions,
     setAdminPermissions: updateAdminPermissions,
     setIsMasterAdmin: updateMasterAdminStatus
-  };
+  }), [isMasterAdmin, adminPermissions]);
 
   return (
     <AdminContext.Provider value={value}>
