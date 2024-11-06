@@ -13,7 +13,7 @@ import BackgroundImageForm from '../components/admin/BackgroundImageForm';
 import ReportForm from '../components/admin/ReportForm';
 import TurnosForm from '../components/admin/TurnosForm';
 import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
-import AdminManagement from '../pages/AdminManagement';
+import AdminManagement from './AdminManagement';
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
@@ -77,26 +77,26 @@ const Admin = () => {
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-9">
-          {renderTrigger("users", "Usuário", "manage_users")}
-          {isMasterAdmin && <TabsTrigger value="companies">Empresas</TabsTrigger>}
-          {isMasterAdmin && <TabsTrigger value="meals">Refeições</TabsTrigger>}
+          {renderTrigger("users", "Usuários", "manage_users")}
+          {renderTrigger("companies", "Empresas", "manage_companies")}
+          {renderTrigger("meals", "Refeições", "manage_meals")}
           {renderTrigger("rls", "Vouchers Extras", "manage_extra_vouchers")}
           {renderTrigger("disposable", "Vouchers Descartáveis", "manage_disposable_vouchers")}
-          {isMasterAdmin && <TabsTrigger value="backgrounds"></TabsTrigger>}
-          {renderTrigger("reports", "", "manage_reports")}
-          {isMasterAdmin && <TabsTrigger value="turnos"></TabsTrigger>}
-          {isMasterAdmin && <TabsTrigger value="managers"></TabsTrigger>}
+          {renderTrigger("backgrounds", "Imagens de Fundo", "manage_backgrounds")}
+          {renderTrigger("reports", "Relatórios", "manage_reports")}
+          {renderTrigger("turnos", "Turnos", "manage_turnos")}
+          {renderTrigger("managers", "Gerentes", "manage_managers")}
         </TabsList>
 
         {renderTab("users", <UserForm />, "manage_users")}
-        {isMasterAdmin && renderTab("companies", <CompanyForm />)}
-        {isMasterAdmin && renderTab("meals", <MealScheduleManager />)}
+        {renderTab("companies", <CompanyForm />, "manage_companies")}
+        {renderTab("meals", <MealScheduleManager />, "manage_meals")}
         {renderTab("rls", <RLSForm />, "manage_extra_vouchers")}
         {renderTab("disposable", <DisposableVoucherForm />, "manage_disposable_vouchers")}
-        {isMasterAdmin && renderTab("backgrounds", <BackgroundImageForm />)}
+        {renderTab("backgrounds", <BackgroundImageForm />, "manage_backgrounds")}
         {renderTab("reports", <ReportForm />, "manage_reports")}
-        {isMasterAdmin && renderTab("turnos", <TurnosForm />)}
-        {isMasterAdmin && renderTab("managers", <AdminManagement />)}
+        {renderTab("turnos", <TurnosForm />, "manage_turnos")}
+        {renderTab("managers", <AdminManagement />, "manage_managers")}
       </Tabs>
     </div>
   );
