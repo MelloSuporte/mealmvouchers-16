@@ -19,12 +19,42 @@ const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
   const navigate = useNavigate();
   const { isMasterAdmin, adminPermissions } = useAdmin();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!localStorage.getItem('adminToken')) {
-      navigate('/admin-login');
-    }
-  }, [navigate]);
+    const checkAuth = () => {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        toast.error("Sessão expirada. Por favor, faça login novamente.");
+        navigate('/admin-login');
+        return false;
+      }
+      return true;
+    };
+
+    const initializeAdmin = async () => {
+      try {
+        setIsLoading(true);
+        const isAuthenticated = checkAuth();
+        if (!isAuthenticated) return;
+        
+        // Verificar se todas as permissões necessárias estão carregadas
+        if (!isMasterAdmin && !adminPermissions) {
+          toast.error("Erro ao carregar permissões. Recarregando...");
+          window.location.reload();
+          return;
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Erro ao inicializar admin:', error);
+        toast.error("Erro ao carregar painel administrativo");
+        setIsLoading(false);
+      }
+    };
+
+    initializeAdmin();
+  }, [navigate, isMasterAdmin, adminPermissions]);
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -67,6 +97,14 @@ const Admin = () => {
     }
     return <TabsTrigger value={value}>{label}</TabsTrigger>;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
