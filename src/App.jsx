@@ -26,27 +26,29 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AdminProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Routes>
-              <Route path="/" element={<Navigate to="/voucher" />} />
-              <Route path="/admin-login" element={<AdminLogin />} />
-              <Route path="/voucher" element={<Voucher />} />
-              <Route path="/user-confirmation" element={<UserConfirmation />} />
-              <Route path="/self-services" element={<SelfServices />} />
-              <Route path="/bom-apetite/:userName" element={<BomApetite />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/user" element={<User />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/managers" element={<AdminManagement />} />
-              <Route path="/app" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="search" element={<Search />} />
-                <Route path="menu" element={<Menu />} />
-                <Route path="profile" element={<Profile />} />
-              </Route>
-            </Routes>
-          </TooltipProvider>
+          <React.Fragment>
+            <TooltipProvider delayDuration={0}>
+              <Toaster />
+              <Routes>
+                <Route path="/" element={<Navigate to="/voucher" />} />
+                <Route path="/admin-login" element={<AdminLogin />} />
+                <Route path="/voucher" element={<Voucher />} />
+                <Route path="/user-confirmation" element={<UserConfirmation />} />
+                <Route path="/self-services" element={<SelfServices />} />
+                <Route path="/bom-apetite/:userName" element={<BomApetite />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/user" element={<User />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/managers" element={<AdminManagement />} />
+                <Route path="/app" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="search" element={<Search />} />
+                  <Route path="menu" element={<Menu />} />
+                  <Route path="profile" element={<Profile />} />
+                </Route>
+              </Routes>
+            </TooltipProvider>
+          </React.Fragment>
         </AdminProvider>
       </BrowserRouter>
     </QueryClientProvider>
