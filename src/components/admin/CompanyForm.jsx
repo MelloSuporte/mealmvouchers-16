@@ -28,18 +28,11 @@ const CompanyForm = () => {
   });
 
   const validateForm = () => {
-    if (!companyName.trim() || !cnpj) {
-      toast.error("Preencha todos os campos obrigatórios");
+    if (!companyName || !cnpj) {
+      toast.error("Digite o nome e CNPJ");
       return false;
     }
-
-    try {
-      validateCNPJ(cnpj);
-      return true;
-    } catch (error) {
-      toast.error(error.message);
-      return false;
-    }
+    return true;
   };
 
   const handleEditCompany = (company) => {
@@ -63,23 +56,23 @@ const CompanyForm = () => {
       setIsSubmitting(true);
       
       const companyData = {
-        name: companyName.trim(),
+        name: companyName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
         logo
       };
 
       if (editingCompany) {
         await api.put(`/api/companies/${editingCompany.id}`, companyData);
-        toast.success('Empresa atualizada com sucesso!');
+        toast.success('Empresa atualizada!');
       } else {
         await api.post('/api/companies', companyData);
-        toast.success('Empresa cadastrada com sucesso!');
+        toast.success('Empresa cadastrada!');
       }
       
       resetForm();
       queryClient.invalidateQueries(['companies']);
     } catch (error) {
-      toast.error(error.response?.data?.error || "Erro ao salvar empresa");
+      toast.error("Erro ao salvar empresa");
     } finally {
       setIsSubmitting(false);
     }
