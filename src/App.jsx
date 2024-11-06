@@ -1,3 +1,4 @@
+import React from 'react';
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -20,34 +21,38 @@ import { AdminProvider } from "./contexts/AdminContext";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AdminProvider>
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Navigate to="/voucher" />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/voucher" element={<Voucher />} />
-            <Route path="/user-confirmation" element={<UserConfirmation />} />
-            <Route path="/self-services" element={<SelfServices />} />
-            <Route path="/bom-apetite/:userName" element={<BomApetite />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/user" element={<User />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/managers" element={<AdminManagement />} />
-            <Route path="/app" element={<Layout />}>
-              <Route index element={<Home />} />
-              <Route path="search" element={<Search />} />
-              <Route path="menu" element={<Menu />} />
-              <Route path="profile" element={<Profile />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AdminProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <AdminProvider>
+          <TooltipProvider>
+            <Toaster />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Navigate to="/voucher" />} />
+                <Route path="/admin-login" element={<AdminLogin />} />
+                <Route path="/voucher" element={<Voucher />} />
+                <Route path="/user-confirmation" element={<UserConfirmation />} />
+                <Route path="/self-services" element={<SelfServices />} />
+                <Route path="/bom-apetite/:userName" element={<BomApetite />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/user" element={<User />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/managers" element={<AdminManagement />} />
+                <Route path="/app" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="search" element={<Search />} />
+                  <Route path="menu" element={<Menu />} />
+                  <Route path="profile" element={<Profile />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AdminProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+};
 
 export default App;
