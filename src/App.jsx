@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AdminProvider } from "./contexts/AdminContext";
 import Layout from "./components/Layout";
 import AdminLogin from "./pages/AdminLogin";
 import SelfServices from "./pages/SelfServices";
@@ -17,17 +18,24 @@ import BomApetite from "./pages/BomApetite";
 import Admin from "./pages/Admin";
 import UserConfirmation from "./pages/UserConfirmation";
 import AdminManagement from "./pages/AdminManagement";
-import { AdminProvider } from "./contexts/AdminContext";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      cacheTime: 10 * 60 * 1000, // 10 minutos
+    },
+  },
+});
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <AdminProvider>
+    <QueryClientProvider client={queryClient}>
+      <AdminProvider>
+        <BrowserRouter>
           <TooltipProvider>
-            <Toaster />
+            <Toaster position="top-right" richColors />
             <Routes>
               <Route path="/" element={<Navigate to="/voucher" />} />
               <Route path="/admin-login" element={<AdminLogin />} />
@@ -47,9 +55,9 @@ const App = () => {
               </Route>
             </Routes>
           </TooltipProvider>
-        </AdminProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+        </BrowserRouter>
+      </AdminProvider>
+    </QueryClientProvider>
   );
 };
 

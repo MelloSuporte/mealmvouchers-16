@@ -9,13 +9,15 @@ if ('serviceWorker' in navigator) {
   wb.register();
 }
 
-const root = document.getElementById('root');
+const rootElement = document.getElementById('root');
 
-if (!root) {
-  throw new Error('Root element not found');
+if (!rootElement) {
+  throw new Error('Elemento root não encontrado! Verifique se existe um elemento com id="root" no seu HTML.');
 }
 
-ReactDOM.createRoot(root).render(
+const root = ReactDOM.createRoot(rootElement);
+
+root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
