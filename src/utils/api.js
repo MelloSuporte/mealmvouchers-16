@@ -13,26 +13,57 @@ const initDB = async () => {
   });
 };
 
+// Configuração do axios com timeout aumentado e retries
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 60000,
+  timeout: 30000, // Aumentado para 30 segundos
   headers: {
     'Content-Type': 'application/json',
   },
   retry: 3,
   retryDelay: (retryCount) => {
-    return Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff with 10s max
+    return Math.min(1000 * Math.pow(2, retryCount), 10000);
   }
 });
 
-// Response interceptor with enhanced error handling and retry logic
+// Log de requisições
+api.interceptors.request.use(
+  config => {
+    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
+      headers: config.headers,
+      data: config.data
+    });
+    return config;
+  },
+  error => {
+    console.error('[API Request Error]', error);
+    return Promise.reject(error);
+  }
+);
+
+// Log de respostas e tratamento de erros melhorado
 api.interceptors.response.use(
-  response => response,
+  response => {
+    console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
   async error => {
+    console.error('[API Error Details]', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+
     const originalRequest = error.config;
 
-    // Handle offline mode
+    // Modo offline
     if (!navigator.onLine) {
+      console.log('[API] Dispositivo offline, salvando operação para sincronização posterior');
       const db = await initDB();
       await db.add(STORE_NAME, {
         request: originalRequest,
@@ -43,7 +74,7 @@ api.interceptors.response.use(
       return Promise.resolve({ data: { offline: true } });
     }
 
-    // Enhanced retry logic for network errors
+    // Lógica de retry para erros de rede
     if ((error.message === 'Network Error' || 
          error.response?.status === 502 || 
          error.code === 'ECONNABORTED') && 
@@ -56,7 +87,9 @@ api.interceptors.response.use(
       const retryCount = 3 - originalRequest.retry;
       const delayMs = originalRequest.retryDelay(retryCount);
       
-      toast.info(`Tentativa ${retryCount + 1} de 3 de reconexão ao servidor...`, {
+      console.log(`[API] Tentativa ${retryCount + 1} de reconexão em ${delayMs}ms`);
+      
+      toast.info(`Tentando reconectar ao servidor... (${retryCount + 1}/3)`, {
         duration: delayMs,
       });
       
@@ -67,33 +100,76 @@ api.interceptors.response.use(
       });
     }
 
-    // Handle specific error types
-    const errorResponse = error.response?.data;
+    // Mensagens de erro específicas
     let errorMessage = 'Erro ao processar sua requisição';
 
-    if (error.response?.status === 401) {
-      errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
-    } else if (error.response?.status === 403) {
-      errorMessage = 'Você não tem permissão para realizar esta ação.';
-    } else if (error.response?.status === 404) {
-      errorMessage = 'Recurso não encontrado.';
-    } else if (error.response?.status === 422) {
-      errorMessage = 'Dados inválidos. Verifique as informações e tente novamente.';
-    } else if (error.response?.status >= 500) {
-      errorMessage = 'Erro no servidor. Por favor, aguarde alguns instantes e tente novamente.';
-    }
-
-    // Use error message from server if available
-    if (errorResponse?.message) {
-      errorMessage = errorResponse.message;
+    if (!navigator.onLine) {
+      errorMessage = 'Sem conexão com a internet. Verifique sua conexão e tente novamente.';
+    } else if (error.code === 'ECONNABORTED') {
+      errorMessage = 'A conexão demorou muito para responder. Tente novamente.';
+    } else if (error.response) {
+      switch (error.response.status) {
+        case 400:
+          errorMessage = 'Dados inválidos. Verifique as informações e tente novamente.';
+          break;
+        case 401:
+          errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
+          break;
+        case 403:
+          errorMessage = 'Você não tem permissão para realizar esta ação.';
+          break;
+        case 404:
+          errorMessage = 'Recurso não encontrado.';
+          break;
+        case 408:
+          errorMessage = 'Tempo de requisição esgotado. Tente novamente.';
+          break;
+        case 429:
+          errorMessage = 'Muitas requisições. Aguarde um momento e tente novamente.';
+          break;
+        case 500:
+          errorMessage = 'Erro interno do servidor. Nossa equipe foi notificada.';
+          break;
+        case 502:
+        case 503:
+        case 504:
+          errorMessage = 'Servidor temporariamente indisponível. Tente novamente em alguns instantes.';
+          break;
+        default:
+          errorMessage = error.response.data?.message || 'Erro desconhecido. Tente novamente.';
+      }
     }
 
     if (!originalRequest._retry || originalRequest.retry === 0) {
       toast.error(errorMessage);
     }
 
-    throw error;
+    return Promise.reject(error);
   }
 );
+
+// Sincronização de operações offline
+window.addEventListener('online', async () => {
+  console.log('[API] Conexão restaurada, sincronizando operações pendentes');
+  const db = await initDB();
+  const tx = db.transaction(STORE_NAME, 'readwrite');
+  const store = tx.objectStore(STORE_NAME);
+  const pendingOps = await store.getAll();
+
+  if (pendingOps.length > 0) {
+    toast.info(`Sincronizando ${pendingOps.length} operações pendentes...`);
+    
+    for (const op of pendingOps) {
+      try {
+        await api(op.request);
+        await store.delete(op.id);
+      } catch (error) {
+        console.error('[API] Erro ao sincronizar operação:', error);
+      }
+    }
+    
+    toast.success('Sincronização concluída!');
+  }
+});
 
 export default api;
