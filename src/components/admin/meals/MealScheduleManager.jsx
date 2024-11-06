@@ -8,14 +8,14 @@ const MealScheduleManager = () => {
   return (
     <Tabs defaultValue="list" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="list">Lista de Refeições</TabsTrigger>
-        <TabsTrigger value="new">Nova Refeição</TabsTrigger>
+        <TabsTrigger value="list">Lista</TabsTrigger>
+        <TabsTrigger value="new">Nova</TabsTrigger>
       </TabsList>
       
       <TabsContent value="list">
         <Card>
           <CardHeader>
-            <CardTitle>Refeições Cadastradas</CardTitle>
+            <CardTitle>Refeições</CardTitle>
           </CardHeader>
           <CardContent>
             <MealScheduleList />
@@ -26,7 +26,7 @@ const MealScheduleManager = () => {
       <TabsContent value="new">
         <Card>
           <CardHeader>
-            <CardTitle>Cadastrar Nova Refeição</CardTitle>
+            <CardTitle>Refeição</CardTitle>
           </CardHeader>
           <CardContent>
             <MealScheduleForm />
