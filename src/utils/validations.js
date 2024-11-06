@@ -1,22 +1,17 @@
 export const validateCNPJ = (cnpj) => {
-  // Remove caracteres não numéricos
   const cleanCNPJ = cnpj.replace(/[^\d]/g, '');
 
-  // Verifica se tem 14 dígitos
   if (cleanCNPJ.length !== 14) {
     throw new Error('CNPJ deve conter 14 dígitos');
   }
 
-  // Verifica se todos os dígitos são iguais
   if (/^(\d)\1+$/.test(cleanCNPJ)) {
-    throw new Error('CNPJ inválido');
+    throw new Error('CNPJ inválido: todos os dígitos são iguais');
   }
 
-  // Validação dos dígitos verificadores
   let sum = 0;
   let pos = 5;
 
-  // Primeiro dígito verificador
   for (let i = 0; i < 12; i++) {
     sum += parseInt(cleanCNPJ[i]) * pos--;
     if (pos < 2) pos = 9;
@@ -24,10 +19,9 @@ export const validateCNPJ = (cnpj) => {
 
   let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
   if (result !== parseInt(cleanCNPJ[12])) {
-    throw new Error('CNPJ inválido');
+    throw new Error('CNPJ inválido: primeiro dígito verificador incorreto');
   }
 
-  // Segundo dígito verificador
   sum = 0;
   pos = 6;
   for (let i = 0; i < 13; i++) {
@@ -37,7 +31,7 @@ export const validateCNPJ = (cnpj) => {
 
   result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
   if (result !== parseInt(cleanCNPJ[13])) {
-    throw new Error('CNPJ inválido');
+    throw new Error('CNPJ inválido: segundo dígito verificador incorreto');
   }
 
   return true;
@@ -58,27 +52,25 @@ export const validateCPF = (cpf) => {
   }
 
   if (/^(\d)\1+$/.test(cleanCPF)) {
-    throw new Error('CPF inválido');
+    throw new Error('CPF inválido: todos os dígitos são iguais');
   }
 
-  // Validação do primeiro dígito
   let sum = 0;
   for (let i = 0; i < 9; i++) {
     sum += parseInt(cleanCPF[i]) * (10 - i);
   }
   let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
   if (result !== parseInt(cleanCPF[9])) {
-    throw new Error('CPF inválido');
+    throw new Error('CPF inválido: primeiro dígito verificador incorreto');
   }
 
-  // Validação do segundo dígito
   sum = 0;
   for (let i = 0; i < 10; i++) {
     sum += parseInt(cleanCPF[i]) * (11 - i);
   }
   result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
   if (result !== parseInt(cleanCPF[10])) {
-    throw new Error('CPF inválido');
+    throw new Error('CPF inválido: segundo dígito verificador incorreto');
   }
 
   return true;
@@ -89,12 +81,19 @@ export const validateEmail = (email) => {
   if (!emailRegex.test(email)) {
     throw new Error('Email inválido');
   }
+  if (email.length > 255) {
+    throw new Error('Email deve ter no máximo 255 caracteres');
+  }
   return true;
 };
 
 export const validateImageFile = (file) => {
   const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
   const maxSize = 5 * 1024 * 1024; // 5MB
+
+  if (!file) {
+    throw new Error('Arquivo de imagem é obrigatório');
+  }
 
   if (!validTypes.includes(file.type)) {
     throw new Error('Formato de imagem inválido. Use JPEG, PNG ou GIF');

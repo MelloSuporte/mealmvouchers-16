@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil } from "lucide-react";
 import api from '../../utils/api';
-import { validateCNPJ, validateImageFile } from '../../utils/validations';
+import { validateCNPJ } from '../../utils/validations';
 import CompanyList from './company/CompanyList';
 import CompanyFormFields from './company/CompanyFormFields';
 
@@ -33,6 +33,37 @@ const CompanyForm = () => {
     }
   });
 
+  const validateForm = () => {
+    if (!companyName.trim()) {
+      toast.error("Nome da empresa é obrigatório");
+      return false;
+    }
+    
+    if (companyName.length < 3) {
+      toast.error("Nome da empresa deve ter no mínimo 3 caracteres");
+      return false;
+    }
+
+    if (companyName.length > 100) {
+      toast.error("Nome da empresa deve ter no máximo 100 caracteres");
+      return false;
+    }
+
+    if (!cnpj) {
+      toast.error("CNPJ é obrigatório");
+      return false;
+    }
+
+    try {
+      validateCNPJ(cnpj);
+    } catch (error) {
+      toast.error(error.message);
+      return false;
+    }
+
+    return true;
+  };
+
   const handleEditCompany = (company) => {
     setEditingCompany(company);
     setCompanyName(company.name);
@@ -48,23 +79,14 @@ const CompanyForm = () => {
   };
 
   const handleSaveCompany = async () => {
+    if (!validateForm()) return;
+
     try {
-      if (!companyName.trim()) {
-        throw new Error("Nome da empresa é obrigatório");
-      }
-      if (companyName.length < 3) {
-        throw new Error("Nome da empresa deve ter no mínimo 3 caracteres");
-      }
-      if (!cnpj) {
-        throw new Error("CNPJ é obrigatório");
-      }
-      validateCNPJ(cnpj);
-      
       setIsSubmitting(true);
       
       const companyData = {
-        name: companyName,
-        cnpj,
+        name: companyName.trim(),
+        cnpj: cnpj.replace(/[^\d]/g, ''),
         logo
       };
 
