@@ -80,7 +80,7 @@ api.interceptors.response.use(
     } else if (error.response?.status === 422) {
       errorMessage = 'Dados inválidos. Verifique as informações e tente novamente.';
     } else if (error.response?.status >= 500) {
-      errorMessage = 'Erro no servidor. Por favor, tente novamente em alguns instantes.';
+      errorMessage = 'Erro no servidor. Por favor, aguarde alguns instantes e tente novamente.';
     }
 
     // Use error message from server if available
