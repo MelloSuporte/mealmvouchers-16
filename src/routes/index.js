@@ -7,20 +7,17 @@ import empresasRoutes from './empresas.js';
 import usuariosRoutes from './usuarios.js';
 import vouchersExtraRoutes from './vouchersExtra.js';
 
-export const configureRoutes = (app) => {
-  // Health check route
-  app.use('/health', healthRoutes);
-  
-  // API routes with /api prefix
-  const apiRouter = express.Router();
-  
-  apiRouter.use('/vouchers', voucherRoutes);
-  apiRouter.use('/relatorios', relatoriosRoutes);
-  apiRouter.use('/refeicoes', refeicoesRoutes);
-  apiRouter.use('/empresas', empresasRoutes);
-  apiRouter.use('/usuarios', usuariosRoutes);
-  apiRouter.use('/vouchers-extra', vouchersExtraRoutes);
-  
-  // Mount all API routes under /api
-  app.use('/api', apiRouter);
-};
+const router = express.Router();
+
+// Health check route
+router.use('/health', healthRoutes);
+
+// API routes
+router.use('/companies', empresasRoutes);
+router.use('/vouchers', voucherRoutes);
+router.use('/reports', relatoriosRoutes);
+router.use('/meals', refeicoesRoutes);
+router.use('/users', usuariosRoutes);  // This maps /api/users to the usuarios routes
+router.use('/extra-vouchers', vouchersExtraRoutes);
+
+export default router;
