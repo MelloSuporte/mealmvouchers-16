@@ -20,7 +20,14 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
           manage_extra_vouchers: true,
           manage_disposable_vouchers: true,
           manage_users: true,
-          manage_reports: true
+          manage_reports: true,
+          manage_companies: true,
+          manage_meals: true,
+          manage_backgrounds: true,
+          manage_turnos: true,
+          manage_managers: true,
+          manage_system: true,
+          full_access: true
         }));
         onClose();
         navigate('/admin');
