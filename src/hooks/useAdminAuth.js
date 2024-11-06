@@ -7,14 +7,14 @@ export const useAdminAuth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const adminToken = localStorage.getItem('adminToken');
     const adminType = localStorage.getItem('adminType');
-
-    if (!adminToken && adminType !== 'master') {
-      toast.error("Sessão expirada. Por favor, faça login novamente.");
+    
+    if (!adminType) {
+      toast.error("Acesso não autorizado");
       navigate('/admin-login');
       return;
     }
+
     setIsAuthenticated(true);
   }, [navigate]);
 
