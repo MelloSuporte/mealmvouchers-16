@@ -1,7 +1,8 @@
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import CompanySelect from '../user/CompanySelect';
 
 const CompanyUserSelector = ({ 
   selectedCompany, 
@@ -10,32 +11,18 @@ const CompanyUserSelector = ({
   setSearchTerm, 
   selectedUser, 
   setSelectedUser,
-  companies = [],
   users = [],
-  isLoadingCompanies,
   isLoadingUsers 
 }) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="company">Empresa</Label>
-        <Select 
-          value={selectedCompany} 
+        <CompanySelect 
+          value={selectedCompany}
           onValueChange={setSelectedCompany}
-          disabled={isLoadingCompanies}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a empresa" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as empresas</SelectItem>
-            {companies.map((company) => (
-              <SelectItem key={company.id} value={company.id.toString()}>
-                {company.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          includeAllOption={true}
+        />
       </div>
 
       <div className="space-y-2">

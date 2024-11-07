@@ -3,10 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../../../utils/api';
+import CompanySelect from '../user/CompanySelect';
 
 const AdminForm = ({ onClose, adminToEdit = null }) => {
   const [formData, setFormData] = useState({
@@ -20,20 +20,6 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
       manage_disposable_vouchers: false,
       manage_users: false,
       manage_reports: false
-    }
-  });
-
-  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      try {
-        const response = await api.get('/api/companies');
-        return response.data || [];
-      } catch (error) {
-        console.error('Error fetching companies:', error);
-        toast.error('Erro ao carregar empresas');
-        return [];
-      }
     }
   });
 
@@ -85,22 +71,10 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
 
       <div className="space-y-2">
         <Label>Empresa</Label>
-        <Select 
-          value={formData.company_id} 
+        <CompanySelect 
+          value={formData.company_id}
           onValueChange={(value) => setFormData({ ...formData, company_id: value })}
-          disabled={isLoadingCompanies}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
-          </SelectTrigger>
-          <SelectContent>
-            {companies.map((company) => (
-              <SelectItem key={company.id} value={company.id.toString()}>
-                {company.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        />
       </div>
 
       <div className="space-y-2">
