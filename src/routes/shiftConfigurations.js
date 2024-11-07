@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const [rows] = await req.db.query(
-      'SELECT * FROM configuracoes_turno ORDER BY tipo_turno'
+      'SELECT * FROM configuracoes_turno ORDER BY id'
     );
     res.json(rows);
   } catch (error) {
@@ -21,12 +21,12 @@ router.get('/', async (req, res) => {
 
 // Create new shift configuration
 router.post('/', async (req, res) => {
-  const { tipo_turno, hora_inicio, hora_fim, ativo } = req.body;
+  const { shift_type, start_time, end_time, is_active } = req.body;
   
   try {
     const [result] = await req.db.query(
-      'INSERT INTO configuracoes_turno (tipo_turno, hora_inicio, hora_fim, ativo) VALUES (?, ?, ?, ?)',
-      [tipo_turno, hora_inicio, hora_fim, ativo]
+      'INSERT INTO configuracoes_turno (tipo_turno, hora_inicio, hora_fim, ativo, criado_em, atualizado_em) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+      [shift_type, start_time, end_time, is_active]
     );
     
     const [newShift] = await req.db.query(
@@ -47,16 +47,16 @@ router.post('/', async (req, res) => {
 // Update shift configuration
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { hora_inicio, hora_fim, ativo } = req.body;
+  const { start_time, end_time, is_active } = req.body;
   
   try {
     const [result] = await req.db.query(
-      'UPDATE configuracoes_turno SET hora_inicio = ?, hora_fim = ?, ativo = ? WHERE id = ?',
-      [hora_inicio, hora_fim, ativo, id]
+      'UPDATE configuracoes_turno SET hora_inicio = ?, hora_fim = ?, ativo = ?, atualizado_em = CURRENT_TIMESTAMP WHERE id = ?',
+      [start_time, end_time, is_active, id]
     );
     
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Configuração de turno não encontrada' });
+      return res.status(404).json({ error: 'Shift configuration not found' });
     }
     
     const [updatedShift] = await req.db.query(

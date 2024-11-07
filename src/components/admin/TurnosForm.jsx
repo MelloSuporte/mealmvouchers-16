@@ -7,7 +7,20 @@ import TurnoCard from "@/components/admin/turnos/TurnoCard";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NewTurnoDialog from "@/components/admin/turnos/NewTurnoDialog";
 import { useAdmin } from '@/contexts/AdminContext';
-import { Button } from "@/components/ui/button";
+
+/**
+ * COMPONENTE DE GERENCIAMENTO DE TURNOS
+ * Status: ESTÁVEL
+ * 
+ * Funcionalidades:
+ * - Visualização de turnos
+ * - Criação de novos turnos
+ * - Edição de horários
+ * - Ativação/desativação de turnos
+ * 
+ * Permissões:
+ * - Administrador Master: Acesso total
+ */
 
 const TurnosForm = () => {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
@@ -24,7 +37,11 @@ const TurnosForm = () => {
     queryKey: ['shift-configurations'],
     queryFn: async () => {
       try {
-        const response = await api.get('/api/shift-configurations');
+        const response = await api.get('/api/shift-configurations', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          }
+        });
         return response.data;
       } catch (error) {
         toast.error('Erro ao carregar configurações dos turnos');
@@ -64,23 +81,15 @@ const TurnosForm = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Gerenciamento de Turnos</h1>
-        {isMasterAdmin && (
-          <Button onClick={() => setIsDialogOpen(true)}>
-            Adicionar Novo Turno
-          </Button>
-        )}
+      <div className="flex items-center justify-between">
+        <NewTurnoDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          newTurno={newTurno}
+          setNewTurno={setNewTurno}
+          onCreateTurno={onCreateTurno}
+        />
       </div>
-
-      <NewTurnoDialog
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        newTurno={newTurno}
-        setNewTurno={setNewTurno}
-        onCreateTurno={onCreateTurno}
-      />
-
       <div className="grid gap-6">
         {turnos.map((turno) => (
           <TurnoCard
