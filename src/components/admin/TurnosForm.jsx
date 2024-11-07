@@ -143,22 +143,24 @@ const TurnosForm = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Configuração de Turnos</h2>
         <Button
           onClick={() => setIsNewTurnoDialogOpen(true)}
-          className="mb-4"
         >
           <Plus className="h-4 w-4 mr-2" />
           Novo Turno
         </Button>
-        <NewTurnoDialog
-          isOpen={isNewTurnoDialogOpen}
-          onOpenChange={setIsNewTurnoDialogOpen}
-          newTurno={newTurno}
-          setNewTurno={setNewTurno}
-          onCreateTurno={handleCreateTurno}
-        />
       </div>
+      
+      <NewTurnoDialog
+        isOpen={isNewTurnoDialogOpen}
+        onOpenChange={setIsNewTurnoDialogOpen}
+        newTurno={newTurno}
+        setNewTurno={setNewTurno}
+        onCreateTurno={handleCreateTurno}
+      />
+      
       <div className="grid gap-4">
         {turnos.map((turno) => (
           <TurnoCard
