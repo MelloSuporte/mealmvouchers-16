@@ -1,5 +1,5 @@
 import React from 'react';
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import TurnosForm from '@/components/admin/TurnosForm';
 
 const queryClient = new QueryClient({
