@@ -7,6 +7,7 @@ import refeicoesRoutes from './refeicoes.js';
 import usuariosRoutes from './usuarios.js';
 import vouchersExtraRoutes from './vouchersExtra.js';
 import backgroundImagesRoutes from './backgroundImages.js';
+import shiftConfigurationsRoutes from './shiftConfigurations.js';
 
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.use('/meals', refeicoesRoutes);
 router.use('/users', usuariosRoutes);
 router.use('/extra-vouchers', vouchersExtraRoutes);
 router.use('/background-images', backgroundImagesRoutes);
+router.use('/shift-configurations', shiftConfigurationsRoutes);
 
 export default router;
