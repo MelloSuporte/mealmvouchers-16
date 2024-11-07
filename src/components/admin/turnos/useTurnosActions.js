@@ -73,16 +73,6 @@ export const useTurnosActions = () => {
   };
 
   const handleCreateTurno = (newTurno) => {
-    if (!newTurno.shift_type || !newTurno.start_time || !newTurno.end_time) {
-      toast.error("Preencha todos os campos obrigatórios");
-      return;
-    }
-
-    if (newTurno.start_time >= newTurno.end_time) {
-      toast.error("Horário de entrada deve ser menor que o de saída");
-      return;
-    }
-
     createTurnoMutation.mutate(newTurno);
   };
 
