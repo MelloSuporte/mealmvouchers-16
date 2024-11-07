@@ -9,7 +9,13 @@ export const useTurnosActions = () => {
 
   const createTurnoMutation = useMutation({
     mutationFn: async (newTurno) => {
-      const response = await api.post('/shift-configurations', newTurno);
+      const turnoData = {
+        shift_type: newTurno.shift_type,
+        start_time: newTurno.start_time,
+        end_time: newTurno.end_time,
+        is_active: newTurno.is_active
+      };
+      const response = await api.post('/shift-configurations', turnoData);
       return response.data;
     },
     onSuccess: () => {
@@ -17,17 +23,18 @@ export const useTurnosActions = () => {
       toast.success("Turno criado com sucesso!");
     },
     onError: (error) => {
-      toast.error("Erro ao criar turno: " + error.message);
+      toast.error("Erro ao criar turno: " + (error.response?.data?.message || error.message));
     }
   });
 
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
-      const response = await api.put(`/shift-configurations/${updatedTurno.id}`, {
+      const turnoData = {
         start_time: updatedTurno.start_time,
         end_time: updatedTurno.end_time,
         is_active: updatedTurno.is_active
-      });
+      };
+      const response = await api.put(`/shift-configurations/${updatedTurno.id}`, turnoData);
       return response.data;
     },
     onMutate: (variables) => {
@@ -41,7 +48,7 @@ export const useTurnosActions = () => {
       toast.success("Horário do turno atualizado com sucesso!");
     },
     onError: (error) => {
-      toast.error("Erro ao atualizar turno: " + error.message);
+      toast.error("Erro ao atualizar turno: " + (error.response?.data?.message || error.message));
     }
   });
 
