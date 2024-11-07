@@ -1,68 +1,61 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
-import { useAdmin } from '@/contexts/AdminContext';
+import { Label } from "@/components/ui/label";
 
 const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
-  const { isMasterAdmin } = useAdmin();
-
-  // Função para converter o tipo de turno em um rótulo legível
   const getTurnoLabel = (shiftType) => {
     const labels = {
       'central': 'Turno Central (Administrativo)',
-      'primeiro': 'Primeiro Turno',
-      'segundo': 'Segundo Turno',
-      'terceiro': 'Terceiro Turno'
+      'first': 'Primeiro Turno',
+      'second': 'Segundo Turno',
+      'third': 'Terceiro Turno'
     };
     return labels[shiftType] || shiftType;
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="p-6">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <CardTitle>{getTurnoLabel(turno.shift_type)}</CardTitle>
+          <h3 className="text-lg font-semibold">
+            {getTurnoLabel(turno.shift_type)}
+          </h3>
           {isSubmitting && (
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           )}
         </div>
-        <CardDescription>Configure os horários de entrada e saída</CardDescription>
-      </CardHeader>
-      <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor={`entrada-${turno.id}`}>Horário de Entrada</Label>
+            <Label>Horário de Entrada</Label>
             <Input
-              id={`entrada-${turno.id}`}
               type="time"
               value={turno.start_time}
               onChange={(e) => onTurnoChange(turno.id, 'start_time', e.target.value)}
               className="w-full"
-              disabled={isSubmitting || !isMasterAdmin}
+              disabled={isSubmitting}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`saida-${turno.id}`}>Horário de Saída</Label>
+            <Label>Horário de Saída</Label>
             <Input
-              id={`saida-${turno.id}`}
               type="time"
               value={turno.end_time}
               onChange={(e) => onTurnoChange(turno.id, 'end_time', e.target.value)}
               className="w-full"
-              disabled={isSubmitting || !isMasterAdmin}
+              disabled={isSubmitting}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`active-${turno.id}`}>Status do Turno</Label>
+            <Label>Status</Label>
             <div className="flex items-center space-x-2">
               <Switch
                 id={`active-${turno.id}`}
                 checked={turno.is_active}
                 onCheckedChange={(checked) => onTurnoChange(turno.id, 'is_active', checked)}
-                disabled={isSubmitting || !isMasterAdmin}
+                disabled={isSubmitting}
               />
               <Label htmlFor={`active-${turno.id}`}>
                 {turno.is_active ? 'Ativo' : 'Inativo'}
@@ -70,7 +63,7 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
             </div>
           </div>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };
