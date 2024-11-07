@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import api from "@/utils/api";
 import { Loader2 } from "lucide-react";
 import TurnoCard from "@/components/admin/turnos/TurnoCard";
@@ -8,6 +9,7 @@ import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NewTurnoDialog from "@/components/admin/turnos/NewTurnoDialog";
 
 const TurnosForm = () => {
+  const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [newTurno, setNewTurno] = React.useState({
     shift_type: '',
@@ -19,15 +21,28 @@ const TurnosForm = () => {
   const { data: turnos = [], isLoading, error } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        toast.error('Sessão expirada. Por favor, faça login novamente.');
+        navigate('/login');
+        return [];
+      }
+
       try {
         const response = await api.get('/api/shift-configurations', {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            'Authorization': `Bearer ${token}`
           }
         });
         return response.data;
       } catch (error) {
         console.error('Error fetching shift configurations:', error);
+        if (error.response?.status === 401) {
+          toast.error('Sessão expirada. Por favor, faça login novamente.');
+          navigate('/login');
+          return [];
+        }
         toast.error('Erro ao carregar configurações dos turnos');
         throw error;
       }
@@ -35,6 +50,14 @@ const TurnosForm = () => {
   });
 
   const { handleTurnoChange, submittingTurnoId, handleCreateTurno } = useTurnosActions();
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      toast.error('Você precisa estar logado para acessar esta página');
+      navigate('/login');
+    }
+  }, [navigate]);
 
   if (isLoading) {
     return (
