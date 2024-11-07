@@ -19,7 +19,6 @@ import Turnos from "./pages/Turnos";
 import UserConfirmation from "./pages/UserConfirmation";
 import AdminManagement from "./pages/AdminManagement";
 
-// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -56,7 +55,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/user" element={<User />} />
                 <Route path="/admin" element={<Admin />} />
-                <Route path="/admin/turnos" element={<Turnos />} />
+                <Route path="/turnos" element={<Turnos />} />
                 <Route path="/admin/managers" element={<AdminManagement />} />
                 <Route path="/app" element={<Layout />}>
                   <Route index element={<Home />} />
