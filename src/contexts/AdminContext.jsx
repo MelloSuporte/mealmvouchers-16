@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 
 const AdminContext = createContext(null);
@@ -14,44 +14,71 @@ export const useAdmin = () => {
 export const AdminProvider = ({ children }) => {
   const [adminType, setAdminType] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const checkAuth = useCallback(() => {
+    try {
+      const adminToken = localStorage.getItem('adminToken');
+      const storedType = localStorage.getItem('adminType');
+      
+      if (adminToken) {
+        setIsAuthenticated(true);
+        setAdminType('master');
+      } else if (storedType) {
+        setIsAuthenticated(true);
+        setAdminType(storedType);
+      } else {
+        setIsAuthenticated(false);
+        setAdminType(null);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar autenticação:', error);
+      toast.error("Erro ao verificar autenticação");
+      setIsAuthenticated(false);
+      setAdminType(null);
+    }
+  }, []);
 
   useEffect(() => {
-    const initializeAdmin = () => {
+    const initializeAdmin = async () => {
       try {
-        const storedType = localStorage.getItem('adminType');
-        const adminToken = localStorage.getItem('adminToken');
-        
-        if (adminToken) {
-          setAdminType('master'); // Garante acesso total com token
-        } else if (storedType) {
-          setAdminType(storedType);
-        }
-        
-        setIsLoading(false);
+        checkAuth();
       } catch (error) {
         console.error('Erro ao inicializar admin:', error);
         toast.error("Erro ao carregar dados do administrador");
+      } finally {
         setIsLoading(false);
       }
     };
 
     initializeAdmin();
+  }, [checkAuth]);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminType');
+    setIsAuthenticated(false);
+    setAdminType(null);
+    toast.success("Logout realizado com sucesso");
   }, []);
 
-  const hasPermission = () => {
-    const adminToken = localStorage.getItem('adminToken');
-    return adminToken ? true : (adminType === 'master' || adminType === 'manager');
-  };
-
   const value = {
-    isMasterAdmin: true, // Garante que sempre será master admin
-    isManager: true, // Garante acesso de gerente também
-    hasPermission: () => true, // Sempre retorna true para garantir acesso
-    isLoading
+    adminType,
+    isLoading,
+    isAuthenticated,
+    isMasterAdmin: adminType === 'master',
+    isManager: adminType === 'manager' || adminType === 'master',
+    hasPermission: () => isAuthenticated,
+    logout,
+    checkAuth
   };
 
   if (isLoading) {
-    return <div>Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   return (
