@@ -6,14 +6,9 @@ import { Loader2 } from "lucide-react";
 import TurnoCard from "@/components/admin/turnos/TurnoCard";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NewTurnoDialog from "@/components/admin/turnos/NewTurnoDialog";
-import { useAdmin } from '@/contexts/AdminContext';
 
 const TurnosForm = () => {
-  // Estado para controlar o diálogo de novo turno
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const { isMasterAdmin } = useAdmin(); // Verifica se é admin master
-
-  // Estado inicial para novo turno
   const [newTurno, setNewTurno] = React.useState({
     shift_type: '',
     start_time: '',
@@ -21,7 +16,6 @@ const TurnosForm = () => {
     is_active: true
   });
 
-  // Busca os dados dos turnos do servidor
   const { data: turnos = [], isLoading, error } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
@@ -39,10 +33,8 @@ const TurnosForm = () => {
     }
   });
 
-  // Hook personalizado para gerenciar ações dos turnos
   const { handleTurnoChange, submittingTurnoId, handleCreateTurno } = useTurnosActions();
 
-  // Exibe loader durante o carregamento
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -51,7 +43,6 @@ const TurnosForm = () => {
     );
   }
 
-  // Exibe mensagem de erro se houver falha no carregamento
   if (error) {
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
@@ -60,14 +51,7 @@ const TurnosForm = () => {
     );
   }
 
-  // Função para criar novo turno
   const onCreateTurno = async () => {
-    // Verifica se usuário tem permissão
-    if (!isMasterAdmin) {
-      toast.error("Apenas administradores master podem criar novos turnos");
-      return;
-    }
-
     await handleCreateTurno(newTurno);
     setIsDialogOpen(false);
     setNewTurno({
@@ -94,14 +78,7 @@ const TurnosForm = () => {
           <TurnoCard
             key={turno.id}
             turno={turno}
-            onTurnoChange={(id, field, value) => {
-              // Verifica permissão antes de permitir alterações
-              if (!isMasterAdmin) {
-                toast.error("Apenas administradores master podem modificar turnos");
-                return;
-              }
-              handleTurnoChange(id, field, value);
-            }}
+            onTurnoChange={handleTurnoChange}
             isSubmitting={submittingTurnoId === turno.id}
           />
         ))}

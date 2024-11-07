@@ -4,12 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
-import { useAdmin } from '@/contexts/AdminContext';
 
 const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
-  const { isMasterAdmin } = useAdmin();
-
-  // Função para converter o tipo de turno em um rótulo legível
   const getTurnoLabel = (shiftType) => {
     const labels = {
       'central': 'Turno Central (Administrativo)',
@@ -41,7 +37,7 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
               value={turno.start_time}
               onChange={(e) => onTurnoChange(turno.id, 'start_time', e.target.value)}
               className="w-full"
-              disabled={isSubmitting || !isMasterAdmin}
+              disabled={isSubmitting}
             />
           </div>
           <div className="space-y-2">
@@ -52,7 +48,7 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
               value={turno.end_time}
               onChange={(e) => onTurnoChange(turno.id, 'end_time', e.target.value)}
               className="w-full"
-              disabled={isSubmitting || !isMasterAdmin}
+              disabled={isSubmitting}
             />
           </div>
           <div className="space-y-2">
@@ -62,7 +58,7 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
                 id={`active-${turno.id}`}
                 checked={turno.is_active}
                 onCheckedChange={(checked) => onTurnoChange(turno.id, 'is_active', checked)}
-                disabled={isSubmitting || !isMasterAdmin}
+                disabled={isSubmitting}
               />
               <Label htmlFor={`active-${turno.id}`}>
                 {turno.is_active ? 'Ativo' : 'Inativo'}
