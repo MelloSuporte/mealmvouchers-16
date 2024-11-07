@@ -19,7 +19,7 @@ router.use('/health', healthRoutes);
 router.use('/companies', companiesRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/reports', reportRoutes);
-router.use('/meals', mealsRoutes);  // This maps to /api/meals
+router.use('/meals', mealsRoutes);
 router.use('/users', usersRoutes);
 router.use('/extra-vouchers', extraVouchersRoutes);
 router.use('/background-images', backgroundImagesRoutes);

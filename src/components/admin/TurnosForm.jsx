@@ -44,7 +44,6 @@ const TurnosForm = () => {
           navigate('/login');
           return [];
         }
-        toast.error('Erro ao carregar configurações dos turnos');
         throw error;
       }
     },
