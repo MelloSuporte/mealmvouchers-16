@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import api from "@/utils/api";
@@ -8,8 +8,8 @@ import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NewTurnoDialog from "@/components/admin/turnos/NewTurnoDialog";
 
 const TurnosForm = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newTurno, setNewTurno] = useState({
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [newTurno, setNewTurno] = React.useState({
     shift_type: '',
     start_time: '',
     end_time: '',
