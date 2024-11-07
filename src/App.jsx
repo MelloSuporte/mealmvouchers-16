@@ -33,43 +33,45 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AdminProvider>
-          <BrowserRouter>
-            <Toaster 
-              position="top-right"
-              toastOptions={{
-                success: { position: "top-right" },
-                error: { position: "bottom-right" },
-                info: { position: "top-right" },
-                warning: { position: "top-right" },
-              }}
-              richColors
-              closeButton
-            />
-            <Routes>
-              <Route path="/" element={<Navigate to="/voucher" replace />} />
-              <Route path="/voucher" element={<Voucher />} />
-              <Route path="/user-confirmation" element={<UserConfirmation />} />
-              <Route path="/self-services" element={<SelfServices />} />
-              <Route path="/bom-apetite/:userName" element={<BomApetite />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/user" element={<User />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/turnos" element={<Turnos />} />
-              <Route path="/admin/managers" element={<AdminManagement />} />
-              <Route path="/app" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="search" element={<Search />} />
-                <Route path="menu" element={<Menu />} />
-                <Route path="profile" element={<Profile />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
-        </AdminProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AdminProvider>
+            <BrowserRouter>
+              <Toaster 
+                position="top-right"
+                toastOptions={{
+                  success: { position: "top-right" },
+                  error: { position: "bottom-right" },
+                  info: { position: "top-right" },
+                  warning: { position: "top-right" },
+                }}
+                richColors
+                closeButton
+              />
+              <Routes>
+                <Route path="/" element={<Navigate to="/voucher" replace />} />
+                <Route path="/voucher" element={<Voucher />} />
+                <Route path="/user-confirmation" element={<UserConfirmation />} />
+                <Route path="/self-services" element={<SelfServices />} />
+                <Route path="/bom-apetite/:userName" element={<BomApetite />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/user" element={<User />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/turnos" element={<Turnos />} />
+                <Route path="/admin/managers" element={<AdminManagement />} />
+                <Route path="/app" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="search" element={<Search />} />
+                  <Route path="menu" element={<Menu />} />
+                  <Route path="profile" element={<Profile />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </AdminProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 }
 
