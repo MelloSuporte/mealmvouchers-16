@@ -4,12 +4,20 @@ import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/utils/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import TurnoCard from './turnos/TurnoCard';
+import NewTurnoDialog from './turnos/NewTurnoDialog';
 
 const TurnosForm = () => {
   const queryClient = useQueryClient();
   const [submittingTurnoId, setSubmittingTurnoId] = useState(null);
+  const [isNewTurnoDialogOpen, setIsNewTurnoDialogOpen] = useState(false);
+  const [newTurno, setNewTurno] = useState({
+    shift_type: '',
+    start_time: '',
+    end_time: '',
+    is_active: true
+  });
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['shift-configurations'],
@@ -20,6 +28,27 @@ const TurnosForm = () => {
   });
 
   const turnos = Array.isArray(data) ? data : [];
+
+  const createTurnoMutation = useMutation({
+    mutationFn: async (newTurno) => {
+      const response = await api.post('/shift-configurations', newTurno);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['shift-configurations']);
+      toast.success("Turno criado com sucesso!");
+      setIsNewTurnoDialogOpen(false);
+      setNewTurno({
+        shift_type: '',
+        start_time: '',
+        end_time: '',
+        is_active: true
+      });
+    },
+    onError: (error) => {
+      toast.error("Erro ao criar turno: " + error.message);
+    }
+  });
 
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
@@ -70,6 +99,20 @@ const TurnosForm = () => {
     updateTurnosMutation.mutate(updatedTurno);
   };
 
+  const handleCreateTurno = () => {
+    if (!newTurno.shift_type || !newTurno.start_time || !newTurno.end_time) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    if (newTurno.start_time >= newTurno.end_time) {
+      toast.error("Horário de entrada deve ser menor que o de saída");
+      return;
+    }
+
+    createTurnoMutation.mutate(newTurno);
+  };
+
   if (error) {
     return (
       <div className="p-4">
@@ -100,6 +143,15 @@ const TurnosForm = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <NewTurnoDialog
+          isOpen={isNewTurnoDialogOpen}
+          onOpenChange={setIsNewTurnoDialogOpen}
+          newTurno={newTurno}
+          setNewTurno={setNewTurno}
+          onCreateTurno={handleCreateTurno}
+        />
+      </div>
       <div className="grid gap-4">
         {turnos.map((turno) => (
           <TurnoCard
