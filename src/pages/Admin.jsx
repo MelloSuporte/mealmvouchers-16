@@ -18,7 +18,7 @@ import AdminManagement from './AdminManagement';
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("users");
   const navigate = useNavigate();
-  const { isMasterAdmin, adminPermissions } = useAdmin();
+  const { isMasterAdmin, isManager } = useAdmin();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ const Admin = () => {
         const isAuthenticated = checkAuth();
         if (!isAuthenticated) return;
         
-        if (!isMasterAdmin && !adminPermissions) {
+        if (!isMasterAdmin && !isManager) {
           toast.error("Erro ao carregar permissões. Recarregando...");
           window.location.reload();
           return;
@@ -53,48 +53,12 @@ const Admin = () => {
     };
 
     initializeAdmin();
-  }, [navigate, isMasterAdmin, adminPermissions]);
+  }, [navigate, isMasterAdmin, isManager]);
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     toast.success("Logout realizado com sucesso!");
     navigate('/voucher');
-  };
-
-  const renderTab = (value, component, requiredPermission = null) => {
-    if (!isMasterAdmin && requiredPermission && !adminPermissions[requiredPermission]) {
-      return (
-        <TabsContent value={value}>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center text-red-500">
-                Você não tem permissão para acessar esta funcionalidade
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      );
-    }
-
-    return (
-      <TabsContent value={value}>
-        <Card>
-          <CardHeader>
-            <CardTitle>{value.charAt(0).toUpperCase() + value.slice(1)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {component}
-          </CardContent>
-        </Card>
-      </TabsContent>
-    );
-  };
-
-  const renderTrigger = (value, label, requiredPermission = null) => {
-    if (!isMasterAdmin && requiredPermission && !adminPermissions[requiredPermission]) {
-      return null;
-    }
-    return <TabsTrigger value={value}>{label}</TabsTrigger>;
   };
 
   if (isLoading) {
@@ -114,26 +78,88 @@ const Admin = () => {
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-9">
-          {renderTrigger("users", "Usuários", "manage_users")}
-          {renderTrigger("companies", "Empresas", "manage_companies")}
-          {renderTrigger("meals", "Refeições", "manage_meals")}
-          {renderTrigger("rls", "Vouchers Extras", "manage_extra_vouchers")}
-          {renderTrigger("disposable", "Vouchers Descartáveis", "manage_disposable_vouchers")}
-          {renderTrigger("backgrounds", "Imagens de Fundo", "manage_backgrounds")}
-          {renderTrigger("reports", "Relatórios", "manage_reports")}
-          {renderTrigger("turnos", "Turnos", "manage_turnos")}
-          {renderTrigger("managers", "Gerentes", "manage_managers")}
+          <TabsTrigger value="users">Usuários</TabsTrigger>
+          <TabsTrigger value="companies">Empresas</TabsTrigger>
+          <TabsTrigger value="meals">Refeições</TabsTrigger>
+          <TabsTrigger value="rls">Vouchers Extras</TabsTrigger>
+          <TabsTrigger value="disposable">Vouchers Descartáveis</TabsTrigger>
+          <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>
+          <TabsTrigger value="reports">Relatórios</TabsTrigger>
+          <TabsTrigger value="turnos">Turnos</TabsTrigger>
+          <TabsTrigger value="managers">Gerentes</TabsTrigger>
         </TabsList>
 
-        {renderTab("users", <UserForm />, "manage_users")}
-        {renderTab("companies", <CompanyForm />, "manage_companies")}
-        {renderTab("meals", <MealScheduleManager />, "manage_meals")}
-        {renderTab("rls", <RLSForm />, "manage_extra_vouchers")}
-        {renderTab("disposable", <DisposableVoucherForm />, "manage_disposable_vouchers")}
-        {renderTab("backgrounds", <BackgroundImageForm />, "manage_backgrounds")}
-        {renderTab("reports", <ReportForm />, "manage_reports")}
-        {renderTab("turnos", <TurnosForm />, "manage_turnos")}
-        {renderTab("managers", <AdminManagement />, "manage_managers")}
+        <TabsContent value="users">
+          <Card>
+            <CardContent className="pt-6">
+              <UserForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="companies">
+          <Card>
+            <CardContent className="pt-6">
+              <CompanyForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="meals">
+          <Card>
+            <CardContent className="pt-6">
+              <MealScheduleManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="rls">
+          <Card>
+            <CardContent className="pt-6">
+              <RLSForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="disposable">
+          <Card>
+            <CardContent className="pt-6">
+              <DisposableVoucherForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="backgrounds">
+          <Card>
+            <CardContent className="pt-6">
+              <BackgroundImageForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <Card>
+            <CardContent className="pt-6">
+              <ReportForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="turnos">
+          <Card>
+            <CardContent className="pt-6">
+              <TurnosForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="managers">
+          <Card>
+            <CardContent className="pt-6">
+              <AdminManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
