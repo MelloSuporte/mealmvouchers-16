@@ -37,7 +37,7 @@ const TurnosForm = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[200px]">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -45,8 +45,8 @@ const TurnosForm = () => {
 
   if (error) {
     return (
-      <div className="p-4">
-        <p className="text-red-500">Erro ao carregar turnos</p>
+      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+        <p className="text-red-600">Erro ao carregar turnos. Por favor, tente novamente.</p>
       </div>
     );
   }
@@ -65,7 +65,6 @@ const TurnosForm = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Configuração de Turnos</h1>
         <NewTurnoDialog
           isOpen={isDialogOpen}
           onOpenChange={setIsDialogOpen}
