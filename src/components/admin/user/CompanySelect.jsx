@@ -10,7 +10,8 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
     queryFn: async () => {
       try {
         const response = await api.get('/api/companies');
-        return response.data || [];
+        // Ensure we always return an array
+        return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         toast.error('Erro ao carregar empresas');
         return [];
@@ -21,6 +22,9 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
   if (error) {
     toast.error('Erro ao carregar empresas');
   }
+
+  // Ensure companies is always an array
+  const companyList = Array.isArray(companies) ? companies : [];
 
   return (
     <Select 
@@ -35,9 +39,9 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
         {includeAllOption && (
           <SelectItem value="all">Todas as empresas</SelectItem>
         )}
-        {companies.map((company) => (
+        {companyList.map((company) => (
           <SelectItem key={company.id} value={company.id.toString()}>
-            {company.nome}
+            {company.name}
           </SelectItem>
         ))}
       </SelectContent>
