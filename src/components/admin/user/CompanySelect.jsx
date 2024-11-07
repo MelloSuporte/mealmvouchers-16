@@ -41,7 +41,7 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
         )}
         {companyList.map((company) => (
           <SelectItem key={company.id} value={company.id.toString()}>
-            {company.name}
+            {company.nome}
           </SelectItem>
         ))}
       </SelectContent>
