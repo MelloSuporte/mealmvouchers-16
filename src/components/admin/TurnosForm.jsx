@@ -144,6 +144,13 @@ const TurnosForm = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
+        <Button
+          onClick={() => setIsNewTurnoDialogOpen(true)}
+          className="mb-4"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Turno
+        </Button>
         <NewTurnoDialog
           isOpen={isNewTurnoDialogOpen}
           onOpenChange={setIsNewTurnoDialogOpen}
