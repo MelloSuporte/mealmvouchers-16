@@ -76,7 +76,7 @@ const Admin = () => {
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
 
-      <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab}>
+      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
