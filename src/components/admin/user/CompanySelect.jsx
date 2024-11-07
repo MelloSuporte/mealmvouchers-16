@@ -1,25 +1,26 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 import api from '../../../utils/api';
 
 const CompanySelect = ({ value, onValueChange }) => {
-  const { data: companiesData, isLoading } = useQuery({
+  const { data: companies = [], isLoading, error } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        const response = await api.get('/companies');
-        // Ensure we return an array even if the response is unexpected
-        const companies = response.data?.companies || response.data || [];
-        return Array.isArray(companies) ? companies : [];
+        const response = await api.get('/api/companies');
+        return response.data || [];
       } catch (error) {
-        console.error('Error fetching companies:', error);
-        return [];
+        toast.error("Erro ao carregar empresas: " + error.message);
+        throw error;
       }
     }
   });
 
-  const companies = Array.isArray(companiesData) ? companiesData : [];
+  if (error) {
+    toast.error("Erro ao carregar empresas");
+  }
 
   return (
     <Select 
