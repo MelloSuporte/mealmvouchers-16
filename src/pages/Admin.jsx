@@ -38,7 +38,6 @@ const Admin = () => {
         const isAuthenticated = checkAuth();
         if (!isAuthenticated) return;
         
-        // Verificar se todas as permissões necessárias estão carregadas
         if (!isMasterAdmin && !adminPermissions) {
           toast.error("Erro ao carregar permissões. Recarregando...");
           window.location.reload();
