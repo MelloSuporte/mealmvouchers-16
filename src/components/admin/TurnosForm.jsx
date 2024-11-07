@@ -27,6 +27,7 @@ const TurnosForm = () => {
         });
         return response.data;
       } catch (error) {
+        console.error('Error fetching shift configurations:', error);
         toast.error('Erro ao carregar configurações dos turnos');
         throw error;
       }
@@ -51,17 +52,6 @@ const TurnosForm = () => {
     );
   }
 
-  const onCreateTurno = async () => {
-    await handleCreateTurno(newTurno);
-    setIsDialogOpen(false);
-    setNewTurno({
-      shift_type: '',
-      start_time: '',
-      end_time: '',
-      is_active: true
-    });
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -70,7 +60,7 @@ const TurnosForm = () => {
           onOpenChange={setIsDialogOpen}
           newTurno={newTurno}
           setNewTurno={setNewTurno}
-          onCreateTurno={onCreateTurno}
+          onCreateTurno={handleCreateTurno}
         />
       </div>
       <div className="grid gap-6">
