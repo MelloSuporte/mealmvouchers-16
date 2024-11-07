@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import api from "@/utils/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Plus } from "lucide-react";
 import TurnoCard from './turnos/TurnoCard';
 import NewTurnoDialog from './turnos/NewTurnoDialog';
+import { useTurnosActions } from './turnos/useTurnosActions';
 
 const TurnosForm = () => {
-  const queryClient = useQueryClient();
-  const [submittingTurnoId, setSubmittingTurnoId] = useState(null);
   const [isNewTurnoDialogOpen, setIsNewTurnoDialogOpen] = useState(false);
   const [newTurno, setNewTurno] = useState({
     shift_type: '',
@@ -19,7 +18,7 @@ const TurnosForm = () => {
     is_active: true
   });
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data: turnos = [], isLoading, error, refetch } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
       const response = await api.get('/shift-configurations');
@@ -27,91 +26,7 @@ const TurnosForm = () => {
     }
   });
 
-  const turnos = Array.isArray(data) ? data : [];
-
-  const createTurnoMutation = useMutation({
-    mutationFn: async (newTurno) => {
-      const response = await api.post('/shift-configurations', newTurno);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['shift-configurations']);
-      toast.success("Turno criado com sucesso!");
-      setIsNewTurnoDialogOpen(false);
-      setNewTurno({
-        shift_type: '',
-        start_time: '',
-        end_time: '',
-        is_active: true
-      });
-    },
-    onError: (error) => {
-      toast.error("Erro ao criar turno: " + error.message);
-    }
-  });
-
-  const updateTurnosMutation = useMutation({
-    mutationFn: async (updatedTurno) => {
-      const response = await api.put(`/shift-configurations/${updatedTurno.id}`, {
-        start_time: updatedTurno.start_time,
-        end_time: updatedTurno.end_time,
-        is_active: updatedTurno.is_active
-      });
-      return response.data;
-    },
-    onMutate: (variables) => {
-      setSubmittingTurnoId(variables.id);
-    },
-    onSettled: () => {
-      setSubmittingTurnoId(null);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['shift-configurations']);
-      toast.success("Horário do turno atualizado com sucesso!");
-    },
-    onError: (error) => {
-      toast.error("Erro ao atualizar turno: " + error.message);
-    }
-  });
-
-  const handleTurnoChange = (id, field, value) => {
-    if (submittingTurnoId === id) {
-      toast.warning("Aguarde, processando alteração anterior...");
-      return;
-    }
-
-    const turno = turnos.find(t => t.id === id);
-    
-    if (field === 'start_time' && turno.end_time && value >= turno.end_time) {
-      toast.error("Horário de entrada deve ser menor que o de saída");
-      return;
-    }
-    if (field === 'end_time' && turno.start_time && value <= turno.start_time) {
-      toast.error("Horário de saída deve ser maior que o de entrada");
-      return;
-    }
-
-    const updatedTurno = {
-      ...turno,
-      [field]: value
-    };
-
-    updateTurnosMutation.mutate(updatedTurno);
-  };
-
-  const handleCreateTurno = () => {
-    if (!newTurno.shift_type || !newTurno.start_time || !newTurno.end_time) {
-      toast.error("Preencha todos os campos obrigatórios");
-      return;
-    }
-
-    if (newTurno.start_time >= newTurno.end_time) {
-      toast.error("Horário de entrada deve ser menor que o de saída");
-      return;
-    }
-
-    createTurnoMutation.mutate(newTurno);
-  };
+  const { handleTurnoChange, handleCreateTurno, submittingTurnoId } = useTurnosActions();
 
   if (error) {
     return (
@@ -145,9 +60,7 @@ const TurnosForm = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Configuração de Turnos</h2>
-        <Button
-          onClick={() => setIsNewTurnoDialogOpen(true)}
-        >
+        <Button onClick={() => setIsNewTurnoDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Turno
         </Button>

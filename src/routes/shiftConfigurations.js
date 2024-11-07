@@ -19,6 +19,31 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Create new shift configuration
+router.post('/', async (req, res) => {
+  const { shift_type, start_time, end_time, is_active } = req.body;
+  
+  try {
+    const [result] = await req.db.query(
+      'INSERT INTO configuracoes_turno (tipo_turno, hora_inicio, hora_fim, ativo, criado_em, atualizado_em) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+      [shift_type, start_time, end_time, is_active]
+    );
+    
+    const [newShift] = await req.db.query(
+      'SELECT * FROM configuracoes_turno WHERE id = ?',
+      [result.insertId]
+    );
+    
+    res.status(201).json(newShift[0]);
+  } catch (error) {
+    logger.error('Error creating shift configuration:', error);
+    res.status(500).json({ 
+      error: 'Database error',
+      message: 'Failed to create shift configuration'
+    });
+  }
+});
+
 // Update shift configuration
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
