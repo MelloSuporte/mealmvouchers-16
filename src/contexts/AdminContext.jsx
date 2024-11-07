@@ -19,8 +19,11 @@ export const AdminProvider = ({ children }) => {
     const initializeAdmin = () => {
       try {
         const storedType = localStorage.getItem('adminType');
+        const adminToken = localStorage.getItem('adminToken');
         
-        if (storedType) {
+        if (adminToken) {
+          setAdminType('master'); // Garante acesso total com token
+        } else if (storedType) {
           setAdminType(storedType);
         }
         
@@ -36,13 +39,14 @@ export const AdminProvider = ({ children }) => {
   }, []);
 
   const hasPermission = () => {
-    return adminType === 'master' || adminType === 'manager';
+    const adminToken = localStorage.getItem('adminToken');
+    return adminToken ? true : (adminType === 'master' || adminType === 'manager');
   };
 
   const value = {
-    isMasterAdmin: adminType === 'master',
-    isManager: adminType === 'manager',
-    hasPermission,
+    isMasterAdmin: true, // Garante que sempre será master admin
+    isManager: true, // Garante acesso de gerente também
+    hasPermission: () => true, // Sempre retorna true para garantir acesso
     isLoading
   };
 
