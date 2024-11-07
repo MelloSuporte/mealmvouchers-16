@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import TurnoCard from "@/components/admin/turnos/TurnoCard";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NewTurnoDialog from "@/components/admin/turnos/NewTurnoDialog";
+import { Button } from "@/components/ui/button";
 
 const TurnosForm = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const TurnosForm = () => {
     is_active: true
   });
 
-  const { data: turnos = [], isLoading, error } = useQuery({
+  const { data: turnos = [], isLoading, error, refetch } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
       const token = localStorage.getItem('adminToken');
@@ -30,7 +31,7 @@ const TurnosForm = () => {
       }
 
       try {
-        const response = await api.get('/api/shift-configurations', {
+        const response = await api.get('/shift-configurations', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -46,7 +47,10 @@ const TurnosForm = () => {
         toast.error('Erro ao carregar configurações dos turnos');
         throw error;
       }
-    }
+    },
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 10 // 10 minutes
   });
 
   const { handleTurnoChange, submittingTurnoId, handleCreateTurno } = useTurnosActions();
@@ -71,6 +75,13 @@ const TurnosForm = () => {
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
         <p className="text-red-600">Erro ao carregar turnos. Por favor, tente novamente.</p>
+        <Button 
+          onClick={() => refetch()} 
+          variant="outline" 
+          className="mt-2"
+        >
+          Tentar novamente
+        </Button>
       </div>
     );
   }
