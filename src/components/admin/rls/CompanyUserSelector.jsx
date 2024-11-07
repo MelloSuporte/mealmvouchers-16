@@ -1,10 +1,7 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import api from '../../../utils/api';
 
 const CompanyUserSelector = ({ 
   selectedCompany, 
@@ -13,26 +10,11 @@ const CompanyUserSelector = ({
   setSearchTerm, 
   selectedUser, 
   setSelectedUser,
+  companies = [],
   users = [],
+  isLoadingCompanies,
   isLoadingUsers 
 }) => {
-  const { data: companies = [], isLoading: isLoadingCompanies, error } = useQuery({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      try {
-        const response = await api.get('/api/companies');
-        return response.data || [];
-      } catch (error) {
-        toast.error("Erro ao carregar empresas: " + error.message);
-        throw error;
-      }
-    }
-  });
-
-  if (error) {
-    toast.error("Erro ao carregar empresas");
-  }
-
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -43,7 +25,7 @@ const CompanyUserSelector = ({
           disabled={isLoadingCompanies}
         >
           <SelectTrigger>
-            <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
+            <SelectValue placeholder="Selecione a empresa" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as empresas</SelectItem>

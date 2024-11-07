@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../../utils/api';
 
 const AdminForm = ({ onClose, adminToEdit = null }) => {
@@ -23,15 +23,16 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
     }
   });
 
-  const { data: companies = [], isLoading: isLoadingCompanies, error } = useQuery({
+  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       try {
         const response = await api.get('/api/companies');
         return response.data || [];
       } catch (error) {
-        toast.error("Erro ao carregar empresas: " + error.message);
-        throw error;
+        console.error('Error fetching companies:', error);
+        toast.error('Erro ao carregar empresas');
+        return [];
       }
     }
   });
@@ -56,10 +57,6 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
       toast.error('Erro ao salvar gestor: ' + error.message);
     }
   };
-
-  if (error) {
-    toast.error("Erro ao carregar empresas");
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
