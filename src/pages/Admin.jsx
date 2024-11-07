@@ -16,7 +16,7 @@ import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
 import AdminManagement from './AdminManagement';
 
 const Admin = () => {
-  const [selectedTab, setSelectedTab] = useState("users");
+  const [activeTab, setActiveTab] = useState("users");
   const navigate = useNavigate();
   const { isMasterAdmin, isManager } = useAdmin();
   const [isLoading, setIsLoading] = useState(true);
@@ -76,7 +76,7 @@ const Admin = () => {
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+      <Tabs defaultValue="users" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
