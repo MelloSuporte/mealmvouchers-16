@@ -15,7 +15,6 @@ import Login from "./pages/Login";
 import Voucher from "./pages/Voucher";
 import BomApetite from "./pages/BomApetite";
 import Admin from "./pages/Admin";
-import Turnos from "./pages/Turnos";
 import UserConfirmation from "./pages/UserConfirmation";
 import AdminManagement from "./pages/AdminManagement";
 
@@ -57,7 +56,6 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/user" element={<User />} />
               <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/turnos" element={<Turnos />} />
               <Route path="/admin/managers" element={<AdminManagement />} />
               <Route path="/app" element={<Layout />}>
                 <Route index element={<Home />} />
