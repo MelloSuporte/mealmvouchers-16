@@ -6,26 +6,9 @@ import { Loader2 } from "lucide-react";
 import TurnoCard from "@/components/admin/turnos/TurnoCard";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NewTurnoDialog from "@/components/admin/turnos/NewTurnoDialog";
-import { useAdmin } from '@/contexts/AdminContext';
-
-/**
- * COMPONENTE DE GERENCIAMENTO DE TURNOS
- * Status: ESTÁVEL
- * 
- * Funcionalidades:
- * - Visualização de turnos
- * - Criação de novos turnos
- * - Edição de horários
- * - Ativação/desativação de turnos
- * 
- * Permissões:
- * - Administrador Master: Acesso total
- */
 
 const TurnosForm = () => {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const { isMasterAdmin } = useAdmin();
-
   const [newTurno, setNewTurno] = React.useState({
     shift_type: '',
     start_time: '',
