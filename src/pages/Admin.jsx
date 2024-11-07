@@ -57,6 +57,7 @@ const Admin = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminType');
     toast.success("Logout realizado com sucesso!");
     navigate('/voucher');
   };

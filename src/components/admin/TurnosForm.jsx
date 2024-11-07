@@ -6,10 +6,8 @@ import { Loader2 } from "lucide-react";
 import TurnoCard from "@/components/admin/turnos/TurnoCard";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NewTurnoDialog from "@/components/admin/turnos/NewTurnoDialog";
-import { useAdmin } from '@/contexts/AdminContext';
 
 const TurnosForm = () => {
-  const { isMasterAdmin } = useAdmin();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTurno, setNewTurno] = useState({
     shift_type: '',
@@ -36,10 +34,6 @@ const TurnosForm = () => {
   });
 
   const { handleTurnoChange, submittingTurnoId, handleCreateTurno } = useTurnosActions();
-
-  if (!isMasterAdmin) {
-    return null;
-  }
 
   if (isLoading) {
     return (
