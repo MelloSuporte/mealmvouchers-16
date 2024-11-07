@@ -55,15 +55,6 @@ export const useTurnosActions = () => {
     
     if (!turno) return;
 
-    if (field === 'start_time' && turno.end_time && value >= turno.end_time) {
-      toast.error("Horário de entrada deve ser menor que o de saída");
-      return;
-    }
-    if (field === 'end_time' && turno.start_time && value <= turno.start_time) {
-      toast.error("Horário de saída deve ser maior que o de entrada");
-      return;
-    }
-
     const updatedTurno = {
       ...turno,
       [field]: value
