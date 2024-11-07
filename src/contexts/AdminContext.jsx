@@ -20,11 +20,13 @@ export const AdminProvider = ({ children }) => {
     try {
       const adminToken = localStorage.getItem('adminToken');
       const storedType = localStorage.getItem('adminType');
-      const isAuth = localStorage.getItem('isAuthenticated');
       
-      if (adminToken && isAuth === 'true') {
+      if (adminToken) {
         setIsAuthenticated(true);
-        setAdminType(storedType || 'master');
+        setAdminType('master');
+      } else if (storedType) {
+        setIsAuthenticated(true);
+        setAdminType(storedType);
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
@@ -55,7 +57,6 @@ export const AdminProvider = ({ children }) => {
   const logout = useCallback(() => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminType');
-    localStorage.removeItem('isAuthenticated');
     setIsAuthenticated(false);
     setAdminType(null);
     toast.success("Logout realizado com sucesso");

@@ -19,10 +19,8 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
 
       // Admin master
       if (password === '0001000') {
-        const token = 'master-admin-token-' + Date.now(); // Adiciona timestamp para evitar cache
-        localStorage.setItem('adminToken', token);
+        localStorage.setItem('adminToken', 'master-admin-token');
         localStorage.setItem('adminType', 'master');
-        localStorage.setItem('isAuthenticated', 'true'); // Nova linha
         onClose();
         navigate('/admin');
         toast.success("Login realizado com sucesso!");
@@ -35,7 +33,6 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
       if (response.data.success) {
         localStorage.setItem('adminToken', response.data.token);
         localStorage.setItem('adminType', 'manager');
-        localStorage.setItem('isAuthenticated', 'true'); // Nova linha
         onClose();
         navigate('/admin');
         toast.success("Login realizado com sucesso!");
@@ -50,12 +47,6 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleLogin();
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -67,9 +58,7 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
           placeholder="Digite a senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          onKeyPress={handleKeyPress}
           disabled={isSubmitting}
-          autoFocus
         />
         <DialogFooter>
           <Button 
