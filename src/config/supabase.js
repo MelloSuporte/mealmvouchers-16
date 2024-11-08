@@ -4,18 +4,19 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL and Anon Key são necessários');
+  throw new Error('As variáveis de ambiente do Supabase são necessárias');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Função auxiliar para consultas
-export const executeQuery = async (query, params = []) => {
+export const executeQuery = async (table, query = {}) => {
   try {
-    const { data, error } = await supabase.rpc('execute_query', {
-      query_text: query,
-      query_params: params
-    });
+    const { data, error } = await supabase
+      .from(table)
+      .select(query.select || '*')
+      .eq(query.eq?.column || '', query.eq?.value || '')
+      .order(query.orderBy || 'id', { ascending: query.ascending !== false });
 
     if (error) throw error;
     return data;
