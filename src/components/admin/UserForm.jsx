@@ -43,15 +43,16 @@ const UserForm = () => {
     try {
       setIsSubmitting(true);
       
+      // Mapeia os campos do formulário para o formato do banco de dados
       const userData = {
-        name: formData.userName,
+        nome: formData.userName,
         email: formData.userEmail,
-        cpf: formData.userCPF.replace(/\D/g, ''), // Remove caracteres não numéricos do CPF
-        company_id: parseInt(formData.company),
+        cpf: formData.userCPF.replace(/\D/g, ''),
+        empresa_id: parseInt(formData.company),
         voucher: formData.voucher,
         turno: formData.selectedTurno,
-        is_suspended: formData.isSuspended,
-        photo: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
+        suspenso: formData.isSuspended,
+        foto: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
       };
 
       let response;

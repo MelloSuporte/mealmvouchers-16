@@ -14,12 +14,12 @@ router.get('/search', async (req, res) => {
 
   try {
     const { data: user, error } = await supabase
-      .from('users')
+      .from('usuarios')
       .select(`
         *,
-        companies (
+        empresas (
           id,
-          name
+          nome
         )
       `)
       .eq('cpf', cpf)
@@ -31,7 +31,21 @@ router.get('/search', async (req, res) => {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    res.json(user);
+    // Mapeia os campos do banco para o formato do frontend
+    const mappedUser = {
+      id: user.id,
+      name: user.nome,
+      email: user.email,
+      cpf: user.cpf,
+      company_id: user.empresa_id,
+      voucher: user.voucher,
+      turno: user.turno,
+      is_suspended: user.suspenso,
+      photo: user.foto,
+      company: user.empresas
+    };
+
+    res.json(mappedUser);
   } catch (error) {
     logger.error('Error searching user:', error);
     res.status(500).json({ error: 'Erro ao buscar usuário' });
@@ -40,11 +54,11 @@ router.get('/search', async (req, res) => {
 
 // Criar novo usuário
 router.post('/', async (req, res) => {
-  const { name, email, cpf, company_id, voucher, turno, is_suspended, photo } = req.body;
+  const { nome, email, cpf, empresa_id, voucher, turno, suspenso, foto } = req.body;
   
   try {
     // Validações
-    if (!name?.trim() || !email?.trim() || !cpf?.trim() || !company_id || !voucher || !turno) {
+    if (!nome?.trim() || !email?.trim() || !cpf?.trim() || !empresa_id || !voucher || !turno) {
       return res.status(400).json({ 
         error: 'Campos obrigatórios faltando',
         details: 'Nome, email, CPF, empresa, voucher e turno são obrigatórios'
@@ -53,7 +67,7 @@ router.post('/', async (req, res) => {
 
     // Verifica se já existe usuário com mesmo CPF ou email
     const { data: existingUser, error: searchError } = await supabase
-      .from('users')
+      .from('usuarios')
       .select('id, cpf, email')
       .or(`cpf.eq.${cpf},email.eq.${email}`)
       .maybeSingle();
@@ -69,23 +83,23 @@ router.post('/', async (req, res) => {
 
     // Insere novo usuário
     const { data: newUser, error: insertError } = await supabase
-      .from('users')
+      .from('usuarios')
       .insert([{
-        name,
+        nome,
         email,
         cpf,
-        company_id,
+        empresa_id,
         voucher,
         turno,
-        is_suspended: is_suspended || false,
-        photo
+        suspenso: suspenso || false,
+        foto
       }])
       .select()
       .single();
 
     if (insertError) throw insertError;
 
-    logger.info(`Novo usuário cadastrado - ID: ${newUser.id}, Nome: ${name}`);
+    logger.info(`Novo usuário cadastrado - ID: ${newUser.id}, Nome: ${nome}`);
     res.status(201).json({
       success: true,
       message: 'Usuário cadastrado com sucesso',
@@ -103,10 +117,10 @@ router.post('/', async (req, res) => {
 // Atualizar usuário existente
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, email, company_id, voucher, turno, is_suspended, photo } = req.body;
+  const { nome, email, empresa_id, voucher, turno, suspenso, foto } = req.body;
 
   try {
-    if (!name?.trim() || !email?.trim() || !company_id || !voucher || !turno) {
+    if (!nome?.trim() || !email?.trim() || !empresa_id || !voucher || !turno) {
       return res.status(400).json({ 
         error: 'Campos obrigatórios faltando',
         details: 'Nome, email, empresa, voucher e turno são obrigatórios'
@@ -115,7 +129,7 @@ router.put('/:id', async (req, res) => {
 
     // Verifica se email já está em uso por outro usuário
     const { data: existingUser, error: searchError } = await supabase
-      .from('users')
+      .from('usuarios')
       .select('id, email')
       .eq('email', email)
       .neq('id', id)
@@ -132,15 +146,15 @@ router.put('/:id', async (req, res) => {
 
     // Atualiza usuário
     const { data: updatedUser, error: updateError } = await supabase
-      .from('users')
+      .from('usuarios')
       .update({
-        name,
+        nome,
         email,
-        company_id,
+        empresa_id,
         voucher,
         turno,
-        is_suspended: is_suspended || false,
-        photo
+        suspenso: suspenso || false,
+        foto
       })
       .eq('id', id)
       .select()
@@ -152,7 +166,7 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    logger.info(`Usuário atualizado - ID: ${id}, Nome: ${name}`);
+    logger.info(`Usuário atualizado - ID: ${id}, Nome: ${nome}`);
     res.json({
       success: true,
       message: 'Usuário atualizado com sucesso',
