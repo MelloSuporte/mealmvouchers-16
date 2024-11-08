@@ -17,30 +17,51 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import api from "../../utils/api"
 
-const MultiSelect = React.forwardRef(({ className, value, onChange, placeholder }, ref) => {
+const MultiSelect = React.forwardRef(({ className, value = [], onChange, placeholder }, ref) => {
   const [open, setOpen] = React.useState(false)
 
-  const { data: options = [] } = useQuery({
+  const { data: mealTypes = [], isError } = useQuery({
     queryKey: ['meal-types'],
     queryFn: async () => {
-      const response = await api.get('/api/meals');
-      return response.data.map(meal => ({
-        value: meal.id.toString(),
-        label: meal.name
-      }));
+      try {
+        const response = await api.get('/api/meals');
+        return Array.isArray(response.data) ? response.data.map(meal => ({
+          value: meal.id.toString(),
+          label: meal.name
+        })) : [];
+      } catch (error) {
+        console.error('Error fetching meal types:', error);
+        return [];
+      }
     }
   });
 
-  const selectedLabels = options
-    .filter((option) => value.includes(option.value))
-    .map((option) => option.label)
-    .join(", ")
+  const options = React.useMemo(() => 
+    Array.isArray(mealTypes) ? mealTypes : [], 
+    [mealTypes]
+  );
+
+  const selectedLabels = React.useMemo(() => {
+    if (!Array.isArray(value) || !Array.isArray(options)) return '';
+    return options
+      .filter((option) => value.includes(option.value))
+      .map((option) => option.label)
+      .join(", ");
+  }, [value, options]);
 
   const handleSelect = (currentValue) => {
+    if (!Array.isArray(value)) {
+      onChange([currentValue]);
+      return;
+    }
     const newValue = value.includes(currentValue)
       ? value.filter((v) => v !== currentValue)
-      : [...value, currentValue]
-    onChange(newValue)
+      : [...value, currentValue];
+    onChange(newValue);
+  };
+
+  if (isError) {
+    return <div>Error loading meal types</div>;
   }
 
   return (
@@ -53,11 +74,11 @@ const MultiSelect = React.forwardRef(({ className, value, onChange, placeholder 
           aria-expanded={open}
           className={cn(
             "w-full justify-between",
-            !value.length && "text-muted-foreground",
+            !value?.length && "text-muted-foreground",
             className
           )}
         >
-          {selectedLabels || placeholder}
+          {selectedLabels || placeholder || "Select options..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -75,7 +96,7 @@ const MultiSelect = React.forwardRef(({ className, value, onChange, placeholder 
                 <Check
                   className={cn(
                     "mr-2 h-4 w-4",
-                    value.includes(option.value) ? "opacity-100" : "opacity-0"
+                    Array.isArray(value) && value.includes(option.value) ? "opacity-100" : "opacity-0"
                   )}
                 />
                 {option.label}
@@ -86,8 +107,8 @@ const MultiSelect = React.forwardRef(({ className, value, onChange, placeholder 
       </PopoverContent>
     </Popover>
   )
-})
+});
 
-MultiSelect.displayName = "MultiSelect"
+MultiSelect.displayName = "MultiSelect";
 
-export { MultiSelect }
+export { MultiSelect };
