@@ -45,7 +45,11 @@ function App() {
                 toastOptions={{
                   success: { 
                     position: "top-right",
-                    className: "bg-green-500 text-white border-green-600"
+                    className: "bg-green-500 text-white border-green-600",
+                    style: {
+                      top: '20px',
+                      right: '20px'
+                    }
                   },
                   error: { 
                     position: "bottom-right",
@@ -53,7 +57,10 @@ function App() {
                     duration: 4000,
                     style: {
                       bottom: '20px',
-                      right: '20px'
+                      right: '20px',
+                      backgroundColor: 'rgb(239 68 68)',
+                      color: 'white',
+                      border: '1px solid rgb(220 38 38)'
                     }
                   },
                   info: { position: "top-right" },
