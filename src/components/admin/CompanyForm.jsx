@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
-import { Pencil } from "lucide-react";
 import api from '../../utils/api';
 import CompanyList from './company/CompanyList';
 import CompanyFormFields from './company/CompanyFormFields';
@@ -66,12 +61,11 @@ const CompanyForm = () => {
         logo
       };
 
-      let response;
       if (editingCompany) {
-        response = await api.put(`/companies/${editingCompany.id}`, companyData);
+        await api.put(`/companies/${editingCompany.id}`, companyData);
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        response = await api.post('/companies', companyData);
+        await api.post('/companies', companyData);
         toast.success('Empresa cadastrada com sucesso!');
       }
       
