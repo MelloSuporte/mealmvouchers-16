@@ -9,6 +9,9 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('As variáveis de ambiente do Supabase são necessárias');
 }
 
+logger.info('Inicializando cliente Supabase');
+logger.info('URL do Supabase:', supabaseUrl);
+
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: true,
@@ -17,15 +20,27 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   },
   db: {
     schema: 'public'
+  },
+  global: {
+    headers: {
+      'Content-Type': 'application/json'
+    }
   }
 });
 
 // Verificar conexão e permissões
-supabase.from('empresas').select('count', { count: 'exact', head: true })
+logger.info('Verificando conexão com Supabase...');
+supabase.from('empresas')
+  .select('count', { count: 'exact', head: true })
   .then(({ error }) => {
     if (error) {
       logger.error('Erro ao conectar com Supabase:', error);
+      throw error;
     } else {
       logger.info('Conectado com sucesso ao Supabase');
     }
+  })
+  .catch(error => {
+    logger.error('Erro fatal ao conectar com Supabase:', error);
+    throw error;
   });
