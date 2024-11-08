@@ -41,8 +41,14 @@ function App() {
               <Toaster 
                 position="top-right"
                 toastOptions={{
-                  success: { position: "top-right" },
-                  error: { position: "bottom-right" },
+                  success: { 
+                    position: "top-right",
+                    className: "bg-green-500 text-white border-green-600"
+                  },
+                  error: { 
+                    position: "bottom-right",
+                    className: "bg-red-500 text-white border-red-600"
+                  },
                   info: { position: "top-right" },
                   warning: { position: "top-right" },
                 }}
