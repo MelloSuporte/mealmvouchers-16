@@ -1,18 +1,23 @@
-import logger from '../config/logger';
+import { supabase } from '../config/database.js';
+import logger from '../config/logger.js';
 
-export const validateVoucherCode = async (db, code) => {
+export const validateVoucherCode = async (code) => {
   if (!code) {
     throw new Error('Código do voucher é obrigatório');
   }
 
-  const [vouchers] = await db.execute(
-    'SELECT dv.*, mt.name as meal_type_name FROM disposable_vouchers dv ' +
-    'JOIN meal_types mt ON dv.meal_type_id = mt.id ' +
-    'WHERE dv.code = ? AND dv.is_used = FALSE',
-    [code]
-  );
+  const { data: vouchers, error } = await supabase
+    .from('disposable_vouchers')
+    .select(`
+      *,
+      meal_types (
+        name
+      )
+    `)
+    .eq('code', code)
+    .eq('is_used', false);
 
-  if (vouchers.length === 0) {
+  if (error || vouchers.length === 0) {
     return { exists: false, message: 'Voucher não encontrado ou já utilizado' };
   }
 
@@ -23,40 +28,44 @@ export const validateVoucherCode = async (db, code) => {
   };
 };
 
-export const validateMealType = async (db, mealTypeId) => {
-  const [mealTypes] = await db.execute(
-    'SELECT * FROM meal_types WHERE id = ? AND is_active = TRUE',
-    [mealTypeId]
-  );
+export const validateMealType = async (mealTypeId) => {
+  const { data: mealTypes, error } = await supabase
+    .from('meal_types')
+    .select()
+    .eq('id', mealTypeId)
+    .eq('is_active', true);
 
-  if (mealTypes.length === 0) {
+  if (error || mealTypes.length === 0) {
     throw new Error('Tipo de refeição inválido ou inativo');
   }
 
   return mealTypes[0];
 };
 
-export const validateExistingVoucher = async (db, code, mealTypeId) => {
-  const [vouchers] = await db.execute(
-    `SELECT dv.*, mt.name as meal_type_name, mt.start_time, mt.end_time 
-     FROM disposable_vouchers dv
-     JOIN meal_types mt ON dv.meal_type_id = mt.id
-     WHERE dv.code = ? AND dv.is_used = FALSE`,
-    [code]
-  );
+export const validateExistingVoucher = async (code, mealTypeId) => {
+  const { data: vouchers, error } = await supabase
+    .from('disposable_vouchers')
+    .select(`
+      *,
+      meal_types (
+        name,
+        start_time,
+        end_time
+      )
+    `)
+    .eq('code', code)
+    .eq('is_used', false);
 
-  if (vouchers.length === 0) {
+  if (error || vouchers.length === 0) {
     throw new Error('Voucher não encontrado ou já utilizado');
   }
 
   const voucher = vouchers[0];
 
-  // Verificar se o tipo de refeição corresponde
   if (voucher.meal_type_id !== parseInt(mealTypeId)) {
     throw new Error('Tipo de refeição não corresponde ao voucher');
   }
 
-  // Verificar se o voucher está expirado
   if (voucher.expired_at) {
     const expirationDate = new Date(voucher.expired_at);
     if (expirationDate < new Date()) {
