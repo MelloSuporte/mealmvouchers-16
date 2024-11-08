@@ -34,7 +34,7 @@ const CompanyForm = () => {
 
   const handleEditCompany = (company) => {
     setEditingCompany(company);
-    setCompanyName(company.name);
+    setCompanyName(company.nome);
     setCnpj(company.cnpj);
     setLogo(company.logo);
   };

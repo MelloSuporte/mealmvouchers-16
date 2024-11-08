@@ -21,12 +21,12 @@ const CompanyList = ({ companies, isLoading, onEdit }) => {
                   {company.logo && (
                     <img 
                       src={company.logo} 
-                      alt={company.name} 
+                      alt={company.nome} 
                       className="w-12 h-12 object-contain rounded"
                     />
                   )}
                   <div>
-                    <h3 className="font-medium">{company.name}</h3>
+                    <h3 className="font-medium">{company.nome}</h3>
                     <p className="text-sm text-gray-500">{company.cnpj}</p>
                   </div>
                 </div>

@@ -8,9 +8,9 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { data: companies, error } = await supabase
-      .from('companies')
+      .from('empresas')
       .select('*')
-      .order('name');
+      .order('nome');
 
     if (error) throw error;
     
@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
     }
 
     const { data: existingCompany } = await supabase
-      .from('companies')
+      .from('empresas')
       .select('id')
       .eq('cnpj', cnpj)
       .single();
@@ -41,8 +41,12 @@ router.post('/', async (req, res) => {
     }
 
     const { data: company, error } = await supabase
-      .from('companies')
-      .insert([{ name, cnpj, logo }])
+      .from('empresas')
+      .insert([{ 
+        nome: name, 
+        cnpj: cnpj.replace(/[^\d]/g, ''),
+        logo: logo 
+      }])
       .select()
       .single();
 
@@ -62,7 +66,7 @@ router.put('/:id', async (req, res) => {
 
   try {
     const { data: existingCompany } = await supabase
-      .from('companies')
+      .from('empresas')
       .select('id')
       .eq('cnpj', cnpj)
       .neq('id', id)
@@ -73,8 +77,12 @@ router.put('/:id', async (req, res) => {
     }
 
     const { data: company, error } = await supabase
-      .from('companies')
-      .update({ name, cnpj, logo })
+      .from('empresas')
+      .update({ 
+        nome: name, 
+        cnpj: cnpj.replace(/[^\d]/g, ''),
+        logo: logo 
+      })
       .eq('id', id)
       .select()
       .single();
