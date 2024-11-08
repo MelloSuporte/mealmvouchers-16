@@ -14,6 +14,8 @@ services:
     restart: always
     volumes:
       - ./src:/app/src
+    environment:
+      - TZ=America/Sao_Paulo
     command: >
       /bin/sh -c "
       echo '🚀 Frontend is running at http://localhost';
@@ -75,7 +77,7 @@ services:
     networks:
       - app-network
     restart: unless-stopped
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --default-time-zone='-03:00'
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "voucher", "-pMysql*voucher"]
       interval: 10s
