@@ -38,6 +38,13 @@ CREATE TABLE IF NOT EXISTS tipos_refeicao (
   criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS uso_voucher (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER REFERENCES usuarios(id),
+  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
+  usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Insert initial data
 INSERT INTO empresas (nome, cnpj) VALUES 
 ('Empresa Teste', '12.345.678/0001-90'),
