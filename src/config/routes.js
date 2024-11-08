@@ -16,14 +16,14 @@ const router = express.Router();
 router.use('/health', healthRoutes);
 
 // API routes
-router.use('/api/companies', companiesRoutes);
-router.use('/api/vouchers', voucherRoutes);
-router.use('/api/reports', reportRoutes);
-router.use('/api/meals', mealsRoutes);
-router.use('/api/users', usersRoutes);
-router.use('/api/extra-vouchers', extraVouchersRoutes);
-router.use('/api/background-images', backgroundImagesRoutes);
-router.use('/api/shift-configurations', shiftConfigurationsRoutes);
-router.use('/api/admin-users', adminUsersRoutes);
+router.use('/companies', companiesRoutes);
+router.use('/vouchers', voucherRoutes);
+router.use('/reports', reportRoutes);
+router.use('/meals', mealsRoutes);
+router.use('/users', usersRoutes);
+router.use('/extra-vouchers', extraVouchersRoutes);
+router.use('/background-images', backgroundImagesRoutes);
+router.use('/shift-configurations', shiftConfigurationsRoutes);
+router.use('/admin-users', adminUsersRoutes);
 
 export default router;
