@@ -40,6 +40,8 @@ function App() {
             <BrowserRouter>
               <Toaster 
                 position="top-right"
+                expand={true}
+                visibleToasts={6}
                 toastOptions={{
                   success: { 
                     position: "top-right",
@@ -48,7 +50,11 @@ function App() {
                   error: { 
                     position: "bottom-right",
                     className: "bg-red-500 text-white border-red-600",
-                    duration: 4000
+                    duration: 4000,
+                    style: {
+                      bottom: '20px',
+                      right: '20px'
+                    }
                   },
                   info: { position: "top-right" },
                   warning: { position: "top-right" },
