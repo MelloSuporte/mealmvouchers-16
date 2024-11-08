@@ -9,12 +9,16 @@ const CompanyList = ({ companies, isLoading, onEdit }) => {
     return <div className="text-center">Carregando empresas...</div>;
   }
 
+  if (!companies || companies.length === 0) {
+    return <div className="text-center text-gray-500">Nenhuma empresa cadastrada</div>;
+  }
+
   return (
     <div className="mt-8">
       <h2 className="text-lg font-semibold mb-4">Empresas Cadastradas</h2>
       <ScrollArea className="h-[400px] rounded-md border p-4">
         <div className="space-y-4">
-          {Array.isArray(companies) && companies.map((company) => (
+          {companies.map((company) => (
             <Card key={company.id} className="hover:bg-gray-50">
               <CardContent className="flex items-center justify-between p-4">
                 <div className="flex items-center space-x-4">

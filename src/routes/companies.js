@@ -11,7 +11,10 @@ router.get('/empresas', async (req, res) => {
       .select('*')
       .order('nome');
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Error fetching companies:', error);
+      throw error;
+    }
     
     res.json(companies || []);
   } catch (error) {
