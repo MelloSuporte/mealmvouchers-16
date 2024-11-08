@@ -22,7 +22,7 @@ const CompanyForm = () => {
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        const response = await api.get('/companies');
+        const response = await api.get('/api/companies');
         return response.data || [];
       } catch (error) {
         toast.error('Erro ao carregar empresas');
@@ -47,6 +47,16 @@ const CompanyForm = () => {
   };
 
   const handleSaveCompany = async () => {
+    if (!companyName?.trim()) {
+      toast.error('Nome da empresa é obrigatório');
+      return;
+    }
+
+    if (!cnpj?.trim()) {
+      toast.error('CNPJ é obrigatório');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       
@@ -58,10 +68,10 @@ const CompanyForm = () => {
 
       let response;
       if (editingCompany) {
-        response = await api.put(`/companies/${editingCompany.id}`, companyData);
+        response = await api.put(`/api/companies/${editingCompany.id}`, companyData);
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        response = await api.post('/companies', companyData);
+        response = await api.post('/api/companies', companyData);
         toast.success('Empresa cadastrada com sucesso!');
       }
       
@@ -69,7 +79,8 @@ const CompanyForm = () => {
       queryClient.invalidateQueries(['companies']);
     } catch (error) {
       console.error('Erro ao salvar empresa:', error);
-      toast.error(error.response?.data?.error || "Erro ao salvar empresa");
+      const errorMessage = error.response?.data?.error || "Erro ao salvar empresa";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

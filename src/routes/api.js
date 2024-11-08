@@ -7,6 +7,7 @@ import refeicoesRoutes from './refeicoes.js';
 import usuariosRoutes from './usuarios.js';
 import vouchersExtraRoutes from './vouchersExtra.js';
 import adminRoutes from './admin.js';
+import companiesRoutes from './companies.js';
 
 const router = express.Router();
 
@@ -14,10 +15,11 @@ const router = express.Router();
 router.use('/health', healthRoutes);
 
 // API routes
+router.use('/companies', companiesRoutes);
 router.use('/empresas', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/relatorios', relatoriosRoutes);
-router.use('/refeicoes', refeicoesRoutes);  // Corrigido: adicionado o prefixo correto
+router.use('/refeicoes', refeicoesRoutes);
 router.use('/users', usuariosRoutes);
 router.use('/vouchers-extra', vouchersExtraRoutes);
 router.use('/admin', adminRoutes);
