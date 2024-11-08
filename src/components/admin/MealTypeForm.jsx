@@ -22,11 +22,11 @@ const MealTypeForm = () => {
     }
 
     try {
-      const response = await api.post('/meal-types', {
+      const response = await api.post('/refeicoes', {
         name: mealType,
         value: parseFloat(mealValue),
-        start_time: startTime,
-        end_time: endTime
+        startTime: startTime,
+        endTime: endTime
       });
 
       if (response.data) {

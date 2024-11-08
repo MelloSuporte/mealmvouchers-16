@@ -1,53 +1,67 @@
 import express from 'express';
 import { supabase } from '../config/supabase.js';
-import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/meal-types', async (req, res) => {
+router.post('/', async (req, res) => {
   const { name, startTime, endTime, value, isActive, maxUsersPerDay, toleranceMinutes } = req.body;
   
   try {
-    const { data: meal, error } = await supabase
-      .from('meal_types')
-      .insert([{
-        name,
-        start_time: startTime,
-        end_time: endTime,
-        value,
-        is_active: isActive,
-        max_users_per_day: maxUsersPerDay,
-        tolerance_minutes: toleranceMinutes
-      }])
+    const { data: refeicao, error } = await supabase
+      .from('tipos_refeicao')
+      .insert([
+        {
+          nome: name,
+          hora_inicio: startTime,
+          hora_fim: endTime,
+          valor: value,
+          ativo: isActive,
+          max_usuarios_por_dia: maxUsersPerDay,
+          minutos_tolerancia: toleranceMinutes
+        }
+      ])
       .select()
       .single();
 
-    if (error) throw error;
-    
-    res.status(201).json({ 
-      success: true, 
-      id: meal.id,
-      message: 'Refeição cadastrada com sucesso'
-    });
+    if (error) {
+      throw error;
+    }
+
+    res.status(201).json(refeicao);
   } catch (error) {
-    logger.error('Error creating meal:', error);
-    res.status(500).json({ error: 'Erro ao cadastrar refeição' });
+    console.error('Erro ao criar tipo de refeição:', error);
+    res.status(500).json({ error: 'Erro ao criar tipo de refeição' });
   }
 });
 
-router.get('/meal-types', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const { data: meals, error } = await supabase
-      .from('meal_types')
+    const { data: refeicoes, error } = await supabase
+      .from('tipos_refeicao')
       .select('*')
-      .order('name');
+      .order('nome');
 
-    if (error) throw error;
-    
-    res.json(meals);
+    if (error) {
+      throw error;
+    }
+
+    // Mapeia os campos do português para inglês para manter compatibilidade com o frontend
+    const refeicoesMapeadas = refeicoes.map(refeicao => ({
+      id: refeicao.id,
+      name: refeicao.nome,
+      startTime: refeicao.hora_inicio,
+      endTime: refeicao.hora_fim,
+      value: refeicao.valor,
+      isActive: refeicao.ativo,
+      maxUsersPerDay: refeicao.max_usuarios_por_dia,
+      toleranceMinutes: refeicao.minutos_tolerancia,
+      createdAt: refeicao.criado_em
+    }));
+
+    res.json(refeicoesMapeadas);
   } catch (error) {
-    logger.error('Error fetching meals:', error);
-    res.status(500).json({ error: 'Erro ao buscar refeições' });
+    console.error('Erro ao buscar tipos de refeição:', error);
+    res.status(500).json({ error: 'Erro ao buscar tipos de refeição' });
   }
 });
 
