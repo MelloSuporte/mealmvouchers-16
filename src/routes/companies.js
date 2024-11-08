@@ -4,7 +4,6 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// List all companies
 router.get('/', async (req, res) => {
   try {
     const { data: companies, error } = await supabase
@@ -21,12 +20,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create new company
 router.post('/', async (req, res) => {
-  const { name, cnpj, logo } = req.body;
+  const { nome, cnpj, logo } = req.body;
   
   try {
-    if (!name || !cnpj) {
+    if (!nome || !cnpj) {
       return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
     }
 
@@ -43,9 +41,9 @@ router.post('/', async (req, res) => {
     const { data: company, error } = await supabase
       .from('empresas')
       .insert([{ 
-        nome: name, 
+        nome, 
         cnpj: cnpj.replace(/[^\d]/g, ''),
-        logo: logo 
+        logo 
       }])
       .select()
       .single();
@@ -59,10 +57,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update company
 router.put('/:id', async (req, res) => {
-  const { name, cnpj, logo } = req.body;
   const { id } = req.params;
+  const { nome, cnpj, logo } = req.body;
 
   try {
     const { data: existingCompany } = await supabase
@@ -79,9 +76,9 @@ router.put('/:id', async (req, res) => {
     const { data: company, error } = await supabase
       .from('empresas')
       .update({ 
-        nome: name, 
+        nome, 
         cnpj: cnpj.replace(/[^\d]/g, ''),
-        logo: logo 
+        logo 
       })
       .eq('id', id)
       .select()

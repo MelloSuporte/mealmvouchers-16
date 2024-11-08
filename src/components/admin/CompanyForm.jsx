@@ -51,7 +51,7 @@ const CompanyForm = () => {
       setIsSubmitting(true);
       
       const companyData = {
-        name: companyName,
+        nome: companyName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
         logo
       };
