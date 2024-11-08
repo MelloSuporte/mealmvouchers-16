@@ -1,6 +1,10 @@
-CREATE DATABASE IF NOT EXISTS sis_voucher;
+CREATE DATABASE IF NOT EXISTS sis_voucher
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
 
 USE sis_voucher;
+
+SET time_zone = '-03:00';
 
 -- Create tables
 CREATE TABLE IF NOT EXISTS empresas (
@@ -9,7 +13,7 @@ CREATE TABLE IF NOT EXISTS empresas (
   cnpj VARCHAR(18) NOT NULL UNIQUE,
   logo LONGTEXT,
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS usuarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -23,7 +27,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   foto LONGTEXT,
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (empresa_id) REFERENCES empresas(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS tipos_refeicao (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -35,7 +39,7 @@ CREATE TABLE IF NOT EXISTS tipos_refeicao (
   max_usuarios_por_dia INT,
   minutos_tolerancia INT DEFAULT 15,
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert some initial data
 INSERT INTO empresas (nome, cnpj) VALUES 
@@ -46,3 +50,7 @@ INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor) VALUES
 ('Café da Manhã', '06:00:00', '09:00:00', 10.00),
 ('Almoço', '11:00:00', '14:00:00', 25.00),
 ('Jantar', '18:00:00', '21:00:00', 25.00);
+
+-- Configurar timezone da sessão
+SET GLOBAL time_zone = '-03:00';
+SET SESSION time_zone = '-03:00';
