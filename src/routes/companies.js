@@ -4,6 +4,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
+// Listar empresas
 router.get('/', async (req, res) => {
   try {
     const { data: companies, error } = await supabase
@@ -22,10 +23,12 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Criar empresa
 router.post('/', async (req, res) => {
   const { nome, cnpj, logo } = req.body;
   
   try {
+    // Validações
     if (!nome?.trim()) {
       return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
     }
@@ -33,17 +36,19 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'CNPJ é obrigatório' });
     }
 
+    // Verifica CNPJ duplicado
     const { data: existingCompany } = await supabase
       .from('empresas')
       .select('id')
-      .eq('cnpj', cnpj)
+      .eq('cnpj', cnpj.replace(/[^\d]/g, ''))
       .single();
 
     if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
     }
 
-    const { data: company, error } = await supabase
+    // Insere nova empresa
+    const { data: company, error: insertError } = await supabase
       .from('empresas')
       .insert([{
         nome,
@@ -53,7 +58,7 @@ router.post('/', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (insertError) throw insertError;
 
     res.status(201).json(company);
   } catch (error) {
@@ -65,15 +70,17 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Atualizar empresa
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { nome, cnpj, logo } = req.body;
   
   try {
+    // Verifica CNPJ duplicado
     const { data: existingCompany } = await supabase
       .from('empresas')
       .select('id')
-      .eq('cnpj', cnpj)
+      .eq('cnpj', cnpj.replace(/[^\d]/g, ''))
       .neq('id', id)
       .single();
 
@@ -81,7 +88,8 @@ router.put('/:id', async (req, res) => {
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
 
-    const { data: company, error } = await supabase
+    // Atualiza empresa
+    const { data: company, error: updateError } = await supabase
       .from('empresas')
       .update({ 
         nome, 
@@ -92,7 +100,7 @@ router.put('/:id', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (updateError) throw updateError;
     
     if (!company) {
       return res.status(404).json({ error: 'Empresa não encontrada' });

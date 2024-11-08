@@ -14,11 +14,14 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
+  },
+  db: {
+    schema: 'public'
   }
 });
 
-// Verificar conexão
-supabase.from('empresas').select('count', { count: 'exact' })
+// Verificar conexão e permissões
+supabase.from('empresas').select('count', { count: 'exact', head: true })
   .then(({ error }) => {
     if (error) {
       logger.error('Erro ao conectar com Supabase:', error);

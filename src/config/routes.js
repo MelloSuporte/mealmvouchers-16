@@ -16,7 +16,7 @@ const router = express.Router();
 router.use('/health', healthRoutes);
 
 // API routes
-router.use('/companies', companiesRoutes);
+router.use('/api/companies', companiesRoutes); // Adicionado /api prefix
 router.use('/vouchers', voucherRoutes);
 router.use('/reports', reportRoutes);
 router.use('/meals', mealsRoutes);
