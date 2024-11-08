@@ -1,27 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
+import logger from './logger.js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('As variáveis de ambiente do Supabase são necessárias');
+if (!supabaseUrl || !supabaseKey) {
+  logger.error('Supabase environment variables are not set');
+  throw new Error('Supabase configuration is missing');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Função auxiliar para consultas
-export const executeQuery = async (table, query = {}) => {
-  try {
-    const { data, error } = await supabase
-      .from(table)
-      .select(query.select || '*')
-      .eq(query.eq?.column || '', query.eq?.value || '')
-      .order(query.orderBy || 'id', { ascending: query.ascending !== false });
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Database error:', error);
-    throw error;
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
   }
-};
+});
+
+// Verificar conexão
+supabase.from('empresas').select('count', { count: 'exact' })
+  .then(({ error }) => {
+    if (error) {
+      logger.error('Error connecting to Supabase:', error);
+    } else {
+      logger.info('Successfully connected to Supabase');
+    }
+  });
