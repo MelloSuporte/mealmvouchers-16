@@ -4,11 +4,10 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/meals', async (req, res) => {
+router.post('/', async (req, res) => {
   const { name, start_time, end_time, value, is_active = true } = req.body;
   
   try {
-    // Log the request data for debugging
     logger.info('Creating meal type:', { name, start_time, end_time, value, is_active });
 
     const { data: meal, error } = await supabase
@@ -39,7 +38,7 @@ router.post('/meals', async (req, res) => {
   }
 });
 
-router.get('/meals', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     logger.info('Fetching meal types');
     

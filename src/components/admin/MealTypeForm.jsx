@@ -24,7 +24,7 @@ const MealTypeForm = () => {
 
     try {
       setIsSubmitting(true);
-      const response = await api.post('/meals', {
+      const response = await api.post('/tipos-refeicao', {
         name: mealType,
         value: parseFloat(mealValue),
         start_time: startTime,
