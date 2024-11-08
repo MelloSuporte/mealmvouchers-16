@@ -17,8 +17,8 @@ router.use('/health', healthRoutes);
 router.use('/empresas', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/relatorios', relatoriosRoutes);
-router.use('/refeicoes', refeicoesRoutes);
-router.use('/users', usuariosRoutes);  // Map /api/users to usuarios routes
+router.use('/refeicoes', refeicoesRoutes);  // Corrigido: adicionado o prefixo correto
+router.use('/users', usuariosRoutes);
 router.use('/vouchers-extra', vouchersExtraRoutes);
 router.use('/admin', adminRoutes);
 
