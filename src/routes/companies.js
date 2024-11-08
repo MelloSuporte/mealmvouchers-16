@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { data: companies, error } = await supabase
-      .from('companies')
+      .from('empresas')
       .select('*')
       .order('name');
 
@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
     }
 
     const { data: existingCompany, error: checkError } = await supabase
-      .from('companies')
+      .from('empresas')
       .select('id')
       .eq('cnpj', cnpj)
       .single();
@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
     }
 
     const { data: result, error: insertError } = await supabase
-      .from('companies')
+      .from('empresas')
       .insert([{ name, cnpj, logo }])
       .select()
       .single();
@@ -59,7 +59,7 @@ router.put('/:id', async (req, res) => {
   const { name, cnpj, logo } = req.body;
   try {
     const { data: existingCompany } = await supabase
-      .from('companies')
+      .from('empresas')
       .select('id')
       .eq('cnpj', cnpj)
       .neq('id', req.params.id)
@@ -70,7 +70,7 @@ router.put('/:id', async (req, res) => {
     }
 
     const { data: result, error } = await supabase
-      .from('companies')
+      .from('empresas')
       .update({ name, cnpj, logo })
       .eq('id', req.params.id)
       .select()
