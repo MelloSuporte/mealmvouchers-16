@@ -4,13 +4,12 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// List companies
 router.get('/', async (req, res) => {
   try {
     const { data: companies, error } = await supabase
-      .from('empresas')
+      .from('companies')
       .select('*')
-      .order('nome');
+      .order('name');
 
     if (error) throw error;
     res.json(companies);
@@ -20,32 +19,27 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create company
 router.post('/', async (req, res) => {
-  const { nome, cnpj, logo } = req.body;
+  const { name, cnpj, logo } = req.body;
   
   try {
-    if (!nome || !cnpj) {
+    if (!name || !cnpj) {
       return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
     }
 
     const { data: existingCompany, error: checkError } = await supabase
-      .from('empresas')
+      .from('companies')
       .select('id')
       .eq('cnpj', cnpj)
       .single();
-    
-    if (checkError && checkError.code !== 'PGRST116') {
-      throw checkError;
-    }
     
     if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
     }
 
     const { data: result, error: insertError } = await supabase
-      .from('empresas')
-      .insert([{ nome, cnpj, logo }])
+      .from('companies')
+      .insert([{ name, cnpj, logo }])
       .select()
       .single();
 
@@ -57,44 +51,32 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error creating company:', error);
-    res.status(500).json({ 
-      error: 'Erro ao cadastrar empresa',
-      details: error.message
-    });
+    res.status(500).json({ error: 'Erro ao cadastrar empresa' });
   }
 });
 
-// Update company
 router.put('/:id', async (req, res) => {
-  const { nome, cnpj, logo } = req.body;
+  const { name, cnpj, logo } = req.body;
   try {
-    if (!nome || !cnpj) {
-      return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
-    }
-
-    const { data: existingCompany, error: checkError } = await supabase
-      .from('empresas')
+    const { data: existingCompany } = await supabase
+      .from('companies')
       .select('id')
       .eq('cnpj', cnpj)
       .neq('id', req.params.id)
       .single();
     
-    if (checkError && checkError.code !== 'PGRST116') {
-      throw checkError;
-    }
-    
     if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
 
-    const { data: result, error: updateError } = await supabase
-      .from('empresas')
-      .update({ nome, cnpj, logo })
+    const { data: result, error } = await supabase
+      .from('companies')
+      .update({ name, cnpj, logo })
       .eq('id', req.params.id)
       .select()
       .single();
     
-    if (updateError) throw updateError;
+    if (error) throw error;
     
     if (!result) {
       return res.status(404).json({ error: 'Empresa não encontrada' });
@@ -107,22 +89,6 @@ router.put('/:id', async (req, res) => {
   } catch (error) {
     logger.error('Error updating company:', error);
     res.status(500).json({ error: 'Erro ao atualizar empresa' });
-  }
-});
-
-// Delete company
-router.delete('/:id', async (req, res) => {
-  try {
-    const { error } = await supabase
-      .from('empresas')
-      .delete()
-      .eq('id', req.params.id);
-
-    if (error) throw error;
-    res.status(204).send();
-  } catch (error) {
-    logger.error('Error deleting company:', error);
-    res.status(500).json({ error: 'Erro ao excluir empresa' });
   }
 });
 

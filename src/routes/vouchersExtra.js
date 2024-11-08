@@ -1,34 +1,30 @@
 import express from 'express';
-import pool from '../config/database.js';
+import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
-import { format } from 'date-fns';
 
 const router = express.Router();
 
 router.post('/', async (req, res) => {
   const { userId, dates } = req.body;
-  let db;
 
   try {
-    db = await pool.getConnection();
     const vouchers = [];
     
     for (const date of dates) {
-      // Format the date to MySQL date format (YYYY-MM-DD)
-      const formattedDate = format(new Date(date), 'yyyy-MM-dd');
+      const { data: voucher, error } = await supabase
+        .from('extra_vouchers')
+        .insert([{
+          user_id: userId,
+          authorized_by: 1, // TODO: Get from authenticated user
+          valid_until: new Date(date).toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
       
-      const [result] = await db.execute(
-        'INSERT INTO extra_vouchers (user_id, authorized_by, valid_until) VALUES (?, ?, ?)',
-        [userId, 1, formattedDate]
-      );
-
-      const [voucherData] = await db.execute(
-        'SELECT * FROM extra_vouchers WHERE id = ?',
-        [result.insertId]
-      );
-
-      if (voucherData[0]) {
-        vouchers.push(voucherData[0]);
+      if (voucher) {
+        vouchers.push(voucher);
       }
     }
 
@@ -40,8 +36,6 @@ router.post('/', async (req, res) => {
   } catch (error) {
     logger.error('Error creating extra vouchers:', error);
     res.status(500).json({ error: error.message });
-  } finally {
-    if (db) db.release();
   }
 });
 

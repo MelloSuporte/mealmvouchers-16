@@ -1,9 +1,9 @@
 import express from 'express';
+import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Search users by CPF
 router.get('/search', async (req, res) => {
   const { term } = req.query;
   
@@ -12,13 +12,17 @@ router.get('/search', async (req, res) => {
   }
 
   try {
-    const [users] = await req.db.execute(
-      `SELECT u.*, e.nome as company_name 
-       FROM usuarios u 
-       LEFT JOIN empresas e ON u.empresa_id = e.id 
-       WHERE u.cpf LIKE ? OR u.nome LIKE ?`,
-      [`%${term}%`, `%${term}%`]
-    );
+    const { data: users, error } = await supabase
+      .from('users')
+      .select(`
+        *,
+        companies (
+          name
+        )
+      `)
+      .or(`cpf.ilike.%${term}%,name.ilike.%${term}%`);
+
+    if (error) throw error;
     
     res.json(users);
   } catch (error) {
@@ -27,39 +31,43 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// Create user
 router.post('/', async (req, res) => {
   const { name, email, cpf, company_id, voucher, turno, is_suspended, photo } = req.body;
   
   try {
     if (!name || !email || !cpf || !company_id || !voucher || !turno) {
-      return res.status(400).json({ 
-        error: 'Todos os campos obrigatórios devem ser preenchidos' 
-      });
+      return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos' });
     }
 
-    // Check if email or CPF already exists
-    const [existingUser] = await req.db.execute(
-      'SELECT id FROM usuarios WHERE email = ? OR cpf = ?',
-      [email, cpf]
-    );
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .or(`email.eq.${email},cpf.eq.${cpf}`)
+      .single();
 
-    if (existingUser.length > 0) {
-      return res.status(409).json({ 
-        error: 'Já existe um usuário cadastrado com este email ou CPF' 
-      });
+    if (existingUser) {
+      return res.status(409).json({ error: 'Já existe um usuário cadastrado com este email ou CPF' });
     }
 
-    const [result] = await req.db.execute(
-      `INSERT INTO usuarios (
-        nome, email, cpf, empresa_id, voucher, 
-        turno, suspenso, foto
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, email, cpf, company_id, voucher, turno, is_suspended || false, photo]
-    );
+    const { data: user, error } = await supabase
+      .from('users')
+      .insert([{
+        name,
+        email,
+        cpf,
+        company_id,
+        voucher,
+        turno,
+        is_suspended: is_suspended || false,
+        photo
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
 
     res.status(201).json({
-      id: result.insertId,
+      id: user.id,
       message: 'Usuário cadastrado com sucesso'
     });
   } catch (error) {
@@ -71,44 +79,44 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update user
 router.put('/:cpf', async (req, res) => {
   const { name, email, company_id, voucher, turno, is_suspended, photo } = req.body;
   const { cpf } = req.params;
 
   try {
     if (!name || !email || !company_id || !voucher || !turno) {
-      return res.status(400).json({ 
-        error: 'Todos os campos obrigatórios devem ser preenchidos' 
-      });
+      return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos' });
     }
 
-    // Check if email already exists for another user
-    const [existingUser] = await req.db.execute(
-      'SELECT id FROM usuarios WHERE email = ? AND cpf != ?',
-      [email, cpf]
-    );
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .neq('cpf', cpf)
+      .single();
 
-    if (existingUser.length > 0) {
-      return res.status(409).json({ 
-        error: 'Email já está em uso por outro usuário' 
-      });
+    if (existingUser) {
+      return res.status(409).json({ error: 'Email já está em uso por outro usuário' });
     }
 
-    const [result] = await req.db.execute(
-      `UPDATE usuarios SET 
-        nome = ?, 
-        email = ?, 
-        empresa_id = ?, 
-        voucher = ?, 
-        turno = ?, 
-        suspenso = ?,
-        foto = ?
-       WHERE cpf = ?`,
-      [name, email, company_id, voucher, turno, is_suspended || false, photo, cpf]
-    );
+    const { data: user, error } = await supabase
+      .from('users')
+      .update({
+        name,
+        email,
+        company_id,
+        voucher,
+        turno,
+        is_suspended: is_suspended || false,
+        photo
+      })
+      .eq('cpf', cpf)
+      .select()
+      .single();
 
-    if (result.affectedRows === 0) {
+    if (error) throw error;
+
+    if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
