@@ -1,47 +1,44 @@
-CREATE DATABASE IF NOT EXISTS sis_voucher
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE sis_voucher;
 
-USE sis_voucher;
+\c sis_voucher;
 
-SET time_zone = '-03:00';
+SET timezone = 'America/Sao_Paulo';
 
 -- Create tables
 CREATE TABLE IF NOT EXISTS empresas (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
   cnpj VARCHAR(18) NOT NULL UNIQUE,
-  logo LONGTEXT,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  logo TEXT,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE IF NOT EXISTS usuarios (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
   cpf VARCHAR(14) NOT NULL UNIQUE,
-  empresa_id INT,
+  empresa_id INTEGER REFERENCES empresas(id),
   voucher VARCHAR(4) NOT NULL,
-  turno ENUM('central', 'primeiro', 'segundo', 'terceiro') NOT NULL,
+  turno VARCHAR(10) CHECK (turno IN ('central', 'primeiro', 'segundo', 'terceiro')),
   suspenso BOOLEAN DEFAULT FALSE,
-  foto LONGTEXT,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (empresa_id) REFERENCES empresas(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  foto TEXT,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE IF NOT EXISTS tipos_refeicao (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
   hora_inicio TIME,
   hora_fim TIME,
   valor DECIMAL(10,2) NOT NULL,
   ativo BOOLEAN DEFAULT TRUE,
-  max_usuarios_por_dia INT,
-  minutos_tolerancia INT DEFAULT 15,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  max_usuarios_por_dia INTEGER,
+  minutos_tolerancia INTEGER DEFAULT 15,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
--- Insert some initial data
+-- Insert initial data
 INSERT INTO empresas (nome, cnpj) VALUES 
 ('Empresa Teste', '12.345.678/0001-90'),
 ('Outra Empresa', '98.765.432/0001-10');
@@ -51,6 +48,5 @@ INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor) VALUES
 ('Almoço', '11:00:00', '14:00:00', 25.00),
 ('Jantar', '18:00:00', '21:00:00', 25.00);
 
--- Configurar timezone da sessão
-SET GLOBAL time_zone = '-03:00';
-SET SESSION time_zone = '-03:00';
+-- Set timezone for the session
+SET timezone TO 'America/Sao_Paulo';
