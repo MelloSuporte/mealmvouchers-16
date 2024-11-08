@@ -14,26 +14,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get company by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const [company] = await req.db.execute('SELECT * FROM empresas WHERE id = ?', [req.params.id]);
-    if (company.length === 0) {
-      return res.status(404).json({ error: 'Empresa não encontrada' });
-    }
-    res.json(company[0]);
-  } catch (error) {
-    logger.error('Error fetching company:', error);
-    res.status(500).json({ error: 'Erro ao buscar empresa' });
-  }
-});
-
 // Create company
 router.post('/', async (req, res) => {
-  const { name, cnpj, logo } = req.body;
+  const { nome, cnpj, logo } = req.body;
   
   try {
-    if (!name || !cnpj) {
+    if (!nome || !cnpj) {
       return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
     }
 
@@ -48,12 +34,12 @@ router.post('/', async (req, res) => {
 
     const [result] = await req.db.execute(
       'INSERT INTO empresas (nome, cnpj, logo) VALUES (?, ?, ?)',
-      [name, cnpj, logo]
+      [nome, cnpj, logo]
     );
 
     res.status(201).json({ 
       id: result.insertId, 
-      name, 
+      nome, 
       cnpj, 
       logo,
       message: 'Empresa cadastrada com sucesso'
@@ -69,9 +55,9 @@ router.post('/', async (req, res) => {
 
 // Update company
 router.put('/:id', async (req, res) => {
-  const { name, cnpj, logo } = req.body;
+  const { nome, cnpj, logo } = req.body;
   try {
-    if (!name || !cnpj) {
+    if (!nome || !cnpj) {
       return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
     }
 
@@ -84,14 +70,18 @@ router.put('/:id', async (req, res) => {
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
 
-    await req.db.execute(
+    const [result] = await req.db.execute(
       'UPDATE empresas SET nome = ?, cnpj = ?, logo = ? WHERE id = ?',
-      [name, cnpj, logo, req.params.id]
+      [nome, cnpj, logo, req.params.id]
     );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Empresa não encontrada' });
+    }
     
     res.json({ 
       id: parseInt(req.params.id), 
-      name, 
+      nome, 
       cnpj, 
       logo,
       message: 'Empresa atualizada com sucesso'
