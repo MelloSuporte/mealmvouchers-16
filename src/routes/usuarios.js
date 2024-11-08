@@ -4,52 +4,71 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
+// Busca usuário por CPF
 router.get('/search', async (req, res) => {
-  const { term } = req.query;
+  const { cpf } = req.query;
   
-  if (!term) {
-    return res.status(400).json({ error: 'Termo de busca é obrigatório' });
+  if (!cpf) {
+    return res.status(400).json({ error: 'CPF é obrigatório para a busca' });
   }
 
   try {
-    const { data: users, error } = await supabase
+    const { data: user, error } = await supabase
       .from('users')
       .select(`
         *,
         companies (
+          id,
           name
         )
       `)
-      .or(`cpf.ilike.%${term}%,name.ilike.%${term}%`);
+      .eq('cpf', cpf)
+      .maybeSingle();
 
     if (error) throw error;
     
-    res.json(users);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    res.json(user);
   } catch (error) {
-    logger.error('Error searching users:', error);
-    res.status(500).json({ error: 'Erro ao buscar usuários' });
+    logger.error('Error searching user:', error);
+    res.status(500).json({ error: 'Erro ao buscar usuário' });
   }
 });
 
+// Criar novo usuário
 router.post('/', async (req, res) => {
   const { name, email, cpf, company_id, voucher, turno, is_suspended, photo } = req.body;
   
   try {
-    if (!name || !email || !cpf || !company_id || !voucher || !turno) {
-      return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos' });
+    // Validações
+    if (!name?.trim() || !email?.trim() || !cpf?.trim() || !company_id || !voucher || !turno) {
+      return res.status(400).json({ 
+        error: 'Campos obrigatórios faltando',
+        details: 'Nome, email, CPF, empresa, voucher e turno são obrigatórios'
+      });
     }
 
-    const { data: existingUser } = await supabase
+    // Verifica se já existe usuário com mesmo CPF ou email
+    const { data: existingUser, error: searchError } = await supabase
       .from('users')
-      .select('id')
-      .or(`email.eq.${email},cpf.eq.${cpf}`)
-      .single();
+      .select('id, cpf, email')
+      .or(`cpf.eq.${cpf},email.eq.${email}`)
+      .maybeSingle();
+
+    if (searchError) throw searchError;
 
     if (existingUser) {
-      return res.status(409).json({ error: 'Já existe um usuário cadastrado com este email ou CPF' });
+      return res.status(409).json({ 
+        error: 'Usuário já existe',
+        details: 'Já existe um usuário cadastrado com este CPF ou email'
+      });
     }
 
-    const { data: user, error } = await supabase
+    // Insere novo usuário
+    const { data: newUser, error: insertError } = await supabase
       .from('users')
       .insert([{
         name,
@@ -64,11 +83,13 @@ router.post('/', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (insertError) throw insertError;
 
+    logger.info(`Novo usuário cadastrado - ID: ${newUser.id}, Nome: ${name}`);
     res.status(201).json({
-      id: user.id,
-      message: 'Usuário cadastrado com sucesso'
+      success: true,
+      message: 'Usuário cadastrado com sucesso',
+      user: newUser
     });
   } catch (error) {
     logger.error('Error creating user:', error);
@@ -79,27 +100,38 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:cpf', async (req, res) => {
+// Atualizar usuário existente
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
   const { name, email, company_id, voucher, turno, is_suspended, photo } = req.body;
-  const { cpf } = req.params;
 
   try {
-    if (!name || !email || !company_id || !voucher || !turno) {
-      return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos' });
+    if (!name?.trim() || !email?.trim() || !company_id || !voucher || !turno) {
+      return res.status(400).json({ 
+        error: 'Campos obrigatórios faltando',
+        details: 'Nome, email, empresa, voucher e turno são obrigatórios'
+      });
     }
 
-    const { data: existingUser } = await supabase
+    // Verifica se email já está em uso por outro usuário
+    const { data: existingUser, error: searchError } = await supabase
       .from('users')
-      .select('id')
+      .select('id, email')
       .eq('email', email)
-      .neq('cpf', cpf)
-      .single();
+      .neq('id', id)
+      .maybeSingle();
+
+    if (searchError) throw searchError;
 
     if (existingUser) {
-      return res.status(409).json({ error: 'Email já está em uso por outro usuário' });
+      return res.status(409).json({ 
+        error: 'Email já em uso',
+        details: 'Este email já está sendo usado por outro usuário'
+      });
     }
 
-    const { data: user, error } = await supabase
+    // Atualiza usuário
+    const { data: updatedUser, error: updateError } = await supabase
       .from('users')
       .update({
         name,
@@ -110,17 +142,22 @@ router.put('/:cpf', async (req, res) => {
         is_suspended: is_suspended || false,
         photo
       })
-      .eq('cpf', cpf)
+      .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (updateError) throw updateError;
 
-    if (!user) {
+    if (!updatedUser) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    res.json({ message: 'Usuário atualizado com sucesso' });
+    logger.info(`Usuário atualizado - ID: ${id}, Nome: ${name}`);
+    res.json({
+      success: true,
+      message: 'Usuário atualizado com sucesso',
+      user: updatedUser
+    });
   } catch (error) {
     logger.error('Error updating user:', error);
     res.status(500).json({ 

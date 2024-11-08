@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { toast } from "sonner";
 import UserFormMain from './UserFormMain';
 import api from '../../utils/api';
+import logger from '../../config/logger';
 
 const UserForm = () => {
   const [formData, setFormData] = useState({
@@ -45,8 +46,8 @@ const UserForm = () => {
       const userData = {
         name: formData.userName,
         email: formData.userEmail,
-        cpf: formData.userCPF,
-        company_id: formData.company,
+        cpf: formData.userCPF.replace(/\D/g, ''), // Remove caracteres não numéricos do CPF
+        company_id: parseInt(formData.company),
         voucher: formData.voucher,
         turno: formData.selectedTurno,
         is_suspended: formData.isSuspended,
@@ -54,19 +55,19 @@ const UserForm = () => {
       };
 
       let response;
-      if (formData.id) {
-        response = await api.put(`/users/${formData.id}`, userData);
-        toast.success("Usuário atualizado com sucesso!");
-      } else {
-        response = await api.post('/users', userData);
-        toast.success("Usuário cadastrado com sucesso!");
-      }
+      const endpoint = `/api/users${formData.id ? `/${formData.id}` : ''}`;
+      const method = formData.id ? 'put' : 'post';
+
+      response = await api[method](endpoint, userData);
 
       if (response.data.success) {
+        toast.success(formData.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
         resetForm();
+      } else {
+        throw new Error(response.data.error || 'Erro ao salvar usuário');
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.error || "Erro ao salvar usuário. Tente novamente.";
+      const errorMessage = error.response?.data?.error || error.message || "Erro ao salvar usuário";
       toast.error(errorMessage);
       logger.error('Erro ao salvar usuário:', error);
     } finally {

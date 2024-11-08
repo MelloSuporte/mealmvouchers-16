@@ -1,9 +1,8 @@
 import axios from 'axios';
 import { toast } from "sonner";
-import { supabase } from '../config/supabase';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/', // Garante que a baseURL está correta
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -13,6 +12,7 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   config => {
+    // Adiciona timestamp para evitar cache em requisições GET
     if (config.method === 'get') {
       config.params = {
         ...config.params,
@@ -42,11 +42,12 @@ api.interceptors.response.use(
     }
 
     if (error.response) {
-      const errorMessage = error.response.data?.error || 'Ocorreu um erro';
+      const errorMessage = error.response.data?.error || error.response.data?.message || 'Ocorreu um erro';
+      const errorDetails = error.response.data?.details;
       
       switch (error.response.status) {
         case 400:
-          toast.error('Dados inválidos: ' + errorMessage);
+          toast.error(`Dados inválidos: ${errorMessage}`);
           break;
         case 401:
           toast.error('Sessão expirada');
@@ -55,19 +56,19 @@ api.interceptors.response.use(
           toast.error('Acesso negado');
           break;
         case 404:
-          toast.error('Recurso não encontrado: ' + errorMessage);
+          toast.error(`Recurso não encontrado: ${errorMessage}`);
           break;
         case 409:
-          toast.error('Conflito: ' + errorMessage);
+          toast.error(`Conflito: ${errorMessage}`);
           break;
         case 422:
-          toast.error('Dados inválidos: ' + errorMessage);
+          toast.error(`Dados inválidos: ${errorMessage}`);
           break;
         case 429:
           toast.error('Muitas requisições');
           break;
         case 500:
-          toast.error('Erro interno do servidor');
+          toast.error(`Erro interno do servidor: ${errorMessage}`);
           break;
         case 503:
           toast.error('Serviço indisponível');
@@ -75,66 +76,14 @@ api.interceptors.response.use(
         default:
           toast.error(errorMessage);
       }
+
+      if (errorDetails && process.env.NODE_ENV === 'development') {
+        console.error('Error details:', errorDetails);
+      }
     }
 
     return Promise.reject(error);
   }
 );
-
-// Supabase helper functions
-api.supabase = {
-  async query(table) {
-    const { data, error } = await supabase
-      .from(table)
-      .select();
-    
-    if (error) throw error;
-    return data;
-  },
-
-  async getById(table, id) {
-    const { data, error } = await supabase
-      .from(table)
-      .select()
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
-
-  async insert(table, data) {
-    const { data: result, error } = await supabase
-      .from(table)
-      .insert(data)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return result;
-  },
-
-  async update(table, id, data) {
-    const { data: result, error } = await supabase
-      .from(table)
-      .update(data)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return result;
-  },
-
-  async delete(table, id) {
-    const { error } = await supabase
-      .from(table)
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
-    return true;
-  }
-};
 
 export default api;
