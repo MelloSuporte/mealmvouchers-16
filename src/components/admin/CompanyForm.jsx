@@ -34,7 +34,7 @@ const CompanyForm = () => {
 
   const handleEditCompany = (company) => {
     setEditingCompany(company);
-    setCompanyName(company.nome);
+    setCompanyName(company.name);
     setCnpj(company.cnpj);
     setLogo(company.logo);
   };
@@ -51,7 +51,7 @@ const CompanyForm = () => {
       setIsSubmitting(true);
       
       const companyData = {
-        nome: companyName,
+        name: companyName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
         logo
       };
