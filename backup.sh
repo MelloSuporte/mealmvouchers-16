@@ -37,14 +37,15 @@ do_backup() {
     
     if [ "$BACKUP_TYPE" = "full" ]; then
         # Backup completo
-        docker exec $CONTAINER_NAME mysqldump -u$MYSQL_USER -p$MYSQL_PASSWORD $DATABASE > "$BACKUP_FILE"
+        docker exec $CONTAINER_NAME pg_dump -U$POSTGRES_USER -d $DATABASE > "$BACKUP_FILE"
     else
         # Backup incremental (apenas alterações desde o último backup)
-        docker exec $CONTAINER_NAME mysqldump -u$MYSQL_USER -p$MYSQL_PASSWORD \
-            --skip-add-drop-table \
-            --no-create-info \
-            --where="modified_at >= CURDATE()" \
-            $DATABASE > "$BACKUP_FILE"
+        docker exec $CONTAINER_NAME pg_dump -U$POSTGRES_USER -d $DATABASE \
+            --exclude-table-data='*' \
+            --data-only \
+            --inserts \
+            --rows-per-insert=100 \
+            > "$BACKUP_FILE"
     fi
     
     if [ $? -eq 0 ]; then
