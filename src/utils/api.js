@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from "sonner";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: '/',  // Removendo o prefixo /api
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -12,6 +12,12 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   config => {
+    // Adiciona token de autenticação se existir
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     // Adiciona timestamp para evitar cache em requisições GET
     if (config.method === 'get') {
       config.params = {
@@ -43,14 +49,15 @@ api.interceptors.response.use(
 
     if (error.response) {
       const errorMessage = error.response.data?.error || error.response.data?.message || 'Ocorreu um erro';
-      const errorDetails = error.response.data?.details;
       
       switch (error.response.status) {
         case 400:
           toast.error(`Dados inválidos: ${errorMessage}`);
           break;
         case 401:
-          toast.error('Sessão expirada');
+          toast.error('Sessão expirada. Por favor, faça login novamente.');
+          localStorage.removeItem('adminToken');
+          window.location.href = '/login';
           break;
         case 403:
           toast.error('Acesso negado');
@@ -65,20 +72,16 @@ api.interceptors.response.use(
           toast.error(`Dados inválidos: ${errorMessage}`);
           break;
         case 429:
-          toast.error('Muitas requisições');
+          toast.error('Muitas requisições. Tente novamente em alguns instantes.');
           break;
         case 500:
           toast.error(`Erro interno do servidor: ${errorMessage}`);
           break;
         case 503:
-          toast.error('Serviço indisponível');
+          toast.error('Serviço temporariamente indisponível');
           break;
         default:
           toast.error(errorMessage);
-      }
-
-      if (errorDetails && process.env.NODE_ENV === 'development') {
-        console.error('Error details:', errorDetails);
       }
     }
 

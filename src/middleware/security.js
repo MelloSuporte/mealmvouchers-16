@@ -1,24 +1,20 @@
-import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import compression from 'compression';
-
-export const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // increased from 100 to 1000 requests per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: "Too many requests from this IP, please try again later."
-});
 
 export const securityMiddleware = [
-  helmet(),
-  compression(),
-  limiter
-];
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+  }),
+  (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
 
-export const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:3000',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-};
+    // Handle preflight requests
+    if ('OPTIONS' === req.method) {
+      res.sendStatus(200);
+    } else {
+      next();
+    }
+  }
+];
