@@ -4,7 +4,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post('/meal-types', async (req, res) => {
   const { name, startTime, endTime, value, isActive, maxUsersPerDay, toleranceMinutes } = req.body;
   
   try {
@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/meal-types', async (req, res) => {
   try {
     const { data: meals, error } = await supabase
       .from('meal_types')
