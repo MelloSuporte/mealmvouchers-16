@@ -3,15 +3,30 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-const container = document.getElementById('root');
+// Função para desregistrar o service worker
+const unregisterServiceWorker = async () => {
+  try {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao desregistrar service worker:', error);
+  }
+};
 
-if (!container) {
-  throw new Error('Root element not found. Did you forget to add it to your index.html?');
-}
+// Monitorar estado da conexão
+window.addEventListener('offline', () => {
+  unregisterServiceWorker();
+});
 
-const root = ReactDOM.createRoot(container);
+window.addEventListener('online', () => {
+  window.location.reload();
+});
 
-root.render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>

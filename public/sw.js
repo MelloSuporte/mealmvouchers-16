@@ -1,22 +1,40 @@
 const CACHE_NAME = 'voucher-system-v1';
 
 self.addEventListener('install', (event) => {
-  // Skip caching during install
   self.skipWaiting();
 });
 
-self.addEventListener('fetch', (event) => {
-  // Only try to fetch from network, don't use cache
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      // If fetch fails (offline), return error response
-      return new Response('Sistema offline. Por favor, verifique sua conexão.', {
-        status: 503,
-        statusText: 'Service Unavailable',
-        headers: new Headers({
-          'Content-Type': 'text/plain',
-        }),
-      });
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
     })
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        // Não armazena em cache, apenas retorna a resposta
+        return response;
+      })
+      .catch(() => {
+        return new Response(JSON.stringify({
+          error: 'Sistema offline',
+          message: 'Por favor, verifique sua conexão com a internet'
+        }), {
+          status: 503,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      })
   );
 });
