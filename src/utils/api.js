@@ -1,9 +1,6 @@
 import axios from 'axios';
 import { toast } from "sonner";
-import { openDB } from 'idb';
-
-const DB_NAME = 'voucher_offline_db';
-const STORE_NAME = 'pending_operations';
+import { supabase } from '../config/supabase';
 
 const api = axios.create({
   baseURL: '/',
@@ -87,5 +84,61 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Funções auxiliares para o Supabase
+api.supabase = {
+  async query(table) {
+    const { data, error } = await supabase
+      .from(table)
+      .select();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async getById(table, id) {
+    const { data, error } = await supabase
+      .from(table)
+      .select()
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async insert(table, data) {
+    const { data: result, error } = await supabase
+      .from(table)
+      .insert(data)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return result;
+  },
+
+  async update(table, id, data) {
+    const { data: result, error } = await supabase
+      .from(table)
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return result;
+  },
+
+  async delete(table, id) {
+    const { error } = await supabase
+      .from(table)
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    return true;
+  }
+};
 
 export default api;
