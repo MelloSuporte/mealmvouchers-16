@@ -10,6 +10,7 @@ const MealTypeForm = () => {
   const [mealValue, setMealValue] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const mealTypes = [
     "Café (1)", "Café (2)", "Almoço", "Lanche", "Jantar", "Ceia", "Desjejum", "Extra"
@@ -22,6 +23,7 @@ const MealTypeForm = () => {
     }
 
     try {
+      setIsSubmitting(true);
       const response = await api.post('/meals', {
         name: mealType,
         value: parseFloat(mealValue),
@@ -38,7 +40,10 @@ const MealTypeForm = () => {
         setEndTime("");
       }
     } catch (error) {
+      console.error('Erro ao salvar tipo de refeição:', error);
       toast.error("Erro ao salvar tipo de refeição: " + (error.response?.data?.error || error.message));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -77,7 +82,13 @@ const MealTypeForm = () => {
           />
         </>
       )}
-      <Button type="button" onClick={handleSaveMealType}>Cadastrar Tipo de Refeição</Button>
+      <Button 
+        type="button" 
+        onClick={handleSaveMealType}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Cadastrando...' : 'Cadastrar Tipo de Refeição'}
+      </Button>
     </form>
   );
 };
