@@ -10,10 +10,9 @@ const api = axios.create({
   }
 });
 
-// Interceptador de requisições
+// Request interceptor
 api.interceptors.request.use(
   config => {
-    // Adiciona timestamp para evitar cache
     if (config.method === 'get') {
       config.params = {
         ...config.params,
@@ -23,43 +22,40 @@ api.interceptors.request.use(
     return config;
   },
   error => {
-    console.error('Erro na requisição:', error);
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// Interceptador de respostas
+// Response interceptor
 api.interceptors.response.use(
   response => response,
   async error => {
-    // Trata erros de rede
     if (!navigator.onLine) {
-      toast.error('Sem conexão com a internet. Verifique sua conexão e tente novamente.');
+      toast.error('Sem conexão com a internet');
       return Promise.reject(error);
     }
 
-    // Trata timeout
     if (error.code === 'ECONNABORTED') {
-      toast.error('A conexão demorou muito para responder. Tente novamente.');
+      toast.error('A conexão demorou muito para responder');
       return Promise.reject(error);
     }
 
-    // Trata erros do servidor
     if (error.response) {
-      const errorMessage = error.response.data?.error || 'Ocorreu um erro. Tente novamente.';
+      const errorMessage = error.response.data?.error || 'Ocorreu um erro';
       
       switch (error.response.status) {
         case 400:
           toast.error('Dados inválidos: ' + errorMessage);
           break;
         case 401:
-          toast.error('Sessão expirada. Faça login novamente.');
+          toast.error('Sessão expirada');
           break;
         case 403:
-          toast.error('Acesso negado.');
+          toast.error('Acesso negado');
           break;
         case 404:
-          toast.error('Recurso não encontrado.');
+          toast.error('Recurso não encontrado');
           break;
         case 409:
           toast.error('Conflito: ' + errorMessage);
@@ -68,13 +64,13 @@ api.interceptors.response.use(
           toast.error('Dados inválidos: ' + errorMessage);
           break;
         case 429:
-          toast.error('Muitas requisições. Aguarde um momento.');
+          toast.error('Muitas requisições');
           break;
         case 500:
-          toast.error('Erro interno do servidor. Tente novamente.');
+          toast.error('Erro interno do servidor');
           break;
         case 503:
-          toast.error('Serviço indisponível. Tente novamente em alguns instantes.');
+          toast.error('Serviço indisponível');
           break;
         default:
           toast.error(errorMessage);
@@ -85,7 +81,7 @@ api.interceptors.response.use(
   }
 );
 
-// Funções auxiliares para o Supabase
+// Supabase helper functions
 api.supabase = {
   async query(table) {
     const { data, error } = await supabase

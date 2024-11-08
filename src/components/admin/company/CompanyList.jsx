@@ -33,12 +33,7 @@ const CompanyList = ({ companies, isLoading, onEdit }) => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => onEdit({
-                    id: company.id,
-                    name: company.nome,
-                    cnpj: company.cnpj,
-                    logo: company.logo
-                  })}
+                  onClick={() => onEdit(company)}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>

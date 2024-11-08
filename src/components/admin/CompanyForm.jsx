@@ -56,19 +56,20 @@ const CompanyForm = () => {
         logo
       };
 
+      let response;
       if (editingCompany) {
-        await api.put(`/companies/${editingCompany.id}`, companyData);
+        response = await api.put(`/companies/${editingCompany.id}`, companyData);
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        await api.post('/companies', companyData);
+        response = await api.post('/companies', companyData);
         toast.success('Empresa cadastrada com sucesso!');
       }
       
       resetForm();
       queryClient.invalidateQueries(['companies']);
     } catch (error) {
-      toast.error(error.response?.data?.error || "Erro ao salvar empresa");
       console.error('Erro ao salvar empresa:', error);
+      toast.error(error.response?.data?.error || "Erro ao salvar empresa");
     } finally {
       setIsSubmitting(false);
     }
