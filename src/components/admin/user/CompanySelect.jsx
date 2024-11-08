@@ -9,8 +9,7 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        const response = await api.get('/api/companies');
-        // Ensure we always return an array
+        const response = await api.get('/companies');
         return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         toast.error('Erro ao carregar empresas');
@@ -23,7 +22,6 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
     toast.error('Erro ao carregar empresas');
   }
 
-  // Ensure companies is always an array
   const companyList = Array.isArray(companies) ? companies : [];
 
   return (

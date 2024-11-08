@@ -1,4 +1,5 @@
 import express from 'express';
+import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
@@ -6,7 +7,12 @@ const router = express.Router();
 // List companies
 router.get('/', async (req, res) => {
   try {
-    const [companies] = await req.db.execute('SELECT * FROM empresas ORDER BY nome');
+    const { data: companies, error } = await supabase
+      .from('empresas')
+      .select('*')
+      .order('nome');
+
+    if (error) throw error;
     res.json(companies);
   } catch (error) {
     logger.error('Error listing companies:', error);
@@ -23,25 +29,30 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
     }
 
-    const [existingCompany] = await req.db.execute(
-      'SELECT id FROM empresas WHERE cnpj = ?', 
-      [cnpj]
-    );
+    const { data: existingCompany, error: checkError } = await supabase
+      .from('empresas')
+      .select('id')
+      .eq('cnpj', cnpj)
+      .single();
     
-    if (existingCompany.length > 0) {
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError;
+    }
+    
+    if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
     }
 
-    const [result] = await req.db.execute(
-      'INSERT INTO empresas (nome, cnpj, logo) VALUES (?, ?, ?)',
-      [nome, cnpj, logo]
-    );
+    const { data: result, error: insertError } = await supabase
+      .from('empresas')
+      .insert([{ nome, cnpj, logo }])
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
 
     res.status(201).json({ 
-      id: result.insertId, 
-      nome, 
-      cnpj, 
-      logo,
+      ...result,
       message: 'Empresa cadastrada com sucesso'
     });
   } catch (error) {
@@ -61,29 +72,36 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
     }
 
-    const [existingCompany] = await req.db.execute(
-      'SELECT id FROM empresas WHERE cnpj = ? AND id != ?', 
-      [cnpj, req.params.id]
-    );
+    const { data: existingCompany, error: checkError } = await supabase
+      .from('empresas')
+      .select('id')
+      .eq('cnpj', cnpj)
+      .neq('id', req.params.id)
+      .single();
     
-    if (existingCompany.length > 0) {
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError;
+    }
+    
+    if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
 
-    const [result] = await req.db.execute(
-      'UPDATE empresas SET nome = ?, cnpj = ?, logo = ? WHERE id = ?',
-      [nome, cnpj, logo, req.params.id]
-    );
+    const { data: result, error: updateError } = await supabase
+      .from('empresas')
+      .update({ nome, cnpj, logo })
+      .eq('id', req.params.id)
+      .select()
+      .single();
     
-    if (result.affectedRows === 0) {
+    if (updateError) throw updateError;
+    
+    if (!result) {
       return res.status(404).json({ error: 'Empresa não encontrada' });
     }
     
     res.json({ 
-      id: parseInt(req.params.id), 
-      nome, 
-      cnpj, 
-      logo,
+      ...result,
       message: 'Empresa atualizada com sucesso'
     });
   } catch (error) {
@@ -95,10 +113,12 @@ router.put('/:id', async (req, res) => {
 // Delete company
 router.delete('/:id', async (req, res) => {
   try {
-    const [result] = await req.db.execute('DELETE FROM empresas WHERE id = ?', [req.params.id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Empresa não encontrada' });
-    }
+    const { error } = await supabase
+      .from('empresas')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (error) throw error;
     res.status(204).send();
   } catch (error) {
     logger.error('Error deleting company:', error);
