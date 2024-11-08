@@ -22,7 +22,7 @@ const CompanyForm = () => {
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        const response = await api.get('/empresas');
+        const response = await api.get('/companies');
         return response.data || [];
       } catch (error) {
         toast.error('Erro ao carregar empresas');
@@ -58,10 +58,10 @@ const CompanyForm = () => {
 
       let response;
       if (editingCompany) {
-        response = await api.put(`/empresas/${editingCompany.id}`, companyData);
+        response = await api.put(`/companies/${editingCompany.id}`, companyData);
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        response = await api.post('/empresas', companyData);
+        response = await api.post('/companies', companyData);
         toast.success('Empresa cadastrada com sucesso!');
       }
       

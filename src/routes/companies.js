@@ -4,6 +4,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
+// List all companies
 router.get('/', async (req, res) => {
   try {
     const { data: companies, error } = await supabase
@@ -12,13 +13,15 @@ router.get('/', async (req, res) => {
       .order('name');
 
     if (error) throw error;
-    res.json(companies);
+    
+    res.json(companies || []);
   } catch (error) {
     logger.error('Error listing companies:', error);
     res.status(500).json({ error: 'Erro ao buscar empresas' });
   }
 });
 
+// Create new company
 router.post('/', async (req, res) => {
   const { name, cnpj, logo } = req.body;
   
@@ -27,7 +30,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Nome e CNPJ são obrigatórios' });
     }
 
-    const { data: existingCompany, error: checkError } = await supabase
+    const { data: existingCompany } = await supabase
       .from('empresas')
       .select('id')
       .eq('cnpj', cnpj)
@@ -37,55 +40,52 @@ router.post('/', async (req, res) => {
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
     }
 
-    const { data: result, error: insertError } = await supabase
+    const { data: company, error } = await supabase
       .from('empresas')
       .insert([{ name, cnpj, logo }])
       .select()
       .single();
 
-    if (insertError) throw insertError;
+    if (error) throw error;
 
-    res.status(201).json({ 
-      ...result,
-      message: 'Empresa cadastrada com sucesso'
-    });
+    res.status(201).json(company);
   } catch (error) {
     logger.error('Error creating company:', error);
     res.status(500).json({ error: 'Erro ao cadastrar empresa' });
   }
 });
 
+// Update company
 router.put('/:id', async (req, res) => {
   const { name, cnpj, logo } = req.body;
+  const { id } = req.params;
+
   try {
     const { data: existingCompany } = await supabase
       .from('empresas')
       .select('id')
       .eq('cnpj', cnpj)
-      .neq('id', req.params.id)
+      .neq('id', id)
       .single();
     
     if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
 
-    const { data: result, error } = await supabase
+    const { data: company, error } = await supabase
       .from('empresas')
       .update({ name, cnpj, logo })
-      .eq('id', req.params.id)
+      .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
     
-    if (!result) {
+    if (!company) {
       return res.status(404).json({ error: 'Empresa não encontrada' });
     }
-    
-    res.json({ 
-      ...result,
-      message: 'Empresa atualizada com sucesso'
-    });
+
+    res.json(company);
   } catch (error) {
     logger.error('Error updating company:', error);
     res.status(500).json({ error: 'Erro ao atualizar empresa' });
