@@ -129,7 +129,7 @@ insert into public.configuracoes_turno (tipo_turno, hora_inicio, hora_fim) value
   ('segundo', '14:00', '22:00'),
   ('terceiro', '22:00', '06:00');
 
--- Habilitar RLS em todas as tabelas
+-- Habilitar Row Level Security (RLS)
 alter table public.empresas enable row level security;
 alter table public.usuarios enable row level security;
 alter table public.tipos_refeicao enable row level security;
