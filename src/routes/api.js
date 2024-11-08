@@ -19,7 +19,7 @@ router.use('/companies', companiesRoutes);
 router.use('/empresas', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/relatorios', relatoriosRoutes);
-router.use('/refeicoes', refeicoesRoutes);
+router.use('/meals', refeicoesRoutes); // Alterado de '/refeicoes' para '/meals'
 router.use('/users', usuariosRoutes);
 router.use('/vouchers-extra', vouchersExtraRoutes);
 router.use('/admin', adminRoutes);

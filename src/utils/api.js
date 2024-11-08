@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { supabase } from '../config/supabase';
 
 const api = axios.create({
-  baseURL: '/',
+  baseURL: import.meta.env.VITE_API_URL || '/', // Garante que a baseURL está correta
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ api.interceptors.response.use(
           toast.error('Acesso negado');
           break;
         case 404:
-          toast.error('Recurso não encontrado');
+          toast.error('Recurso não encontrado: ' + errorMessage);
           break;
         case 409:
           toast.error('Conflito: ' + errorMessage);
