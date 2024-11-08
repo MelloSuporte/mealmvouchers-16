@@ -40,11 +40,7 @@ router.post('/', async (req, res) => {
 
     const { data: company, error } = await supabase
       .from('empresas')
-      .insert([{ 
-        nome, 
-        cnpj: cnpj.replace(/[^\d]/g, ''),
-        logo 
-      }])
+      .insert([{ nome, cnpj: cnpj.replace(/[^\d]/g, ''), logo }])
       .select()
       .single();
 
@@ -75,11 +71,7 @@ router.put('/:id', async (req, res) => {
 
     const { data: company, error } = await supabase
       .from('empresas')
-      .update({ 
-        nome, 
-        cnpj: cnpj.replace(/[^\d]/g, ''),
-        logo 
-      })
+      .update({ nome, cnpj: cnpj.replace(/[^\d]/g, ''), logo })
       .eq('id', id)
       .select()
       .single();
