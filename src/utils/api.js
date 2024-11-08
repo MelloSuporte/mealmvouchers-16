@@ -2,23 +2,20 @@ import axios from 'axios';
 import { toast } from "sonner";
 
 const api = axios.create({
-  baseURL: '/',  // Removendo o prefixo /api
+  baseURL: '/',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   }
 });
 
-// Request interceptor
 api.interceptors.request.use(
   config => {
-    // Adiciona token de autenticação se existir
     const token = localStorage.getItem('adminToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Adiciona timestamp para evitar cache em requisições GET
     if (config.method === 'get') {
       config.params = {
         ...config.params,
@@ -33,9 +30,14 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
 api.interceptors.response.use(
-  response => response,
+  response => {
+    if (!response.data) {
+      console.warn('Empty response received');
+      return { ...response, data: [] };
+    }
+    return response;
+  },
   async error => {
     if (!navigator.onLine) {
       toast.error('Sem conexão com a internet');
@@ -83,6 +85,8 @@ api.interceptors.response.use(
         default:
           toast.error(errorMessage);
       }
+    } else {
+      toast.error('Erro na comunicação com o servidor');
     }
 
     return Promise.reject(error);

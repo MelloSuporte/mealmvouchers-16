@@ -26,18 +26,19 @@ const DisposableVoucherForm = () => {
   const loadMealTypes = async () => {
     try {
       const response = await api.get('/meals');
-      if (Array.isArray(response.data)) {
-        // Filtra os tipos de refeição, excluindo explicitamente o tipo "Extra"
-        setMealTypes(response.data.filter(meal => 
-          meal.is_active && meal.name.toLowerCase() !== 'extra'
-        ));
+      if (response.data && Array.isArray(response.data)) {
+        const filteredMeals = response.data.filter(meal => 
+          meal.is_active && meal.name?.toLowerCase() !== 'extra'
+        );
+        setMealTypes(filteredMeals);
       } else {
-        toast.error("Formato inválido de dados recebidos");
         setMealTypes([]);
+        toast.error("Formato inválido de dados recebidos");
       }
     } catch (error) {
-      toast.error("Erro ao carregar tipos de refeição: " + error.message);
+      console.error('Error loading meal types:', error);
       setMealTypes([]);
+      toast.error("Erro ao carregar tipos de refeição");
     } finally {
       setIsLoading(false);
     }
@@ -46,37 +47,43 @@ const DisposableVoucherForm = () => {
   const loadAllVouchers = async () => {
     try {
       const response = await api.get('/vouchers/disposable');
-      setAllVouchers(response.data || []);
+      if (response.data && Array.isArray(response.data)) {
+        setAllVouchers(response.data);
+      } else {
+        setAllVouchers([]);
+      }
     } catch (error) {
       console.error('Error loading vouchers:', error);
       toast.error("Erro ao carregar vouchers existentes");
+      setAllVouchers([]);
     }
   };
 
   const handleMealTypeToggle = (typeId) => {
+    if (!typeId) return;
+
     const mealType = mealTypes.find(type => type.id === typeId);
     
-    if (mealType && mealType.name.toLowerCase() === 'extra') {
+    if (mealType && mealType.name?.toLowerCase() === 'extra') {
       toast.error("Voucher Descartável não disponível para uso Extra");
       return;
     }
 
     setSelectedMealTypes(current => {
-      if (current.includes(typeId)) {
-        return current.filter(id => id !== typeId);
-      } else {
-        return [...current, typeId];
-      }
+      if (!Array.isArray(current)) return [typeId];
+      return current.includes(typeId) 
+        ? current.filter(id => id !== typeId)
+        : [...current, typeId];
     });
   };
 
   const handleGenerateVouchers = async () => {
-    if (selectedDates.length === 0) {
+    if (!Array.isArray(selectedDates) || selectedDates.length === 0) {
       toast.error("Selecione pelo menos uma data");
       return;
     }
 
-    if (selectedMealTypes.length === 0) {
+    if (!Array.isArray(selectedMealTypes) || selectedMealTypes.length === 0) {
       toast.error("Selecione pelo menos um tipo de refeição");
       return;
     }
@@ -105,10 +112,11 @@ const DisposableVoucherForm = () => {
                 expired_at: `${formattedDate}T23:59:59`
               });
 
-              if (response.data.success) {
+              if (response.data?.success) {
                 newVouchers.push(response.data.voucher);
               }
             } catch (error) {
+              console.error('Error generating voucher:', error);
               toast.error(`Erro ao gerar voucher: ${error.response?.data?.error || error.message}`);
             }
           }
@@ -116,8 +124,7 @@ const DisposableVoucherForm = () => {
       }
 
       if (newVouchers.length > 0) {
-        const updatedVouchers = [...newVouchers, ...allVouchers];
-        setAllVouchers(updatedVouchers);
+        setAllVouchers(prev => [...newVouchers, ...(Array.isArray(prev) ? prev : [])]);
         toast.success(`${newVouchers.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
         
         setQuantity(1);
@@ -125,6 +132,7 @@ const DisposableVoucherForm = () => {
         setSelectedDates([]);
       }
     } catch (error) {
+      console.error('Error in voucher generation:', error);
       toast.error("Erro ao gerar vouchers: " + error.message);
     } finally {
       setIsGenerating(false);
@@ -176,14 +184,21 @@ const DisposableVoucherForm = () => {
       <div className="flex justify-center gap-4">
         <Button 
           onClick={handleGenerateVouchers}
-          disabled={selectedMealTypes.length === 0 || quantity < 1 || selectedDates.length === 0 || isGenerating}
+          disabled={
+            !Array.isArray(selectedMealTypes) || 
+            selectedMealTypes.length === 0 || 
+            quantity < 1 || 
+            !Array.isArray(selectedDates) || 
+            selectedDates.length === 0 || 
+            isGenerating
+          }
           className="px-6"
         >
           {isGenerating ? 'Gerando...' : 'Gerar Vouchers Descartáveis'}
         </Button>
       </div>
 
-      <VoucherTable vouchers={allVouchers} />
+      <VoucherTable vouchers={Array.isArray(allVouchers) ? allVouchers : []} />
     </div>
   );
 };
