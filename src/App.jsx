@@ -47,7 +47,8 @@ function App() {
                   },
                   error: { 
                     position: "bottom-right",
-                    className: "bg-red-500 text-white border-red-600"
+                    className: "bg-red-500 text-white border-red-600",
+                    duration: 4000
                   },
                   info: { position: "top-right" },
                   warning: { position: "top-right" },
