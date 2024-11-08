@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
-import logger from './logger.js';
+import logger from './logger';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  logger.error('Supabase environment variables are not set');
-  throw new Error('Supabase configuration is missing');
+  logger.error('Variáveis de ambiente do Supabase não configuradas');
+  throw new Error('As variáveis de ambiente do Supabase são necessárias');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
@@ -21,8 +21,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 supabase.from('empresas').select('count', { count: 'exact' })
   .then(({ error }) => {
     if (error) {
-      logger.error('Error connecting to Supabase:', error);
+      logger.error('Erro ao conectar com Supabase:', error);
     } else {
-      logger.info('Successfully connected to Supabase');
+      logger.info('Conectado com sucesso ao Supabase');
     }
   });
