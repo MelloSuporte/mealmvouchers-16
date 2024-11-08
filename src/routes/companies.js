@@ -4,7 +4,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/empresas', async (req, res) => {
   try {
     const { data: companies, error } = await supabase
       .from('empresas')
@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/empresas', async (req, res) => {
   const { nome, cnpj, logo } = req.body;
   
   try {
@@ -53,7 +53,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/empresas/:id', async (req, res) => {
   const { id } = req.params;
   const { nome, cnpj, logo } = req.body;
 
