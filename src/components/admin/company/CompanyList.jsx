@@ -21,19 +21,24 @@ const CompanyList = ({ companies, isLoading, onEdit }) => {
                   {company.logo && (
                     <img 
                       src={company.logo} 
-                      alt={company.name} 
+                      alt={company.nome} 
                       className="w-12 h-12 object-contain rounded"
                     />
                   )}
                   <div>
-                    <h3 className="font-medium">{company.name}</h3>
+                    <h3 className="font-medium">{company.nome}</h3>
                     <p className="text-sm text-gray-500">{company.cnpj}</p>
                   </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => onEdit(company)}
+                  onClick={() => onEdit({
+                    id: company.id,
+                    name: company.nome,
+                    cnpj: company.cnpj,
+                    logo: company.logo
+                  })}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
