@@ -4,7 +4,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.get('/empresas', async (req, res) => {
+router.get('/companies', async (req, res) => {
   try {
     const { data: companies, error } = await supabase
       .from('empresas')
@@ -23,7 +23,7 @@ router.get('/empresas', async (req, res) => {
   }
 });
 
-router.post('/empresas', async (req, res) => {
+router.post('/companies', async (req, res) => {
   const { nome, cnpj, logo } = req.body;
   
   try {
@@ -47,7 +47,10 @@ router.post('/empresas', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Error creating company:', error);
+      throw error;
+    }
 
     res.status(201).json(company);
   } catch (error) {
@@ -56,7 +59,7 @@ router.post('/empresas', async (req, res) => {
   }
 });
 
-router.put('/empresas/:id', async (req, res) => {
+router.put('/companies/:id', async (req, res) => {
   const { id } = req.params;
   const { nome, cnpj, logo } = req.body;
 
@@ -79,7 +82,10 @@ router.put('/empresas/:id', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Error updating company:', error);
+      throw error;
+    }
     
     if (!company) {
       return res.status(404).json({ error: 'Empresa não encontrada' });
