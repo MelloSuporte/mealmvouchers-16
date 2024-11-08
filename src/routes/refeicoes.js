@@ -4,8 +4,8 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
-  const { nome, hora_inicio, hora_fim, valor, ativo = true, max_usuarios_por_dia, minutos_tolerancia = 15 } = req.body;
+router.post('/tipos_refeicao', async (req, res) => {
+  const { nome, hora_inicio, hora_fim, valor, ativo = true } = req.body;
   
   try {
     const { data: refeicao, error } = await supabase
@@ -16,9 +16,7 @@ router.post('/', async (req, res) => {
           hora_inicio,
           hora_fim,
           valor,
-          ativo,
-          max_usuarios_por_dia,
-          minutos_tolerancia
+          ativo
         }
       ])
       .select()
@@ -36,7 +34,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/tipos_refeicao', async (req, res) => {
   try {
     const { data: refeicoes, error } = await supabase
       .from('tipos_refeicao')
