@@ -17,7 +17,7 @@ const CompanyForm = () => {
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        const response = await api.get('/empresas');
+        const response = await api.get('/api/empresas');
         const companiesData = Array.isArray(response.data) ? response.data : [];
         return companiesData.map(company => ({
           id: company.id,
@@ -78,10 +78,10 @@ const CompanyForm = () => {
       };
 
       if (editingCompany) {
-        await api.put(`/empresas/${editingCompany.id}`, formData, config);
+        await api.put(`/api/empresas/${editingCompany.id}`, formData, config);
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        const response = await api.post('/empresas', formData, config);
+        const response = await api.post('/api/empresas', formData, config);
         if (response.data) {
           toast.success('Empresa cadastrada com sucesso!');
         }
