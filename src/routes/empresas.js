@@ -1,160 +1,129 @@
 import express from 'express';
+import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
-import { validateCNPJ } from '../utils/validations.js';
 
 const router = express.Router();
 
-// List companies
-router.get('/companies', async (req, res) => {
-  let connection;
+// Listar empresas
+router.get('/', async (req, res) => {
   try {
-    connection = await req.db.getConnection();
-    const [companies] = await connection.execute(
-      'SELECT * FROM companies ORDER BY name'
-    );
-    res.json(companies);
+    const { data: empresas, error } = await supabase
+      .from('empresas')
+      .select('*')
+      .order('nome');
+
+    if (error) throw error;
+
+    res.json(empresas || []);
   } catch (error) {
-    logger.error('Error fetching companies:', error);
+    logger.error('Erro ao buscar empresas:', error);
     res.status(500).json({ 
-      error: 'Database error',
-      message: 'Error fetching companies'
+      error: 'Erro ao buscar empresas',
+      details: error.message 
     });
-  } finally {
-    if (connection) connection.release();
   }
 });
 
-// Create company
-router.post('/companies', async (req, res) => {
-  const { name, cnpj, logo } = req.body;
-  let connection;
+// Criar empresa
+router.post('/', async (req, res) => {
+  const { nome, cnpj, logo } = req.body;
   
   try {
-    // Validations
-    if (!name?.trim()) {
+    if (!nome?.trim()) {
       return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
     }
-    if (name.length < 3) {
-      return res.status(400).json({ error: 'Nome da empresa deve ter no mínimo 3 caracteres' });
-    }
-    if (!cnpj) {
+    if (!cnpj?.trim()) {
       return res.status(400).json({ error: 'CNPJ é obrigatório' });
     }
-    
-    validateCNPJ(cnpj);
-    
-    connection = await req.db.getConnection();
-    await connection.beginTransaction();
-    
-    // Check if company already exists
-    const [existing] = await connection.execute(
-      'SELECT id FROM companies WHERE cnpj = ?',
-      [cnpj]
-    );
-    
-    if (existing.length > 0) {
-      await connection.rollback();
+
+    const cnpjLimpo = cnpj.replace(/[^\d]/g, '');
+
+    // Verifica CNPJ duplicado
+    const { data: existingCompany } = await supabase
+      .from('empresas')
+      .select('id')
+      .eq('cnpj', cnpjLimpo)
+      .single();
+
+    if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
     }
-    
-    // Insert new company
-    const [result] = await connection.execute(
-      'INSERT INTO companies (name, cnpj, logo) VALUES (?, ?, ?)',
-      [name, cnpj, logo]
-    );
-    
-    await connection.commit();
-    logger.info(`Nova empresa cadastrada - ID: ${result.insertId}, Nome: ${name}`);
-    
-    res.status(201).json({ 
-      id: result.insertId, 
-      name, 
-      cnpj, 
-      logo,
-      success: true,
-      message: 'Empresa cadastrada com sucesso'
-    });
+
+    // Insere nova empresa
+    const { data: newCompany, error: insertError } = await supabase
+      .from('empresas')
+      .insert([{
+        nome: nome.trim(),
+        cnpj: cnpjLimpo,
+        logo
+      }])
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    res.status(201).json(newCompany);
   } catch (error) {
-    if (connection) {
-      await connection.rollback();
-    }
-    logger.error('Error creating company:', error);
-    res.status(400).json({ 
-      error: error.message || 'Erro ao cadastrar empresa',
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    logger.error('Erro ao cadastrar empresa:', error);
+    res.status(500).json({ 
+      error: 'Erro ao cadastrar empresa',
+      details: error.message 
     });
-  } finally {
-    if (connection) connection.release();
   }
 });
 
-// Update company
-router.put('/companies/:id', async (req, res) => {
+// Atualizar empresa
+router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, cnpj, logo } = req.body;
-  let connection;
+  const { nome, cnpj, logo } = req.body;
   
   try {
-    // Validations
-    if (!name?.trim()) {
+    if (!nome?.trim()) {
       return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
     }
-    if (name.length < 3) {
-      return res.status(400).json({ error: 'Nome da empresa deve ter no mínimo 3 caracteres' });
-    }
-    if (!cnpj) {
+    if (!cnpj?.trim()) {
       return res.status(400).json({ error: 'CNPJ é obrigatório' });
     }
-    
-    validateCNPJ(cnpj);
-    
-    connection = await req.db.getConnection();
-    await connection.beginTransaction();
-    
-    // Check if another company has this CNPJ
-    const [existing] = await connection.execute(
-      'SELECT id FROM companies WHERE cnpj = ? AND id != ?',
-      [cnpj, id]
-    );
-    
-    if (existing.length > 0) {
-      await connection.rollback();
+
+    const cnpjLimpo = cnpj.replace(/[^\d]/g, '');
+
+    // Verifica CNPJ duplicado
+    const { data: existingCompany } = await supabase
+      .from('empresas')
+      .select('id')
+      .eq('cnpj', cnpjLimpo)
+      .neq('id', id)
+      .single();
+
+    if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
-    
-    // Update company
-    const [result] = await connection.execute(
-      'UPDATE companies SET name = ?, cnpj = ?, logo = ? WHERE id = ?',
-      [name, cnpj, logo, id]
-    );
-    
-    if (result.affectedRows === 0) {
-      await connection.rollback();
+
+    // Atualiza empresa
+    const { data: updatedCompany, error: updateError } = await supabase
+      .from('empresas')
+      .update({
+        nome: nome.trim(),
+        cnpj: cnpjLimpo,
+        logo
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    if (!updatedCompany) {
       return res.status(404).json({ error: 'Empresa não encontrada' });
     }
-    
-    await connection.commit();
-    logger.info(`Empresa atualizada - ID: ${id}, Nome: ${name}`);
-    
-    res.json({ 
-      id: parseInt(id), 
-      name, 
-      cnpj, 
-      logo,
-      success: true,
-      message: 'Empresa atualizada com sucesso'
-    });
+
+    res.json(updatedCompany);
   } catch (error) {
-    if (connection) {
-      await connection.rollback();
-    }
-    logger.error('Error updating company:', error);
-    res.status(400).json({ 
-      error: error.message || 'Erro ao atualizar empresa',
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    logger.error('Erro ao atualizar empresa:', error);
+    res.status(500).json({ 
+      error: 'Erro ao atualizar empresa',
+      details: error.message 
     });
-  } finally {
-    if (connection) connection.release();
   }
 });
 
