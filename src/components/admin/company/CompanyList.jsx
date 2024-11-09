@@ -1,51 +1,46 @@
 import React from 'react';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-const CompanyList = ({ companies, isLoading, onEdit }) => {
+const CompanyList = ({ companies = [], isLoading, onEdit }) => {
   if (isLoading) {
-    return <div className="text-center">Carregando empresas...</div>;
-  }
-
-  if (!companies || companies.length === 0) {
-    return <div className="text-center text-gray-500">Nenhuma empresa cadastrada</div>;
+    return <div>Carregando empresas...</div>;
   }
 
   return (
-    <div className="mt-8">
-      <h2 className="text-lg font-semibold mb-4">Empresas Cadastradas</h2>
-      <ScrollArea className="h-[400px] rounded-md border p-4">
-        <div className="space-y-4">
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>CNPJ</TableHead>
+            <TableHead>Data de Cadastro</TableHead>
+            <TableHead>Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {companies.map((company) => (
-            <Card key={company.id} className="hover:bg-gray-50">
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center space-x-4">
-                  {company.logo && (
-                    <img 
-                      src={company.logo} 
-                      alt={company.nome} 
-                      className="w-12 h-12 object-contain rounded"
-                    />
-                  )}
-                  <div>
-                    <h3 className="font-medium">{company.nome}</h3>
-                    <p className="text-sm text-gray-500">{company.cnpj}</p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
+            <TableRow key={company.id}>
+              <TableCell>{company.name}</TableCell>
+              <TableCell>{company.cnpj}</TableCell>
+              <TableCell>
+                {company.createdAt && format(new Date(company.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+              </TableCell>
+              <TableCell>
+                <Button 
+                  variant="outline" 
+                  size="sm"
                   onClick={() => onEdit(company)}
                 >
-                  <Pencil className="h-4 w-4" />
+                  Editar
                 </Button>
-              </CardContent>
-            </Card>
+              </TableCell>
+            </TableRow>
           ))}
-        </div>
-      </ScrollArea>
+        </TableBody>
+      </Table>
     </div>
   );
 };

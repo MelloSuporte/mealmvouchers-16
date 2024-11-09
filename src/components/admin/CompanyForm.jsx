@@ -18,7 +18,14 @@ const CompanyForm = () => {
     queryFn: async () => {
       try {
         const response = await api.get('/companies');
-        return response.data || [];
+        // Mapeia os campos do português para inglês
+        return (response.data || []).map(company => ({
+          id: company.id,
+          name: company.nome,
+          cnpj: company.cnpj,
+          logo: company.logo,
+          createdAt: company.criado_em
+        }));
       } catch (error) {
         console.error('Erro ao carregar empresas:', error);
         toast.error('Erro ao carregar empresas: ' + (error.response?.data?.error || error.message));
@@ -29,7 +36,7 @@ const CompanyForm = () => {
 
   const handleEditCompany = (company) => {
     setEditingCompany(company);
-    setCompanyName(company.nome);
+    setCompanyName(company.name);
     setCnpj(company.cnpj);
     setLogo(company.logo);
   };
@@ -55,6 +62,7 @@ const CompanyForm = () => {
     try {
       setIsSubmitting(true);
       
+      // Mapeia os campos do inglês para português
       const companyData = {
         nome: companyName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
