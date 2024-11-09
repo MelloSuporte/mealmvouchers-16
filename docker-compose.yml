@@ -61,7 +61,6 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: bd_voucher
     platform: linux/x86_64
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
