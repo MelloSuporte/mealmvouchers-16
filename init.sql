@@ -45,6 +45,16 @@ CREATE TABLE IF NOT EXISTS uso_voucher (
   usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS shift_configurations (
+  id SERIAL PRIMARY KEY,
+  shift_type VARCHAR(10) NOT NULL CHECK (shift_type IN ('central', 'primeiro', 'segundo', 'terceiro')),
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Insert initial data
 INSERT INTO empresas (nome, cnpj) VALUES 
 ('Empresa Teste', '12.345.678/0001-90'),
@@ -54,6 +64,13 @@ INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor) VALUES
 ('Café da Manhã', '06:00:00', '09:00:00', 10.00),
 ('Almoço', '11:00:00', '14:00:00', 25.00),
 ('Jantar', '18:00:00', '21:00:00', 25.00);
+
+-- Insert initial shifts
+INSERT INTO shift_configurations (shift_type, start_time, end_time, is_active) VALUES
+('central', '08:00:00', '17:00:00', true),
+('primeiro', '06:00:00', '14:00:00', true),
+('segundo', '14:00:00', '22:00:00', true),
+('terceiro', '22:00:00', '06:00:00', true);
 
 -- Set timezone for the session
 SET timezone TO 'America/Sao_Paulo';
