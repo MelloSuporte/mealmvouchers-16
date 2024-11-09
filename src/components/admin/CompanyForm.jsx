@@ -49,7 +49,6 @@ const CompanyForm = () => {
   };
 
   const handleSaveCompany = async () => {
-    // Removendo espaços extras no início e fim do nome
     const trimmedName = companyName?.trim();
     
     if (!trimmedName) {
@@ -65,17 +64,24 @@ const CompanyForm = () => {
     try {
       setIsSubmitting(true);
       
-      const companyData = {
-        nome: trimmedName,
-        cnpj: cnpj.replace(/[^\d]/g, ''),
-        logo
+      const companyData = new FormData();
+      companyData.append('nome', trimmedName);
+      companyData.append('cnpj', cnpj.replace(/[^\d]/g, ''));
+      if (logo) {
+        companyData.append('logo', logo);
+      }
+
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       };
 
       if (editingCompany) {
-        await api.put(`/empresas/${editingCompany.id}`, companyData);
+        await api.put(`/empresas/${editingCompany.id}`, companyData, config);
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        const response = await api.post('/empresas', companyData);
+        const response = await api.post('/empresas', companyData, config);
         if (response.data) {
           toast.success('Empresa cadastrada com sucesso!');
         }
