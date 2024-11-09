@@ -1,7 +1,8 @@
 import express from 'express';
-import { supabase } from '../config/supabase.js';
-import logger from '../config/logger.js';
 import multer from 'multer';
+import logger from '../config/logger.js';
+import { checkDuplicateCNPJ, createCompany, updateCompany } from '../services/companyService.js';
+import { supabase } from '../config/supabase.js';
 
 const router = express.Router();
 const upload = multer();
@@ -15,7 +16,6 @@ router.get('/', async (req, res) => {
       .order('nome');
 
     if (error) throw error;
-
     res.json(empresas || []);
   } catch (error) {
     logger.error('Erro ao buscar empresas:', error);
@@ -38,65 +38,17 @@ router.post('/', upload.single('logo'), async (req, res) => {
       return res.status(400).json({ error: 'CNPJ é obrigatório' });
     }
 
-    const cnpjLimpo = cnpj.replace(/[^\d]/g, '');
-
-    // Verifica CNPJ duplicado
-    const { data: existingCompany } = await supabase
-      .from('empresas')
-      .select('id')
-      .eq('cnpj', cnpjLimpo)
-      .maybeSingle();
-
+    const existingCompany = await checkDuplicateCNPJ(cnpj);
     if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
     }
 
-    let logoUrl = null;
-    if (req.file) {
-      // Ensure the bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const logosBucket = buckets?.find(b => b.name === 'logos');
-      
-      if (!logosBucket) {
-        const { error: createBucketError } = await supabase.storage.createBucket('logos', {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB
-          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif']
-        });
-        
-        if (createBucketError) throw createBucketError;
-      }
-
-      const fileBuffer = req.file.buffer;
-      const fileName = `company-logos/${Date.now()}-${req.file.originalname}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('logos')
-        .upload(fileName, fileBuffer, {
-          contentType: req.file.mimetype,
-          cacheControl: '3600'
-        });
-
-      if (uploadError) throw uploadError;
-      
-      const { data } = supabase.storage
-        .from('logos')
-        .getPublicUrl(fileName);
-        
-      logoUrl = data.publicUrl;
-    }
-
-    const { data: newCompany, error: insertError } = await supabase
-      .from('empresas')
-      .insert([{
-        nome: nome.trim(),
-        cnpj: cnpjLimpo,
-        logo: logoUrl
-      }])
-      .select()
-      .single();
-
-    if (insertError) throw insertError;
+    const newCompany = await createCompany(
+      nome,
+      cnpj,
+      req.file?.buffer,
+      req.file?.originalname
+    );
 
     res.status(201).json(newCompany);
   } catch (error) {
@@ -110,10 +62,10 @@ router.post('/', upload.single('logo'), async (req, res) => {
 
 // Atualizar empresa
 router.put('/:id', upload.single('logo'), async (req, res) => {
-  const { id } = req.params;
-  const { nome, cnpj } = req.body;
-  
   try {
+    const { id } = req.params;
+    const { nome, cnpj } = req.body;
+    
     if (!nome?.trim()) {
       return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
     }
@@ -121,72 +73,18 @@ router.put('/:id', upload.single('logo'), async (req, res) => {
       return res.status(400).json({ error: 'CNPJ é obrigatório' });
     }
 
-    const cnpjLimpo = cnpj.replace(/[^\d]/g, '');
-
-    // Verifica CNPJ duplicado
-    const { data: existingCompany } = await supabase
-      .from('empresas')
-      .select('id')
-      .eq('cnpj', cnpjLimpo)
-      .neq('id', id)
-      .maybeSingle();
-
+    const existingCompany = await checkDuplicateCNPJ(cnpj, id);
     if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
 
-    let logoUrl = null;
-    if (req.file) {
-      // Ensure the bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const logosBucket = buckets?.find(b => b.name === 'logos');
-      
-      if (!logosBucket) {
-        const { error: createBucketError } = await supabase.storage.createBucket('logos', {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB
-          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif']
-        });
-        
-        if (createBucketError) throw createBucketError;
-      }
-
-      const fileBuffer = req.file.buffer;
-      const fileName = `company-logos/${Date.now()}-${req.file.originalname}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('logos')
-        .upload(fileName, fileBuffer, {
-          contentType: req.file.mimetype,
-          cacheControl: '3600'
-        });
-
-      if (uploadError) throw uploadError;
-      
-      const { data } = supabase.storage
-        .from('logos')
-        .getPublicUrl(fileName);
-        
-      logoUrl = data.publicUrl;
-    }
-
-    const updateData = {
-      nome: nome.trim(),
-      cnpj: cnpjLimpo
-    };
-
-    if (logoUrl) {
-      updateData.logo = logoUrl;
-    }
-
-    const { data: updatedCompany, error: updateError } = await supabase
-      .from('empresas')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (updateError) throw updateError;
+    const updatedCompany = await updateCompany(
+      id,
+      nome,
+      cnpj,
+      req.file?.buffer,
+      req.file?.originalname
+    );
 
     if (!updatedCompany) {
       return res.status(404).json({ error: 'Empresa não encontrada' });
