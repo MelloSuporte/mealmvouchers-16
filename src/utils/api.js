@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from "sonner";
 
 const api = axios.create({
-  baseURL: '/',
+  baseURL: '/api',  // Adicionando /api como prefixo base
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
