@@ -39,15 +39,11 @@ router.post('/', async (req, res) => {
     const cnpjLimpo = cnpj.replace(/[^\d]/g, '');
 
     // Verifica CNPJ duplicado
-    const { data: existingCompany, error: checkError } = await supabase
+    const { data: existingCompany } = await supabase
       .from('empresas')
       .select('id')
       .eq('cnpj', cnpjLimpo)
       .single();
-
-    if (checkError && checkError.code !== 'PGRST116') {
-      throw checkError;
-    }
 
     if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
@@ -92,16 +88,12 @@ router.put('/:id', async (req, res) => {
     const cnpjLimpo = cnpj.replace(/[^\d]/g, '');
 
     // Verifica CNPJ duplicado
-    const { data: existingCompany, error: checkError } = await supabase
+    const { data: existingCompany } = await supabase
       .from('empresas')
       .select('id')
       .eq('cnpj', cnpjLimpo)
       .neq('id', id)
       .single();
-
-    if (checkError && checkError.code !== 'PGRST116') {
-      throw checkError;
-    }
 
     if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
