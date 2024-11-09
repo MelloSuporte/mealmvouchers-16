@@ -14,14 +14,12 @@ export const useTurnosActions = () => {
         throw new Error('Token não encontrado');
       }
 
-      const turnoData = {
-        tipo: String(newTurno.tipo),
-        hora_inicio: String(newTurno.hora_inicio),
-        hora_fim: String(newTurno.hora_fim),
-        ativo: Boolean(newTurno.ativo)
-      };
-      
-      const response = await api.post('/api/turnos', turnoData, {
+      const response = await api.post('/api/turnos', {
+        tipo: newTurno.tipo,
+        hora_inicio: newTurno.hora_inicio,
+        hora_fim: newTurno.hora_fim,
+        ativo: newTurno.ativo
+      }, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -45,13 +43,11 @@ export const useTurnosActions = () => {
         throw new Error('Token não encontrado');
       }
 
-      const turnoData = {
-        hora_inicio: String(updatedTurno.hora_inicio),
-        hora_fim: String(updatedTurno.hora_fim),
-        ativo: Boolean(updatedTurno.ativo)
-      };
-      
-      const response = await api.put(`/api/turnos/${updatedTurno.id}`, turnoData, {
+      const response = await api.put(`/api/turnos/${updatedTurno.id}`, {
+        hora_inicio: updatedTurno.hora_inicio,
+        hora_fim: updatedTurno.hora_fim,
+        ativo: updatedTurno.ativo
+      }, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -81,7 +77,6 @@ export const useTurnosActions = () => {
     }
 
     const turno = queryClient.getQueryData(['turnos'])?.find(t => t.id === id);
-    
     if (!turno) return;
 
     const updatedTurno = {
