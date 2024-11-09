@@ -9,13 +9,16 @@ router.get('/', async (req, res) => {
   try {
     logger.info('Iniciando busca de empresas');
     const { data: companies, error } = await supabase
-      .from('empresas')  // Corrigido nome da tabela
+      .from('empresas')
       .select('*')
       .order('nome');
 
     if (error) {
       logger.error('Erro ao buscar empresas:', error);
-      throw error;
+      return res.status(500).json({ 
+        error: 'Erro ao buscar empresas',
+        details: error.message 
+      });
     }
 
     logger.info(`${companies?.length || 0} empresas encontradas`);
@@ -36,40 +39,37 @@ router.post('/', async (req, res) => {
   try {
     logger.info('Iniciando cadastro de empresa:', { nome, cnpj });
 
-    // Validações básicas
     if (!nome?.trim()) {
-      logger.warn('Tentativa de cadastro sem nome da empresa');
       return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
     }
     if (!cnpj?.trim()) {
-      logger.warn('Tentativa de cadastro sem CNPJ');
       return res.status(400).json({ error: 'CNPJ é obrigatório' });
     }
 
     const cnpjLimpo = cnpj.replace(/[^\d]/g, '');
 
     // Verifica CNPJ duplicado
-    logger.info('Verificando duplicidade de CNPJ:', cnpjLimpo);
     const { data: existingCompany, error: checkError } = await supabase
-      .from('empresas')  // Corrigido nome da tabela
+      .from('empresas')
       .select('id')
       .eq('cnpj', cnpjLimpo)
-      .maybeSingle();
+      .single();
 
-    if (checkError) {
+    if (checkError && checkError.code !== 'PGRST116') {
       logger.error('Erro ao verificar CNPJ duplicado:', checkError);
-      throw checkError;
+      return res.status(500).json({ 
+        error: 'Erro ao verificar CNPJ',
+        details: checkError.message 
+      });
     }
 
     if (existingCompany) {
-      logger.warn('Tentativa de cadastro com CNPJ duplicado:', cnpjLimpo);
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
     }
 
     // Insere nova empresa
-    logger.info('Inserindo nova empresa');
-    const { data: company, error: insertError } = await supabase
-      .from('empresas')  // Corrigido nome da tabela
+    const { data: newCompany, error: insertError } = await supabase
+      .from('empresas')
       .insert([{
         nome: nome.trim(),
         cnpj: cnpjLimpo,
@@ -80,11 +80,14 @@ router.post('/', async (req, res) => {
 
     if (insertError) {
       logger.error('Erro ao inserir empresa:', insertError);
-      throw insertError;
+      return res.status(500).json({ 
+        error: 'Erro ao cadastrar empresa',
+        details: insertError.message 
+      });
     }
 
-    logger.info('Empresa cadastrada com sucesso:', company);
-    res.status(201).json(company);
+    logger.info('Empresa cadastrada com sucesso:', newCompany);
+    res.status(201).json(newCompany);
   } catch (error) {
     logger.error('Erro ao cadastrar empresa:', error);
     res.status(500).json({ 
@@ -106,26 +109,27 @@ router.put('/:id', async (req, res) => {
 
     // Verifica CNPJ duplicado
     const { data: existingCompany, error: checkError } = await supabase
-      .from('empresas')  // Corrigido nome da tabela
+      .from('empresas')
       .select('id')
       .eq('cnpj', cnpjLimpo)
       .neq('id', id)
-      .maybeSingle();
+      .single();
 
-    if (checkError) {
+    if (checkError && checkError.code !== 'PGRST116') {
       logger.error('Erro ao verificar CNPJ duplicado:', checkError);
-      throw checkError;
+      return res.status(500).json({ 
+        error: 'Erro ao verificar CNPJ',
+        details: checkError.message 
+      });
     }
 
     if (existingCompany) {
-      logger.warn('Tentativa de atualização com CNPJ duplicado:', cnpjLimpo);
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
 
     // Atualiza empresa
-    logger.info('Atualizando empresa');
-    const { data: company, error: updateError } = await supabase
-      .from('empresas')  // Corrigido nome da tabela
+    const { data: updatedCompany, error: updateError } = await supabase
+      .from('empresas')
       .update({ 
         nome: nome.trim(), 
         cnpj: cnpjLimpo,
@@ -137,16 +141,18 @@ router.put('/:id', async (req, res) => {
 
     if (updateError) {
       logger.error('Erro ao atualizar empresa:', updateError);
-      throw updateError;
+      return res.status(500).json({ 
+        error: 'Erro ao atualizar empresa',
+        details: updateError.message 
+      });
     }
-    
-    if (!company) {
-      logger.warn('Tentativa de atualização de empresa inexistente:', id);
+
+    if (!updatedCompany) {
       return res.status(404).json({ error: 'Empresa não encontrada' });
     }
 
-    logger.info('Empresa atualizada com sucesso:', company);
-    res.json(company);
+    logger.info('Empresa atualizada com sucesso:', updatedCompany);
+    res.json(updatedCompany);
   } catch (error) {
     logger.error('Erro ao atualizar empresa:', error);
     res.status(500).json({ 

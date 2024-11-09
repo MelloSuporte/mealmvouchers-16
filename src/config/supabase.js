@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import logger from './logger';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   logger.error('Variáveis de ambiente do Supabase não configuradas');
@@ -12,7 +12,7 @@ if (!supabaseUrl || !supabaseKey) {
 logger.info('Inicializando cliente Supabase');
 logger.info('URL do Supabase:', supabaseUrl);
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
+const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -20,11 +20,6 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   },
   db: {
     schema: 'public'
-  },
-  global: {
-    headers: {
-      'Content-Type': 'application/json'
-    }
   }
 });
 
@@ -44,3 +39,5 @@ supabase.from('empresas')
     logger.error('Erro fatal ao conectar com Supabase:', error);
     throw error;
   });
+
+export { supabase };

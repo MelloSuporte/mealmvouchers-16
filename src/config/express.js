@@ -1,17 +1,16 @@
 import express from 'express';
 import cors from 'cors';
 import { securityMiddleware } from '../middleware/security.js';
-import { withDatabase } from '../middleware/database.js';
 import routes from './routes.js';
 
 export const configureExpress = (app) => {
   // Enable CORS with specific options
   app.use(cors({
-    origin: true, // Permite todas as origens em desenvolvimento
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-    maxAge: 86400 // 24 hours
+    maxAge: 86400
   }));
   
   // Parse JSON bodies
@@ -25,10 +24,7 @@ export const configureExpress = (app) => {
   app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
   });
-
-  // Apply database middleware to all routes except health check
-  app.use('/', withDatabase);
   
   // Mount all routes
-  app.use('/', routes);
+  app.use('/api', routes);
 };
