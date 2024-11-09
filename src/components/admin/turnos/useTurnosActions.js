@@ -9,7 +9,11 @@ export const useTurnosActions = () => {
 
   const createTurnoMutation = useMutation({
     mutationFn: async (newTurno) => {
-      // Criando um objeto simples com apenas os dados necessários
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('Token não encontrado');
+      }
+
       const turnoData = {
         shift_type: String(newTurno.shift_type),
         start_time: String(newTurno.start_time),
@@ -17,7 +21,11 @@ export const useTurnosActions = () => {
         is_active: Boolean(newTurno.is_active)
       };
       
-      const response = await api.post('/shift-configurations', turnoData);
+      const response = await api.post('/shift-configurations', turnoData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -32,14 +40,22 @@ export const useTurnosActions = () => {
 
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
-      // Criando um objeto simples com apenas os dados necessários
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('Token não encontrado');
+      }
+
       const turnoData = {
         start_time: String(updatedTurno.start_time),
         end_time: String(updatedTurno.end_time),
         is_active: Boolean(updatedTurno.is_active)
       };
       
-      const response = await api.put(`/shift-configurations/${updatedTurno.id}`, turnoData);
+      const response = await api.put(`/shift-configurations/${updatedTurno.id}`, turnoData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       return response.data;
     },
     onMutate: (variables) => {
