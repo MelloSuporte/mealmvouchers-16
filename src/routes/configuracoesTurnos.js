@@ -12,14 +12,20 @@ router.get('/', async (req, res) => {
       .select('*')
       .order('id');
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Error fetching shift configurations:', error);
+      return res.status(500).json({ 
+        error: 'Database error',
+        message: 'Failed to fetch shift configurations'
+      });
+    }
     
     res.json(shifts);
   } catch (error) {
-    logger.error('Error fetching shift configurations:', error);
+    logger.error('Error in shift configurations route:', error);
     res.status(500).json({ 
-      error: 'Database error',
-      message: 'Failed to fetch shift configurations'
+      error: 'Server error',
+      message: 'An unexpected error occurred'
     });
   }
 });
@@ -42,14 +48,20 @@ router.post('/', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Error creating shift configuration:', error);
+      return res.status(400).json({ 
+        error: 'Database error',
+        message: 'Failed to create shift configuration'
+      });
+    }
     
     res.status(201).json(shift);
   } catch (error) {
-    logger.error('Error creating shift configuration:', error);
+    logger.error('Error in create shift configuration route:', error);
     res.status(500).json({ 
-      error: 'Database error',
-      message: 'Failed to create shift configuration'
+      error: 'Server error',
+      message: 'An unexpected error occurred'
     });
   }
 });
@@ -72,7 +84,13 @@ router.put('/:id', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Error updating shift configuration:', error);
+      return res.status(400).json({ 
+        error: 'Database error',
+        message: 'Failed to update shift configuration'
+      });
+    }
     
     if (!shift) {
       return res.status(404).json({ error: 'Shift configuration not found' });
@@ -80,10 +98,10 @@ router.put('/:id', async (req, res) => {
     
     res.json(shift);
   } catch (error) {
-    logger.error('Error updating shift configuration:', error);
+    logger.error('Error in update shift configuration route:', error);
     res.status(500).json({ 
-      error: 'Database error',
-      message: 'Failed to update shift configuration'
+      error: 'Server error',
+      message: 'An unexpected error occurred'
     });
   }
 });
