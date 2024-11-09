@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { securityMiddleware } from '../middleware/security.js';
-import routes from './routes.js';
+import routes from '../routes/index.js';
 import logger from './logger.js';
 import { errorHandler } from '../middleware/errorHandler.js';
 import { withDatabase } from '../middleware/database.js';
