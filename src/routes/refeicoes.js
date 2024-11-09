@@ -23,10 +23,7 @@ router.post('/', async (req, res) => {
       .select()
       .single();
 
-    if (error) {
-      logger.error('Erro ao criar tipo de refeição:', error);
-      throw error;
-    }
+    if (error) throw error;
 
     res.status(201).json(meal);
   } catch (error) {
