@@ -18,9 +18,11 @@ const MealScheduleList = () => {
     queryFn: async () => {
       try {
         const response = await api.get('/api/refeicoes');
+        console.log('Meals response:', response.data); // Debug log
         return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         console.error('Error fetching meals:', error);
+        toast.error('Erro ao carregar refeições: ' + error.message);
         return [];
       }
     }
@@ -28,7 +30,7 @@ const MealScheduleList = () => {
 
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, currentStatus }) => {
-      await api.patch(`/api/refeicoes/${id}`, { is_active: !currentStatus });
+      await api.patch(`/api/refeicoes/${id}`, { ativo: !currentStatus });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['meals']);
@@ -153,20 +155,20 @@ const MealScheduleList = () => {
                     onCheckedChange={() => handleSelectMeal(meal.id)}
                   />
                 </TableCell>
-                <TableCell>{meal.name}</TableCell>
-                <TableCell>{meal.start_time} - {meal.end_time}</TableCell>
+                <TableCell>{meal.nome}</TableCell>
+                <TableCell>{meal.hora_inicio} - {meal.hora_fim}</TableCell>
                 <TableCell>
-                  {parseFloat(meal.value).toLocaleString('pt-BR', {
+                  {parseFloat(meal.valor).toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
                   })}
                 </TableCell>
-                <TableCell>{meal.max_users_per_day || 'Sem limite'}</TableCell>
-                <TableCell>{meal.tolerance_minutes} min</TableCell>
+                <TableCell>{meal.max_usuarios_por_dia || 'Sem limite'}</TableCell>
+                <TableCell>{meal.minutos_tolerancia} min</TableCell>
                 <TableCell>
                   <Switch
-                    checked={meal.is_active}
-                    onCheckedChange={() => handleToggleActive(meal.id, meal.is_active)}
+                    checked={meal.ativo}
+                    onCheckedChange={() => handleToggleActive(meal.id, meal.ativo)}
                     disabled={toggleActiveMutation.isLoading}
                   />
                 </TableCell>
