@@ -40,14 +40,14 @@ router.post('/', async (req, res) => {
 
     const { data: turno, error } = await supabase
       .from('turnos')
-      .insert([{
+      .insert({
         tipo: shift_type,
         hora_inicio: start_time,
         hora_fim: end_time,
         ativo: is_active,
         criado_em: new Date().toISOString(),
         atualizado_em: new Date().toISOString()
-      }])
+      })
       .select()
       .single();
 
