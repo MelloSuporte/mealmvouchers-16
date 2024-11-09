@@ -53,6 +53,20 @@ router.post('/', upload.single('logo'), async (req, res) => {
 
     let logoUrl = null;
     if (req.file) {
+      // Ensure the bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const logosBucket = buckets?.find(b => b.name === 'logos');
+      
+      if (!logosBucket) {
+        const { error: createBucketError } = await supabase.storage.createBucket('logos', {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif']
+        });
+        
+        if (createBucketError) throw createBucketError;
+      }
+
       const fileBuffer = req.file.buffer;
       const fileName = `company-logos/${Date.now()}-${req.file.originalname}`;
       
@@ -123,6 +137,20 @@ router.put('/:id', upload.single('logo'), async (req, res) => {
 
     let logoUrl = null;
     if (req.file) {
+      // Ensure the bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const logosBucket = buckets?.find(b => b.name === 'logos');
+      
+      if (!logosBucket) {
+        const { error: createBucketError } = await supabase.storage.createBucket('logos', {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif']
+        });
+        
+        if (createBucketError) throw createBucketError;
+      }
+
       const fileBuffer = req.file.buffer;
       const fileName = `company-logos/${Date.now()}-${req.file.originalname}`;
       
