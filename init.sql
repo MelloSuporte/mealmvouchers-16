@@ -54,16 +54,7 @@ CREATE TABLE IF NOT EXISTS turnos (
   atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS bloqueios_refeicao (
-  id SERIAL PRIMARY KEY,
-  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
-  data_inicio DATE NOT NULL,
-  data_fim DATE NOT NULL,
-  motivo TEXT,
-  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Insert initial data
+-- Inserir dados iniciais
 INSERT INTO empresas (nome, cnpj) VALUES 
 ('Empresa Teste', '12.345.678/0001-90'),
 ('Outra Empresa', '98.765.432/0001-10');
@@ -73,12 +64,12 @@ INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor) VALUES
 ('Almoço', '11:00:00', '14:00:00', 25.00),
 ('Jantar', '18:00:00', '21:00:00', 25.00);
 
--- Insert initial shifts
+-- Inserir turnos iniciais
 INSERT INTO turnos (tipo, hora_inicio, hora_fim, ativo) VALUES
 ('central', '08:00:00', '17:00:00', true),
 ('primeiro', '06:00:00', '14:00:00', true),
 ('segundo', '14:00:00', '22:00:00', true),
 ('terceiro', '22:00:00', '06:00:00', true);
 
--- Set timezone for the session
+-- Definir timezone para a sessão
 SET timezone TO 'America/Sao_Paulo';

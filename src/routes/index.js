@@ -12,10 +12,10 @@ import usuariosAdminRoutes from './usuariosAdmin.js';
 
 const router = express.Router();
 
-// Health check route
+// Rota de verificação de saúde
 router.use('/health', healthRoutes);
 
-// API routes - all endpoints already include the /api prefix
+// Rotas da API - todos os endpoints já incluem o prefixo /api
 router.use('/empresas', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/relatorios', relatoriosRoutes);
