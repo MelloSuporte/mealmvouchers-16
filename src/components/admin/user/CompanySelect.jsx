@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import api from '../../../utils/api';
 
 const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeholder = "Selecione a empresa" }) => {
-  const { data: companies = [], isLoading, error } = useQuery({
-    queryKey: ['companies'],
+  const { data: empresas = [], isLoading, error } = useQuery({
+    queryKey: ['empresas'],
     queryFn: async () => {
       try {
-        const response = await api.get('/companies');
+        const response = await api.get('/empresas');
         return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         toast.error('Erro ao carregar empresas');
@@ -22,7 +22,7 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
     toast.error('Erro ao carregar empresas');
   }
 
-  const companyList = Array.isArray(companies) ? companies : [];
+  const listaEmpresas = Array.isArray(empresas) ? empresas : [];
 
   return (
     <Select 
@@ -37,9 +37,9 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
         {includeAllOption && (
           <SelectItem value="all">Todas as empresas</SelectItem>
         )}
-        {companyList.map((company) => (
-          <SelectItem key={company.id} value={company.id.toString()}>
-            {company.nome}
+        {listaEmpresas.map((empresa) => (
+          <SelectItem key={empresa.id} value={empresa.id.toString()}>
+            {empresa.nome}
           </SelectItem>
         ))}
       </SelectContent>

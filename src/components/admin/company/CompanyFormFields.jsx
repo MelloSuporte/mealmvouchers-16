@@ -5,14 +5,14 @@ import { validateImageFile } from '../../../utils/validations';
 import { toast } from "sonner";
 
 const CompanyFormFields = ({
-  companyName,
-  setCompanyName,
+  nomeEmpresa,
+  setNomeEmpresa,
   cnpj,
   setCnpj,
   logo,
   setLogo,
   isSubmitting,
-  editingCompany,
+  editingEmpresa,
   onSave
 }) => {
   const handleCNPJChange = (e) => {
@@ -43,8 +43,8 @@ const CompanyFormFields = ({
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
       <Input
         placeholder="Nome da empresa"
-        value={companyName}
-        onChange={(e) => setCompanyName(e.target.value)}
+        value={nomeEmpresa}
+        onChange={(e) => setNomeEmpresa(e.target.value)}
         required
         minLength={3}
       />
@@ -79,7 +79,7 @@ const CompanyFormFields = ({
         disabled={isSubmitting}
         className="w-full"
       >
-        {isSubmitting ? "Salvando..." : (editingCompany ? "Atualizar Empresa" : "Cadastrar Empresa")}
+        {isSubmitting ? "Salvando..." : (editingEmpresa ? "Atualizar Empresa" : "Cadastrar Empresa")}
       </Button>
     </form>
   );

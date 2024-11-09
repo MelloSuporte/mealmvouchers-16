@@ -10,32 +10,32 @@ import CompanySelect from '../user/CompanySelect';
 
 const AdminForm = ({ onClose, adminToEdit = null }) => {
   const [formData, setFormData] = useState({
-    name: adminToEdit?.name || '',
+    nome: adminToEdit?.nome || '',
     email: adminToEdit?.email || '',
     cpf: adminToEdit?.cpf || '',
-    company_id: adminToEdit?.company_id || '',
-    password: '',
-    permissions: {
-      manage_extra_vouchers: false,
-      manage_disposable_vouchers: false,
-      manage_users: false,
-      manage_reports: false
+    empresa_id: adminToEdit?.empresa_id || '',
+    senha: '',
+    permissoes: {
+      gerenciar_vouchers_extra: false,
+      gerenciar_vouchers_descartaveis: false,
+      gerenciar_usuarios: false,
+      gerenciar_relatorios: false
     }
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!formData.company_id) {
+      if (!formData.empresa_id) {
         toast.error('Por favor, selecione uma empresa');
         return;
       }
 
       if (adminToEdit) {
-        await api.put(`/api/admin-users/${adminToEdit.id}`, formData);
+        await api.put(`/api/usuarios-admin/${adminToEdit.id}`, formData);
         toast.success('Gestor atualizado com sucesso!');
       } else {
-        await api.post('/api/admin-users', formData);
+        await api.post('/api/usuarios-admin', formData);
         toast.success('Gestor cadastrado com sucesso!');
       }
       onClose();
@@ -48,8 +48,8 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input
         placeholder="Nome completo"
-        value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        value={formData.nome}
+        onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
       />
       <Input
         placeholder="E-mail"
@@ -65,15 +65,15 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
       <Input
         placeholder="Senha"
         type="password"
-        value={formData.password}
-        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+        value={formData.senha}
+        onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
       />
 
       <div className="space-y-2">
         <Label>Empresa</Label>
         <CompanySelect 
-          value={formData.company_id}
-          onValueChange={(value) => setFormData({ ...formData, company_id: value })}
+          value={formData.empresa_id}
+          onValueChange={(value) => setFormData({ ...formData, empresa_id: value })}
         />
       </div>
 
@@ -82,13 +82,13 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Checkbox
-              checked={formData.permissions.manage_extra_vouchers}
+              checked={formData.permissoes.gerenciar_vouchers_extra}
               onCheckedChange={(checked) => 
                 setFormData({
                   ...formData,
-                  permissions: {
-                    ...formData.permissions,
-                    manage_extra_vouchers: checked
+                  permissoes: {
+                    ...formData.permissoes,
+                    gerenciar_vouchers_extra: checked
                   }
                 })
               }
@@ -97,13 +97,13 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
-              checked={formData.permissions.manage_disposable_vouchers}
+              checked={formData.permissoes.gerenciar_vouchers_descartaveis}
               onCheckedChange={(checked) => 
                 setFormData({
                   ...formData,
-                  permissions: {
-                    ...formData.permissions,
-                    manage_disposable_vouchers: checked
+                  permissoes: {
+                    ...formData.permissoes,
+                    gerenciar_vouchers_descartaveis: checked
                   }
                 })
               }
@@ -112,13 +112,13 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
-              checked={formData.permissions.manage_users}
+              checked={formData.permissoes.gerenciar_usuarios}
               onCheckedChange={(checked) => 
                 setFormData({
                   ...formData,
-                  permissions: {
-                    ...formData.permissions,
-                    manage_users: checked
+                  permissoes: {
+                    ...formData.permissoes,
+                    gerenciar_usuarios: checked
                   }
                 })
               }
@@ -127,13 +127,13 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
-              checked={formData.permissions.manage_reports}
+              checked={formData.permissoes.gerenciar_relatorios}
               onCheckedChange={(checked) => 
                 setFormData({
                   ...formData,
-                  permissions: {
-                    ...formData.permissions,
-                    manage_reports: checked
+                  permissoes: {
+                    ...formData.permissoes,
+                    gerenciar_relatorios: checked
                   }
                 })
               }
