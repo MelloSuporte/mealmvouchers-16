@@ -1,37 +1,37 @@
 -- Create admin_users table
-create table public.admin_users (
-  id uuid primary key default uuid_generate_v4(),
-  nome text not null,
-  email text not null unique,
-  cpf text not null unique,
-  empresa_id uuid references public.empresas(id),
-  senha text not null,
-  permissoes jsonb not null default '{
+CREATE TABLE IF NOT EXISTS admin_users (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  cpf VARCHAR(14) NOT NULL UNIQUE,
+  empresa_id INTEGER REFERENCES empresas(id),
+  senha TEXT NOT NULL,
+  permissoes JSONB NOT NULL DEFAULT '{
     "gerenciar_vouchers_extra": false,
     "gerenciar_vouchers_descartaveis": false,
     "gerenciar_usuarios": false,
     "gerenciar_relatorios": false
   }',
-  criado_em timestamptz default now()
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Enable RLS
-alter table public.admin_users enable row level security;
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
-create policy "Admin users são visíveis para todos"
-  on public.admin_users for select
-  using (true);
+CREATE POLICY "Admin users são visíveis para todos"
+  ON admin_users FOR SELECT
+  USING (true);
 
-create policy "Apenas admins podem inserir"
-  on public.admin_users for insert
-  with check (true);
+CREATE POLICY "Apenas admins podem inserir"
+  ON admin_users FOR INSERT
+  WITH CHECK (true);
 
-create policy "Apenas admins podem atualizar"
-  on public.admin_users for update
-  using (true);
+CREATE POLICY "Apenas admins podem atualizar"
+  ON admin_users FOR UPDATE
+  USING (true);
 
 -- Create indexes
-create index admin_users_empresa_id_idx on public.admin_users(empresa_id);
-create index admin_users_email_idx on public.admin_users(email);
-create index admin_users_cpf_idx on public.admin_users(cpf);
+CREATE INDEX admin_users_empresa_id_idx ON admin_users(empresa_id);
+CREATE INDEX admin_users_email_idx ON admin_users(email);
+CREATE INDEX admin_users_cpf_idx ON admin_users(cpf);

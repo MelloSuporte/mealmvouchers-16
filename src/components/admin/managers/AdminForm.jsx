@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useQueryClient } from '@tanstack/react-query';
 import api from '../../../utils/api';
 import CompanySelect from '../user/CompanySelect';
 
@@ -23,11 +22,30 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
     }
   });
 
+  const formatCPF = (value) => {
+    const cpf = value.replace(/\D/g, '');
+    if (cpf.length <= 11) {
+      return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    return value;
+  };
+
+  const handleCPFChange = (e) => {
+    const formattedCPF = formatCPF(e.target.value);
+    setFormData({ ...formData, cpf: formattedCPF });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (!formData.empresa_id) {
         toast.error('Por favor, selecione uma empresa');
+        return;
+      }
+
+      const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+      if (!cpfRegex.test(formData.cpf)) {
+        toast.error('Por favor, insira um CPF válido no formato XXX.XXX.XXX-XX');
         return;
       }
 
@@ -59,9 +77,10 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
       />
       <Input
-        placeholder="CPF"
+        placeholder="CPF (000.000.000-00)"
         value={formData.cpf}
-        onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+        onChange={handleCPFChange}
+        maxLength={14}
       />
       <Input
         placeholder="Senha"
