@@ -2,116 +2,123 @@
 create extension if not exists "uuid-ossp";
 
 -- Create base tables
-create table public.empresas (
-  id uuid primary key default uuid_generate_v4(),
-  nome text not null,
-  cnpj text not null unique,
-  logo text,
-  criado_em timestamptz default now()
+CREATE TABLE IF NOT EXISTS empresas (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  cnpj VARCHAR(18) NOT NULL UNIQUE,
+  logo TEXT,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-create table public.usuarios (
-  id uuid primary key default uuid_generate_v4(),
-  nome text not null,
-  email text not null unique,
-  cpf text not null unique,
-  empresa_id uuid references public.empresas,
-  voucher text not null,
-  turno text check (turno in ('central', 'primeiro', 'segundo', 'terceiro')),
-  suspenso boolean default false,
-  foto text,
-  criado_em timestamptz default now()
+CREATE TABLE IF NOT EXISTS usuarios (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  cpf VARCHAR(14) NOT NULL UNIQUE,
+  empresa_id INTEGER REFERENCES empresas(id),
+  voucher VARCHAR(4) NOT NULL,
+  turno VARCHAR(10) CHECK (turno IN ('central', 'primeiro', 'segundo', 'terceiro')),
+  suspenso BOOLEAN DEFAULT FALSE,
+  foto TEXT,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-create table public.tipos_refeicao (
-  id uuid primary key default uuid_generate_v4(),
-  nome text not null,
-  hora_inicio time,
-  hora_fim time,
-  valor decimal(10,2) not null,
-  ativo boolean default true,
-  max_usuarios_por_dia integer,
-  minutos_tolerancia integer default 15,
-  criado_em timestamptz default now()
+CREATE TABLE IF NOT EXISTS tipos_refeicao (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  hora_inicio TIME,
+  hora_fim TIME,
+  valor DECIMAL(10,2) NOT NULL,
+  ativo BOOLEAN DEFAULT TRUE,
+  max_usuarios_por_dia INTEGER,
+  minutos_tolerancia INTEGER DEFAULT 15,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-create table public.uso_voucher (
-  id uuid primary key default uuid_generate_v4(),
-  usuario_id uuid references public.usuarios,
-  tipo_refeicao_id uuid references public.tipos_refeicao,
-  usado_em timestamptz default now()
+CREATE TABLE IF NOT EXISTS uso_voucher (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER REFERENCES usuarios(id),
+  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
+  usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-create table public.configuracoes (
-  id uuid primary key default uuid_generate_v4(),
-  chave text not null unique,
-  valor text,
-  descricao text,
-  atualizado_em timestamptz default now()
+CREATE TABLE IF NOT EXISTS configuracoes (
+  id SERIAL PRIMARY KEY,
+  chave VARCHAR(255) NOT NULL UNIQUE,
+  valor TEXT,
+  descricao TEXT,
+  atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-create table public.logs_sistema (
-  id uuid primary key default uuid_generate_v4(),
-  tipo text not null,
-  mensagem text not null,
-  dados jsonb,
-  criado_em timestamptz default now()
+CREATE TABLE IF NOT EXISTS logs_sistema (
+  id SERIAL PRIMARY KEY,
+  tipo VARCHAR(50) NOT NULL,
+  mensagem TEXT NOT NULL,
+  dados JSONB,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-create table public.feriados (
-  id uuid primary key default uuid_generate_v4(),
-  data date not null unique,
-  descricao text,
-  criado_em timestamptz default now()
+CREATE TABLE IF NOT EXISTS feriados (
+  id SERIAL PRIMARY KEY,
+  data DATE NOT NULL UNIQUE,
+  descricao TEXT,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-create table public.bloqueios_refeicao (
-  id uuid primary key default uuid_generate_v4(),
-  tipo_refeicao_id uuid references public.tipos_refeicao,
-  data_inicio date not null,
-  data_fim date not null,
-  motivo text,
-  criado_em timestamptz default now()
+CREATE TABLE IF NOT EXISTS bloqueios_refeicao (
+  id SERIAL PRIMARY KEY,
+  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
+  data_inicio DATE NOT NULL,
+  data_fim DATE NOT NULL,
+  motivo TEXT,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create shift_configurations table
-create table public.shift_configurations (
-  id uuid primary key default uuid_generate_v4(),
-  shift_type text not null check (shift_type in ('central', 'primeiro', 'segundo', 'terceiro')),
-  start_time time not null,
-  end_time time not null,
-  is_active boolean default true,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+-- Create turnos table
+CREATE TABLE IF NOT EXISTS turnos (
+  id SERIAL PRIMARY KEY,
+  tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('central', 'primeiro', 'segundo', 'terceiro')),
+  hora_inicio TIME NOT NULL,
+  hora_fim TIME NOT NULL,
+  ativo BOOLEAN DEFAULT TRUE,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Enable RLS for shift_configurations
-alter table public.shift_configurations enable row level security;
+-- Enable RLS
+ALTER TABLE turnos ENABLE ROW LEVEL SECURITY;
 
--- Create policy for shift_configurations
-create policy "Shift configurations are visible to all"
-  on public.shift_configurations for select
-  using (true);
+-- Create policies for turnos
+CREATE POLICY "Turnos são visíveis para todos"
+  ON turnos FOR SELECT
+  USING (true);
 
-create policy "Only authenticated users can insert shift configurations"
-  on public.shift_configurations for insert
-  with check (auth.role() = 'authenticated');
+CREATE POLICY "Apenas usuários autenticados podem inserir turnos"
+  ON turnos FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
 
-create policy "Only authenticated users can update shift configurations"
-  on public.shift_configurations for update
-  using (auth.role() = 'authenticated');
+CREATE POLICY "Apenas usuários autenticados podem atualizar turnos"
+  ON turnos FOR UPDATE
+  USING (auth.role() = 'authenticated');
 
 -- Insert initial data
-insert into public.empresas (nome, cnpj) values 
-('Empresa Teste', '12345678000190'),
-('Outra Empresa', '98765432000110');
+INSERT INTO empresas (nome, cnpj) VALUES 
+('Empresa Teste', '12.345.678/0001-90'),
+('Outra Empresa', '98.765.432/0001-10');
 
-insert into public.tipos_refeicao (nome, hora_inicio, hora_fim, valor) values 
-('Café da Manhã', '06:00', '09:00', 10.00),
-('Almoço', '11:00', '14:00', 25.00),
-('Jantar', '18:00', '21:00', 25.00);
+INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor) VALUES 
+('Café da Manhã', '06:00:00', '09:00:00', 10.00),
+('Almoço', '11:00:00', '14:00:00', 25.00),
+('Jantar', '18:00:00', '21:00:00', 25.00);
 
-insert into public.configuracoes (chave, valor, descricao) values
+INSERT INTO configuracoes (chave, valor, descricao) VALUES
 ('LOGO_SISTEMA', null, 'URL da logo do sistema'),
 ('IMAGEM_FUNDO', null, 'URL da imagem de fundo do sistema'),
 ('NOME_SISTEMA', 'Sistema de Vouchers', 'Nome do sistema');
+
+-- Insert initial shifts
+INSERT INTO turnos (tipo, hora_inicio, hora_fim, ativo) VALUES
+('central', '08:00:00', '17:00:00', true),
+('primeiro', '06:00:00', '14:00:00', true),
+('segundo', '14:00:00', '22:00:00', true),
+('terceiro', '22:00:00', '06:00:00', true);
