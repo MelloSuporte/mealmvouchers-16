@@ -4,8 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminProvider } from "./contexts/AdminContext";
-import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import SelfServices from "./pages/SelfServices";
 import Home from "./pages/Home";
@@ -38,89 +36,59 @@ function App() {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <AuthProvider>
-            <AdminProvider>
-              <BrowserRouter>
-                <Toaster 
-                  position="top-right"
-                  expand={true}
-                  visibleToasts={6}
-                  toastOptions={{
-                    success: { 
-                      position: "top-right",
-                      className: "bg-green-500 text-white border-green-600",
-                      style: {
-                        top: '20px',
-                        right: '20px'
-                      }
-                    },
-                    error: { 
-                      position: "bottom-right",
-                      className: "bg-red-500 text-white border-red-600",
-                      duration: 4000,
-                      style: {
-                        bottom: '20px',
-                        right: '20px',
-                        backgroundColor: 'rgb(239 68 68)',
-                        color: 'white',
-                        border: '1px solid rgb(220 38 38)'
-                      }
-                    },
-                    info: { position: "top-right" },
-                    warning: { position: "top-right" },
-                  }}
-                  richColors
-                  closeButton
-                />
-                <Routes>
-                  <Route path="/" element={<Navigate to="/voucher" replace />} />
-                  <Route path="/voucher" element={<Voucher />} />
-                  <Route path="/user-confirmation" element={<UserConfirmation />} />
-                  <Route path="/self-services" element={<SelfServices />} />
-                  <Route path="/bom-apetite/:userName" element={<BomApetite />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/user" element={<User />} />
-                  <Route 
-                    path="/admin" 
-                    element={
-                      <ProtectedRoute>
-                        <Admin />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/turnos" 
-                    element={
-                      <ProtectedRoute>
-                        <Turnos />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/admin/managers" 
-                    element={
-                      <ProtectedRoute>
-                        <AdminManagement />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/app" 
-                    element={
-                      <ProtectedRoute>
-                        <Layout />
-                      </ProtectedRoute>
+          <AdminProvider>
+            <BrowserRouter>
+              <Toaster 
+                position="top-right"
+                expand={true}
+                visibleToasts={6}
+                toastOptions={{
+                  success: { 
+                    position: "top-right",
+                    className: "bg-green-500 text-white border-green-600",
+                    style: {
+                      top: '20px',
+                      right: '20px'
                     }
-                  >
-                    <Route index element={<Home />} />
-                    <Route path="search" element={<Search />} />
-                    <Route path="menu" element={<Menu />} />
-                    <Route path="profile" element={<Profile />} />
-                  </Route>
-                </Routes>
-              </BrowserRouter>
-            </AdminProvider>
-          </AuthProvider>
+                  },
+                  error: { 
+                    position: "bottom-right",
+                    className: "bg-red-500 text-white border-red-600",
+                    duration: 4000,
+                    style: {
+                      bottom: '20px',
+                      right: '20px',
+                      backgroundColor: 'rgb(239 68 68)',
+                      color: 'white',
+                      border: '1px solid rgb(220 38 38)'
+                    }
+                  },
+                  info: { position: "top-right" },
+                  warning: { position: "top-right" },
+                }}
+                richColors
+                closeButton
+              />
+              <Routes>
+                <Route path="/" element={<Navigate to="/voucher" replace />} />
+                <Route path="/voucher" element={<Voucher />} />
+                <Route path="/user-confirmation" element={<UserConfirmation />} />
+                <Route path="/self-services" element={<SelfServices />} />
+                <Route path="/bom-apetite/:userName" element={<BomApetite />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/user" element={<User />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/turnos" element={<Turnos />} />
+                <Route path="/admin/managers" element={<AdminManagement />} />
+                <Route path="/app" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="search" element={<Search />} />
+                  <Route path="menu" element={<Menu />} />
+                  <Route path="profile" element={<Profile />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </AdminProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </React.StrictMode>
