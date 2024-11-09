@@ -20,7 +20,7 @@ const TurnosForm = () => {
   });
 
   const { data: turnosData, isLoading, error, refetch } = useQuery({
-    queryKey: ['shift-configurations'],
+    queryKey: ['configuracoes-turnos'],
     queryFn: async () => {
       const token = localStorage.getItem('adminToken');
       
@@ -31,7 +31,7 @@ const TurnosForm = () => {
       }
 
       try {
-        const response = await api.get('/api/shift-configurations', {
+        const response = await api.get('/api/configuracoes-turnos', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

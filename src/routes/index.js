@@ -23,7 +23,7 @@ router.use('/refeicoes', refeicoesRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/vouchers-extra', vouchersExtraRoutes);
 router.use('/imagens-fundo', imagensFundoRoutes);
-router.use('/shift-configurations', configuracoesTurnosRoutes);
+router.use('/configuracoes-turnos', configuracoesTurnosRoutes);
 router.use('/usuarios-admin', usuariosAdminRoutes);
 
 export default router;
