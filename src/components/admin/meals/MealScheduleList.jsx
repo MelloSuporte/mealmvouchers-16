@@ -17,8 +17,7 @@ const MealScheduleList = () => {
     queryKey: ['meals'],
     queryFn: async () => {
       try {
-        const response = await api.get('/meals');
-        // Ensure we always return an array
+        const response = await api.get('/api/refeicoes');
         return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         console.error('Error fetching meals:', error);
@@ -29,7 +28,7 @@ const MealScheduleList = () => {
 
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, currentStatus }) => {
-      await api.patch(`/meals/${id}`, { is_active: !currentStatus });
+      await api.patch(`/api/refeicoes/${id}`, { is_active: !currentStatus });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['meals']);
@@ -42,7 +41,7 @@ const MealScheduleList = () => {
 
   const deleteMealsMutation = useMutation({
     mutationFn: async (ids) => {
-      await Promise.all(ids.map(id => api.delete(`/meals/${id}`)));
+      await Promise.all(ids.map(id => api.delete(`/api/refeicoes/${id}`)));
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['meals']);
