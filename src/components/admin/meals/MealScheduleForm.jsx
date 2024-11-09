@@ -63,7 +63,7 @@ const MealScheduleForm = () => {
       setIsSubmitting(true);
       const numericValue = parseFloat(mealSchedule.value.replace(/[^0-9,]/g, '').replace(',', '.'));
       
-      const response = await api.post('/meals', {
+      const response = await api.post('/api/refeicoes', {
         ...mealSchedule,
         value: numericValue
       });
