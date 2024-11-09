@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
   try {
     logger.info('Iniciando busca de empresas');
     const { data: companies, error } = await supabase
-      .from('empresas')
+      .from('empresas')  // Corrigido nome da tabela
       .select('*')
       .order('nome');
 
@@ -51,7 +51,7 @@ router.post('/', async (req, res) => {
     // Verifica CNPJ duplicado
     logger.info('Verificando duplicidade de CNPJ:', cnpjLimpo);
     const { data: existingCompany, error: checkError } = await supabase
-      .from('empresas')
+      .from('empresas')  // Corrigido nome da tabela
       .select('id')
       .eq('cnpj', cnpjLimpo)
       .maybeSingle();
@@ -69,7 +69,7 @@ router.post('/', async (req, res) => {
     // Insere nova empresa
     logger.info('Inserindo nova empresa');
     const { data: company, error: insertError } = await supabase
-      .from('empresas')
+      .from('empresas')  // Corrigido nome da tabela
       .insert([{
         nome: nome.trim(),
         cnpj: cnpjLimpo,
@@ -106,7 +106,7 @@ router.put('/:id', async (req, res) => {
 
     // Verifica CNPJ duplicado
     const { data: existingCompany, error: checkError } = await supabase
-      .from('empresas')
+      .from('empresas')  // Corrigido nome da tabela
       .select('id')
       .eq('cnpj', cnpjLimpo)
       .neq('id', id)
@@ -125,7 +125,7 @@ router.put('/:id', async (req, res) => {
     // Atualiza empresa
     logger.info('Atualizando empresa');
     const { data: company, error: updateError } = await supabase
-      .from('empresas')
+      .from('empresas')  // Corrigido nome da tabela
       .update({ 
         nome: nome.trim(), 
         cnpj: cnpjLimpo,
