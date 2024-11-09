@@ -53,6 +53,26 @@ const CompanyForm = () => {
     setEditingCompany(null);
   };
 
+  const ensureLogosBucket = async () => {
+    try {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const logosBucket = buckets?.find(b => b.name === 'logos');
+      
+      if (!logosBucket) {
+        const { error: createBucketError } = await supabase.storage.createBucket('logos', {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif']
+        });
+        
+        if (createBucketError) throw createBucketError;
+      }
+    } catch (error) {
+      console.error('Error ensuring logos bucket exists:', error);
+      throw error;
+    }
+  };
+
   const handleSaveCompany = async () => {
     const trimmedName = companyName?.trim();
     
@@ -71,6 +91,9 @@ const CompanyForm = () => {
       
       let logoUrl = null;
       if (logo instanceof File) {
+        // Ensure logos bucket exists before upload
+        await ensureLogosBucket();
+        
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('logos')
           .upload(`company-logos/${Date.now()}-${logo.name}`, logo);
@@ -87,7 +110,7 @@ const CompanyForm = () => {
       const companyData = {
         nome: trimmedName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
-        logo: logoUrl
+        logo: logoUrl || logo // Use existing logo URL if no new file was uploaded
       };
 
       if (editingCompany) {
