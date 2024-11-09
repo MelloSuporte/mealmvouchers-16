@@ -14,15 +14,12 @@ import CompanySelect from './user/CompanySelect';
 
 const generateUniqueVoucher = async (cpf) => {
   try {
-    // Generate a voucher based on the last 4 digits of CPF
     const cleanCPF = cpf.replace(/\D/g, '');
     const lastFourDigits = cleanCPF.slice(-4);
     
-    // Verify if voucher already exists
     const response = await api.get(`/users/check-voucher/${lastFourDigits}`);
     
     if (response.data.exists) {
-      // If exists, generate a random 4-digit number
       return Math.floor(1000 + Math.random() * 9000).toString();
     }
     
@@ -42,19 +39,20 @@ const UserFormMain = ({
   const [searchCPF, setSearchCPF] = React.useState('');
 
   const { data: turnosData, isLoading: isLoadingTurnos } = useQuery({
-    queryKey: ['shift-configurations'],
+    queryKey: ['turnos'],
     queryFn: async () => {
       try {
-        const response = await api.get('/shift-configurations');
-        return Array.isArray(response.data) ? response.data : [];
+        const response = await api.get('/api/turnos');
+        return response.data || [];
       } catch (error) {
         console.error('Error fetching turnos:', error);
+        toast.error('Erro ao carregar turnos');
         return [];
       }
     }
   });
 
-  const turnos = Array.isArray(turnosData) ? turnosData.filter(turno => turno.is_active) : [];
+  const turnos = Array.isArray(turnosData) ? turnosData : [];
 
   const handlePhotoUpload = (event) => {
     const file = event.target.files[0];
@@ -147,8 +145,8 @@ const UserFormMain = ({
         </SelectTrigger>
         <SelectContent>
           {turnos.map((turno) => (
-            <SelectItem key={turno.id} value={turno.shift_type}>
-              {turno.shift_type.charAt(0).toUpperCase() + turno.shift_type.slice(1)} Turno ({formatTime(turno.start_time)} - {formatTime(turno.end_time)})
+            <SelectItem key={turno.id} value={turno.tipo}>
+              {turno.tipo.charAt(0).toUpperCase() + turno.tipo.slice(1)} ({formatTime(turno.hora_inicio)} - {formatTime(turno.hora_fim)})
             </SelectItem>
           ))}
         </SelectContent>
