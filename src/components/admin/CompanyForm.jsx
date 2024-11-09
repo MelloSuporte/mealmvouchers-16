@@ -18,8 +18,10 @@ const CompanyForm = () => {
     queryFn: async () => {
       try {
         const response = await api.get('/companies');
+        // Garantindo que response.data é um array antes de fazer o map
+        const companiesData = Array.isArray(response.data) ? response.data : [];
         // Mapeia os campos do português para inglês
-        return (response.data || []).map(company => ({
+        return companiesData.map(company => ({
           id: company.id,
           name: company.nome,
           cnpj: company.cnpj,
