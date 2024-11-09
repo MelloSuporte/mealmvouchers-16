@@ -1,41 +1,44 @@
 import express from 'express';
-import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
+import { supabase } from '../config/supabase.js';
 
 const router = express.Router();
 
-// Get all shift configurations
+// Listar turnos
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { data: turnos, error } = await supabase
       .from('turnos')
       .select('*')
       .order('id');
 
     if (error) throw error;
-
-    return data.map(turno => ({
-      id: turno.id,
-      shift_type: turno.tipo,
-      start_time: turno.hora_inicio,
-      end_time: turno.hora_fim,
-      is_active: turno.ativo,
-      created_at: turno.criado_em,
-      updated_at: turno.atualizado_em
-    }));
+    res.json(turnos || []);
   } catch (error) {
-    console.error('Erro ao carregar turnos:', error);
-    res.status(500).json({ error: 'Erro ao carregar turnos: ' + error.message });
-    return [];
+    logger.error('Erro ao buscar turnos:', error);
+    res.status(500).json({ 
+      error: 'Erro ao buscar turnos',
+      details: error.message 
+    });
   }
 });
 
-// Create new shift configuration
+// Criar turno
 router.post('/', async (req, res) => {
-  const { shift_type, start_time, end_time, is_active } = req.body;
-  
   try {
-    const { data, error } = await supabase
+    const { shift_type, start_time, end_time, is_active } = req.body;
+    
+    if (!shift_type?.trim()) {
+      return res.status(400).json({ error: 'Tipo de turno é obrigatório' });
+    }
+    if (!start_time?.trim()) {
+      return res.status(400).json({ error: 'Horário de início é obrigatório' });
+    }
+    if (!end_time?.trim()) {
+      return res.status(400).json({ error: 'Horário de fim é obrigatório' });
+    }
+
+    const { data: turno, error } = await supabase
       .from('turnos')
       .insert([{
         tipo: shift_type,
@@ -50,28 +53,30 @@ router.post('/', async (req, res) => {
 
     if (error) throw error;
 
-    res.status(201).json({
-      id: data.id,
-      shift_type: data.tipo,
-      start_time: data.hora_inicio,
-      end_time: data.hora_fim,
-      is_active: data.ativo,
-      created_at: data.criado_em,
-      updated_at: data.atualizado_em
-    });
+    res.status(201).json(turno);
   } catch (error) {
-    console.error('Erro ao criar turno:', error);
-    res.status(500).json({ error: 'Erro ao criar turno: ' + error.message });
+    logger.error('Erro ao cadastrar turno:', error);
+    res.status(500).json({ 
+      error: 'Erro ao cadastrar turno',
+      details: error.message 
+    });
   }
 });
 
-// Update shift configuration
+// Atualizar turno
 router.put('/:id', async (req, res) => {
-  const { id } = req.params;
-  const { start_time, end_time, is_active } = req.body;
-  
   try {
-    const { data, error } = await supabase
+    const { id } = req.params;
+    const { start_time, end_time, is_active } = req.body;
+    
+    if (!start_time?.trim()) {
+      return res.status(400).json({ error: 'Horário de início é obrigatório' });
+    }
+    if (!end_time?.trim()) {
+      return res.status(400).json({ error: 'Horário de fim é obrigatório' });
+    }
+
+    const { data: turno, error } = await supabase
       .from('turnos')
       .update({
         hora_inicio: start_time,
@@ -85,22 +90,17 @@ router.put('/:id', async (req, res) => {
 
     if (error) throw error;
 
-    if (!data) {
+    if (!turno) {
       return res.status(404).json({ error: 'Turno não encontrado' });
     }
-    
-    res.json({
-      id: data.id,
-      shift_type: data.tipo,
-      start_time: data.hora_inicio,
-      end_time: data.hora_fim,
-      is_active: data.ativo,
-      created_at: data.criado_em,
-      updated_at: data.atualizado_em
-    });
+
+    res.json(turno);
   } catch (error) {
-    console.error('Erro ao atualizar turno:', error);
-    res.status(500).json({ error: 'Erro ao atualizar turno: ' + error.message });
+    logger.error('Erro ao atualizar turno:', error);
+    res.status(500).json({ 
+      error: 'Erro ao atualizar turno',
+      details: error.message 
+    });
   }
 });
 
