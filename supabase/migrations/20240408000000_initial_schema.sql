@@ -74,36 +74,32 @@ create table public.bloqueios_refeicao (
   criado_em timestamptz default now()
 );
 
--- Enable RLS
-alter table public.empresas enable row level security;
-alter table public.usuarios enable row level security;
-alter table public.tipos_refeicao enable row level security;
-alter table public.uso_voucher enable row level security;
-alter table public.configuracoes enable row level security;
-alter table public.logs_sistema enable row level security;
-alter table public.feriados enable row level security;
-alter table public.bloqueios_refeicao enable row level security;
+-- Create shift_configurations table
+create table public.shift_configurations (
+  id uuid primary key default uuid_generate_v4(),
+  shift_type text not null check (shift_type in ('central', 'primeiro', 'segundo', 'terceiro')),
+  start_time time not null,
+  end_time time not null,
+  is_active boolean default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
 
--- Create basic policies
-create policy "Empresas são visíveis para todos"
-  on public.empresas for select
+-- Enable RLS for shift_configurations
+alter table public.shift_configurations enable row level security;
+
+-- Create policy for shift_configurations
+create policy "Shift configurations are visible to all"
+  on public.shift_configurations for select
   using (true);
 
-create policy "Usuários são visíveis para todos"
-  on public.usuarios for select
-  using (true);
+create policy "Only authenticated users can insert shift configurations"
+  on public.shift_configurations for insert
+  with check (auth.role() = 'authenticated');
 
-create policy "Tipos de refeição são visíveis para todos"
-  on public.tipos_refeicao for select
-  using (true);
-
-create policy "Configurações são visíveis para todos"
-  on public.configuracoes for select
-  using (true);
-
-create policy "Feriados são visíveis para todos"
-  on public.feriados for select
-  using (true);
+create policy "Only authenticated users can update shift configurations"
+  on public.shift_configurations for update
+  using (auth.role() = 'authenticated');
 
 -- Insert initial data
 insert into public.empresas (nome, cnpj) values 

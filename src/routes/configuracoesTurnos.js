@@ -4,6 +4,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
+// Get all shift configurations
 router.get('/', async (req, res) => {
   try {
     const { data: shifts, error } = await supabase
@@ -23,6 +24,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Create new shift configuration
 router.post('/', async (req, res) => {
   const { shift_type, start_time, end_time, is_active } = req.body;
   
@@ -52,6 +54,7 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Update shift configuration
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { start_time, end_time, is_active } = req.body;
