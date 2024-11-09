@@ -17,10 +17,8 @@ const CompanyForm = () => {
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        const response = await api.get('/companies');
-        // Garantindo que response.data é um array antes de fazer o map
+        const response = await api.get('/empresas');
         const companiesData = Array.isArray(response.data) ? response.data : [];
-        // Mapeia os campos do português para inglês
         return companiesData.map(company => ({
           id: company.id,
           name: company.nome,
@@ -51,7 +49,10 @@ const CompanyForm = () => {
   };
 
   const handleSaveCompany = async () => {
-    if (!companyName?.trim()) {
+    // Removendo espaços extras no início e fim do nome
+    const trimmedName = companyName?.trim();
+    
+    if (!trimmedName) {
       toast.error('Nome da empresa é obrigatório');
       return;
     }
@@ -64,18 +65,17 @@ const CompanyForm = () => {
     try {
       setIsSubmitting(true);
       
-      // Mapeia os campos do inglês para português
       const companyData = {
-        nome: companyName,
+        nome: trimmedName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
         logo
       };
 
       if (editingCompany) {
-        await api.put(`/companies/${editingCompany.id}`, companyData);
+        await api.put(`/empresas/${editingCompany.id}`, companyData);
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        const response = await api.post('/companies', companyData);
+        const response = await api.post('/empresas', companyData);
         if (response.data) {
           toast.success('Empresa cadastrada com sucesso!');
         }
