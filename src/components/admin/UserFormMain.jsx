@@ -12,6 +12,27 @@ import UserSearchSection from './user/UserSearchSection';
 import UserBasicInfo from './user/UserBasicInfo';
 import CompanySelect from './user/CompanySelect';
 
+const generateUniqueVoucher = async (cpf) => {
+  try {
+    // Generate a voucher based on the last 4 digits of CPF
+    const cleanCPF = cpf.replace(/\D/g, '');
+    const lastFourDigits = cleanCPF.slice(-4);
+    
+    // Verify if voucher already exists
+    const response = await api.get(`/users/check-voucher/${lastFourDigits}`);
+    
+    if (response.data.exists) {
+      // If exists, generate a random 4-digit number
+      return Math.floor(1000 + Math.random() * 9000).toString();
+    }
+    
+    return lastFourDigits;
+  } catch (error) {
+    console.error('Error generating voucher:', error);
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+};
+
 const UserFormMain = ({
   formData,
   onInputChange,
@@ -53,7 +74,6 @@ const UserFormMain = ({
       if (response.data) {
         const userData = response.data;
         onInputChange('userName', userData.name);
-        onInputChange('userEmail', userData.email);
         onInputChange('userCPF', userData.cpf);
         onInputChange('company', userData.company_id?.toString());
         onInputChange('voucher', userData.voucher);
