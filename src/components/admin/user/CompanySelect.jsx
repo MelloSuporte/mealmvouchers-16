@@ -32,7 +32,7 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
 
   return (
     <Select 
-      value={value} 
+      value={value?.toString()} 
       onValueChange={onValueChange}
       disabled={isLoading}
     >
