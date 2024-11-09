@@ -10,19 +10,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
 
-const NewTurnoDialog = ({ isOpen, onOpenChange, newTurno, setNewTurno, onCreateTurno }) => {
+const NovoTurnoDialog = ({ isOpen, onOpenChange, novoTurno, setNovoTurno, onCreateTurno }) => {
+  if (!novoTurno) return null;
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Turno
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Criar Novo Turno</DialogTitle>
@@ -34,8 +28,8 @@ const NewTurnoDialog = ({ isOpen, onOpenChange, newTurno, setNewTurno, onCreateT
           <div className="space-y-2">
             <Label>Tipo de Turno</Label>
             <Select
-              value={newTurno.tipo}
-              onValueChange={(value) => setNewTurno({ ...newTurno, tipo: value })}
+              value={novoTurno.tipo}
+              onValueChange={(value) => setNovoTurno({ ...novoTurno, tipo: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo de turno" />
@@ -52,22 +46,22 @@ const NewTurnoDialog = ({ isOpen, onOpenChange, newTurno, setNewTurno, onCreateT
             <Label>Horário de Entrada</Label>
             <Input
               type="time"
-              value={newTurno.hora_inicio}
-              onChange={(e) => setNewTurno({ ...newTurno, hora_inicio: e.target.value })}
+              value={novoTurno.hora_inicio}
+              onChange={(e) => setNovoTurno({ ...novoTurno, hora_inicio: e.target.value })}
             />
           </div>
           <div className="space-y-2">
             <Label>Horário de Saída</Label>
             <Input
               type="time"
-              value={newTurno.hora_fim}
-              onChange={(e) => setNewTurno({ ...newTurno, hora_fim: e.target.value })}
+              value={novoTurno.hora_fim}
+              onChange={(e) => setNovoTurno({ ...novoTurno, hora_fim: e.target.value })}
             />
           </div>
           <div className="flex items-center space-x-2">
             <Switch
-              checked={newTurno.ativo}
-              onCheckedChange={(checked) => setNewTurno({ ...newTurno, ativo: checked })}
+              checked={novoTurno.ativo}
+              onCheckedChange={(checked) => setNovoTurno({ ...novoTurno, ativo: checked })}
             />
             <Label>Turno Ativo</Label>
           </div>
@@ -80,4 +74,4 @@ const NewTurnoDialog = ({ isOpen, onOpenChange, newTurno, setNewTurno, onCreateT
   );
 };
 
-export default NewTurnoDialog;
+export default NovoTurnoDialog;

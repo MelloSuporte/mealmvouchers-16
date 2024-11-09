@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import api from "@/utils/api";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import TurnoCard from "@/components/admin/turnos/TurnoCard";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NovoTurnoDialog from "@/components/admin/turnos/NovoTurnoDialog";
@@ -62,6 +62,17 @@ const TurnosForm = () => {
     }
   }, [navigate]);
 
+  const handleNovoTurno = async () => {
+    await handleCreateTurno(novoTurno);
+    setDialogoAberto(false);
+    setNovoTurno({
+      tipo: '',
+      hora_inicio: '',
+      hora_fim: '',
+      ativo: true
+    });
+  };
+
   if (carregando) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -90,12 +101,16 @@ const TurnosForm = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
+        <Button onClick={() => setDialogoAberto(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Turno
+        </Button>
         <NovoTurnoDialog
           isOpen={dialogoAberto}
           onOpenChange={setDialogoAberto}
           novoTurno={novoTurno}
           setNovoTurno={setNovoTurno}
-          onCreateTurno={handleCreateTurno}
+          onCreateTurno={handleNovoTurno}
         />
       </div>
       <div className="grid gap-6">
