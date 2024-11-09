@@ -80,7 +80,6 @@ router.post('/', async (req, res) => {
 
     if (insertError) throw insertError;
 
-    logger.info(`Novo gestor cadastrado - ID: ${newAdmin.id}, Nome: ${nome}`);
     res.status(201).json({
       success: true,
       message: 'Gestor cadastrado com sucesso',
@@ -130,10 +129,10 @@ router.put('/:id', async (req, res) => {
       nome,
       email,
       empresa_id,
-      permissoes
+      permissoes,
+      updated_at: new Date()
     };
 
-    // Adiciona senha apenas se foi fornecida
     if (senha) {
       updateData.senha = senha;
     }
@@ -152,7 +151,6 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Gestor não encontrado' });
     }
 
-    logger.info(`Gestor atualizado - ID: ${id}, Nome: ${nome}`);
     res.json({
       success: true,
       message: 'Gestor atualizado com sucesso',

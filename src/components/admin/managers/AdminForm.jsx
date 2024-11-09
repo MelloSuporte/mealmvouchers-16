@@ -40,7 +40,8 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
       }
       onClose();
     } catch (error) {
-      toast.error('Erro ao salvar gestor: ' + error.message);
+      console.error('Erro ao salvar gestor:', error);
+      toast.error('Erro ao salvar gestor: ' + (error.response?.data?.error || error.message));
     }
   };
 
