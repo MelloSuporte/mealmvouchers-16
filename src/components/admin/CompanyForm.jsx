@@ -64,11 +64,11 @@ const CompanyForm = () => {
     try {
       setIsSubmitting(true);
       
-      const companyData = new FormData();
-      companyData.append('nome', trimmedName);
-      companyData.append('cnpj', cnpj.replace(/[^\d]/g, ''));
-      if (logo) {
-        companyData.append('logo', logo);
+      const formData = new FormData();
+      formData.append('nome', trimmedName);
+      formData.append('cnpj', cnpj.replace(/[^\d]/g, ''));
+      if (logo instanceof File) {
+        formData.append('logo', logo);
       }
 
       const config = {
@@ -78,10 +78,10 @@ const CompanyForm = () => {
       };
 
       if (editingCompany) {
-        await api.put(`/empresas/${editingCompany.id}`, companyData, config);
+        await api.put(`/empresas/${editingCompany.id}`, formData, config);
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        const response = await api.post('/empresas', companyData, config);
+        const response = await api.post('/empresas', formData, config);
         if (response.data) {
           toast.success('Empresa cadastrada com sucesso!');
         }

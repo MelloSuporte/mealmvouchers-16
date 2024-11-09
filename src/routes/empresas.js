@@ -1,8 +1,10 @@
 import express from 'express';
 import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
+import multer from 'multer';
 
 const router = express.Router();
+const upload = multer();
 
 // Listar empresas
 router.get('/', async (req, res) => {
@@ -25,10 +27,10 @@ router.get('/', async (req, res) => {
 });
 
 // Criar empresa
-router.post('/', async (req, res) => {
-  const { nome, cnpj, logo } = req.body;
-  
+router.post('/', upload.single('logo'), async (req, res) => {
   try {
+    const { nome, cnpj } = req.body;
+    
     if (!nome?.trim()) {
       return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
     }
@@ -49,13 +51,28 @@ router.post('/', async (req, res) => {
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
     }
 
+    let logoUrl = null;
+    if (req.file) {
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('logos')
+        .upload(`company-logos/${Date.now()}-${req.file.originalname}`, req.file.buffer);
+
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('logos')
+        .getPublicUrl(uploadData.path);
+        
+      logoUrl = publicUrl;
+    }
+
     // Insere nova empresa
     const { data: newCompany, error: insertError } = await supabase
       .from('empresas')
       .insert([{
         nome: nome.trim(),
         cnpj: cnpjLimpo,
-        logo
+        logo: logoUrl
       }])
       .select()
       .single();
@@ -73,9 +90,9 @@ router.post('/', async (req, res) => {
 });
 
 // Atualizar empresa
-router.put('/:id', async (req, res) => {
+router.put('/:id', upload.single('logo'), async (req, res) => {
   const { id } = req.params;
-  const { nome, cnpj, logo } = req.body;
+  const { nome, cnpj } = req.body;
   
   try {
     if (!nome?.trim()) {
@@ -99,14 +116,34 @@ router.put('/:id', async (req, res) => {
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
     }
 
+    let logoUrl = null;
+    if (req.file) {
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('logos')
+        .upload(`company-logos/${Date.now()}-${req.file.originalname}`, req.file.buffer);
+
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('logos')
+        .getPublicUrl(uploadData.path);
+        
+      logoUrl = publicUrl;
+    }
+
+    const updateData = {
+      nome: nome.trim(),
+      cnpj: cnpjLimpo
+    };
+
+    if (logoUrl) {
+      updateData.logo = logoUrl;
+    }
+
     // Atualiza empresa
     const { data: updatedCompany, error: updateError } = await supabase
       .from('empresas')
-      .update({
-        nome: nome.trim(),
-        cnpj: cnpjLimpo,
-        logo
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
