@@ -29,7 +29,19 @@ router.post('/', async (req, res) => {
       throw error;
     }
 
-    res.status(201).json({ success: true, data: meal });
+    // Mapeia os dados de volta para o formato do frontend
+    const mappedMeal = {
+      id: meal.id,
+      name: meal.nome,
+      startTime: meal.hora_inicio,
+      endTime: meal.hora_fim,
+      value: meal.valor,
+      isActive: meal.ativo,
+      maxUsersPerDay: meal.max_usuarios_por_dia,
+      toleranceMinutes: meal.minutos_tolerancia
+    };
+
+    res.status(201).json({ success: true, data: mappedMeal });
   } catch (error) {
     logger.error('Error in meal type creation:', error);
     res.status(500).json({ 
@@ -47,7 +59,20 @@ router.get('/', async (req, res) => {
       .order('nome');
 
     if (error) throw error;
-    res.json(meals);
+
+    // Mapeia os dados para o formato esperado pelo frontend
+    const mappedMeals = meals.map(meal => ({
+      id: meal.id,
+      name: meal.nome,
+      startTime: meal.hora_inicio,
+      endTime: meal.hora_fim,
+      value: meal.valor,
+      isActive: meal.ativo,
+      maxUsersPerDay: meal.max_usuarios_por_dia,
+      toleranceMinutes: meal.minutos_tolerancia
+    }));
+
+    res.json(mappedMeals);
   } catch (error) {
     logger.error('Error fetching meals:', error);
     res.status(500).json({ 
