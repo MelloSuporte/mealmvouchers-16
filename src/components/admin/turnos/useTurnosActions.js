@@ -21,7 +21,7 @@ export const useTurnosActions = () => {
         is_active: Boolean(newTurno.is_active)
       };
       
-      const response = await api.post('/shift-configurations', turnoData, {
+      const response = await api.post('/api/shift-configurations', turnoData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -51,7 +51,7 @@ export const useTurnosActions = () => {
         is_active: Boolean(updatedTurno.is_active)
       };
       
-      const response = await api.put(`/shift-configurations/${updatedTurno.id}`, turnoData, {
+      const response = await api.put(`/api/shift-configurations/${updatedTurno.id}`, turnoData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
