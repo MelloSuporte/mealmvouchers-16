@@ -45,7 +45,7 @@ router.post('/', upload.single('logo'), async (req, res) => {
       .from('empresas')
       .select('id')
       .eq('cnpj', cnpjLimpo)
-      .single();
+      .maybeSingle();
 
     if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado' });
@@ -53,23 +53,25 @@ router.post('/', upload.single('logo'), async (req, res) => {
 
     let logoUrl = null;
     if (req.file) {
+      const fileBuffer = req.file.buffer;
+      const fileName = `company-logos/${Date.now()}-${req.file.originalname}`;
+      
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('logos')
-        .upload(`company-logos/${Date.now()}-${req.file.originalname}`, req.file.buffer);
+        .upload(fileName, fileBuffer, {
+          contentType: req.file.mimetype,
+          cacheControl: '3600'
+        });
 
-      if (uploadError) {
-        logger.error('Erro ao fazer upload da logo:', uploadError);
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
       
-      const { data: { publicUrl } } = supabase.storage
+      const { data } = supabase.storage
         .from('logos')
-        .getPublicUrl(uploadData.path);
+        .getPublicUrl(fileName);
         
-      logoUrl = publicUrl;
+      logoUrl = data.publicUrl;
     }
 
-    // Insere nova empresa
     const { data: newCompany, error: insertError } = await supabase
       .from('empresas')
       .insert([{
@@ -80,10 +82,7 @@ router.post('/', upload.single('logo'), async (req, res) => {
       .select()
       .single();
 
-    if (insertError) {
-      logger.error('Erro ao inserir empresa:', insertError);
-      throw insertError;
-    }
+    if (insertError) throw insertError;
 
     res.status(201).json(newCompany);
   } catch (error) {
@@ -116,7 +115,7 @@ router.put('/:id', upload.single('logo'), async (req, res) => {
       .select('id')
       .eq('cnpj', cnpjLimpo)
       .neq('id', id)
-      .single();
+      .maybeSingle();
 
     if (existingCompany) {
       return res.status(409).json({ error: 'CNPJ já cadastrado para outra empresa' });
@@ -124,20 +123,23 @@ router.put('/:id', upload.single('logo'), async (req, res) => {
 
     let logoUrl = null;
     if (req.file) {
+      const fileBuffer = req.file.buffer;
+      const fileName = `company-logos/${Date.now()}-${req.file.originalname}`;
+      
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('logos')
-        .upload(`company-logos/${Date.now()}-${req.file.originalname}`, req.file.buffer);
+        .upload(fileName, fileBuffer, {
+          contentType: req.file.mimetype,
+          cacheControl: '3600'
+        });
 
-      if (uploadError) {
-        logger.error('Erro ao fazer upload da logo:', uploadError);
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
       
-      const { data: { publicUrl } } = supabase.storage
+      const { data } = supabase.storage
         .from('logos')
-        .getPublicUrl(uploadData.path);
+        .getPublicUrl(fileName);
         
-      logoUrl = publicUrl;
+      logoUrl = data.publicUrl;
     }
 
     const updateData = {
@@ -149,7 +151,6 @@ router.put('/:id', upload.single('logo'), async (req, res) => {
       updateData.logo = logoUrl;
     }
 
-    // Atualiza empresa
     const { data: updatedCompany, error: updateError } = await supabase
       .from('empresas')
       .update(updateData)
@@ -157,10 +158,7 @@ router.put('/:id', upload.single('logo'), async (req, res) => {
       .select()
       .single();
 
-    if (updateError) {
-      logger.error('Erro ao atualizar empresa:', updateError);
-      throw updateError;
-    }
+    if (updateError) throw updateError;
 
     if (!updatedCompany) {
       return res.status(404).json({ error: 'Empresa não encontrada' });
