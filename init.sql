@@ -55,6 +55,15 @@ CREATE TABLE IF NOT EXISTS shift_configurations (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS bloqueios_refeicao (
+  id SERIAL PRIMARY KEY,
+  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
+  data_inicio DATE NOT NULL,
+  data_fim DATE NOT NULL,
+  motivo TEXT,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Insert initial data
 INSERT INTO empresas (nome, cnpj) VALUES 
 ('Empresa Teste', '12.345.678/0001-90'),
