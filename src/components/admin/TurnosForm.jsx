@@ -19,7 +19,7 @@ const TurnosForm = () => {
     is_active: true
   });
 
-  const { data: turnos = [], isLoading, error, refetch } = useQuery({
+  const { data: turnosData, isLoading, error, refetch } = useQuery({
     queryKey: ['shift-configurations'],
     queryFn: async () => {
       const token = localStorage.getItem('adminToken');
@@ -31,12 +31,12 @@ const TurnosForm = () => {
       }
 
       try {
-        const response = await api.get('/shift-configurations', {
+        const response = await api.get('/api/shift-configurations', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        return response.data;
+        return response.data || [];
       } catch (error) {
         console.error('Error fetching shift configurations:', error);
         if (error.response?.status === 401) {
@@ -84,6 +84,8 @@ const TurnosForm = () => {
       </div>
     );
   }
+
+  const turnos = Array.isArray(turnosData) ? turnosData : [];
 
   return (
     <div className="space-y-6">
