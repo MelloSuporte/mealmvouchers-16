@@ -13,14 +13,14 @@ const TurnosForm = () => {
   const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [newTurno, setNewTurno] = React.useState({
-    shift_type: '',
-    start_time: '',
-    end_time: '',
-    is_active: true
+    tipo: '',
+    hora_inicio: '',
+    hora_fim: '',
+    ativo: true
   });
 
   const { data: turnosData, isLoading, error, refetch } = useQuery({
-    queryKey: ['configuracoes-turnos'],
+    queryKey: ['turnos'],
     queryFn: async () => {
       const token = localStorage.getItem('adminToken');
       
@@ -31,7 +31,7 @@ const TurnosForm = () => {
       }
 
       try {
-        const response = await api.get('/api/configuracoes-turnos', {
+        const response = await api.get('/api/turnos', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

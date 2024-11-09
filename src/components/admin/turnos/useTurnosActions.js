@@ -15,13 +15,13 @@ export const useTurnosActions = () => {
       }
 
       const turnoData = {
-        shift_type: String(newTurno.shift_type),
-        start_time: String(newTurno.start_time),
-        end_time: String(newTurno.end_time),
-        is_active: Boolean(newTurno.is_active)
+        tipo: String(newTurno.tipo),
+        hora_inicio: String(newTurno.hora_inicio),
+        hora_fim: String(newTurno.hora_fim),
+        ativo: Boolean(newTurno.ativo)
       };
       
-      const response = await api.post('/api/configuracoes-turnos', turnoData, {
+      const response = await api.post('/api/turnos', turnoData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -29,7 +29,7 @@ export const useTurnosActions = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['shift-configurations']);
+      queryClient.invalidateQueries(['turnos']);
       toast.success("Turno criado com sucesso!");
     },
     onError: (error) => {
@@ -46,12 +46,12 @@ export const useTurnosActions = () => {
       }
 
       const turnoData = {
-        start_time: String(updatedTurno.start_time),
-        end_time: String(updatedTurno.end_time),
-        is_active: Boolean(updatedTurno.is_active)
+        hora_inicio: String(updatedTurno.hora_inicio),
+        hora_fim: String(updatedTurno.hora_fim),
+        ativo: Boolean(updatedTurno.ativo)
       };
       
-      const response = await api.put(`/api/configuracoes-turnos/${updatedTurno.id}`, turnoData, {
+      const response = await api.put(`/api/turnos/${updatedTurno.id}`, turnoData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -65,7 +65,7 @@ export const useTurnosActions = () => {
       setSubmittingTurnoId(null);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['shift-configurations']);
+      queryClient.invalidateQueries(['turnos']);
       toast.success("Horário do turno atualizado com sucesso!");
     },
     onError: (error) => {
@@ -80,7 +80,7 @@ export const useTurnosActions = () => {
       return;
     }
 
-    const turno = queryClient.getQueryData(['shift-configurations'])?.find(t => t.id === id);
+    const turno = queryClient.getQueryData(['turnos'])?.find(t => t.id === id);
     
     if (!turno) return;
 

@@ -7,7 +7,7 @@ import refeicoesRoutes from '../routes/refeicoes.js';
 import usuariosRoutes from '../routes/usuarios.js';
 import vouchersExtraRoutes from '../routes/vouchersExtra.js';
 import imagensFundoRoutes from '../routes/imagensFundo.js';
-import configuracoesTurnosRoutes from '../routes/configuracoesTurnos.js';
+import turnosRoutes from '../routes/configuracoesTurnos.js';
 import usuariosAdminRoutes from '../routes/usuariosAdmin.js';
 
 const router = express.Router();
@@ -23,7 +23,7 @@ router.use('/refeicoes', refeicoesRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/vouchers-extra', vouchersExtraRoutes);
 router.use('/imagens-fundo', imagensFundoRoutes);
-router.use('/configuracoes-turnos', configuracoesTurnosRoutes);
+router.use('/turnos', turnosRoutes);
 router.use('/usuarios-admin', usuariosAdminRoutes);
 
 export default router;

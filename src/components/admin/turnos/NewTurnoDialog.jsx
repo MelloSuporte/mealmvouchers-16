@@ -34,8 +34,8 @@ const NewTurnoDialog = ({ isOpen, onOpenChange, newTurno, setNewTurno, onCreateT
           <div className="space-y-2">
             <Label>Tipo de Turno</Label>
             <Select
-              value={newTurno.shift_type}
-              onValueChange={(value) => setNewTurno({ ...newTurno, shift_type: value })}
+              value={newTurno.tipo}
+              onValueChange={(value) => setNewTurno({ ...newTurno, tipo: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo de turno" />
@@ -52,22 +52,22 @@ const NewTurnoDialog = ({ isOpen, onOpenChange, newTurno, setNewTurno, onCreateT
             <Label>Horário de Entrada</Label>
             <Input
               type="time"
-              value={newTurno.start_time}
-              onChange={(e) => setNewTurno({ ...newTurno, start_time: e.target.value })}
+              value={newTurno.hora_inicio}
+              onChange={(e) => setNewTurno({ ...newTurno, hora_inicio: e.target.value })}
             />
           </div>
           <div className="space-y-2">
             <Label>Horário de Saída</Label>
             <Input
               type="time"
-              value={newTurno.end_time}
-              onChange={(e) => setNewTurno({ ...newTurno, end_time: e.target.value })}
+              value={newTurno.hora_fim}
+              onChange={(e) => setNewTurno({ ...newTurno, hora_fim: e.target.value })}
             />
           </div>
           <div className="flex items-center space-x-2">
             <Switch
-              checked={newTurno.is_active}
-              onCheckedChange={(checked) => setNewTurno({ ...newTurno, is_active: checked })}
+              checked={newTurno.ativo}
+              onCheckedChange={(checked) => setNewTurno({ ...newTurno, ativo: checked })}
             />
             <Label>Turno Ativo</Label>
           </div>
