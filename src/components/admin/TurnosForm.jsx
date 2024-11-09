@@ -6,20 +6,20 @@ import api from "@/utils/api";
 import { Loader2 } from "lucide-react";
 import TurnoCard from "@/components/admin/turnos/TurnoCard";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
-import NewTurnoDialog from "@/components/admin/turnos/NewTurnoDialog";
+import NovoTurnoDialog from "@/components/admin/turnos/NovoTurnoDialog";
 import { Button } from "@/components/ui/button";
 
 const TurnosForm = () => {
   const navigate = useNavigate();
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [newTurno, setNewTurno] = React.useState({
+  const [dialogoAberto, setDialogoAberto] = React.useState(false);
+  const [novoTurno, setNovoTurno] = React.useState({
     tipo: '',
     hora_inicio: '',
     hora_fim: '',
     ativo: true
   });
 
-  const { data: turnosData, isLoading, error, refetch } = useQuery({
+  const { data: dadosTurnos, isLoading: carregando, error: erro, refetch: recarregar } = useQuery({
     queryKey: ['turnos'],
     queryFn: async () => {
       const token = localStorage.getItem('adminToken');
@@ -31,25 +31,25 @@ const TurnosForm = () => {
       }
 
       try {
-        const response = await api.get('/api/turnos', {
+        const resposta = await api.get('/api/turnos', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        return response.data || [];
-      } catch (error) {
-        console.error('Error fetching shift configurations:', error);
-        if (error.response?.status === 401) {
+        return resposta.data || [];
+      } catch (erro) {
+        console.error('Erro ao buscar configurações de turno:', erro);
+        if (erro.response?.status === 401) {
           toast.error('Sessão expirada. Por favor, faça login novamente.');
           navigate('/login');
           return [];
         }
-        throw error;
+        throw erro;
       }
     },
     retry: 1,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 10 // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 10
   });
 
   const { handleTurnoChange, submittingTurnoId, handleCreateTurno } = useTurnosActions();
@@ -62,7 +62,7 @@ const TurnosForm = () => {
     }
   }, [navigate]);
 
-  if (isLoading) {
+  if (carregando) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -70,12 +70,12 @@ const TurnosForm = () => {
     );
   }
 
-  if (error) {
+  if (erro) {
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
         <p className="text-red-600">Erro ao carregar turnos. Por favor, tente novamente.</p>
         <Button 
-          onClick={() => refetch()} 
+          onClick={() => recarregar()} 
           variant="outline" 
           className="mt-2"
         >
@@ -85,16 +85,16 @@ const TurnosForm = () => {
     );
   }
 
-  const turnos = Array.isArray(turnosData) ? turnosData : [];
+  const turnos = Array.isArray(dadosTurnos) ? dadosTurnos : [];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <NewTurnoDialog
-          isOpen={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          newTurno={newTurno}
-          setNewTurno={setNewTurno}
+        <NovoTurnoDialog
+          isOpen={dialogoAberto}
+          onOpenChange={setDialogoAberto}
+          novoTurno={novoTurno}
+          setNovoTurno={setNovoTurno}
           onCreateTurno={handleCreateTurno}
         />
       </div>

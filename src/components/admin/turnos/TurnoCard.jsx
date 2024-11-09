@@ -6,21 +6,21 @@ import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 
 const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
-  const getTurnoLabel = (shiftType) => {
+  const getTurnoLabel = (tipoTurno) => {
     const labels = {
       'central': 'Turno Central (Administrativo)',
       'primeiro': 'Primeiro Turno',
       'segundo': 'Segundo Turno',
       'terceiro': 'Terceiro Turno'
     };
-    return labels[shiftType] || shiftType;
+    return labels[tipoTurno] || tipoTurno;
   };
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>{getTurnoLabel(turno.shift_type)}</CardTitle>
+          <CardTitle>{getTurnoLabel(turno.tipo)}</CardTitle>
           {isSubmitting && (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           )}
@@ -34,8 +34,8 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
             <Input
               id={`entrada-${turno.id}`}
               type="time"
-              value={turno.start_time}
-              onChange={(e) => onTurnoChange(turno.id, 'start_time', e.target.value)}
+              value={turno.hora_inicio}
+              onChange={(e) => onTurnoChange(turno.id, 'hora_inicio', e.target.value)}
               className="w-full"
               disabled={isSubmitting}
             />
@@ -45,23 +45,23 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
             <Input
               id={`saida-${turno.id}`}
               type="time"
-              value={turno.end_time}
-              onChange={(e) => onTurnoChange(turno.id, 'end_time', e.target.value)}
+              value={turno.hora_fim}
+              onChange={(e) => onTurnoChange(turno.id, 'hora_fim', e.target.value)}
               className="w-full"
               disabled={isSubmitting}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`active-${turno.id}`}>Status do Turno</Label>
+            <Label htmlFor={`ativo-${turno.id}`}>Status do Turno</Label>
             <div className="flex items-center space-x-2">
               <Switch
-                id={`active-${turno.id}`}
-                checked={turno.is_active}
-                onCheckedChange={(checked) => onTurnoChange(turno.id, 'is_active', checked)}
+                id={`ativo-${turno.id}`}
+                checked={turno.ativo}
+                onCheckedChange={(checked) => onTurnoChange(turno.id, 'ativo', checked)}
                 disabled={isSubmitting}
               />
-              <Label htmlFor={`active-${turno.id}`}>
-                {turno.is_active ? 'Ativo' : 'Inativo'}
+              <Label htmlFor={`ativo-${turno.id}`}>
+                {turno.ativo ? 'Ativo' : 'Inativo'}
               </Label>
             </div>
           </div>
