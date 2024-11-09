@@ -7,7 +7,6 @@ import logger from '../../config/logger';
 const UserForm = () => {
   const [formData, setFormData] = useState({
     userName: "",
-    userEmail: "",
     userCPF: "",
     company: "",
     voucher: "",
@@ -18,13 +17,8 @@ const UserForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
-    if (!formData.userName || !formData.userEmail || !formData.userCPF || !formData.company || !formData.voucher || !formData.selectedTurno) {
+    if (!formData.userName || !formData.userCPF || !formData.company || !formData.voucher || !formData.selectedTurno) {
       toast.error("Por favor, preencha todos os campos obrigatórios");
-      return false;
-    }
-
-    if (!formData.userEmail.includes('@')) {
-      toast.error("Por favor, insira um email válido");
       return false;
     }
 
@@ -46,7 +40,6 @@ const UserForm = () => {
       // Mapeia os campos do formulário para o formato do banco de dados
       const userData = {
         nome: formData.userName,
-        email: formData.userEmail,
         cpf: formData.userCPF.replace(/\D/g, ''),
         empresa_id: parseInt(formData.company),
         voucher: formData.voucher,
@@ -88,7 +81,6 @@ const UserForm = () => {
   const resetForm = () => {
     setFormData({
       userName: "",
-      userEmail: "",
       userCPF: "",
       company: "",
       voucher: "",

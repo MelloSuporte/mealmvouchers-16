@@ -10,12 +10,6 @@ const UserBasicInfo = ({ formData, onInputChange, handleCPFChange }) => {
         onChange={(e) => onInputChange('userName', e.target.value)}
       />
       <Input 
-        placeholder="E-mail do usuário" 
-        type="email"
-        value={formData.userEmail}
-        onChange={(e) => onInputChange('userEmail', e.target.value)}
-      />
-      <Input 
         placeholder="CPF (000.000.000-00)" 
         value={formData.userCPF}
         onChange={handleCPFChange}
