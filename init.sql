@@ -4,7 +4,6 @@ CREATE DATABASE sis_voucher;
 
 SET timezone = 'America/Sao_Paulo';
 
--- Create tables
 CREATE TABLE IF NOT EXISTS empresas (
   id SERIAL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
@@ -45,14 +44,14 @@ CREATE TABLE IF NOT EXISTS uso_voucher (
   usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS shift_configurations (
+CREATE TABLE IF NOT EXISTS turnos (
   id SERIAL PRIMARY KEY,
-  shift_type VARCHAR(10) NOT NULL CHECK (shift_type IN ('central', 'primeiro', 'segundo', 'terceiro')),
-  start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('central', 'primeiro', 'segundo', 'terceiro')),
+  hora_inicio TIME NOT NULL,
+  hora_fim TIME NOT NULL,
+  ativo BOOLEAN DEFAULT TRUE,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS bloqueios_refeicao (
@@ -75,7 +74,7 @@ INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor) VALUES
 ('Jantar', '18:00:00', '21:00:00', 25.00);
 
 -- Insert initial shifts
-INSERT INTO shift_configurations (shift_type, start_time, end_time, is_active) VALUES
+INSERT INTO turnos (tipo, hora_inicio, hora_fim, ativo) VALUES
 ('central', '08:00:00', '17:00:00', true),
 ('primeiro', '06:00:00', '14:00:00', true),
 ('segundo', '14:00:00', '22:00:00', true),
