@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
       .single();
 
     if (error) {
-      logger.error('Error creating meal type:', error);
+      logger.error('Error in meal creation:', error);
       throw error;
     }
 
@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
   } catch (error) {
     logger.error('Error fetching meals:', error);
     res.status(500).json({ 
-      error: 'Erro ao buscar tipos de refeição',
+      error: 'Erro ao buscar refeições',
       details: error.message 
     });
   }

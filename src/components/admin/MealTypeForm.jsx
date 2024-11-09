@@ -24,12 +24,13 @@ const MealTypeForm = () => {
 
     try {
       setIsSubmitting(true);
-      const response = await api.post('/api/meals', {
-        nome: mealType,
-        valor: parseFloat(mealValue),
-        hora_inicio: startTime,
-        hora_fim: endTime,
-        ativo: true
+      const response = await api.post('/meals', {
+        name: mealType,
+        value: parseFloat(mealValue),
+        startTime: startTime,
+        endTime: endTime,
+        isActive: true,
+        toleranceMinutes: 15
       });
 
       if (response.data) {

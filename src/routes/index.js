@@ -18,7 +18,7 @@ router.use('/health', healthRoutes);
 router.use('/companies', companiesRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/reports', relatoriosRoutes);
-router.use('/meals', refeicoesRoutes);
+router.use('/meals', refeicoesRoutes); // Garantindo que a rota está correta
 router.use('/users', usuariosRoutes);
 router.use('/extra-vouchers', vouchersExtraRoutes);
 router.use('/background-images', backgroundImagesRoutes);
