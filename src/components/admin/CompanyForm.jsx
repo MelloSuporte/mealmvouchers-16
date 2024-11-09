@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import api from '../../utils/api';
+import { supabase } from '../../config/supabase';
 import CompanyList from './company/CompanyList';
 import CompanyFormFields from './company/CompanyFormFields';
 
@@ -14,12 +14,17 @@ const CompanyForm = () => {
   const queryClient = useQueryClient();
 
   const { data: companies = [], isLoading } = useQuery({
-    queryKey: ['companies'],
+    queryKey: ['empresas'],
     queryFn: async () => {
       try {
-        const response = await api.get('/api/empresas');
-        const companiesData = Array.isArray(response.data) ? response.data : [];
-        return companiesData.map(company => ({
+        const { data, error } = await supabase
+          .from('empresas')
+          .select('*')
+          .order('nome');
+
+        if (error) throw error;
+
+        return data.map(company => ({
           id: company.id,
           name: company.nome,
           cnpj: company.cnpj,
@@ -28,7 +33,7 @@ const CompanyForm = () => {
         }));
       } catch (error) {
         console.error('Erro ao carregar empresas:', error);
-        toast.error('Erro ao carregar empresas: ' + (error.response?.data?.error || error.message));
+        toast.error('Erro ao carregar empresas: ' + error.message);
         return [];
       }
     }
@@ -64,35 +69,49 @@ const CompanyForm = () => {
     try {
       setIsSubmitting(true);
       
-      const formData = new FormData();
-      formData.append('nome', trimmedName);
-      formData.append('cnpj', cnpj.replace(/[^\d]/g, ''));
+      let logoUrl = null;
       if (logo instanceof File) {
-        formData.append('logo', logo);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('logos')
+          .upload(`company-logos/${Date.now()}-${logo.name}`, logo);
+
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('logos')
+          .getPublicUrl(uploadData.path);
+          
+        logoUrl = publicUrl;
       }
 
-      const config = {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const companyData = {
+        nome: trimmedName,
+        cnpj: cnpj.replace(/[^\d]/g, ''),
+        logo: logoUrl
       };
 
       if (editingCompany) {
-        await api.put(`/api/empresas/${editingCompany.id}`, formData, config);
+        const { error } = await supabase
+          .from('empresas')
+          .update(companyData)
+          .eq('id', editingCompany.id);
+
+        if (error) throw error;
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        const response = await api.post('/api/empresas', formData, config);
-        if (response.data) {
-          toast.success('Empresa cadastrada com sucesso!');
-        }
+        const { error } = await supabase
+          .from('empresas')
+          .insert([companyData]);
+
+        if (error) throw error;
+        toast.success('Empresa cadastrada com sucesso!');
       }
       
       resetForm();
-      queryClient.invalidateQueries(['companies']);
+      queryClient.invalidateQueries(['empresas']);
     } catch (error) {
       console.error('Erro ao salvar empresa:', error);
-      const errorMessage = error.response?.data?.error || "Erro ao salvar empresa";
-      toast.error(errorMessage);
+      toast.error('Erro ao salvar empresa: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }

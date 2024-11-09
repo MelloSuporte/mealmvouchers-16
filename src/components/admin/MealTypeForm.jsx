@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import api from '../../utils/api';
+import { supabase } from '../../config/supabase';
 
 const MealTypeForm = () => {
   const [mealType, setMealType] = useState("");
@@ -24,25 +24,28 @@ const MealTypeForm = () => {
 
     try {
       setIsSubmitting(true);
-      const response = await api.post('/api/refeicoes', {
-        nome: mealType,
-        valor: parseFloat(mealValue),
-        hora_inicio: startTime,
-        hora_fim: endTime,
-        ativo: true,
-        minutos_tolerancia: 15
-      });
+      
+      const { error } = await supabase
+        .from('tipos_refeicao')
+        .insert([{
+          nome: mealType,
+          valor: parseFloat(mealValue),
+          hora_inicio: startTime || null,
+          hora_fim: endTime || null,
+          ativo: true,
+          minutos_tolerancia: 15
+        }]);
 
-      if (response.data) {
-        toast.success(`Tipo de refeição ${mealType} salvo com sucesso!`);
-        setMealType("");
-        setMealValue("");
-        setStartTime("");
-        setEndTime("");
-      }
+      if (error) throw error;
+
+      toast.success(`Tipo de refeição ${mealType} salvo com sucesso!`);
+      setMealType("");
+      setMealValue("");
+      setStartTime("");
+      setEndTime("");
     } catch (error) {
       console.error('Erro ao salvar tipo de refeição:', error);
-      toast.error("Erro ao salvar tipo de refeição: " + (error.response?.data?.error || error.message));
+      toast.error("Erro ao salvar tipo de refeição: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
