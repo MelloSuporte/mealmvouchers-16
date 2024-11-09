@@ -28,15 +28,25 @@ router.post('/', async (req, res) => {
   try {
     const { tipo, hora_inicio, hora_fim, ativo } = req.body;
     
+    if (!tipo?.trim()) {
+      return res.status(400).json({ error: 'Tipo de turno é obrigatório' });
+    }
+    if (!hora_inicio?.trim()) {
+      return res.status(400).json({ error: 'Horário de início é obrigatório' });
+    }
+    if (!hora_fim?.trim()) {
+      return res.status(400).json({ error: 'Horário de fim é obrigatório' });
+    }
+
     const { data: turno, error } = await supabase
       .from('turnos')
       .insert([{
-        shift_type: tipo,
-        start_time: hora_inicio,
-        end_time: hora_fim,
-        is_active: ativo,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        tipo,
+        hora_inicio,
+        hora_fim,
+        ativo,
+        criado_em: new Date().toISOString(),
+        atualizado_em: new Date().toISOString()
       }])
       .select()
       .single();
@@ -59,13 +69,20 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { hora_inicio, hora_fim, ativo } = req.body;
     
+    if (!hora_inicio?.trim()) {
+      return res.status(400).json({ error: 'Horário de início é obrigatório' });
+    }
+    if (!hora_fim?.trim()) {
+      return res.status(400).json({ error: 'Horário de fim é obrigatório' });
+    }
+
     const { data: turno, error } = await supabase
       .from('turnos')
       .update({
-        start_time: hora_inicio,
-        end_time: hora_fim,
-        is_active: ativo,
-        updated_at: new Date().toISOString()
+        hora_inicio,
+        hora_fim,
+        ativo,
+        atualizado_em: new Date().toISOString()
       })
       .eq('id', id)
       .select()
