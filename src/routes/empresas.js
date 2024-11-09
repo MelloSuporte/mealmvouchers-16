@@ -57,7 +57,10 @@ router.post('/', upload.single('logo'), async (req, res) => {
         .from('logos')
         .upload(`company-logos/${Date.now()}-${req.file.originalname}`, req.file.buffer);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        logger.error('Erro ao fazer upload da logo:', uploadError);
+        throw uploadError;
+      }
       
       const { data: { publicUrl } } = supabase.storage
         .from('logos')
@@ -77,7 +80,10 @@ router.post('/', upload.single('logo'), async (req, res) => {
       .select()
       .single();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      logger.error('Erro ao inserir empresa:', insertError);
+      throw insertError;
+    }
 
     res.status(201).json(newCompany);
   } catch (error) {
@@ -122,7 +128,10 @@ router.put('/:id', upload.single('logo'), async (req, res) => {
         .from('logos')
         .upload(`company-logos/${Date.now()}-${req.file.originalname}`, req.file.buffer);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        logger.error('Erro ao fazer upload da logo:', uploadError);
+        throw uploadError;
+      }
       
       const { data: { publicUrl } } = supabase.storage
         .from('logos')
@@ -148,7 +157,10 @@ router.put('/:id', upload.single('logo'), async (req, res) => {
       .select()
       .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      logger.error('Erro ao atualizar empresa:', updateError);
+      throw updateError;
+    }
 
     if (!updatedCompany) {
       return res.status(404).json({ error: 'Empresa não encontrada' });

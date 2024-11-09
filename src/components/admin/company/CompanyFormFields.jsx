@@ -28,9 +28,11 @@ const CompanyFormFields = ({
     if (file) {
       try {
         validateImageFile(file);
+        setLogo(file);
         const reader = new FileReader();
         reader.onloadend = () => {
-          setLogo(reader.result);
+          // Apenas para preview
+          e.target.nextElementSibling.querySelector('img').src = reader.result;
         };
         reader.readAsDataURL(file);
       } catch (error) {
@@ -65,13 +67,15 @@ const CompanyFormFields = ({
           onChange={handleLogoChange}
           className="mb-2"
         />
-        {logo && (
-          <img 
-            src={logo} 
-            alt="Preview" 
-            className="w-32 h-32 object-contain border rounded-lg"
-          />
-        )}
+        <div className="preview">
+          {(logo || editingCompany?.logo) && (
+            <img 
+              src={logo instanceof File ? URL.createObjectURL(logo) : (logo || editingCompany?.logo)} 
+              alt="Preview" 
+              className="w-32 h-32 object-contain border rounded-lg"
+            />
+          )}
+        </div>
       </div>
       <Button 
         type="button" 
