@@ -14,19 +14,13 @@ router.get('/', async (req, res) => {
 
     if (error) {
       logger.error('Error fetching shift configurations:', error);
-      return res.status(500).json({ 
-        error: 'Database error',
-        message: 'Failed to fetch shift configurations'
-      });
+      return res.status(500).json({ error: error.message });
     }
     
-    res.json(shifts);
+    res.json(shifts || []);
   } catch (error) {
     logger.error('Error in shift configurations route:', error);
-    res.status(500).json({ 
-      error: 'Server error',
-      message: 'An unexpected error occurred'
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -50,19 +44,13 @@ router.post('/', async (req, res) => {
 
     if (error) {
       logger.error('Error creating shift configuration:', error);
-      return res.status(400).json({ 
-        error: 'Database error',
-        message: 'Failed to create shift configuration'
-      });
+      return res.status(400).json({ error: error.message });
     }
     
     res.status(201).json(shift);
   } catch (error) {
     logger.error('Error in create shift configuration route:', error);
-    res.status(500).json({ 
-      error: 'Server error',
-      message: 'An unexpected error occurred'
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -86,10 +74,7 @@ router.put('/:id', async (req, res) => {
 
     if (error) {
       logger.error('Error updating shift configuration:', error);
-      return res.status(400).json({ 
-        error: 'Database error',
-        message: 'Failed to update shift configuration'
-      });
+      return res.status(400).json({ error: error.message });
     }
     
     if (!shift) {
@@ -99,10 +84,7 @@ router.put('/:id', async (req, res) => {
     res.json(shift);
   } catch (error) {
     logger.error('Error in update shift configuration route:', error);
-    res.status(500).json({ 
-      error: 'Server error',
-      message: 'An unexpected error occurred'
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 

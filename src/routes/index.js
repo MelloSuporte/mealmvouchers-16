@@ -14,7 +14,7 @@ const router = express.Router();
 // Health check route
 router.use('/health', healthRoutes);
 
-// Rotas da API
+// API routes
 router.use('/empresas', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/relatorios', relatoriosRoutes);
@@ -22,6 +22,6 @@ router.use('/refeicoes', refeicoesRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/vouchers-extra', vouchersExtraRoutes);
 router.use('/imagens-fundo', imagensFundoRoutes);
-router.use('/configuracoes-turnos', configuracoesTurnosRoutes);
+router.use('/shift-configurations', configuracoesTurnosRoutes);
 
 export default router;
