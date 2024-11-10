@@ -18,7 +18,6 @@ import Admin from "./pages/Admin";
 import Turnos from "./pages/Turnos";
 import UserConfirmation from "./pages/UserConfirmation";
 import AdminManagement from "./pages/AdminManagement";
-import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -87,7 +86,6 @@ function App() {
                   <Route path="menu" element={<Menu />} />
                   <Route path="profile" element={<Profile />} />
                 </Route>
-                <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </AdminProvider>

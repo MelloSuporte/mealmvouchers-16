@@ -15,13 +15,7 @@ api.interceptors.response.use(
     const errorMessage = error.response?.data?.error || error.message;
     
     if (error.response?.status === 404) {
-      // Se for uma rota da API, mostra o toast
-      if (error.config.url.startsWith('/api/')) {
-        toast.error(`Recurso não encontrado - ${errorMessage}`);
-      } else {
-        // Se for uma rota do frontend, redireciona para a página 404
-        window.location.href = '/404';
-      }
+      toast.error(`Erro: Recurso não encontrado - ${errorMessage}`);
     } else {
       toast.error(`Erro na requisição: ${errorMessage}`);
     }
