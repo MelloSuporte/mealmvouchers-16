@@ -13,7 +13,7 @@ const CompanyForm = () => {
   const [editingCompany, setEditingCompany] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: companies = [], isLoading } = useQuery({
+  const { data: companies, isLoading } = useQuery({
     queryKey: ['empresas'],
     queryFn: async () => {
       try {
@@ -24,7 +24,7 @@ const CompanyForm = () => {
 
         if (error) throw error;
 
-        return data.map(company => ({
+        return (data || []).map(company => ({
           id: company.id,
           name: company.nome,
           cnpj: company.cnpj,
@@ -155,7 +155,7 @@ const CompanyForm = () => {
       />
 
       <CompanyList
-        companies={companies}
+        companies={Array.isArray(companies) ? companies : []}
         isLoading={isLoading}
         onEdit={handleEditCompany}
       />

@@ -9,6 +9,8 @@ const CompanyList = ({ companies = [], isLoading, onEdit }) => {
     return <div>Carregando empresas...</div>;
   }
 
+  const companyArray = Array.isArray(companies) ? companies : [];
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -21,25 +23,26 @@ const CompanyList = ({ companies = [], isLoading, onEdit }) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {companies.map((company) => (
-            <TableRow key={company.id}>
-              <TableCell className="font-medium">{company.name}</TableCell>
-              <TableCell>{company.cnpj}</TableCell>
-              <TableCell>
-                {company.createdAt && format(new Date(company.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-              </TableCell>
-              <TableCell>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => onEdit(company)}
-                >
-                  Editar
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-          {companies.length === 0 && (
+          {companyArray.length > 0 ? (
+            companyArray.map((company) => (
+              <TableRow key={company.id}>
+                <TableCell className="font-medium">{company.name}</TableCell>
+                <TableCell>{company.cnpj}</TableCell>
+                <TableCell>
+                  {company.createdAt && format(new Date(company.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                </TableCell>
+                <TableCell>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onEdit(company)}
+                  >
+                    Editar
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
             <TableRow>
               <TableCell colSpan={4} className="text-center py-4">
                 Nenhuma empresa cadastrada
