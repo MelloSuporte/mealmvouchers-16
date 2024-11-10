@@ -9,12 +9,8 @@ export const useTurnosActions = () => {
 
   const createTurnoMutation = useMutation({
     mutationFn: async (novoTurno) => {
-      const response = await api.post('/turnos', {
-        tipo: novoTurno.tipo,
-        hora_inicio: novoTurno.hora_inicio,
-        hora_fim: novoTurno.hora_fim,
-        ativo: novoTurno.ativo
-      });
+      console.log('[Creating Turno]', novoTurno);
+      const response = await api.post('/turnos', novoTurno);
       return response.data;
     },
     onSuccess: () => {
@@ -22,12 +18,14 @@ export const useTurnosActions = () => {
       toast.success("Turno criado com sucesso!");
     },
     onError: (error) => {
+      console.error('[Create Turno Error]', error);
       toast.error(`Erro ao criar turno: ${error.response?.data?.erro || error.message}`);
     }
   });
 
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
+      console.log('[Updating Turno]', updatedTurno);
       const response = await api.put(`/turnos/${updatedTurno.id}`, {
         hora_inicio: updatedTurno.hora_inicio,
         hora_fim: updatedTurno.hora_fim,
@@ -46,6 +44,7 @@ export const useTurnosActions = () => {
       toast.success("Horário do turno atualizado com sucesso!");
     },
     onError: (error) => {
+      console.error('[Update Turno Error]', error);
       toast.error(`Erro ao atualizar turno: ${error.response?.data?.erro || error.message}`);
     }
   });
