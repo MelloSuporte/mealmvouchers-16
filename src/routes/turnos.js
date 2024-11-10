@@ -1,8 +1,12 @@
 import express from 'express';
 import logger from '../config/logger.js';
 import supabase from '../config/database.js';
+import { authenticateToken } from '../middleware/security.js';
 
 const router = express.Router();
+
+// Aplicar middleware de autenticação em todas as rotas
+router.use(authenticateToken);
 
 // Listar turnos
 router.get('/', async (req, res) => {
