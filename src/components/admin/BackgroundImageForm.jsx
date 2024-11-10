@@ -45,7 +45,7 @@ const BackgroundImageForm = () => {
 
   const loadSavedBackgrounds = async () => {
     try {
-      const response = await api.get('/background-images');
+      const response = await api.get('/imagens-fundo');
       const images = response.data;
       
       if (!Array.isArray(images)) {
@@ -115,7 +115,7 @@ const BackgroundImageForm = () => {
         if (value) formData.append(key, value);
       });
 
-      const response = await api.post('/background-images', formData, {
+      const response = await api.post('/imagens-fundo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 

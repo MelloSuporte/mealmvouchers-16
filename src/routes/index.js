@@ -15,14 +15,14 @@ const router = express.Router();
 // Health check route
 router.use('/health', healthRoutes);
 
-// API Routes
+// Rotas da API
 router.use('/empresas', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/relatorios', relatoriosRoutes);
 router.use('/refeicoes', refeicoesRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/vouchers-extra', vouchersExtraRoutes);
-router.use('/', imagensFundoRoutes); // Alterado para rota raiz para corresponder aos endpoints
+router.use('/imagens-fundo', imagensFundoRoutes);
 router.use('/turnos', turnosRoutes);
 router.use('/usuarios-admin', usuariosAdminRoutes);
 

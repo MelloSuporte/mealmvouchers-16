@@ -10,8 +10,8 @@ const upload = multer({
   }
 });
 
-// GET /background-images
-router.get('/background-images', async (req, res) => {
+// GET /imagens-fundo/background-images
+router.get('/', async (req, res) => {
   try {
     const { data: images, error } = await supabase
       .from('background_images')
@@ -28,8 +28,8 @@ router.get('/background-images', async (req, res) => {
   }
 });
 
-// POST /background-images
-router.post('/background-images', upload.any(), async (req, res) => {
+// POST /imagens-fundo/background-images
+router.post('/', upload.any(), async (req, res) => {
   try {
     // Deactivate existing images for the pages being updated
     const pagesToUpdate = Object.keys(req.files.reduce((acc, file) => {
