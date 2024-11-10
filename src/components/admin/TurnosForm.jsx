@@ -39,12 +39,7 @@ const TurnosForm = () => {
           return [];
         }
 
-        const resposta = await api.get('/api/turnos', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
+        const resposta = await api.get('/turnos');
         return resposta.data || [];
       } catch (erro) {
         if (erro.response?.status === 401) {

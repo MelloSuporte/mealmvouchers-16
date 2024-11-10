@@ -9,16 +9,11 @@ export const useTurnosActions = () => {
 
   const createTurnoMutation = useMutation({
     mutationFn: async (novoTurno) => {
-      const token = localStorage.getItem('adminToken');
-      const response = await api.post('/api/turnos', {
+      const response = await api.post('/turnos', {
         tipo: novoTurno.tipo,
         hora_inicio: novoTurno.hora_inicio,
         hora_fim: novoTurno.hora_fim,
         ativo: novoTurno.ativo
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
       return response.data;
     },
@@ -33,15 +28,10 @@ export const useTurnosActions = () => {
 
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
-      const token = localStorage.getItem('adminToken');
-      const response = await api.put(`/api/turnos/${updatedTurno.id}`, {
+      const response = await api.put(`/turnos/${updatedTurno.id}`, {
         hora_inicio: updatedTurno.hora_inicio,
         hora_fim: updatedTurno.hora_fim,
         ativo: updatedTurno.ativo
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
       return response.data;
     },
