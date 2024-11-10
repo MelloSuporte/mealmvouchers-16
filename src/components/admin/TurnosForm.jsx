@@ -31,7 +31,7 @@ const TurnosForm = () => {
       }
 
       try {
-        const resposta = await api.get('/api/turnos', {
+        const resposta = await api.get('/turnos', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
