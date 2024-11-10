@@ -8,6 +8,14 @@ import TurnoCard from "@/components/admin/turnos/TurnoCard";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NovoTurnoDialog from "@/components/admin/turnos/NovoTurnoDialog";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const TurnosForm = () => {
   const navigate = useNavigate();
@@ -73,6 +81,16 @@ const TurnosForm = () => {
     });
   };
 
+  const getTurnoLabel = (tipoTurno) => {
+    const labels = {
+      'central': 'Turno Central (Administrativo)',
+      'primeiro': 'Primeiro Turno',
+      'segundo': 'Segundo Turno',
+      'terceiro': 'Terceiro Turno'
+    };
+    return labels[tipoTurno] || tipoTurno;
+  };
+
   if (carregando) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -100,7 +118,7 @@ const TurnosForm = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <Button onClick={() => setDialogoAberto(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Turno
@@ -113,6 +131,30 @@ const TurnosForm = () => {
           onCreateTurno={handleNovoTurno}
         />
       </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Horário Início</TableHead>
+              <TableHead>Horário Fim</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {turnos.map((turno) => (
+              <TableRow key={turno.id}>
+                <TableCell>{getTurnoLabel(turno.tipo)}</TableCell>
+                <TableCell>{turno.hora_inicio}</TableCell>
+                <TableCell>{turno.hora_fim}</TableCell>
+                <TableCell>{turno.ativo ? 'Ativo' : 'Inativo'}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
       <div className="grid gap-6">
         {turnos.map((turno) => (
           <TurnoCard
