@@ -7,7 +7,6 @@ import { AdminProvider } from "./contexts/AdminContext";
 import Layout from "./components/Layout";
 import SelfServices from "./pages/SelfServices";
 import Home from "./pages/Home";
-import Search from "./pages/Search";
 import Menu from "./pages/Menu";
 import Profile from "./pages/Profile";
 import User from "./pages/User";
@@ -82,7 +81,6 @@ function App() {
                 <Route path="/admin/managers" element={<AdminManagement />} />
                 <Route path="/app" element={<Layout />}>
                   <Route index element={<Home />} />
-                  <Route path="search" element={<Search />} />
                   <Route path="menu" element={<Menu />} />
                   <Route path="profile" element={<Profile />} />
                 </Route>

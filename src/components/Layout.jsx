@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { Home, Search, Menu, User } from 'lucide-react';
+import { Home, Menu, User } from 'lucide-react';
 
 const Layout = () => {
   return (
@@ -18,12 +18,6 @@ const Layout = () => {
             <Link to="/" className="flex flex-col items-center">
               <Home size={24} />
               <span>Home</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/search" className="flex flex-col items-center">
-              <Search size={24} />
-              <span>Buscar</span>
             </Link>
           </li>
           <li>
