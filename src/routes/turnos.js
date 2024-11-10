@@ -5,8 +5,10 @@ import { supabase } from '../config/supabase.js';
 
 const router = express.Router();
 
+// Aplicar middleware de autenticação para todas as rotas
 router.use(authenticateToken);
 
+// GET /turnos - Listar todos os turnos
 router.get('/', async (req, res) => {
   try {
     logger.info('Buscando lista de turnos');
@@ -15,24 +17,19 @@ router.get('/', async (req, res) => {
       .select('*')
       .order('id');
 
-    if (error) {
-      logger.error('Erro ao buscar turnos:', error);
-      return res.status(500).json({ 
-        erro: 'Erro ao buscar turnos',
-        detalhes: error.message 
-      });
-    }
+    if (error) throw error;
 
     res.json(turnos || []);
   } catch (erro) {
-    logger.error('Erro ao processar requisição de turnos:', erro);
+    logger.error('Erro ao buscar turnos:', erro);
     res.status(500).json({ 
-      erro: 'Erro interno ao processar requisição',
+      erro: 'Erro ao buscar turnos',
       detalhes: erro.message 
     });
   }
 });
 
+// POST /turnos - Criar novo turno
 router.post('/', async (req, res) => {
   try {
     const { tipo, hora_inicio, hora_fim, ativo } = req.body;
@@ -61,24 +58,19 @@ router.post('/', async (req, res) => {
       .select()
       .single();
 
-    if (error) {
-      logger.error('Erro ao criar turno:', error);
-      return res.status(500).json({ 
-        erro: 'Erro ao criar turno',
-        detalhes: error.message 
-      });
-    }
+    if (error) throw error;
 
     res.status(201).json(turno);
   } catch (erro) {
-    logger.error('Erro ao processar criação de turno:', erro);
+    logger.error('Erro ao criar turno:', erro);
     res.status(500).json({ 
-      erro: 'Erro interno ao criar turno',
+      erro: 'Erro ao criar turno',
       detalhes: erro.message 
     });
   }
 });
 
+// PUT /turnos/:id - Atualizar turno existente
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -104,23 +96,16 @@ router.put('/:id', async (req, res) => {
       .select()
       .single();
 
-    if (error) {
-      logger.error('Erro ao atualizar turno:', error);
-      return res.status(500).json({ 
-        erro: 'Erro ao atualizar turno',
-        detalhes: error.message 
-      });
-    }
-
+    if (error) throw error;
     if (!turno) {
       return res.status(404).json({ erro: 'Turno não encontrado' });
     }
 
     res.json(turno);
   } catch (erro) {
-    logger.error('Erro ao processar atualização de turno:', erro);
+    logger.error('Erro ao atualizar turno:', erro);
     res.status(500).json({ 
-      erro: 'Erro interno ao atualizar turno',
+      erro: 'Erro ao atualizar turno',
       detalhes: erro.message 
     });
   }
