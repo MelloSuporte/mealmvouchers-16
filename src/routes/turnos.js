@@ -28,7 +28,6 @@ router.post('/', async (req, res) => {
   try {
     const { tipo, hora_inicio, hora_fim, ativo } = req.body;
     
-    // Validação dos campos obrigatórios
     if (!tipo?.trim()) {
       return res.status(400).json({ erro: 'Tipo de turno é obrigatório' });
     }
