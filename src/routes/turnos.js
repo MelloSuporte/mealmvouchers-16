@@ -11,17 +11,25 @@ router.use(authenticateToken);
 // Listar turnos
 router.get('/', async (req, res) => {
   try {
+    logger.info('Buscando lista de turnos');
     const { data: turnos, error } = await supabase
       .from('turnos')
       .select('*')
       .order('id');
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro ao buscar turnos:', error);
+      return res.status(500).json({ 
+        erro: 'Erro ao buscar turnos',
+        detalhes: error.message 
+      });
+    }
+
     res.json(turnos || []);
   } catch (erro) {
-    logger.error('Erro ao buscar turnos:', erro);
+    logger.error('Erro ao processar requisição de turnos:', erro);
     res.status(500).json({ 
-      erro: 'Erro ao buscar turnos',
+      erro: 'Erro interno ao processar requisição',
       detalhes: erro.message 
     });
   }
@@ -42,6 +50,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ erro: 'Horário de fim é obrigatório' });
     }
 
+    logger.info('Criando novo turno:', { tipo, hora_inicio, hora_fim });
     const { data: turno, error } = await supabase
       .from('turnos')
       .insert([{
@@ -55,13 +64,19 @@ router.post('/', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro ao criar turno:', error);
+      return res.status(500).json({ 
+        erro: 'Erro ao criar turno',
+        detalhes: error.message 
+      });
+    }
 
     res.status(201).json(turno);
   } catch (erro) {
-    logger.error('Erro ao cadastrar turno:', erro);
+    logger.error('Erro ao processar criação de turno:', erro);
     res.status(500).json({ 
-      erro: 'Erro ao cadastrar turno',
+      erro: 'Erro interno ao criar turno',
       detalhes: erro.message 
     });
   }
@@ -80,6 +95,7 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ erro: 'Horário de fim é obrigatório' });
     }
 
+    logger.info('Atualizando turno:', { id, hora_inicio, hora_fim, ativo });
     const { data: turno, error } = await supabase
       .from('turnos')
       .update({
@@ -92,7 +108,13 @@ router.put('/:id', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro ao atualizar turno:', error);
+      return res.status(500).json({ 
+        erro: 'Erro ao atualizar turno',
+        detalhes: error.message 
+      });
+    }
 
     if (!turno) {
       return res.status(404).json({ erro: 'Turno não encontrado' });
@@ -100,9 +122,9 @@ router.put('/:id', async (req, res) => {
 
     res.json(turno);
   } catch (erro) {
-    logger.error('Erro ao atualizar turno:', erro);
+    logger.error('Erro ao processar atualização de turno:', erro);
     res.status(500).json({ 
-      erro: 'Erro ao atualizar turno',
+      erro: 'Erro interno ao atualizar turno',
       detalhes: erro.message 
     });
   }
