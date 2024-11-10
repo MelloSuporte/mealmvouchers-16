@@ -30,23 +30,27 @@ const TurnosForm = () => {
   const { data: dadosTurnos, isLoading: carregando, error: erro, refetch: recarregar } = useQuery({
     queryKey: ['turnos'],
     queryFn: async () => {
-      const token = localStorage.getItem('adminToken');
-      
-      if (!token) {
-        toast.error('Sessão expirada. Por favor, faça login novamente.');
-        navigate('/login');
-        return [];
-      }
-
       try {
+        console.log('Iniciando busca de turnos...');
+        const token = localStorage.getItem('adminToken');
+        
+        if (!token) {
+          console.error('Token não encontrado');
+          toast.error('Sessão expirada. Por favor, faça login novamente.');
+          navigate('/login');
+          return [];
+        }
+
         const resposta = await api.get('/api/turnos', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
+        
+        console.log('Resposta da API:', resposta);
         return resposta.data || [];
       } catch (erro) {
-        console.error('Erro ao buscar configurações de turno:', erro);
+        console.error('Erro ao buscar turnos:', erro);
         if (erro.response?.status === 401) {
           toast.error('Sessão expirada. Por favor, faça login novamente.');
           navigate('/login');

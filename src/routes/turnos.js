@@ -1,7 +1,7 @@
 import express from 'express';
 import logger from '../config/logger.js';
-import supabase from '../config/database.js';
 import { authenticateToken } from '../middleware/security.js';
+import { supabase } from '../config/supabase.js';
 
 const router = express.Router();
 
