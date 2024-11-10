@@ -15,7 +15,7 @@ const router = express.Router();
 // Health check route
 router.use('/health', healthRoutes);
 
-// Rotas da API - todos os endpoints já incluem o prefixo /api
+// Rotas da API
 router.use('/empresas', empresasRoutes);
 router.use('/vouchers', vouchersRoutes);
 router.use('/relatorios', relatoriosRoutes);
