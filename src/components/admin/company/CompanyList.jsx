@@ -23,7 +23,7 @@ const CompanyList = ({ companies = [], isLoading, onEdit }) => {
         <TableBody>
           {companies.map((company) => (
             <TableRow key={company.id}>
-              <TableCell>{company.name}</TableCell>
+              <TableCell className="font-medium">{company.name}</TableCell>
               <TableCell>{company.cnpj}</TableCell>
               <TableCell>
                 {company.createdAt && format(new Date(company.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
@@ -39,6 +39,13 @@ const CompanyList = ({ companies = [], isLoading, onEdit }) => {
               </TableCell>
             </TableRow>
           ))}
+          {companies.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center py-4">
+                Nenhuma empresa cadastrada
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>
