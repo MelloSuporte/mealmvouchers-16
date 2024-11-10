@@ -17,7 +17,10 @@ router.get('/', async (req, res) => {
       .select('*')
       .order('id');
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro ao buscar turnos:', error);
+      throw error;
+    }
 
     res.json(turnos || []);
   } catch (erro) {
@@ -34,6 +37,7 @@ router.post('/', async (req, res) => {
   try {
     const { tipo, hora_inicio, hora_fim, ativo } = req.body;
     
+    // Validações
     if (!tipo?.trim()) {
       return res.status(400).json({ erro: 'Tipo de turno é obrigatório' });
     }
@@ -45,6 +49,7 @@ router.post('/', async (req, res) => {
     }
 
     logger.info('Criando novo turno:', { tipo, hora_inicio, hora_fim });
+    
     const { data: turno, error } = await supabase
       .from('turnos')
       .insert([{
@@ -58,7 +63,10 @@ router.post('/', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro ao criar turno:', error);
+      throw error;
+    }
 
     res.status(201).json(turno);
   } catch (erro) {
@@ -76,6 +84,7 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { hora_inicio, hora_fim, ativo } = req.body;
     
+    // Validações
     if (!hora_inicio?.trim()) {
       return res.status(400).json({ erro: 'Horário de início é obrigatório' });
     }
@@ -84,6 +93,7 @@ router.put('/:id', async (req, res) => {
     }
 
     logger.info('Atualizando turno:', { id, hora_inicio, hora_fim, ativo });
+    
     const { data: turno, error } = await supabase
       .from('turnos')
       .update({
@@ -96,7 +106,11 @@ router.put('/:id', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro ao atualizar turno:', error);
+      throw error;
+    }
+
     if (!turno) {
       return res.status(404).json({ erro: 'Turno não encontrado' });
     }
