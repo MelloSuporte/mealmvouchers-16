@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from "sonner";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -6,5 +7,21 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Interceptor para tratar erros globalmente
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const errorMessage = error.response?.data?.error || error.message;
+    
+    if (error.response?.status === 404) {
+      toast.error(`Erro: Recurso não encontrado - ${errorMessage}`);
+    } else {
+      toast.error(`Erro na requisição: ${errorMessage}`);
+    }
+    
+    return Promise.reject(error);
+  }
+);
 
 export default api;
