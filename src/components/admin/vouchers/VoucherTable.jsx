@@ -14,6 +14,8 @@ import { Download } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const VoucherTable = ({ vouchers = [] }) => {
   const downloadPDF = () => {
@@ -24,19 +26,16 @@ const VoucherTable = ({ vouchers = [] }) => {
       doc.text('Vouchers Descartáveis', 14, 15);
       
       const tableData = vouchers.map(voucher => [
-        voucher.id,
         voucher.codigo,
-        voucher.user_id || 'NULL',
-        voucher.tipo_refeicao_id,
-        voucher.created_by || 'NULL',
-        new Date(voucher.data_criacao).toLocaleString(),
-        voucher.data_uso ? new Date(voucher.data_uso).toLocaleString() : 'NULL',
-        new Date(voucher.data_expiracao).toLocaleString(),
-        voucher.usado ? '1' : '0'
+        voucher.tipo_refeicao_nome || 'Não especificado',
+        format(new Date(voucher.data_criacao), "dd/MM/yyyy HH:mm", { locale: ptBR }),
+        voucher.data_uso ? format(new Date(voucher.data_uso), "dd/MM/yyyy HH:mm", { locale: ptBR }) : '-',
+        format(new Date(voucher.data_expiracao), "dd/MM/yyyy HH:mm", { locale: ptBR }),
+        voucher.usado ? 'Sim' : 'Não'
       ]);
 
       autoTable(doc, {
-        head: [['ID', 'Código', 'User ID', 'Tipo Refeição ID', 'Criado Por', 'Data Criação', 'Data Uso', 'Data Expiração', 'Usado']],
+        head: [['Código', 'Tipo Refeição', 'Data Criação', 'Data Uso', 'Data Expiração', 'Usado']],
         body: tableData,
         startY: 25,
         theme: 'grid',
@@ -70,11 +69,8 @@ const VoucherTable = ({ vouchers = [] }) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
                 <TableHead>Código</TableHead>
-                <TableHead>User ID</TableHead>
-                <TableHead>Tipo Refeição ID</TableHead>
-                <TableHead>Criado Por</TableHead>
+                <TableHead>Tipo Refeição</TableHead>
                 <TableHead>Data Criação</TableHead>
                 <TableHead>Data Uso</TableHead>
                 <TableHead>Data Expiração</TableHead>
@@ -84,15 +80,20 @@ const VoucherTable = ({ vouchers = [] }) => {
             <TableBody>
               {voucherArray.map((voucher) => (
                 <TableRow key={voucher.id}>
-                  <TableCell>{voucher.id}</TableCell>
                   <TableCell>{voucher.codigo}</TableCell>
-                  <TableCell>{voucher.user_id || 'NULL'}</TableCell>
-                  <TableCell>{voucher.tipo_refeicao_id}</TableCell>
-                  <TableCell>{voucher.created_by || 'NULL'}</TableCell>
-                  <TableCell>{new Date(voucher.data_criacao).toLocaleString()}</TableCell>
-                  <TableCell>{voucher.data_uso ? new Date(voucher.data_uso).toLocaleString() : 'NULL'}</TableCell>
-                  <TableCell>{new Date(voucher.data_expiracao).toLocaleString()}</TableCell>
-                  <TableCell>{voucher.usado ? '1' : '0'}</TableCell>
+                  <TableCell>{voucher.tipo_refeicao_nome || 'Não especificado'}</TableCell>
+                  <TableCell>
+                    {format(new Date(voucher.data_criacao), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                  </TableCell>
+                  <TableCell>
+                    {voucher.data_uso 
+                      ? format(new Date(voucher.data_uso), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(voucher.data_expiracao), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                  </TableCell>
+                  <TableCell>{voucher.usado ? 'Sim' : 'Não'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
