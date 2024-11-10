@@ -1,91 +1,40 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { validateImageFile } from '../../../utils/validations';
-import { toast } from "sonner";
 
-const CompanyFormFields = ({
-  companyName,
-  setCompanyName,
-  cnpj,
-  setCnpj,
-  logo,
-  setLogo,
-  isSubmitting,
-  editingCompany,
-  onSave
-}) => {
-  const handleCNPJChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 14) {
-      value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
-      setCnpj(value);
-    }
-  };
-
-  const handleLogoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      try {
-        validateImageFile(file);
-        setLogo(file);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          // Apenas para preview
-          e.target.nextElementSibling.querySelector('img').src = reader.result;
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        toast.error(error.message);
-      }
-    }
-  };
-
+const CompanyFormFields = ({ formData, setFormData }) => {
   return (
-    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+    <div className="space-y-4">
       <Input
-        placeholder="Nome da empresa"
-        value={companyName}
-        onChange={(e) => setCompanyName(e.target.value)}
-        required
-        minLength={3}
+        placeholder="Nome da Empresa"
+        value={formData.nome || ''}
+        onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
       />
       <Input
-        placeholder="CNPJ (99.999.999/9999-99)"
-        value={cnpj}
-        onChange={handleCNPJChange}
-        required
+        placeholder="CNPJ"
+        value={formData.cnpj || ''}
+        onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
       />
-      <div>
-        <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-2">
-          Logo da Empresa
-        </label>
-        <Input
-          id="logo"
-          type="file"
-          accept="image/*"
-          onChange={handleLogoChange}
-          className="mb-2"
-        />
-        <div className="preview">
-          {(logo || editingCompany?.logo) && (
-            <img 
-              src={logo instanceof File ? URL.createObjectURL(logo) : (logo || editingCompany?.logo)} 
-              alt="Preview" 
-              className="w-32 h-32 object-contain border rounded-lg"
-            />
-          )}
-        </div>
-      </div>
-      <Button 
-        type="button" 
-        onClick={onSave}
-        disabled={isSubmitting}
-        className="w-full"
-      >
-        {isSubmitting ? "Salvando..." : (editingCompany ? "Atualizar Empresa" : "Cadastrar Empresa")}
-      </Button>
-    </form>
+      <Input
+        placeholder="Endereço"
+        value={formData.endereco || ''}
+        onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+      />
+      <Input
+        placeholder="Cidade"
+        value={formData.cidade || ''}
+        onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+      />
+      <Input
+        placeholder="Estado"
+        value={formData.estado || ''}
+        onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+      />
+      <Input
+        placeholder="CEP"
+        value={formData.cep || ''}
+        onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+      />
+    </div>
   );
 };
 
