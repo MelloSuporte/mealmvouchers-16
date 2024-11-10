@@ -5,10 +5,8 @@ import { supabase } from '../config/supabase.js';
 
 const router = express.Router();
 
-// Aplicar middleware de autenticação em todas as rotas
 router.use(authenticateToken);
 
-// Listar turnos
 router.get('/', async (req, res) => {
   try {
     logger.info('Buscando lista de turnos');
@@ -35,7 +33,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Criar turno
 router.post('/', async (req, res) => {
   try {
     const { tipo, hora_inicio, hora_fim, ativo } = req.body;
@@ -82,7 +79,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Atualizar turno
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
