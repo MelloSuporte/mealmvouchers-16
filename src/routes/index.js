@@ -22,7 +22,7 @@ router.use('/relatorios', relatoriosRoutes);
 router.use('/refeicoes', refeicoesRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/vouchers-extra', vouchersExtraRoutes);
-router.use('/imagens-fundo', imagensFundoRoutes);
+router.use('/', imagensFundoRoutes); // Alterado para rota raiz para corresponder aos endpoints
 router.use('/turnos', turnosRoutes);
 router.use('/usuarios-admin', usuariosAdminRoutes);
 
