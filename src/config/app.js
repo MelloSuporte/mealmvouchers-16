@@ -19,19 +19,26 @@ const createApp = () => {
   app.use(cors({
     origin: process.env.ALLOWED_ORIGINS || '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
   }));
   
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.use(securityMiddleware);
 
+  // Add request logging
+  app.use((req, res, next) => {
+    logger.info(`${req.method} ${req.path}`);
+    next();
+  });
+
   // Health check endpoint (without database middleware)
   app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
   });
 
-  // Mount all routes directly (without /api prefix as nginx handles it)
+  // Mount all routes
   app.use(withDatabase);
   app.use('/', routes);
 
