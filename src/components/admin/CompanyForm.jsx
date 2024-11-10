@@ -91,7 +91,6 @@ const CompanyForm = () => {
       
       let logoUrl = null;
       if (logo instanceof File) {
-        // Ensure logos bucket exists before upload
         await ensureLogosBucket();
         
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -110,7 +109,7 @@ const CompanyForm = () => {
       const companyData = {
         nome: trimmedName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
-        logo: logoUrl || logo // Use existing logo URL if no new file was uploaded
+        logo: logoUrl || logo
       };
 
       if (editingCompany) {
