@@ -114,7 +114,9 @@ export const useDisposableVoucherForm = () => {
 
     try {
       for (const date of selectedDates) {
-        const formattedDate = format(date, 'yyyy-MM-dd');
+        // Set expiration time to 23:59:59 of the selected date
+        const expirationDate = new Date(date);
+        expirationDate.setHours(23, 59, 59, 999);
         
         for (const mealTypeId of selectedMealTypes) {
           for (let i = 0; i < quantity; i++) {
@@ -124,7 +126,7 @@ export const useDisposableVoucherForm = () => {
               .insert([{
                 codigo,
                 tipo_refeicao_id: mealTypeId,
-                data_expiracao: `${formattedDate}T23:59:59`,
+                data_expiracao: expirationDate.toISOString(),
                 usado: false
               }])
               .select(`
