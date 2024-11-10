@@ -1,45 +1,50 @@
 import express from 'express';
-import pool from '../config/database.js';
+import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Removida a verificação de permissões para garantir acesso total
-router.use((req, res, next) => {
-  req.isMasterAdmin = true;
-  next();
-});
-
-// Rotas que agora têm acesso liberado
-router.use([
-  '/extra-vouchers', 
-  '/disposable-vouchers', 
-  '/users', 
-  '/reports',
-  '/meals',
-  '/companies',
-  '/shift-configurations',
-  '/background-images'
-], (req, res, next) => {
-  next();
-});
-
-// Rota para obter permissões (sempre retorna todas as permissões)
-router.get('/permissions', async (req, res) => {
+router.post('/login', async (req, res) => {
+  const { password } = req.body;
+  
   try {
+    // Validar senha do admin
+    if (!password) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Senha é obrigatória'
+      });
+    }
+
+    // Verificar senha no banco
+    const { data: admin, error } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('senha', password)
+      .single();
+
+    if (error || !admin) {
+      return res.status(401).json({
+        success: false,
+        message: 'Senha inválida'
+      });
+    }
+
+    // Gerar token JWT (você pode usar uma biblioteca como jsonwebtoken)
+    const token = 'temp-admin-token'; // Substituir por geração real de token
+
     res.json({
-      manage_extra_vouchers: true,
-      manage_disposable_vouchers: true,
-      manage_users: true,
-      manage_reports: true,
-      manage_meals: true,
-      manage_companies: true,
-      manage_shifts: true,
-      manage_backgrounds: true
+      success: true,
+      token,
+      type: 'manager'
     });
+
   } catch (error) {
-    logger.error('Erro ao buscar permissões:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    logger.error('Erro no login de admin:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno no servidor'
+    });
   }
 });
 
