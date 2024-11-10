@@ -15,7 +15,7 @@ const router = express.Router();
 // Health check route
 router.use('/health', healthRoutes);
 
-// API Routes
+// API Routes - não adicione /api aqui, pois já está configurado no app.js
 router.use('/empresas', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/relatorios', relatoriosRoutes);

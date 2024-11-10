@@ -31,9 +31,9 @@ const createApp = () => {
     res.json({ status: 'OK', message: 'Server is running' });
   });
 
-  // Mount all routes directly (not under /api since nginx already handles that)
-  app.use(withDatabase);
-  app.use('/', routes);
+  // Apply database middleware and mount routes under /api
+  app.use('/api', withDatabase);
+  app.use('/api', routes);
 
   // Global error handler - must be last
   app.use(errorHandler);
