@@ -74,8 +74,8 @@ CREATE TABLE IF NOT EXISTS bloqueios_refeicao (
   criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create e_turnos table
-CREATE TABLE IF NOT EXISTS e_turnos (
+-- Create turnos table
+CREATE TABLE IF NOT EXISTS turnos (
   id SERIAL PRIMARY KEY,
   tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('central', 'primeiro', 'segundo', 'terceiro')),
   hora_inicio TIME NOT NULL,
@@ -86,19 +86,19 @@ CREATE TABLE IF NOT EXISTS e_turnos (
 );
 
 -- Enable RLS
-ALTER TABLE e_turnos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE turnos ENABLE ROW LEVEL SECURITY;
 
--- Create policies for e_turnos
-CREATE POLICY "e_turnos são visíveis para todos"
-  ON e_turnos FOR SELECT
+-- Create policies for turnos
+CREATE POLICY "Turnos são visíveis para todos"
+  ON turnos FOR SELECT
   USING (true);
 
-CREATE POLICY "Apenas usuários autenticados podem inserir e_turnos"
-  ON e_turnos FOR INSERT
+CREATE POLICY "Apenas usuários autenticados podem inserir turnos"
+  ON turnos FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
 
-CREATE POLICY "Apenas usuários autenticados podem atualizar e_turnos"
-  ON e_turnos FOR UPDATE
+CREATE POLICY "Apenas usuários autenticados podem atualizar turnos"
+  ON turnos FOR UPDATE
   USING (auth.role() = 'authenticated');
 
 -- Insert initial data
@@ -111,8 +111,13 @@ INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor) VALUES
 ('Almoço', '11:00:00', '14:00:00', 25.00),
 ('Jantar', '18:00:00', '21:00:00', 25.00);
 
+INSERT INTO configuracoes (chave, valor, descricao) VALUES
+('LOGO_SISTEMA', null, 'URL da logo do sistema'),
+('IMAGEM_FUNDO', null, 'URL da imagem de fundo do sistema'),
+('NOME_SISTEMA', 'Sistema de Vouchers', 'Nome do sistema');
+
 -- Insert initial shifts
-INSERT INTO e_turnos (tipo, hora_inicio, hora_fim, ativo) VALUES
+INSERT INTO turnos (tipo, hora_inicio, hora_fim, ativo) VALUES
 ('central', '08:00:00', '17:00:00', true),
 ('primeiro', '06:00:00', '14:00:00', true),
 ('segundo', '14:00:00', '22:00:00', true),
