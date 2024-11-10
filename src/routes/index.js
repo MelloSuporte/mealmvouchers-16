@@ -12,7 +12,7 @@ import usuariosAdminRoutes from './usuariosAdmin.js';
 
 const router = express.Router();
 
-// Rota de verificação de saúde
+// Health check route
 router.use('/health', healthRoutes);
 
 // Rotas da API

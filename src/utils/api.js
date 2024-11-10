@@ -14,6 +14,11 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  console.log('Request Config:', {
+    url: config.url,
+    method: config.method,
+    headers: config.headers
+  });
   return config;
 }, (error) => {
   return Promise.reject(error);
@@ -36,7 +41,8 @@ api.interceptors.response.use(
       console.error('404 Error Details:', {
         url: error.config?.url,
         method: error.config?.method,
-        headers: error.config?.headers
+        headers: error.config?.headers,
+        baseURL: error.config?.baseURL
       });
     } else {
       toast.error(`Erro na requisição: ${errorMessage}`);

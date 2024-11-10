@@ -41,7 +41,8 @@ const TurnosForm = () => {
           return [];
         }
 
-        const resposta = await api.get('/api/turnos', {
+        console.log('Fazendo requisição para /api/turnos');
+        const resposta = await api.get('/turnos', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
