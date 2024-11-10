@@ -52,9 +52,9 @@ export const useDisposableVoucherForm = () => {
   const loadAllVouchers = async () => {
     try {
       const { data, error } = await supabase
-        .from('disposable_vouchers')
+        .from('vouchers_descartaveis')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('data_criacao', { ascending: false });
 
       if (error) throw error;
       setAllVouchers(data || []);
@@ -102,14 +102,14 @@ export const useDisposableVoucherForm = () => {
         
         for (const mealTypeId of selectedMealTypes) {
           for (let i = 0; i < quantity; i++) {
-            const code = String(Math.floor(1000 + Math.random() * 9000));
+            const codigo = String(Math.floor(1000 + Math.random() * 9000));
             const { data, error } = await supabase
-              .from('disposable_vouchers')
+              .from('vouchers_descartaveis')
               .insert([{
-                code,
-                meal_type_id: mealTypeId,
-                expired_at: `${formattedDate}T23:59:59`,
-                is_used: false
+                codigo,
+                tipo_refeicao_id: mealTypeId,
+                data_expiracao: `${formattedDate}T23:59:59`,
+                usado: false
               }])
               .select()
               .single();
