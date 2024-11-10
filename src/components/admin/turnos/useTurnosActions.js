@@ -14,7 +14,12 @@ export const useTurnosActions = () => {
         throw new Error('Token não encontrado');
       }
 
-      const response = await api.post('/turnos', novoTurno, {
+      const response = await api.post('/turnos', {
+        tipo: novoTurno.tipo,
+        hora_inicio: novoTurno.hora_inicio,
+        hora_fim: novoTurno.hora_fim,
+        ativo: novoTurno.ativo
+      }, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
