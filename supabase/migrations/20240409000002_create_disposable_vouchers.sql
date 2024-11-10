@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS disposable_vouchers (
   id SERIAL PRIMARY KEY,
   code VARCHAR(4) NOT NULL,
-  meal_type_id UUID REFERENCES tipos_refeicao(id),
+  meal_type_id INTEGER REFERENCES tipos_refeicao(id),
   expired_at TIMESTAMP WITH TIME ZONE NOT NULL,
   is_used BOOLEAN DEFAULT FALSE,
   used_at TIMESTAMP WITH TIME ZONE,
