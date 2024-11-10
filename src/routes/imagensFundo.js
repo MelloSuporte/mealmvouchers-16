@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { supabase } from '../config/supabase.js';
+import { createClient } from '@supabase/supabase-js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
@@ -9,6 +9,12 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
+
+// Criar cliente Supabase com service role
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.VITE_SUPABASE_SERVICE_ROLE
+);
 
 // GET /imagens-fundo
 router.get('/', async (req, res) => {

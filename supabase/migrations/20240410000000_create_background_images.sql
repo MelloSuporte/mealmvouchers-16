@@ -12,17 +12,17 @@ CREATE TABLE IF NOT EXISTS background_images (
 ALTER TABLE background_images ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
-CREATE POLICY "Imagens são visíveis para todos"
+CREATE POLICY "Acesso público para leitura"
     ON background_images FOR SELECT
     USING (true);
 
-CREATE POLICY "Apenas usuários autenticados podem inserir imagens"
+CREATE POLICY "Acesso público para inserção"
     ON background_images FOR INSERT
-    WITH CHECK (auth.role() = 'authenticated');
+    WITH CHECK (true);
 
-CREATE POLICY "Apenas usuários autenticados podem atualizar imagens"
+CREATE POLICY "Acesso público para atualização"
     ON background_images FOR UPDATE
-    USING (auth.role() = 'authenticated');
+    USING (true);
 
 -- Create index for faster queries
 CREATE INDEX IF NOT EXISTS idx_background_images_page 
