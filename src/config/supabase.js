@@ -2,18 +2,28 @@ import { createClient } from '@supabase/supabase-js';
 import logger from './logger';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseServiceRole = import.meta.env.VITE_SUPABASE_SERVICE_ROLE;
 
-if (!supabaseUrl || !supabaseKey) {
+if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRole) {
   logger.error('Variáveis de ambiente do Supabase não configuradas');
   throw new Error('As variáveis de ambiente do Supabase são necessárias');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey, {
+// Cliente público (anônimo)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
+  }
+});
+
+// Cliente com service role (para operações administrativas)
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRole, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true
   }
 });
 
@@ -29,4 +39,4 @@ supabase.from('empresas')
     }
   });
 
-export { supabase };
+export default supabase;
