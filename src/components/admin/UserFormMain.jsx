@@ -42,7 +42,12 @@ const UserFormMain = ({
     queryKey: ['turnos'],
     queryFn: async () => {
       try {
-        const response = await api.get('/api/turnos');
+        const token = localStorage.getItem('adminToken');
+        const response = await api.get('/turnos', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         return response.data || [];
       } catch (error) {
         console.error('Error fetching turnos:', error);
