@@ -10,56 +10,58 @@ const upload = multer({
   }
 });
 
+// GET /imagens-fundo
 router.get('/', async (req, res) => {
   try {
-    logger.info('Buscando imagens de fundo');
+    logger.info('Iniciando busca de imagens de fundo');
+    
     const { data: images, error } = await supabase
       .from('background_images')
       .select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
+      .eq('is_active', true);
 
     if (error) {
       logger.error('Erro ao buscar imagens:', error);
-      throw error;
+      return res.status(500).json({ 
+        error: 'Erro ao buscar imagens de fundo',
+        details: error.message 
+      });
     }
     
     logger.info(`${images?.length || 0} imagens encontradas`);
     res.json(images || []);
   } catch (error) {
-    logger.error('Erro ao buscar imagens de fundo:', error);
-    res.status(500).json({ error: 'Erro ao buscar imagens de fundo' });
+    logger.error('Erro não esperado ao buscar imagens:', error);
+    res.status(500).json({ 
+      error: 'Erro interno ao buscar imagens',
+      details: error.message 
+    });
   }
 });
 
+// POST /imagens-fundo
 router.post('/', upload.any(), async (req, res) => {
   try {
     logger.info('Iniciando upload de imagens');
-    logger.info('Arquivos recebidos:', req.files?.length);
-
-    if (!req.files || req.files.length === 0) {
+    
+    if (!req.files?.length) {
       logger.warn('Nenhum arquivo recebido');
       return res.status(400).json({ error: 'Nenhum arquivo enviado' });
     }
 
-    // Desativa imagens existentes para as páginas sendo atualizadas
-    const pagesToUpdate = Object.keys(req.files.reduce((acc, file) => {
-      acc[file.fieldname] = true;
-      return acc;
-    }, {}));
+    // Desativa imagens existentes
+    const pagesToUpdate = req.files.map(file => file.fieldname);
+    
+    logger.info('Desativando imagens antigas para páginas:', pagesToUpdate);
+    
+    const { error: deactivateError } = await supabase
+      .from('background_images')
+      .update({ is_active: false })
+      .in('page', pagesToUpdate);
 
-    logger.info('Páginas para atualizar:', pagesToUpdate);
-
-    if (pagesToUpdate.length > 0) {
-      const { error: deactivateError } = await supabase
-        .from('background_images')
-        .update({ is_active: false })
-        .in('page', pagesToUpdate);
-
-      if (deactivateError) {
-        logger.error('Erro ao desativar imagens antigas:', deactivateError);
-        throw deactivateError;
-      }
+    if (deactivateError) {
+      logger.error('Erro ao desativar imagens antigas:', deactivateError);
+      throw deactivateError;
     }
 
     // Insere novas imagens
@@ -73,7 +75,8 @@ router.post('/', upload.any(), async (req, res) => {
         .insert([{
           page: file.fieldname,
           image_url: base64Image,
-          is_active: true
+          is_active: true,
+          created_at: new Date().toISOString()
         }]);
 
       if (insertError) {
@@ -83,10 +86,17 @@ router.post('/', upload.any(), async (req, res) => {
     }
 
     logger.info('Upload de imagens concluído com sucesso');
-    res.json({ success: true, message: 'Imagens de fundo atualizadas com sucesso' });
+    res.json({ 
+      success: true, 
+      message: 'Imagens de fundo atualizadas com sucesso',
+      updatedPages: pagesToUpdate
+    });
   } catch (error) {
-    logger.error('Erro ao salvar imagens de fundo:', error);
-    res.status(500).json({ error: 'Erro ao salvar imagens de fundo' });
+    logger.error('Erro não esperado ao salvar imagens:', error);
+    res.status(500).json({ 
+      error: 'Erro ao salvar imagens de fundo',
+      details: error.message 
+    });
   }
 });
 
