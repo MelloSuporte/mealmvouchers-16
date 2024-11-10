@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   try {
     logger.info('Buscando lista de turnos');
     const { data: turnos, error } = await supabase
-      .from('turnos')
+      .from('e_turnos')
       .select('*')
       .order('id');
 
@@ -52,7 +52,7 @@ router.post('/', async (req, res) => {
 
     logger.info('Criando novo turno:', { tipo, hora_inicio, hora_fim });
     const { data: turno, error } = await supabase
-      .from('turnos')
+      .from('e_turnos')
       .insert([{
         tipo,
         hora_inicio,
@@ -97,7 +97,7 @@ router.put('/:id', async (req, res) => {
 
     logger.info('Atualizando turno:', { id, hora_inicio, hora_fim, ativo });
     const { data: turno, error } = await supabase
-      .from('turnos')
+      .from('e_turnos')
       .update({
         hora_inicio,
         hora_fim,
