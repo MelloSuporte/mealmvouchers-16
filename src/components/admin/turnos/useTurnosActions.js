@@ -9,26 +9,39 @@ export const useTurnosActions = () => {
 
   const createTurnoMutation = useMutation({
     mutationFn: async (novoTurno) => {
+      const token = localStorage.getItem('adminToken');
       const response = await api.post('/api/turnos', {
         tipo: novoTurno.tipo,
         hora_inicio: novoTurno.hora_inicio,
         hora_fim: novoTurno.hora_fim,
         ativo: novoTurno.ativo
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['turnos']);
       toast.success("Turno criado com sucesso!");
+    },
+    onError: (error) => {
+      toast.error(`Erro ao criar turno: ${error.response?.data?.erro || error.message}`);
     }
   });
 
   const updateTurnosMutation = useMutation({
     mutationFn: async (updatedTurno) => {
+      const token = localStorage.getItem('adminToken');
       const response = await api.put(`/api/turnos/${updatedTurno.id}`, {
         hora_inicio: updatedTurno.hora_inicio,
         hora_fim: updatedTurno.hora_fim,
         ativo: updatedTurno.ativo
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       return response.data;
     },
@@ -41,6 +54,9 @@ export const useTurnosActions = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(['turnos']);
       toast.success("Horário do turno atualizado com sucesso!");
+    },
+    onError: (error) => {
+      toast.error(`Erro ao atualizar turno: ${error.response?.data?.erro || error.message}`);
     }
   });
 
