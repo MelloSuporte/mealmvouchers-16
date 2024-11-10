@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS uso_voucher (
   usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS turnos (
+CREATE TABLE IF NOT EXISTS e_turnos (
   id SERIAL PRIMARY KEY,
   tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('central', 'primeiro', 'segundo', 'terceiro')),
   hora_inicio TIME NOT NULL,
@@ -75,7 +75,7 @@ INSERT INTO tipos_refeicao (nome, hora_inicio, hora_fim, valor) VALUES
 ('Jantar', '18:00:00', '21:00:00', 25.00);
 
 -- Inserir turnos iniciais
-INSERT INTO turnos (tipo, hora_inicio, hora_fim, ativo) VALUES
+INSERT INTO e_turnos (tipo, hora_inicio, hora_fim, ativo) VALUES
 ('central', '08:00:00', '17:00:00', true),
 ('primeiro', '06:00:00', '14:00:00', true),
 ('segundo', '14:00:00', '22:00:00', true),
