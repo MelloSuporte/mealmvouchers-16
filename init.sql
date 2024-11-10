@@ -54,6 +54,16 @@ CREATE TABLE IF NOT EXISTS turnos (
   atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS vouchers_descartaveis (
+  id SERIAL PRIMARY KEY,
+  codigo VARCHAR(4) NOT NULL UNIQUE,
+  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
+  data_expiracao TIMESTAMP WITH TIME ZONE NOT NULL,
+  usado BOOLEAN DEFAULT FALSE,
+  data_uso TIMESTAMP WITH TIME ZONE,
+  data_criacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Inserir dados iniciais
 INSERT INTO empresas (nome, cnpj) VALUES 
 ('Empresa Teste', '12.345.678/0001-90'),
