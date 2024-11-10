@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
         tipo,
         hora_inicio,
         hora_fim,
-        ativo,
+        ativo: ativo ?? true,
         criado_em: new Date().toISOString(),
         atualizado_em: new Date().toISOString()
       }])
@@ -86,6 +86,42 @@ router.post('/', async (req, res) => {
     logger.error('Erro inesperado ao criar turno:', erro);
     res.status(500).json({ 
       erro: 'Erro interno ao criar turno',
+      detalhes: erro.message 
+    });
+  }
+});
+
+// PUT /turnos/:id - Atualizar turno existente
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { hora_inicio, hora_fim, ativo } = req.body;
+    
+    const { data: turno, error } = await supabase
+      .from('turnos')
+      .update({
+        hora_inicio,
+        hora_fim,
+        ativo,
+        atualizado_em: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Erro ao atualizar turno:', error);
+      return res.status(500).json({ 
+        erro: 'Erro ao atualizar turno',
+        detalhes: error.message 
+      });
+    }
+
+    res.json(turno);
+  } catch (erro) {
+    logger.error('Erro ao atualizar turno:', erro);
+    res.status(500).json({ 
+      erro: 'Erro interno ao atualizar turno',
       detalhes: erro.message 
     });
   }
