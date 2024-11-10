@@ -22,8 +22,7 @@ export const useDisposableVoucherForm = () => {
       const { data, error } = await supabase
         .from('tipos_refeicao')
         .select('*')
-        .eq('ativo', true)
-        .neq('nome', 'Extra');
+        .eq('ativo', true);
 
       if (error) throw error;
 

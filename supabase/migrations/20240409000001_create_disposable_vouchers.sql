@@ -1,8 +1,8 @@
 -- Criar tabela vouchers_descartaveis
 CREATE TABLE IF NOT EXISTS vouchers_descartaveis (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id SERIAL PRIMARY KEY,
   codigo VARCHAR(4) NOT NULL,
-  tipo_refeicao_id UUID REFERENCES tipos_refeicao(id),
+  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
   data_expiracao TIMESTAMP WITH TIME ZONE NOT NULL,
   usado BOOLEAN DEFAULT FALSE,
   data_uso TIMESTAMP WITH TIME ZONE,
