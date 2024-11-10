@@ -21,7 +21,7 @@ export const useDisposableVoucherForm = () => {
     try {
       const { data, error } = await supabase
         .from('tipos_refeicao')
-        .select('*')
+        .select('id, nome, hora_inicio, hora_fim, ativo')
         .eq('ativo', true);
 
       if (error) throw error;
@@ -57,7 +57,13 @@ export const useDisposableVoucherForm = () => {
         .order('data_criacao', { ascending: false });
 
       if (error) throw error;
-      setAllVouchers(data || []);
+
+      const formattedVouchers = data?.map(voucher => ({
+        ...voucher,
+        tipo_refeicao_nome: voucher.tipos_refeicao?.nome || 'Não especificado'
+      })) || [];
+
+      setAllVouchers(formattedVouchers);
     } catch (error) {
       console.error('Error loading vouchers:', error);
       toast.error("Erro ao carregar vouchers existentes");
@@ -135,7 +141,11 @@ export const useDisposableVoucherForm = () => {
             }
 
             if (data) {
-              newVouchers.push(data);
+              const formattedVoucher = {
+                ...data,
+                tipo_refeicao_nome: data.tipos_refeicao?.nome || 'Não especificado'
+              };
+              newVouchers.push(formattedVoucher);
             }
           }
         }
