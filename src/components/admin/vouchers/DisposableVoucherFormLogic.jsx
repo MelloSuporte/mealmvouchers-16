@@ -36,13 +36,9 @@ export const useDisposableVoucherForm = () => {
           is_active: meal.ativo
         }));
         setMealTypes(formattedMealTypes);
-      } else {
-        setMealTypes([]);
-        toast.error("Nenhum tipo de refeição encontrado");
       }
     } catch (error) {
       console.error('Error loading meal types:', error);
-      setMealTypes([]);
       toast.error("Erro ao carregar tipos de refeição");
     } finally {
       setIsLoading(false);
@@ -53,7 +49,12 @@ export const useDisposableVoucherForm = () => {
     try {
       const { data, error } = await supabase
         .from('vouchers_descartaveis')
-        .select('*')
+        .select(`
+          *,
+          tipos_refeicao (
+            nome
+          )
+        `)
         .order('data_criacao', { ascending: false });
 
       if (error) throw error;
@@ -61,17 +62,27 @@ export const useDisposableVoucherForm = () => {
     } catch (error) {
       console.error('Error loading vouchers:', error);
       toast.error("Erro ao carregar vouchers existentes");
-      setAllVouchers([]);
     }
   };
 
   const handleMealTypeToggle = (typeId) => {
-    if (!typeId) return;
     setSelectedMealTypes(current => 
       current.includes(typeId) 
         ? current.filter(id => id !== typeId)
         : [...current, typeId]
     );
+  };
+
+  const generateSequentialCode = async () => {
+    const { data: lastVoucher } = await supabase
+      .from('vouchers_descartaveis')
+      .select('codigo')
+      .order('codigo', { ascending: false })
+      .limit(1)
+      .single();
+
+    const lastCode = lastVoucher ? parseInt(lastVoucher.codigo) : 0;
+    return String(lastCode + 1).padStart(4, '0');
   };
 
   const handleGenerateVouchers = async () => {
@@ -102,7 +113,7 @@ export const useDisposableVoucherForm = () => {
         
         for (const mealTypeId of selectedMealTypes) {
           for (let i = 0; i < quantity; i++) {
-            const codigo = String(Math.floor(1000 + Math.random() * 9000));
+            const codigo = await generateSequentialCode();
             const { data, error } = await supabase
               .from('vouchers_descartaveis')
               .insert([{
@@ -111,7 +122,12 @@ export const useDisposableVoucherForm = () => {
                 data_expiracao: `${formattedDate}T23:59:59`,
                 usado: false
               }])
-              .select()
+              .select(`
+                *,
+                tipos_refeicao (
+                  nome
+                )
+              `)
               .single();
 
             if (error) {
