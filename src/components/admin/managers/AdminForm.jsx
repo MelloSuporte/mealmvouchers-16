@@ -10,7 +10,6 @@ import CompanySelect from '../user/CompanySelect';
 const AdminForm = ({ onClose, adminToEdit = null }) => {
   const [formData, setFormData] = useState({
     nome: adminToEdit?.nome || '',
-    email: adminToEdit?.email || '',
     cpf: adminToEdit?.cpf || '',
     empresa_id: adminToEdit?.empresa_id || '',
     senha: '',
@@ -69,12 +68,6 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
         placeholder="Nome completo"
         value={formData.nome}
         onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-      />
-      <Input
-        placeholder="E-mail"
-        type="email"
-        value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
       />
       <Input
         placeholder="CPF (000.000.000-00)"
