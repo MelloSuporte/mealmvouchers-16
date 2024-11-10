@@ -45,10 +45,14 @@ const BackgroundImageForm = () => {
 
   const loadSavedBackgrounds = async () => {
     try {
+      console.log('Iniciando carregamento das imagens de fundo...');
       const response = await api.get('/imagens-fundo');
+      console.log('Resposta do servidor:', response.data);
+      
       const images = response.data;
       
       if (!Array.isArray(images)) {
+        console.error('Formato de dados inválido:', images);
         throw new Error('Formato de dados inválido');
       }
 
@@ -58,13 +62,15 @@ const BackgroundImageForm = () => {
         img.image_url.startsWith('data:image/')
       );
       
+      console.log('Imagens válidas encontradas:', validImages.length);
+      
       setPreviews({
         voucher: validImages.find(img => img.page === 'voucher')?.image_url || '',
         userConfirmation: validImages.find(img => img.page === 'userConfirmation')?.image_url || '',
         bomApetite: validImages.find(img => img.page === 'bomApetite')?.image_url || ''
       });
     } catch (error) {
-      console.error('Erro ao carregar imagens:', error);
+      console.error('Erro detalhado ao carregar imagens:', error);
       toast.error("Erro ao carregar imagens de fundo");
     }
   };
@@ -103,6 +109,7 @@ const BackgroundImageForm = () => {
 
     try {
       setIsLoading(true);
+      console.log('Iniciando salvamento das imagens...');
       
       const hasChanges = Object.values(backgrounds).some(Boolean);
       if (!hasChanges) {
@@ -112,23 +119,34 @@ const BackgroundImageForm = () => {
 
       const formData = new FormData();
       Object.entries(backgrounds).forEach(([key, value]) => {
-        if (value) formData.append(key, value);
+        if (value) {
+          console.log(`Adicionando imagem para ${key} ao FormData`);
+          formData.append(key, value);
+        }
       });
 
+      console.log('Enviando requisição para salvar imagens...');
       const response = await api.post('/imagens-fundo', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 
+          'Content-Type': 'multipart/form-data'
+        }
       });
+
+      console.log('Resposta do servidor após salvar:', response.data);
 
       if (response.data.success) {
         localStorage.setItem('lastImageModification', Date.now().toString());
         setLastModified(new Date());
         toast.success("Imagens de fundo atualizadas com sucesso!");
-        loadSavedBackgrounds();
+        await loadSavedBackgrounds();
         setBackgrounds({ voucher: null, userConfirmation: null, bomApetite: null });
+      } else {
+        throw new Error('Resposta do servidor não indica sucesso');
       }
     } catch (error) {
-      console.error('Erro ao salvar imagens:', error);
-      toast.error("Erro ao salvar imagens de fundo. Por favor, tente novamente.");
+      console.error('Erro detalhado ao salvar imagens:', error);
+      const errorMessage = error.response?.data?.error || error.message;
+      toast.error(`Erro ao salvar imagens de fundo: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
