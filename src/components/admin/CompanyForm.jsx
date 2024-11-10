@@ -61,7 +61,7 @@ const CompanyForm = () => {
       if (!logosBucket) {
         const { error: createBucketError } = await supabase.storage.createBucket('logos', {
           public: true,
-          fileSizeLimit: 5242880, // 5MB
+          fileSizeLimit: 5242880,
           allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif']
         });
         
@@ -109,7 +109,8 @@ const CompanyForm = () => {
       const companyData = {
         nome: trimmedName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
-        logo: logoUrl || logo
+        logo: logoUrl || logo,
+        criado_em: new Date().toISOString()
       };
 
       if (editingCompany) {
