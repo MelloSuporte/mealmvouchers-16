@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { format } from 'date-fns';
-import api from '../../../utils/api';
+import { supabase } from '../../../config/supabase';
 
 export const useDisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
@@ -19,15 +19,26 @@ export const useDisposableVoucherForm = () => {
 
   const loadMealTypes = async () => {
     try {
-      const response = await api.get('/meals');
-      if (response.data && Array.isArray(response.data)) {
-        const filteredMeals = response.data.filter(meal => 
-          meal.is_active && meal.name?.toLowerCase() !== 'extra'
-        );
-        setMealTypes(filteredMeals);
+      const { data, error } = await supabase
+        .from('tipos_refeicao')
+        .select('*')
+        .eq('ativo', true)
+        .neq('nome', 'Extra');
+
+      if (error) throw error;
+
+      if (data) {
+        const formattedMealTypes = data.map(meal => ({
+          id: meal.id,
+          name: meal.nome,
+          start_time: meal.hora_inicio,
+          end_time: meal.hora_fim,
+          is_active: meal.ativo
+        }));
+        setMealTypes(formattedMealTypes);
       } else {
         setMealTypes([]);
-        toast.error("Formato inválido de dados recebidos");
+        toast.error("Nenhum tipo de refeição encontrado");
       }
     } catch (error) {
       console.error('Error loading meal types:', error);
@@ -40,8 +51,13 @@ export const useDisposableVoucherForm = () => {
 
   const loadAllVouchers = async () => {
     try {
-      const response = await api.get('/vouchers/disposable');
-      setAllVouchers(Array.isArray(response.data) ? response.data : []);
+      const { data, error } = await supabase
+        .from('disposable_vouchers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAllVouchers(data || []);
     } catch (error) {
       console.error('Error loading vouchers:', error);
       toast.error("Erro ao carregar vouchers existentes");
@@ -86,17 +102,25 @@ export const useDisposableVoucherForm = () => {
         
         for (const mealTypeId of selectedMealTypes) {
           for (let i = 0; i < quantity; i++) {
-            try {
-              const response = await api.post('/vouchers/create', {
+            const code = String(Math.floor(1000 + Math.random() * 9000));
+            const { data, error } = await supabase
+              .from('disposable_vouchers')
+              .insert([{
+                code,
                 meal_type_id: mealTypeId,
-                expired_at: `${formattedDate}T23:59:59`
-              });
+                expired_at: `${formattedDate}T23:59:59`,
+                is_used: false
+              }])
+              .select()
+              .single();
 
-              if (response.data?.success) {
-                newVouchers.push(response.data.voucher);
-              }
-            } catch (error) {
-              toast.error(`Erro ao gerar voucher: ${error.response?.data?.error || error.message}`);
+            if (error) {
+              toast.error(`Erro ao gerar voucher: ${error.message}`);
+              continue;
+            }
+
+            if (data) {
+              newVouchers.push(data);
             }
           }
         }
