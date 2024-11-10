@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import api from '../../../utils/api';
+import { supabase } from '../../../config/supabase';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,9 +17,14 @@ const MealScheduleList = () => {
     queryKey: ['meals'],
     queryFn: async () => {
       try {
-        const response = await api.get('/api/refeicoes');
-        console.log('Meals response:', response.data); // Debug log
-        return Array.isArray(response.data) ? response.data : [];
+        const { data, error } = await supabase
+          .from('tipos_refeicao')
+          .select('*')
+          .order('nome');
+
+        if (error) throw error;
+
+        return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error('Error fetching meals:', error);
         toast.error('Erro ao carregar refeições: ' + error.message);
@@ -30,7 +35,12 @@ const MealScheduleList = () => {
 
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, currentStatus }) => {
-      await api.patch(`/api/refeicoes/${id}`, { ativo: !currentStatus });
+      const { error } = await supabase
+        .from('tipos_refeicao')
+        .update({ ativo: !currentStatus })
+        .eq('id', id);
+      
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['meals']);
@@ -43,7 +53,12 @@ const MealScheduleList = () => {
 
   const deleteMealsMutation = useMutation({
     mutationFn: async (ids) => {
-      await Promise.all(ids.map(id => api.delete(`/api/refeicoes/${id}`)));
+      const { error } = await supabase
+        .from('tipos_refeicao')
+        .delete()
+        .in('id', ids);
+      
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['meals']);
