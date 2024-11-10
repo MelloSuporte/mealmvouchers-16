@@ -7,7 +7,7 @@ import refeicoesRoutes from '../routes/refeicoes.js';
 import usuariosRoutes from '../routes/usuarios.js';
 import vouchersExtraRoutes from '../routes/vouchersExtra.js';
 import imagensFundoRoutes from '../routes/imagensFundo.js';
-import turnosRoutes from '../routes/configuracoesTurnos.js';
+import turnosRoutes from '../routes/turnos.js';
 import usuariosAdminRoutes from '../routes/usuariosAdmin.js';
 
 const router = express.Router();
