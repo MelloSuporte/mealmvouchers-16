@@ -14,7 +14,7 @@ export const useTurnosActions = () => {
         throw new Error('Token não encontrado');
       }
 
-      const response = await api.post('/turnos', {
+      const response = await api.post('/api/turnos', {
         tipo: novoTurno.tipo,
         hora_inicio: novoTurno.hora_inicio,
         hora_fim: novoTurno.hora_fim,
@@ -43,7 +43,7 @@ export const useTurnosActions = () => {
         throw new Error('Token não encontrado');
       }
 
-      const response = await api.put(`/turnos/${updatedTurno.id}`, {
+      const response = await api.put(`/api/turnos/${updatedTurno.id}`, {
         hora_inicio: updatedTurno.hora_inicio,
         hora_fim: updatedTurno.hora_fim,
         ativo: updatedTurno.ativo
