@@ -13,7 +13,7 @@ const CompanyForm = () => {
   const [editingCompany, setEditingCompany] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: companies, isLoading } = useQuery({
+  const { data: companies = [], isLoading, error } = useQuery({
     queryKey: ['empresas'],
     queryFn: async () => {
       try {
@@ -26,9 +26,9 @@ const CompanyForm = () => {
 
         return (data || []).map(company => ({
           id: company.id,
-          name: company.nome,
-          cnpj: company.cnpj,
-          logo: company.logo,
+          name: company.nome || '',
+          cnpj: company.cnpj || '',
+          logo: company.logo || null,
           createdAt: company.criado_em
         }));
       } catch (error) {
@@ -40,9 +40,11 @@ const CompanyForm = () => {
   });
 
   const handleEditCompany = (company) => {
+    if (!company) return;
+    
     setEditingCompany(company);
-    setCompanyName(company.name);
-    setCnpj(company.cnpj);
+    setCompanyName(company.name || '');
+    setCnpj(company.cnpj || '');
     setLogo(company.logo);
   };
 
@@ -140,6 +142,10 @@ const CompanyForm = () => {
     }
   };
 
+  if (error) {
+    return <div>Erro ao carregar empresas: {error.message}</div>;
+  }
+
   return (
     <div className="space-y-6">
       <CompanyFormFields
@@ -155,7 +161,7 @@ const CompanyForm = () => {
       />
 
       <CompanyList
-        companies={Array.isArray(companies) ? companies : []}
+        companies={companies}
         isLoading={isLoading}
         onEdit={handleEditCompany}
       />
