@@ -145,8 +145,8 @@ const UserFormMain = ({
         </SelectTrigger>
         <SelectContent>
           {turnos.map((turno) => (
-            <SelectItem key={turno.id} value={turno.tipo_turno}>
-              {turno.tipo_turno.charAt(0).toUpperCase() + turno.tipo_turno.slice(1)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
+            <SelectItem key={turno.id} value={turno.tipo}>
+              {turno.tipo.charAt(0).toUpperCase() + turno.tipo.slice(1)} ({formatTime(turno.hora_inicio)} - {formatTime(turno.hora_fim)})
             </SelectItem>
           ))}
         </SelectContent>
