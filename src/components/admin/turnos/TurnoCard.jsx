@@ -34,8 +34,8 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
             <Input
               id={`entrada-${turno.id}`}
               type="time"
-              value={turno.horario_inicio}
-              onChange={(e) => onTurnoChange(turno.id, 'horario_inicio', e.target.value)}
+              value={turno.hora_inicio}
+              onChange={(e) => onTurnoChange(turno.id, 'hora_inicio', e.target.value)}
               className="w-full"
               disabled={isSubmitting}
             />
@@ -45,8 +45,8 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
             <Input
               id={`saida-${turno.id}`}
               type="time"
-              value={turno.horario_fim}
-              onChange={(e) => onTurnoChange(turno.id, 'horario_fim', e.target.value)}
+              value={turno.hora_fim}
+              onChange={(e) => onTurnoChange(turno.id, 'hora_fim', e.target.value)}
               className="w-full"
               disabled={isSubmitting}
             />

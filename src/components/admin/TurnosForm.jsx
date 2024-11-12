@@ -22,8 +22,8 @@ const TurnosForm = () => {
   const [dialogoAberto, setDialogoAberto] = React.useState(false);
   const [novoTurno, setNovoTurno] = React.useState({
     tipo_turno: '',
-    horario_inicio: '',
-    horario_fim: '',
+    hora_inicio: '',
+    hora_fim: '',
     ativo: true
   });
 
@@ -54,8 +54,8 @@ const TurnosForm = () => {
     setDialogoAberto(false);
     setNovoTurno({
       tipo_turno: '',
-      horario_inicio: '',
-      horario_fim: '',
+      hora_inicio: '',
+      hora_fim: '',
       ativo: true
     });
   };
@@ -125,8 +125,8 @@ const TurnosForm = () => {
             {turnos.map((turno) => (
               <TableRow key={turno.id}>
                 <TableCell>{getTurnoLabel(turno.tipo_turno)}</TableCell>
-                <TableCell>{turno.horario_inicio}</TableCell>
-                <TableCell>{turno.horario_fim}</TableCell>
+                <TableCell>{turno.hora_inicio}</TableCell>
+                <TableCell>{turno.hora_fim}</TableCell>
                 <TableCell>{turno.ativo ? 'Ativo' : 'Inativo'}</TableCell>
               </TableRow>
             ))}
