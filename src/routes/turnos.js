@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   try {
     logger.info('Buscando turnos...');
     const { data: turnos, error } = await supabase
-      .from('turnos')
+      .from('shift_configurations')
       .select('*')
       .order('id');
 
@@ -36,28 +36,28 @@ router.get('/', async (req, res) => {
 // POST /turnos - Criar novo turno
 router.post('/', async (req, res) => {
   try {
-    const { tipo, hora_inicio, hora_fim, ativo } = req.body;
-    logger.info('Criando novo turno:', { tipo, hora_inicio, hora_fim, ativo });
+    const { shift_type, start_time, end_time, is_active } = req.body;
+    logger.info('Criando novo turno:', { shift_type, start_time, end_time, is_active });
     
-    if (!tipo?.trim()) {
+    if (!shift_type?.trim()) {
       return res.status(400).json({ erro: 'Tipo de turno é obrigatório' });
     }
-    if (!hora_inicio?.trim()) {
+    if (!start_time?.trim()) {
       return res.status(400).json({ erro: 'Horário de início é obrigatório' });
     }
-    if (!hora_fim?.trim()) {
+    if (!end_time?.trim()) {
       return res.status(400).json({ erro: 'Horário de fim é obrigatório' });
     }
 
     const { data: turno, error } = await supabase
-      .from('turnos')
+      .from('shift_configurations')
       .insert([{
-        tipo,
-        hora_inicio,
-        hora_fim,
-        ativo: ativo ?? true,
-        criado_em: new Date().toISOString(),
-        atualizado_em: new Date().toISOString()
+        shift_type,
+        start_time,
+        end_time,
+        is_active: is_active ?? true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }])
       .select()
       .single();
@@ -82,15 +82,15 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { hora_inicio, hora_fim, ativo } = req.body;
+    const { start_time, end_time, is_active } = req.body;
     
     const { data: turno, error } = await supabase
-      .from('turnos')
+      .from('shift_configurations')
       .update({
-        hora_inicio,
-        hora_fim,
-        ativo,
-        atualizado_em: new Date().toISOString()
+        start_time,
+        end_time,
+        is_active,
+        updated_at: new Date().toISOString()
       })
       .eq('id', id)
       .select()
