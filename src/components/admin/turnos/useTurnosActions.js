@@ -18,7 +18,8 @@ export const useTurnosActions = () => {
           end_time: novoTurno.end_time,
           is_active: novoTurno.is_active
         }])
-        .select();
+        .select('*')
+        .single();
 
       if (error) throw error;
       return data;
@@ -45,7 +46,8 @@ export const useTurnosActions = () => {
           updated_at: new Date().toISOString()
         })
         .eq('id', updatedTurno.id)
-        .select();
+        .select('*')
+        .single();
 
       if (error) throw error;
       return data;
