@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from '../../config/supabase';
@@ -12,16 +12,6 @@ const CompanyForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session) {
-        toast.error('Você precisa estar autenticado para acessar esta página');
-      }
-    };
-    checkAuth();
-  }, []);
 
   const { data: companies = [], isLoading, error } = useQuery({
     queryKey: ['empresas'],
@@ -65,26 +55,6 @@ const CompanyForm = () => {
     setEditingCompany(null);
   };
 
-  const ensureLogosBucket = async () => {
-    try {
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const logosBucket = buckets?.find(b => b.name === 'logos');
-      
-      if (!logosBucket) {
-        const { error: createBucketError } = await supabase.storage.createBucket('logos', {
-          public: true,
-          fileSizeLimit: 5242880,
-          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif']
-        });
-        
-        if (createBucketError) throw createBucketError;
-      }
-    } catch (error) {
-      console.error('Error ensuring logos bucket exists:', error);
-      throw error;
-    }
-  };
-
   const handleSaveCompany = async () => {
     const trimmedName = companyName?.trim();
     
@@ -101,27 +71,10 @@ const CompanyForm = () => {
     try {
       setIsSubmitting(true);
       
-      let logoUrl = null;
-      if (logo instanceof File) {
-        await ensureLogosBucket();
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('logos')
-          .upload(`company-logos/${Date.now()}-${logo.name}`, logo);
-
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('logos')
-          .getPublicUrl(uploadData.path);
-          
-        logoUrl = publicUrl;
-      }
-
       const companyData = {
         nome: trimmedName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
-        logo: logoUrl || logo,
+        logo: logo,
         criado_em: new Date().toISOString()
       };
 
