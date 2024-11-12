@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import UserFormMain from './UserFormMain';
 import api from '../../utils/api';
 import logger from '../../config/logger';
+import { generateUniqueVoucherFromCPF } from '../../utils/voucherGenerationUtils';
 
 const UserForm = () => {
   const [formData, setFormData] = useState({
@@ -17,7 +18,7 @@ const UserForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
-    if (!formData.userName || !formData.userCPF || !formData.company || !formData.voucher || !formData.selectedTurno) {
+    if (!formData.userName || !formData.userCPF || !formData.company || !formData.selectedTurno) {
       toast.error("Por favor, preencha todos os campos obrigatórios");
       return false;
     }
@@ -37,11 +38,14 @@ const UserForm = () => {
     try {
       setIsSubmitting(true);
       
+      // Gera voucher único baseado no CPF
+      const voucher = await generateUniqueVoucherFromCPF(formData.userCPF.replace(/\D/g, ''));
+      
       const userData = {
         name: formData.userName.trim(),
         cpf: formData.userCPF.replace(/\D/g, ''),
         company_id: parseInt(formData.company),
-        voucher: formData.voucher,
+        voucher: voucher,
         turno: formData.selectedTurno,
         is_suspended: formData.isSuspended,
         photo: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
