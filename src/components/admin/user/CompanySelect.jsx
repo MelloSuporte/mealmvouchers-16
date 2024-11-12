@@ -10,13 +10,12 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
     queryFn: async () => {
       try {
         const { data, error } = await supabase
-          .from('empresas')
+          .from('companies')
           .select('*')
-          .order('nome');
+          .order('name');
 
         if (error) throw error;
 
-        // Ensure we always return an array
         return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error('Erro ao carregar empresas:', error);
@@ -30,7 +29,6 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
     toast.error('Erro ao carregar empresas');
   }
 
-  // Ensure empresas is always an array before mapping
   const companiesArray = Array.isArray(empresas) ? empresas : [];
 
   return (
@@ -48,7 +46,7 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
         )}
         {companiesArray.map((empresa) => (
           <SelectItem key={empresa.id} value={empresa.id.toString()}>
-            {empresa.nome}
+            {empresa.name}
           </SelectItem>
         ))}
       </SelectContent>
