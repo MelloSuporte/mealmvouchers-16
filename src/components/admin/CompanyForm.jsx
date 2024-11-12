@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from '../../config/supabase';
@@ -12,6 +12,16 @@ const CompanyForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        toast.error('Você precisa estar autenticado para acessar esta página');
+      }
+    };
+    checkAuth();
+  }, []);
 
   const { data: companies = [], isLoading, error } = useQuery({
     queryKey: ['empresas'],
