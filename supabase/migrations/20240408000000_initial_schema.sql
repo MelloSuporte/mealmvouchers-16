@@ -1,10 +1,13 @@
-CREATE DATABASE sis_voucher;
+CREATE DATABASE IF NOT EXISTS sis_voucher;
 
+-- Connect to the database
 \c sis_voucher;
 
+-- Set timezone
 SET timezone = 'America/Sao_Paulo';
 
-CREATE TABLE IF NOT EXISTS companies (
+-- Create companies table in public schema
+CREATE TABLE IF NOT EXISTS public.companies (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   cnpj VARCHAR(18) NOT NULL UNIQUE,
@@ -12,17 +15,15 @@ CREATE TABLE IF NOT EXISTS companies (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS users (
+-- Create turnos table in public schema with correct column names
+CREATE TABLE IF NOT EXISTS public.turnos (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  cpf VARCHAR(14) NOT NULL UNIQUE,
-  company_id INTEGER REFERENCES companies(id),
-  voucher VARCHAR(4) NOT NULL,
-  turno VARCHAR(10) CHECK (turno IN ('central', 'primeiro', 'segundo', 'terceiro')),
-  is_suspended BOOLEAN DEFAULT FALSE,
-  photo TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  tipo_turno VARCHAR(10) CHECK (tipo_turno IN ('central', 'primeiro', 'segundo', 'terceiro')),
+  horario_inicio TIME NOT NULL,
+  horario_fim TIME NOT NULL,
+  ativo BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS meal_types (
@@ -73,53 +74,9 @@ CREATE TABLE IF NOT EXISTS disposable_vouchers (
   is_used BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE IF NOT EXISTS shift_configurations (
-  id SERIAL PRIMARY KEY,
-  shift_type VARCHAR(10) CHECK (shift_type IN ('central', 'primeiro', 'segundo', 'terceiro')),
-  start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Insert default shift configurations
-INSERT INTO shift_configurations (shift_type, start_time, end_time, is_active) VALUES
+-- Insert default turnos
+INSERT INTO public.turnos (tipo_turno, horario_inicio, horario_fim, ativo) VALUES
   ('central', '08:00:00', '17:00:00', true),
   ('primeiro', '06:00:00', '14:00:00', true),
   ('segundo', '14:00:00', '22:00:00', true),
   ('terceiro', '22:00:00', '06:00:00', true);
-
--- Enable RLS
-ALTER TABLE empresas ENABLE ROW LEVEL SECURITY;
-
--- Create policies for empresas table
-CREATE POLICY "Empresas are viewable by everyone" 
-ON empresas FOR SELECT 
-USING (true);
-
-CREATE POLICY "Empresas can be inserted by authenticated users only" 
-ON empresas FOR INSERT 
-WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Empresas can be updated by authenticated users only" 
-ON empresas FOR UPDATE 
-USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Empresas can be deleted by authenticated users only" 
-ON empresas FOR DELETE 
-USING (auth.role() = 'authenticated');
-
--- Insert initial data
-INSERT INTO empresas (nome, cnpj) VALUES 
-('Empresa Teste', '12345678000190'),
-('Outra Empresa', '98765432000110');
-
-INSERT INTO meal_types (name, start_time, end_time, value) VALUES 
-('Café da Manhã', '06:00:00', '09:00:00', 10.00),
-('Almoço', '11:00:00', '14:00:00', 25.00),
-('Jantar', '18:00:00', '21:00:00', 25.00);
-
-INSERT INTO background_images (page, image_url) VALUES
-('home', 'https://example.com/image1.png'),
-('about', 'https://example.com/image2.png');
