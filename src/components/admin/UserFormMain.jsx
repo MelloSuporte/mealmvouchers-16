@@ -12,24 +12,6 @@ import UserSearchSection from './user/UserSearchSection';
 import UserBasicInfo from './user/UserBasicInfo';
 import CompanySelect from './user/CompanySelect';
 
-const generateUniqueVoucher = async (cpf) => {
-  try {
-    const cleanCPF = cpf.replace(/\D/g, '');
-    const lastFourDigits = cleanCPF.slice(-4);
-    
-    const response = await api.get(`/usuarios/check-voucher/${lastFourDigits}`);
-    
-    if (response.data.exists) {
-      return Math.floor(1000 + Math.random() * 9000).toString();
-    }
-    
-    return lastFourDigits;
-  } catch (error) {
-    console.error('Error generating voucher:', error);
-    return Math.floor(1000 + Math.random() * 9000).toString();
-  }
-};
-
 const UserFormMain = ({
   formData,
   onInputChange,
@@ -148,8 +130,8 @@ const UserFormMain = ({
         </SelectTrigger>
         <SelectContent>
           {turnos.map((turno) => (
-            <SelectItem key={turno.id} value={turno.tipo}>
-              {turno.tipo.charAt(0).toUpperCase() + turno.tipo.slice(1)} ({formatTime(turno.hora_inicio)} - {formatTime(turno.hora_fim)})
+            <SelectItem key={turno.id} value={turno.tipo_turno}>
+              {turno.tipo_turno.charAt(0).toUpperCase() + turno.tipo_turno.slice(1)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
             </SelectItem>
           ))}
         </SelectContent>
