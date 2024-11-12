@@ -6,24 +6,24 @@ import logger from '../../config/logger';
 
 const UserForm = () => {
   const [formData, setFormData] = useState({
-    userName: "",
-    userCPF: "",
-    company: "",
+    nomeUsuario: "",
+    cpfUsuario: "",
+    empresa: "",
     voucher: "",
-    selectedTurno: "",
-    isSuspended: false,
-    userPhoto: null
+    turnoSelecionado: "",
+    suspenso: false,
+    fotoUsuario: null
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [enviando, setEnviando] = useState(false);
 
-  const validateForm = () => {
-    if (!formData.userName || !formData.userCPF || !formData.company || !formData.voucher || !formData.selectedTurno) {
+  const validarFormulario = () => {
+    if (!formData.nomeUsuario || !formData.cpfUsuario || !formData.empresa || !formData.voucher || !formData.turnoSelecionado) {
       toast.error("Por favor, preencha todos os campos obrigatórios");
       return false;
     }
 
     const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-    if (!cpfRegex.test(formData.userCPF)) {
+    if (!cpfRegex.test(formData.cpfUsuario)) {
       toast.error("Por favor, insira um CPF válido no formato XXX.XXX.XXX-XX");
       return false;
     }
@@ -31,68 +31,68 @@ const UserForm = () => {
     return true;
   };
 
-  const handleSaveUser = async () => {
-    if (!validateForm() || isSubmitting) return;
+  const handleSalvarUsuario = async () => {
+    if (!validarFormulario() || enviando) return;
 
     try {
-      setIsSubmitting(true);
+      setEnviando(true);
       
-      const userData = {
-        name: formData.userName.trim(),
-        cpf: formData.userCPF.replace(/\D/g, ''),
-        company_id: parseInt(formData.company),
+      const dadosUsuario = {
+        nome: formData.nomeUsuario,
+        cpf: formData.cpfUsuario.replace(/\D/g, ''),
+        empresa_id: parseInt(formData.empresa),
         voucher: formData.voucher,
-        turno: formData.selectedTurno,
-        is_suspended: formData.isSuspended,
-        photo: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
+        turno: formData.turnoSelecionado,
+        suspenso: formData.suspenso,
+        foto: formData.fotoUsuario instanceof File ? await converterParaBase64(formData.fotoUsuario) : formData.fotoUsuario
       };
 
-      let response;
-      const endpoint = `/usuarios${formData.id ? `/${formData.id}` : ''}`;
-      const method = formData.id ? 'put' : 'post';
+      let resposta;
+      const endpoint = `/api/usuarios${formData.id ? `/${formData.id}` : ''}`;
+      const metodo = formData.id ? 'put' : 'post';
 
-      response = await api[method](endpoint, userData);
+      resposta = await api[metodo](endpoint, dadosUsuario);
 
-      if (response.data.success) {
+      if (resposta.data.sucesso) {
         toast.success(formData.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
-        clearForm();
+        limparFormulario();
       } else {
-        throw new Error(response.data.error || 'Erro ao salvar usuário');
+        throw new Error(resposta.data.erro || 'Erro ao salvar usuário');
       }
-    } catch (error) {
-      const errorMessage = error.response?.data?.error || error.message;
-      toast.error(errorMessage);
-      logger.error('Erro ao salvar usuário:', error);
+    } catch (erro) {
+      const mensagemErro = erro.response?.data?.erro || erro.message || "Erro ao salvar usuário";
+      toast.error(mensagemErro);
+      logger.error('Erro ao salvar usuário:', erro);
     } finally {
-      setIsSubmitting(false);
+      setEnviando(false);
     }
   };
 
-  const convertToBase64 = (file) => {
+  const converterParaBase64 = (arquivo) => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
+      const leitor = new FileReader();
+      leitor.readAsDataURL(arquivo);
+      leitor.onload = () => resolve(leitor.result);
+      leitor.onerror = (erro) => reject(erro);
     });
   };
 
-  const clearForm = () => {
+  const limparFormulario = () => {
     setFormData({
-      userName: "",
-      userCPF: "",
-      company: "",
+      nomeUsuario: "",
+      cpfUsuario: "",
+      empresa: "",
       voucher: "",
-      selectedTurno: "",
-      isSuspended: false,
-      userPhoto: null
+      turnoSelecionado: "",
+      suspenso: false,
+      fotoUsuario: null
     });
   };
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (campo, valor) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [campo]: valor
     }));
   };
 
@@ -101,8 +101,8 @@ const UserForm = () => {
       <UserFormMain
         formData={formData}
         onInputChange={handleInputChange}
-        onSave={handleSaveUser}
-        isSubmitting={isSubmitting}
+        onSave={handleSalvarUsuario}
+        isSubmitting={enviando}
       />
     </div>
   );

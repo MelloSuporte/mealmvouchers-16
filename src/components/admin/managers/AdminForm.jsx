@@ -49,10 +49,10 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
       }
 
       if (adminToEdit) {
-        await api.put(`/usuarios-admin/${adminToEdit.id}`, formData);
+        await api.put(`/api/usuarios-admin/${adminToEdit.id}`, formData);
         toast.success('Gestor atualizado com sucesso!');
       } else {
-        await api.post('/usuarios-admin', formData);
+        await api.post('/api/usuarios-admin', formData);
         toast.success('Gestor cadastrado com sucesso!');
       }
       onClose();
