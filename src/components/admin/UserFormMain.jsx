@@ -45,7 +45,7 @@ const UserFormMain = ({
         const response = await api.get('/turnos');
         return response.data || [];
       } catch (error) {
-        console.error('Error fetching turnos:', error);
+        console.error('Erro ao carregar turnos:', error);
         toast.error('Erro ao carregar turnos');
         return [];
       }
