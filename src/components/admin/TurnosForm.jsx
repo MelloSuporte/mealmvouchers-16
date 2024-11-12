@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import api from "@/utils/api";
+import { supabase } from "@/config/supabase";
 import { Loader2, Plus } from "lucide-react";
 import TurnoCard from "@/components/admin/turnos/TurnoCard";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";

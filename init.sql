@@ -27,10 +27,10 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS turnos (
   id SERIAL PRIMARY KEY,
-  shift_type VARCHAR(10) CHECK (shift_type IN ('central', 'primeiro', 'segundo', 'terceiro')),
-  start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
+  tipo_turno VARCHAR(10) CHECK (tipo_turno IN ('central', 'primeiro', 'segundo', 'terceiro')),
+  horario_inicio TIME NOT NULL,
+  horario_fim TIME NOT NULL,
+  ativo BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS disposable_vouchers (
 );
 
 -- Insert default shift configurations
-INSERT INTO turnos (shift_type, start_time, end_time, is_active) VALUES
+INSERT INTO turnos (tipo_turno, horario_inicio, horario_fim, ativo) VALUES
   ('central', '08:00:00', '17:00:00', true),
   ('primeiro', '06:00:00', '14:00:00', true),
   ('segundo', '14:00:00', '22:00:00', true),
