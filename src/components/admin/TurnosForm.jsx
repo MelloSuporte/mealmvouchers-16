@@ -33,10 +33,12 @@ const TurnosForm = () => {
       try {
         const { data, error } = await supabase
           .from('turnos')
-          .select('*')
-          .order('id');
+          .select('*');
 
-        if (error) throw error;
+        if (error) {
+          toast.error(`Erro ao buscar turnos: ${error.message}`);
+          throw error;
+        }
         return data || [];
       } catch (erro) {
         console.error('Erro ao buscar turnos:', erro);
