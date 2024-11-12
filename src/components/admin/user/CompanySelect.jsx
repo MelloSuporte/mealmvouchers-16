@@ -5,8 +5,8 @@ import { toast } from "sonner";
 import { supabase } from '../../../config/supabase';
 
 const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeholder = "Selecione a empresa" }) => {
-  const { data: empresas = [], isLoading, error } = useQuery({
-    queryKey: ['empresas'],
+  const { data: companies = [], isLoading, error } = useQuery({
+    queryKey: ['companies'],
     queryFn: async () => {
       try {
         const { data, error } = await supabase
@@ -16,7 +16,7 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
 
         if (error) throw error;
 
-        return Array.isArray(data) ? data : [];
+        return data || [];
       } catch (error) {
         console.error('Erro ao carregar empresas:', error);
         toast.error('Erro ao carregar empresas: ' + error.message);
@@ -28,8 +28,6 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
   if (error) {
     toast.error('Erro ao carregar empresas');
   }
-
-  const companiesArray = Array.isArray(empresas) ? empresas : [];
 
   return (
     <Select 
@@ -44,9 +42,9 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
         {includeAllOption && (
           <SelectItem value="all">Todas as empresas</SelectItem>
         )}
-        {companiesArray.map((empresa) => (
-          <SelectItem key={empresa.id} value={empresa.id.toString()}>
-            {empresa.name}
+        {Array.isArray(companies) && companies.map((company) => (
+          <SelectItem key={company.id} value={company.id.toString()}>
+            {company.name}
           </SelectItem>
         ))}
       </SelectContent>
