@@ -43,7 +43,10 @@ const UserFormMain = ({
     queryFn: async () => {
       try {
         const response = await api.get('/turnos');
-        return response.data || [];
+        if (!response.data) {
+          throw new Error('Dados dos turnos não encontrados');
+        }
+        return response.data;
       } catch (error) {
         console.error('Erro ao carregar turnos:', error);
         toast.error('Erro ao carregar turnos');
