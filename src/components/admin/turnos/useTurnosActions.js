@@ -11,7 +11,7 @@ export const useTurnosActions = () => {
     mutationFn: async (novoTurno) => {
       console.log('[Creating Turno]', novoTurno);
       const { data, error } = await supabase
-        .from('turnos')
+        .from('shift_configurations')
         .insert([{
           shift_type: novoTurno.shift_type,
           start_time: novoTurno.start_time,
@@ -38,7 +38,7 @@ export const useTurnosActions = () => {
     mutationFn: async (updatedTurno) => {
       console.log('[Updating Turno]', updatedTurno);
       const { data, error } = await supabase
-        .from('turnos')
+        .from('shift_configurations')
         .update({
           start_time: updatedTurno.start_time,
           end_time: updatedTurno.end_time,
