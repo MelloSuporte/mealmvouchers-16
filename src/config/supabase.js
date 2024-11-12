@@ -2,9 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase environment variables are not properly configured');
 }
 
@@ -14,42 +13,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true
   },
-  db: {
-    schema: 'public'
-  },
   global: {
     headers: {
-      'apikey': supabaseAnonKey,
-      'Authorization': `Bearer ${supabaseAnonKey}`
+      'apikey': supabaseAnonKey
     }
   }
 });
 
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true
-  },
-  db: {
-    schema: 'public'
-  }
-});
-
-// Verificar conexão com tratamento de erro adequado
+// Verify connection
 const checkConnection = async () => {
   try {
-    const { data, error } = await supabaseAdmin
-      .from('empresas')
-      .select('count', { count: 'exact', head: true });
-
-    if (error) {
-      console.error('Erro na conexão com Supabase:', error);
-      throw error;
-    }
-
-    console.log('Conexão com Supabase estabelecida com sucesso');
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    console.log('Supabase connection verified');
   } catch (error) {
-    console.error('Falha ao conectar com Supabase:', error);
+    console.error('Error connecting to Supabase:', error.message);
   }
 };
 
