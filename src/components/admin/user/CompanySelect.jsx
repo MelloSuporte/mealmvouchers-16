@@ -5,14 +5,14 @@ import { toast } from "sonner";
 import { supabase } from '../../../config/supabase';
 
 const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeholder = "Selecione a empresa" }) => {
-  const { data: companies = [], isLoading, error } = useQuery({
-    queryKey: ['companies'],
+  const { data: empresas = [], isLoading, error } = useQuery({
+    queryKey: ['empresas'],
     queryFn: async () => {
       try {
         const { data, error } = await supabase
-          .from('companies')
+          .from('empresas')
           .select('*')
-          .order('name');
+          .order('nome');
 
         if (error) throw error;
 
@@ -42,9 +42,9 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
         {includeAllOption && (
           <SelectItem value="all">Todas as empresas</SelectItem>
         )}
-        {Array.isArray(companies) && companies.map((company) => (
-          <SelectItem key={company.id} value={company.id.toString()}>
-            {company.name}
+        {Array.isArray(empresas) && empresas.map((empresa) => (
+          <SelectItem key={empresa.id} value={empresa.id.toString()}>
+            {empresa.nome}
           </SelectItem>
         ))}
       </SelectContent>

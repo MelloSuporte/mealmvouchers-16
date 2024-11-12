@@ -17,7 +17,7 @@ const generateUniqueVoucher = async (cpf) => {
     const cleanCPF = cpf.replace(/\D/g, '');
     const lastFourDigits = cleanCPF.slice(-4);
     
-    const response = await api.get(`/users/check-voucher/${lastFourDigits}`);
+    const response = await api.get(`/usuarios/check-voucher/${lastFourDigits}`);
     
     if (response.data.exists) {
       return Math.floor(1000 + Math.random() * 9000).toString();
@@ -73,16 +73,16 @@ const UserFormMain = ({
     }
 
     try {
-      const response = await api.get(`/users/search?cpf=${searchCPF}`);
+      const response = await api.get(`/usuarios/search?cpf=${searchCPF}`);
       if (response.data) {
         const userData = response.data;
-        onInputChange('userName', userData.name);
+        onInputChange('userName', userData.nome);
         onInputChange('userCPF', userData.cpf);
-        onInputChange('company', userData.company_id?.toString());
+        onInputChange('empresa_id', userData.empresa_id?.toString());
         onInputChange('voucher', userData.voucher);
         onInputChange('selectedTurno', userData.turno);
-        onInputChange('isSuspended', userData.is_suspended);
-        onInputChange('userPhoto', userData.photo);
+        onInputChange('isSuspended', userData.suspenso);
+        onInputChange('userPhoto', userData.foto);
         toast.success('Usuário encontrado!');
       }
     } catch (error) {
@@ -125,8 +125,8 @@ const UserFormMain = ({
       />
 
       <CompanySelect 
-        value={formData.company}
-        onValueChange={(value) => onInputChange('company', value)}
+        value={formData.empresa_id}
+        onValueChange={(value) => onInputChange('empresa_id', value)}
       />
 
       <div className="flex items-center space-x-2">
@@ -150,8 +150,8 @@ const UserFormMain = ({
         </SelectTrigger>
         <SelectContent>
           {turnos.map((turno) => (
-            <SelectItem key={turno.id} value={turno.tipo}>
-              {turno.tipo.charAt(0).toUpperCase() + turno.tipo.slice(1)} ({formatTime(turno.hora_inicio)} - {formatTime(turno.hora_fim)})
+            <SelectItem key={turno.id} value={turno.tipo_turno}>
+              {turno.tipo_turno.charAt(0).toUpperCase() + turno.tipo_turno.slice(1)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
             </SelectItem>
           ))}
         </SelectContent>
