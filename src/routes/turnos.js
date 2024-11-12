@@ -5,15 +5,13 @@ import { authenticateToken } from '../middleware/security.js';
 
 const router = express.Router();
 
-// Aplicar middleware de autenticação para todas as rotas
 router.use(authenticateToken);
 
-// GET /turnos - Listar todos os turnos
 router.get('/', async (req, res) => {
   try {
     logger.info('Buscando turnos...');
     const { data: turnos, error } = await supabase
-      .from('shift_configurations')
+      .from('turnos')
       .select('*')
       .order('id');
 
@@ -33,29 +31,28 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /turnos - Criar novo turno
 router.post('/', async (req, res) => {
   try {
-    const { shift_type, start_time, end_time, is_active } = req.body;
-    logger.info('Criando novo turno:', { shift_type, start_time, end_time, is_active });
+    const { turno, hora_inicio, hora_fim, ativo } = req.body;
+    logger.info('Criando novo turno:', { turno, hora_inicio, hora_fim, ativo });
     
-    if (!shift_type?.trim()) {
+    if (!turno?.trim()) {
       return res.status(400).json({ erro: 'Tipo de turno é obrigatório' });
     }
-    if (!start_time?.trim()) {
+    if (!hora_inicio?.trim()) {
       return res.status(400).json({ erro: 'Horário de início é obrigatório' });
     }
-    if (!end_time?.trim()) {
+    if (!hora_fim?.trim()) {
       return res.status(400).json({ erro: 'Horário de fim é obrigatório' });
     }
 
-    const { data: turno, error } = await supabase
-      .from('shift_configurations')
+    const { data: novoTurno, error } = await supabase
+      .from('turnos')
       .insert([{
-        shift_type,
-        start_time,
-        end_time,
-        is_active: is_active ?? true,
+        turno,
+        hora_inicio,
+        hora_fim,
+        ativo: ativo ?? true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }])
@@ -67,8 +64,8 @@ router.post('/', async (req, res) => {
       throw error;
     }
 
-    logger.info('Turno criado com sucesso:', turno);
-    res.status(201).json(turno);
+    logger.info('Turno criado com sucesso:', novoTurno);
+    res.status(201).json(novoTurno);
   } catch (erro) {
     logger.error('Erro ao criar turno:', erro);
     res.status(500).json({ 
@@ -78,18 +75,17 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /turnos/:id - Atualizar turno existente
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { start_time, end_time, is_active } = req.body;
+    const { hora_inicio, hora_fim, ativo } = req.body;
     
     const { data: turno, error } = await supabase
-      .from('shift_configurations')
+      .from('turnos')
       .update({
-        start_time,
-        end_time,
-        is_active,
+        hora_inicio,
+        hora_fim,
+        ativo,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
