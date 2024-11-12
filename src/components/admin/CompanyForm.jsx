@@ -17,6 +17,12 @@ const CompanyForm = () => {
     queryKey: ['empresas'],
     queryFn: async () => {
       try {
+        const { data: session } = await supabase.auth.getSession();
+        
+        if (!session?.session?.access_token) {
+          throw new Error('Usuário não autenticado');
+        }
+
         const { data, error } = await supabase
           .from('empresas')
           .select('*')
@@ -57,6 +63,12 @@ const CompanyForm = () => {
 
   const ensureLogosBucket = async () => {
     try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.access_token) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const { data: buckets } = await supabase.storage.listBuckets();
       const logosBucket = buckets?.find(b => b.name === 'logos');
       
@@ -90,6 +102,12 @@ const CompanyForm = () => {
 
     try {
       setIsSubmitting(true);
+
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.access_token) {
+        throw new Error('Usuário não autenticado');
+      }
       
       let logoUrl = null;
       if (logo instanceof File) {
