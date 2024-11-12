@@ -70,18 +70,11 @@ const UserFormMain = ({
     }
   };
 
-  const handleCPFChange = async (e) => {
+  const handleCPFChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length <= 11) {
       value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
       onInputChange('userCPF', value);
-      
-      if (value.length >= 11) {
-        const newVoucher = await generateUniqueVoucher(value);
-        if (newVoucher) {
-          onInputChange('voucher', newVoucher);
-        }
-      }
     }
   };
 
@@ -130,8 +123,8 @@ const UserFormMain = ({
         </SelectTrigger>
         <SelectContent>
           {turnos.map((turno) => (
-            <SelectItem key={turno.id} value={turno.tipo_turno}>
-              {turno.tipo_turno.charAt(0).toUpperCase() + turno.tipo_turno.slice(1)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
+            <SelectItem key={turno.id} value={turno.tipo}>
+              {turno.tipo.charAt(0).toUpperCase() + turno.tipo.slice(1)} ({formatTime(turno.hora_inicio)} - {formatTime(turno.hora_fim)})
             </SelectItem>
           ))}
         </SelectContent>
