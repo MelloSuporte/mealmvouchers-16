@@ -16,7 +16,8 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
 
         if (error) throw error;
 
-        return data || [];
+        // Ensure we always return an array
+        return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error('Erro ao carregar empresas:', error);
         toast.error('Erro ao carregar empresas: ' + error.message);
@@ -28,6 +29,9 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
   if (error) {
     toast.error('Erro ao carregar empresas');
   }
+
+  // Ensure empresas is always an array before mapping
+  const companiesArray = Array.isArray(empresas) ? empresas : [];
 
   return (
     <Select 
@@ -42,7 +46,7 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
         {includeAllOption && (
           <SelectItem value="all">Todas as empresas</SelectItem>
         )}
-        {Array.isArray(empresas) && empresas.map((empresa) => (
+        {companiesArray.map((empresa) => (
           <SelectItem key={empresa.id} value={empresa.id.toString()}>
             {empresa.nome}
           </SelectItem>
