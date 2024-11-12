@@ -13,7 +13,7 @@ export const useTurnosActions = () => {
       const { data, error } = await supabase
         .from('turnos')
         .insert([{
-          turno: novoTurno.turno,
+          tipo: novoTurno.tipo,
           hora_inicio: novoTurno.hora_inicio,
           hora_fim: novoTurno.hora_fim,
           ativo: novoTurno.ativo

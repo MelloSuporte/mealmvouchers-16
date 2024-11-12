@@ -28,8 +28,8 @@ const NovoTurnoDialog = ({ isOpen, onOpenChange, novoTurno, setNovoTurno, onCrea
           <div className="space-y-2">
             <Label>Tipo de Turno</Label>
             <Select
-              value={novoTurno.tipo_turno}
-              onValueChange={(value) => setNovoTurno({ ...novoTurno, tipo_turno: value })}
+              value={novoTurno.tipo}
+              onValueChange={(value) => setNovoTurno({ ...novoTurno, tipo: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo de turno" />

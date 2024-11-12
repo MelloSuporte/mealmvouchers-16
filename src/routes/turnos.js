@@ -33,10 +33,10 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { tipo_turno, hora_inicio, hora_fim, ativo } = req.body;
-    logger.info('Criando novo turno:', { tipo_turno, hora_inicio, hora_fim, ativo });
+    const { tipo, hora_inicio, hora_fim, ativo } = req.body;
+    logger.info('Criando novo turno:', { tipo, hora_inicio, hora_fim, ativo });
     
-    if (!tipo_turno?.trim()) {
+    if (!tipo?.trim()) {
       return res.status(400).json({ erro: 'Tipo de turno é obrigatório' });
     }
     if (!hora_inicio?.trim()) {
@@ -49,7 +49,7 @@ router.post('/', async (req, res) => {
     const { data: novoTurno, error } = await supabase
       .from('turnos')
       .insert([{
-        tipo_turno,
+        tipo,
         hora_inicio,
         hora_fim,
         ativo: ativo ?? true,
