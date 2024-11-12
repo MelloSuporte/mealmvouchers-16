@@ -25,6 +25,16 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS turnos (
+  id SERIAL PRIMARY KEY,
+  shift_type VARCHAR(10) CHECK (shift_type IN ('central', 'primeiro', 'segundo', 'terceiro')),
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS meal_types (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -73,18 +83,8 @@ CREATE TABLE IF NOT EXISTS disposable_vouchers (
   is_used BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE IF NOT EXISTS shift_configurations (
-  id SERIAL PRIMARY KEY,
-  shift_type VARCHAR(10) CHECK (shift_type IN ('central', 'primeiro', 'segundo', 'terceiro')),
-  start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Insert default shift configurations
-INSERT INTO shift_configurations (shift_type, start_time, end_time, is_active) VALUES
+INSERT INTO turnos (shift_type, start_time, end_time, is_active) VALUES
   ('central', '08:00:00', '17:00:00', true),
   ('primeiro', '06:00:00', '14:00:00', true),
   ('segundo', '14:00:00', '22:00:00', true),
