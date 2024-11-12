@@ -27,9 +27,9 @@ export const useTurnosActions = () => {
     mutationFn: async (updatedTurno) => {
       console.log('[Updating Turno]', updatedTurno);
       const response = await api.put(`/turnos/${updatedTurno.id}`, {
-        hora_inicio: updatedTurno.hora_inicio,
-        hora_fim: updatedTurno.hora_fim,
-        ativo: updatedTurno.ativo
+        start_time: updatedTurno.start_time,
+        end_time: updatedTurno.end_time,
+        is_active: updatedTurno.is_active
       });
       return response.data;
     },

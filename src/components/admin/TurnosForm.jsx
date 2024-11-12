@@ -21,10 +21,10 @@ const TurnosForm = () => {
   const navigate = useNavigate();
   const [dialogoAberto, setDialogoAberto] = React.useState(false);
   const [novoTurno, setNovoTurno] = React.useState({
-    tipo: '',
-    hora_inicio: '',
-    hora_fim: '',
-    ativo: true
+    shift_type: '',
+    start_time: '',
+    end_time: '',
+    is_active: true
   });
 
   const { data: dadosTurnos, isLoading: carregando, error: erro, refetch: recarregar } = useQuery({
@@ -69,10 +69,10 @@ const TurnosForm = () => {
     await handleCreateTurno(novoTurno);
     setDialogoAberto(false);
     setNovoTurno({
-      tipo: '',
-      hora_inicio: '',
-      hora_fim: '',
-      ativo: true
+      shift_type: '',
+      start_time: '',
+      end_time: '',
+      is_active: true
     });
   };
 
@@ -97,7 +97,7 @@ const TurnosForm = () => {
   if (erro) {
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-        <p className="text-red-600">Erro ao carregar turnos. Por favor, tente novamente.</p>
+        <p className="text-red-600">Erro ao buscar turnos. Por favor, tente novamente.</p>
         <Button 
           onClick={() => recarregar()} 
           variant="outline" 
@@ -140,10 +140,10 @@ const TurnosForm = () => {
           <TableBody>
             {turnos.map((turno) => (
               <TableRow key={turno.id}>
-                <TableCell>{getTurnoLabel(turno.tipo)}</TableCell>
-                <TableCell>{turno.hora_inicio}</TableCell>
-                <TableCell>{turno.hora_fim}</TableCell>
-                <TableCell>{turno.ativo ? 'Ativo' : 'Inativo'}</TableCell>
+                <TableCell>{getTurnoLabel(turno.shift_type)}</TableCell>
+                <TableCell>{turno.start_time}</TableCell>
+                <TableCell>{turno.end_time}</TableCell>
+                <TableCell>{turno.is_active ? 'Ativo' : 'Inativo'}</TableCell>
               </TableRow>
             ))}
           </TableBody>
