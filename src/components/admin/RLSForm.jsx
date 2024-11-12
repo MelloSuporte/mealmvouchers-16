@@ -49,7 +49,7 @@ const RLSForm = () => {
 
   const validateDates = (dates) => {
     const today = startOfDay(new Date());
-    const maxDate = addMonths(today, 3); // Limite de 3 meses para vouchers extras
+    const maxDate = addMonths(today, 3);
 
     for (const date of dates) {
       if (isBefore(date, today)) {

@@ -58,7 +58,6 @@ CREATE TABLE IF NOT EXISTS extra_vouchers (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id),
   authorized_by VARCHAR(255) NOT NULL,
-  reason TEXT,
   valid_until DATE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
