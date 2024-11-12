@@ -53,28 +53,6 @@ const handleNormalVoucher = async (cpf, code, mealType, user) => {
   return { success: true };
 };
 
-const handleExtraVoucher = async (cpf, code, mealType, user) => {
-  const { data: extraVouchers, error } = await supabase
-    .from('extra_vouchers')
-    .select()
-    .eq('user_id', user.id)
-    .gte('valid_until', new Date().toISOString())
-    .eq('used', false);
-
-  if (error || extraVouchers.length === 0) {
-    throw new Error('Limite diário de refeições atingido');
-  }
-
-  const { error: updateError } = await supabase
-    .from('extra_vouchers')
-    .update({ used: true })
-    .eq('id', extraVouchers[0].id);
-
-  if (updateError) throw updateError;
-
-  return { success: true };
-};
-
 export const validateVoucher = async (req, res) => {
   const { cpf, voucherCode: code, mealType } = req.body;
   
@@ -122,12 +100,11 @@ export const validateVoucher = async (req, res) => {
       .eq('user_id', user.id)
       .gte('used_at', new Date().toISOString().split('T')[0]);
 
-    let result;
     if (usedMeals.length >= 2) {
-      result = await handleExtraVoucher(cleanCpf, cleanCode, mealType, user);
-    } else {
-      result = await handleNormalVoucher(cleanCpf, cleanCode, mealType, user);
+      throw new Error('Limite diário de refeições atingido');
     }
+
+    const result = await handleNormalVoucher(cleanCpf, cleanCode, mealType, user);
 
     // Registra o uso do voucher
     const { error: usageError } = await supabase
