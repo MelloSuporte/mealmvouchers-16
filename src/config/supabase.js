@@ -16,6 +16,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
+  },
+  db: {
+    schema: 'public'
+  },
+  global: {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseAnonKey}`
+    }
   }
 });
 
@@ -24,11 +33,14 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRole, {
   auth: {
     autoRefreshToken: true,
     persistSession: true
+  },
+  db: {
+    schema: 'public'
   }
 });
 
 // Verificar conexão
-supabase.from('empresas')
+supabaseAdmin.from('empresas')
   .select('count', { count: 'exact', head: true })
   .then(({ error }) => {
     if (error) {
