@@ -11,13 +11,18 @@ router.use(authenticateToken);
 // GET /turnos - Listar todos os turnos
 router.get('/', async (req, res) => {
   try {
+    logger.info('Buscando turnos...');
     const { data: turnos, error } = await supabase
       .from('turnos')
       .select('*')
       .order('id');
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro Supabase ao buscar turnos:', error);
+      throw error;
+    }
 
+    logger.info(`${turnos?.length || 0} turnos encontrados`);
     res.json(turnos || []);
   } catch (erro) {
     logger.error('Erro ao buscar turnos:', erro);
@@ -32,6 +37,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { tipo, hora_inicio, hora_fim, ativo } = req.body;
+    logger.info('Criando novo turno:', { tipo, hora_inicio, hora_fim, ativo });
     
     if (!tipo?.trim()) {
       return res.status(400).json({ erro: 'Tipo de turno é obrigatório' });
@@ -56,8 +62,12 @@ router.post('/', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro Supabase ao criar turno:', error);
+      throw error;
+    }
 
+    logger.info('Turno criado com sucesso:', turno);
     res.status(201).json(turno);
   } catch (erro) {
     logger.error('Erro ao criar turno:', erro);
@@ -86,8 +96,12 @@ router.put('/:id', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro Supabase ao atualizar turno:', error);
+      throw error;
+    }
 
+    logger.info('Turno atualizado com sucesso:', turno);
     res.json(turno);
   } catch (erro) {
     logger.error('Erro ao atualizar turno:', erro);
