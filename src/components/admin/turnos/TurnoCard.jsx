@@ -20,7 +20,7 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>{getTurnoLabel(turno.shift_type)}</CardTitle>
+          <CardTitle>{getTurnoLabel(turno.tipo_turno)}</CardTitle>
           {isSubmitting && (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           )}
@@ -34,8 +34,8 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
             <Input
               id={`entrada-${turno.id}`}
               type="time"
-              value={turno.start_time}
-              onChange={(e) => onTurnoChange(turno.id, 'start_time', e.target.value)}
+              value={turno.horario_inicio}
+              onChange={(e) => onTurnoChange(turno.id, 'horario_inicio', e.target.value)}
               className="w-full"
               disabled={isSubmitting}
             />
@@ -45,8 +45,8 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
             <Input
               id={`saida-${turno.id}`}
               type="time"
-              value={turno.end_time}
-              onChange={(e) => onTurnoChange(turno.id, 'end_time', e.target.value)}
+              value={turno.horario_fim}
+              onChange={(e) => onTurnoChange(turno.id, 'horario_fim', e.target.value)}
               className="w-full"
               disabled={isSubmitting}
             />
@@ -56,12 +56,12 @@ const TurnoCard = ({ turno, onTurnoChange, isSubmitting }) => {
             <div className="flex items-center space-x-2">
               <Switch
                 id={`ativo-${turno.id}`}
-                checked={turno.is_active}
-                onCheckedChange={(checked) => onTurnoChange(turno.id, 'is_active', checked)}
+                checked={turno.ativo}
+                onCheckedChange={(checked) => onTurnoChange(turno.id, 'ativo', checked)}
                 disabled={isSubmitting}
               />
               <Label htmlFor={`ativo-${turno.id}`}>
-                {turno.is_active ? 'Ativo' : 'Inativo'}
+                {turno.ativo ? 'Ativo' : 'Inativo'}
               </Label>
             </div>
           </div>

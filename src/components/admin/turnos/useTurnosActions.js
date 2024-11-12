@@ -13,10 +13,10 @@ export const useTurnosActions = () => {
       const { data, error } = await supabase
         .from('turnos')
         .insert([{
-          tipo_turno: novoTurno.shift_type,
-          horario_inicio: novoTurno.start_time,
-          horario_fim: novoTurno.end_time,
-          ativo: novoTurno.is_active
+          tipo_turno: novoTurno.tipo_turno,
+          horario_inicio: novoTurno.horario_inicio,
+          horario_fim: novoTurno.horario_fim,
+          ativo: novoTurno.ativo
         }])
         .select('*')
         .single();
@@ -40,9 +40,9 @@ export const useTurnosActions = () => {
       const { data, error } = await supabase
         .from('turnos')
         .update({
-          horario_inicio: updatedTurno.start_time,
-          horario_fim: updatedTurno.end_time,
-          ativo: updatedTurno.is_active,
+          horario_inicio: updatedTurno.horario_inicio,
+          horario_fim: updatedTurno.horario_fim,
+          ativo: updatedTurno.ativo,
           updated_at: new Date().toISOString()
         })
         .eq('id', updatedTurno.id)

@@ -21,58 +21,40 @@ const TurnosForm = () => {
   const navigate = useNavigate();
   const [dialogoAberto, setDialogoAberto] = React.useState(false);
   const [novoTurno, setNovoTurno] = React.useState({
-    shift_type: '',
-    start_time: '',
-    end_time: '',
-    is_active: true
+    tipo_turno: '',
+    horario_inicio: '',
+    horario_fim: '',
+    ativo: true
   });
 
   const { data: dadosTurnos, isLoading: carregando, error: erro, refetch: recarregar } = useQuery({
     queryKey: ['turnos'],
     queryFn: async () => {
       try {
-        const token = localStorage.getItem('adminToken');
-        
-        if (!token) {
-          toast.error('Sessão expirada. Por favor, faça login novamente.');
-          navigate('/login');
-          return [];
-        }
+        const { data, error } = await supabase
+          .from('turnos')
+          .select('*')
+          .order('id');
 
-        const resposta = await api.get('/turnos');
-        return resposta.data || [];
+        if (error) throw error;
+        return data || [];
       } catch (erro) {
-        if (erro.response?.status === 401) {
-          toast.error('Sessão expirada. Por favor, faça login novamente.');
-          navigate('/login');
-          return [];
-        }
+        console.error('Erro ao buscar turnos:', erro);
         throw erro;
       }
-    },
-    retry: 1,
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 10
+    }
   });
 
   const { handleTurnoChange, submittingTurnoId, handleCreateTurno } = useTurnosActions();
-
-  React.useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      toast.error('Você precisa estar logado para acessar esta página');
-      navigate('/login');
-    }
-  }, [navigate]);
 
   const handleNovoTurno = async () => {
     await handleCreateTurno(novoTurno);
     setDialogoAberto(false);
     setNovoTurno({
-      shift_type: '',
-      start_time: '',
-      end_time: '',
-      is_active: true
+      tipo_turno: '',
+      horario_inicio: '',
+      horario_fim: '',
+      ativo: true
     });
   };
 
@@ -140,10 +122,10 @@ const TurnosForm = () => {
           <TableBody>
             {turnos.map((turno) => (
               <TableRow key={turno.id}>
-                <TableCell>{getTurnoLabel(turno.shift_type)}</TableCell>
-                <TableCell>{turno.start_time}</TableCell>
-                <TableCell>{turno.end_time}</TableCell>
-                <TableCell>{turno.is_active ? 'Ativo' : 'Inativo'}</TableCell>
+                <TableCell>{getTurnoLabel(turno.tipo_turno)}</TableCell>
+                <TableCell>{turno.horario_inicio}</TableCell>
+                <TableCell>{turno.horario_fim}</TableCell>
+                <TableCell>{turno.ativo ? 'Ativo' : 'Inativo'}</TableCell>
               </TableRow>
             ))}
           </TableBody>
