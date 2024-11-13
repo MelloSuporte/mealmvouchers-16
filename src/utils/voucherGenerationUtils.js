@@ -33,7 +33,7 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
       
       // Verifica duplicidade na tabela de usuários
       const { data: existingUsers, error: userError } = await supabase
-        .from('users')
+        .from('usuarios')  // Alterado de 'users' para 'usuarios'
         .select('id')
         .eq('voucher', voucherCode)
         .limit(1);

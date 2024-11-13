@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from "sonner";
 import UserFormMain from './UserFormMain';
-import api from '../../utils/api';
+import { supabase } from '@/config/supabase';
 import logger from '../../config/logger';
 import { generateUniqueVoucherFromCPF } from '../../utils/voucherGenerationUtils';
 
@@ -50,30 +50,39 @@ const UserForm = () => {
       setFormData(updatedFormData);
 
       const userData = {
-        name: updatedFormData.userName.trim(),
+        nome: updatedFormData.userName.trim(),
         cpf: updatedFormData.userCPF.replace(/\D/g, ''),
-        company_id: parseInt(updatedFormData.company),
+        empresa_id: parseInt(updatedFormData.company),
         voucher: voucher,
         turno: updatedFormData.selectedTurno,
-        is_suspended: updatedFormData.isSuspended,
-        photo: updatedFormData.userPhoto instanceof File ? await convertToBase64(updatedFormData.userPhoto) : updatedFormData.userPhoto
+        suspenso: updatedFormData.isSuspended,
+        foto: updatedFormData.userPhoto instanceof File ? await convertToBase64(updatedFormData.userPhoto) : updatedFormData.userPhoto
       };
 
       let response;
-      const endpoint = `/usuarios${formData.id ? `/${formData.id}` : ''}`;
-      const method = formData.id ? 'put' : 'post';
-
-      response = await api[method](endpoint, userData);
-
-      if (response.data.success) {
-        toast.success(formData.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
-        clearForm();
+      if (formData.id) {
+        response = await supabase
+          .from('usuarios')
+          .update(userData)
+          .eq('id', formData.id)
+          .select()
+          .single();
       } else {
-        throw new Error(response.data.error || 'Erro ao salvar usuário');
+        response = await supabase
+          .from('usuarios')
+          .insert([userData])
+          .select()
+          .single();
       }
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      toast.success(formData.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
+      clearForm();
     } catch (error) {
-      const errorMessage = error.response?.data?.error || error.message;
-      toast.error(errorMessage);
+      toast.error(error.message || 'Erro ao salvar usuário');
       logger.error('Erro ao salvar usuário:', error);
     } finally {
       setIsSubmitting(false);
