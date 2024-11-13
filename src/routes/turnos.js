@@ -12,8 +12,7 @@ router.get('/', async (req, res) => {
     logger.info('Buscando turnos...');
     const { data: turnos, error } = await supabase
       .from('turnos')
-      .select('id, tipo, hora_inicio, hora_fim, ativo')
-      .eq('ativo', true)
+      .select('id, tipo_turno, horario_inicio, horario_fim, ativo, created_at, updated_at')
       .order('id');
 
     if (error) {

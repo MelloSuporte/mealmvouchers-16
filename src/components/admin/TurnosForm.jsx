@@ -134,17 +134,6 @@ const TurnosForm = () => {
           </TableBody>
         </Table>
       </div>
-
-      <div className="grid gap-6">
-        {turnos.map((turno) => (
-          <TurnoCard
-            key={turno.id}
-            turno={turno}
-            onTurnoChange={handleTurnoChange}
-            isSubmitting={submittingTurnoId === turno.id}
-          />
-        ))}
-      </div>
     </div>
   );
 };
