@@ -10,7 +10,7 @@ const UserSearchResults = ({ userData, onUpdate, onClose }) => {
   const [cpf, setCpf] = useState(userData.cpf);
   const [voucher, setVoucher] = useState(userData.voucher);
   const [isSuspended, setIsSuspended] = useState(userData.isSuspended);
-  const [turno, setTurno] = useState(userData.turno);
+  const [tiposTurno, setTiposTurno] = useState(userData.tipos_turno);
   const [photo, setPhoto] = useState(userData.photo);
 
   const turnos = [
@@ -21,7 +21,7 @@ const UserSearchResults = ({ userData, onUpdate, onClose }) => {
   ];
 
   const handleSave = () => {
-    onUpdate({ name, cpf, voucher, isSuspended, turno, photo });
+    onUpdate({ name, cpf, voucher, isSuspended, tipos_turno: tiposTurno, photo });
   };
 
   return (
@@ -43,7 +43,7 @@ const UserSearchResults = ({ userData, onUpdate, onClose }) => {
       />
       <div className="space-y-2">
         <Label>Turno</Label>
-        <RadioGroup value={turno} onValueChange={setTurno}>
+        <RadioGroup value={tiposTurno} onValueChange={setTiposTurno}>
           {turnos.map((t) => (
             <div key={t.id} className="flex items-center space-x-2">
               <RadioGroupItem value={t.id} id={t.id} />

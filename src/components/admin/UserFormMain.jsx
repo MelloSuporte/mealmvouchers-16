@@ -68,7 +68,7 @@ const UserFormMain = ({
         onInputChange('userCPF', userData.cpf);
         onInputChange('company', userData.empresa_id?.toString());
         onInputChange('voucher', userData.voucher);
-        onInputChange('selectedTurno', userData.turno);
+        onInputChange('tipos_turno', userData.tipos_turno);
         onInputChange('isSuspended', userData.suspenso);
         onInputChange('userPhoto', userData.foto);
         toast.success('Usuário encontrado!');
@@ -137,8 +137,8 @@ const UserFormMain = ({
       </div>
 
       <Select 
-        value={formData.selectedTurno} 
-        onValueChange={(value) => onInputChange('selectedTurno', value)}
+        value={formData.tipos_turno} 
+        onValueChange={(value) => onInputChange('tipos_turno', value)}
         disabled={isLoadingTurnos}
       >
         <SelectTrigger className="w-full">
