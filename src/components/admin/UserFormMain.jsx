@@ -31,7 +31,12 @@ const UserFormMain = ({
         .single();
 
       if (error) {
-        throw error;
+        if (error.code === 'PGRST116') {
+          toast.info('Usuário não encontrado');
+        } else {
+          throw error;
+        }
+        return;
       }
 
       if (data) {
@@ -43,13 +48,11 @@ const UserFormMain = ({
         onInputChange('userPhoto', data.foto);
         onInputChange('voucher', data.voucher);
         toast.success('Usuário encontrado!');
-      } else {
-        toast.error('Usuário não encontrado');
-        setIsSearching(false);
       }
     } catch (error) {
       console.error('Erro ao buscar usuário:', error);
-      toast.error('Erro ao buscar usuário');
+      toast.error('Erro ao buscar usuário. Por favor, tente novamente.');
+    } finally {
       setIsSearching(false);
     }
   };
