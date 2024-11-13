@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import api from '../../utils/api';
+import { supabase } from '@/config/supabase';
 import UserSearchSection from './user/UserSearchSection';
 import UserBasicInfo from './user/UserBasicInfo';
 import CompanySelect from './user/CompanySelect';
@@ -25,11 +25,18 @@ const UserFormMain = ({
     queryKey: ['turnos'],
     queryFn: async () => {
       try {
-        const response = await api.get('/turnos');
-        if (!response.data) {
-          throw new Error('Dados dos turnos não encontrados');
+        const { data, error } = await supabase
+          .from('turnos')
+          .select('*')
+          .eq('ativo', true)
+          .order('id');
+
+        if (error) {
+          console.error('Erro ao buscar turnos:', error);
+          toast.error('Erro ao carregar turnos');
+          throw error;
         }
-        return response.data;
+        return data || [];
       } catch (error) {
         console.error('Erro ao carregar turnos:', error);
         toast.error('Erro ao carregar turnos');

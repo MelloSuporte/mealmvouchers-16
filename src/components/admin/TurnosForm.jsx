@@ -34,9 +34,11 @@ const TurnosForm = () => {
         const { data, error } = await supabase
           .from('turnos')
           .select('*')
+          .eq('ativo', true)
           .order('id');
 
         if (error) {
+          console.error('Erro ao buscar turnos:', error);
           toast.error(`Erro ao buscar turnos: ${error.message}`);
           throw error;
         }
@@ -59,6 +61,7 @@ const TurnosForm = () => {
       horario_fim: '',
       ativo: true
     });
+    recarregar();
   };
 
   const getTurnoLabel = (tipoTurno) => {
