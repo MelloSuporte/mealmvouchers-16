@@ -1,7 +1,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const TurnoSelect = ({ value, onValueChange, turnos, isLoadingTurnos }) => {
+const TurnoSelect = ({ value, onValueChange, turnos = [], isLoadingTurnos }) => {
   const formatTime = (time) => {
     if (!time) return '';
     return time.substring(0, 5);
@@ -27,7 +27,7 @@ const TurnoSelect = ({ value, onValueChange, turnos, isLoadingTurnos }) => {
         <SelectValue placeholder={isLoadingTurnos ? "Carregando turnos..." : "Selecione o turno"} />
       </SelectTrigger>
       <SelectContent>
-        {turnos.map((turno) => (
+        {Array.isArray(turnos) && turnos.map((turno) => (
           <SelectItem key={turno.id} value={turno.tipo_turno}>
             {getTurnoLabel(turno.tipo_turno)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
           </SelectItem>
