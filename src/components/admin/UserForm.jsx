@@ -42,19 +42,21 @@ const UserForm = () => {
       const voucher = await generateUniqueVoucherFromCPF(formData.userCPF.replace(/\D/g, ''));
       
       // Atualiza o formData com o voucher gerado
-      setFormData(prev => ({
-        ...prev,
+      const updatedFormData = {
+        ...formData,
         voucher: voucher
-      }));
+      };
+      
+      setFormData(updatedFormData);
 
       const userData = {
-        name: formData.userName.trim(),
-        cpf: formData.userCPF.replace(/\D/g, ''),
-        company_id: parseInt(formData.company),
+        name: updatedFormData.userName.trim(),
+        cpf: updatedFormData.userCPF.replace(/\D/g, ''),
+        company_id: parseInt(updatedFormData.company),
         voucher: voucher,
-        turno: formData.selectedTurno,
-        is_suspended: formData.isSuspended,
-        photo: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
+        turno: updatedFormData.selectedTurno,
+        is_suspended: updatedFormData.isSuspended,
+        photo: updatedFormData.userPhoto instanceof File ? await convertToBase64(updatedFormData.userPhoto) : updatedFormData.userPhoto
       };
 
       let response;

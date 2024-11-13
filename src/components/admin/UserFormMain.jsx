@@ -15,7 +15,8 @@ import CompanySelect from './user/CompanySelect';
 const UserFormMain = ({
   formData,
   onInputChange,
-  onSave
+  onSave,
+  isSubmitting
 }) => {
   const [showVoucher, setShowVoucher] = React.useState(false);
   const [searchCPF, setSearchCPF] = React.useState('');
@@ -58,7 +59,7 @@ const UserFormMain = ({
         const userData = response.data;
         onInputChange('userName', userData.nome);
         onInputChange('userCPF', userData.cpf);
-        onInputChange('empresa_id', userData.empresa_id?.toString());
+        onInputChange('company', userData.empresa_id?.toString());
         onInputChange('voucher', userData.voucher);
         onInputChange('selectedTurno', userData.turno);
         onInputChange('isSuspended', userData.suspenso);
@@ -108,8 +109,8 @@ const UserFormMain = ({
       />
 
       <CompanySelect 
-        value={formData.empresa_id}
-        onValueChange={(value) => onInputChange('empresa_id', value)}
+        value={formData.company}
+        onValueChange={(value) => onInputChange('company', value)}
       />
 
       <div className="flex items-center space-x-2">
@@ -117,8 +118,13 @@ const UserFormMain = ({
           placeholder="Voucher" 
           value={showVoucher ? formData.voucher : '****'}
           readOnly
+          className="bg-gray-100"
         />
-        <Button type="button" onClick={() => setShowVoucher(!showVoucher)}>
+        <Button 
+          type="button" 
+          variant="outline"
+          onClick={() => setShowVoucher(!showVoucher)}
+        >
           {showVoucher ? <EyeOff size={20} /> : <Eye size={20} />}
         </Button>
       </div>
@@ -162,7 +168,11 @@ const UserFormMain = ({
             <Upload size={20} className="mr-2" />
             Upload Foto
           </Button>
-          <Button type="button" onClick={onSave}>
+          <Button 
+            type="button" 
+            onClick={onSave}
+            disabled={isSubmitting}
+          >
             {formData.userCPF ? 'Atualizar Usuário' : 'Cadastrar Usuário'}
           </Button>
         </div>
