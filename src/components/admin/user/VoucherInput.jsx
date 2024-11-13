@@ -11,14 +11,18 @@ const VoucherInput = ({ voucher, showVoucher, onToggleVoucher, disabled }) => {
         onToggleVoucher(false);
       }, 15000); // 15 segundos
     }
-    return () => clearTimeout(timer);
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, [showVoucher, onToggleVoucher]);
 
   return (
     <div className="flex items-center space-x-2">
       <Input 
         placeholder="Voucher (gerado automaticamente)" 
-        value={voucher || ''}
+        value={showVoucher ? (voucher || '') : '****'}
         readOnly
         className="bg-gray-100"
         disabled={disabled}

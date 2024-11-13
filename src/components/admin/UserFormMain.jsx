@@ -1,16 +1,9 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from "@/components/ui/button";
-import { Upload } from 'lucide-react';
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from '@/config/supabase';
-import UserSearchSection from './user/UserSearchSection';
-import UserBasicInfo from './user/UserBasicInfo';
-import CompanySelect from './user/CompanySelect';
-import VoucherInput from './user/VoucherInput';
-import TurnoSelect from './user/TurnoSelect';
+import UserFormFields from './user/UserFormFields';
+import { useVoucherVisibility } from '../../hooks/useVoucherVisibility';
 
 const UserFormMain = ({
   formData,
@@ -18,9 +11,9 @@ const UserFormMain = ({
   onSave,
   isSubmitting
 }) => {
-  const [showVoucher, setShowVoucher] = React.useState(false);
   const [searchCPF, setSearchCPF] = React.useState('');
   const [isSearching, setIsSearching] = React.useState(false);
+  const { showVoucher, handleVoucherToggle } = useVoucherVisibility();
 
   const handleSearch = async () => {
     if (!searchCPF) {
@@ -48,7 +41,7 @@ const UserFormMain = ({
         onInputChange('selectedTurno', data.turno_id.toString());
         onInputChange('isSuspended', data.suspenso);
         onInputChange('userPhoto', data.foto);
-        onInputChange('voucher', data.voucher); // Adicionando o voucher aos dados do formulário
+        onInputChange('voucher', data.voucher);
         toast.success('Usuário encontrado!');
       } else {
         toast.error('Usuário não encontrado');
@@ -61,35 +54,19 @@ const UserFormMain = ({
     }
   };
 
-  const handleVoucherToggle = (value) => {
-    setShowVoucher(value);
-  };
-
   const { data: turnosData, isLoading: isLoadingTurnos } = useQuery({
     queryKey: ['turnos'],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('turnos')
-          .select('*')
-          .eq('ativo', true)
-          .order('id');
+      const { data, error } = await supabase
+        .from('turnos')
+        .select('*')
+        .eq('ativo', true)
+        .order('id');
 
-        if (error) {
-          console.error('Erro ao buscar turnos:', error);
-          toast.error('Erro ao carregar turnos');
-          throw error;
-        }
-        return data || [];
-      } catch (error) {
-        console.error('Erro ao carregar turnos:', error);
-        toast.error('Erro ao carregar turnos');
-        return [];
-      }
+      if (error) throw error;
+      return data || [];
     }
   });
-
-  const turnos = Array.isArray(turnosData) ? turnosData : [];
 
   const handlePhotoUpload = (event) => {
     const file = event.target.files[0];
@@ -107,99 +84,28 @@ const UserFormMain = ({
     onInputChange('selectedTurno', '');
     onInputChange('isSuspended', false);
     onInputChange('userPhoto', null);
-    onInputChange('voucher', ''); // Limpando o voucher ao limpar a busca
+    onInputChange('voucher', '');
   };
 
   return (
-    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-      <div className="space-y-2">
-        <Label>Pesquisar usuário existente</Label>
-        <div className="flex gap-2">
-          <UserSearchSection 
-            searchCPF={searchCPF}
-            setSearchCPF={setSearchCPF}
-            onSearch={handleSearch}
-          />
-          {isSearching && (
-            <Button type="button" variant="outline" onClick={clearSearch}>
-              Limpar Busca
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      <UserBasicInfo 
+    <div className="space-y-4">
+      <UserFormFields
         formData={formData}
         onInputChange={onInputChange}
-        disabled={isSearching}
-      />
-
-      <CompanySelect 
-        value={formData.company}
-        onValueChange={(value) => onInputChange('company', value)}
-        disabled={isSearching}
-      />
-
-      <VoucherInput 
-        voucher={formData.voucher}
+        onSave={onSave}
+        isSubmitting={isSubmitting}
+        searchCPF={searchCPF}
+        setSearchCPF={setSearchCPF}
+        onSearch={handleSearch}
+        isSearching={isSearching}
+        clearSearch={clearSearch}
         showVoucher={showVoucher}
         onToggleVoucher={handleVoucherToggle}
-        disabled={isSearching}
-      />
-
-      <TurnoSelect 
-        value={formData.selectedTurno}
-        onValueChange={(value) => onInputChange('selectedTurno', value)}
-        turnos={turnos}
+        handlePhotoUpload={handlePhotoUpload}
+        turnos={turnosData}
         isLoadingTurnos={isLoadingTurnos}
-        disabled={isSearching}
       />
-
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="suspend-user"
-          checked={formData.isSuspended}
-          onCheckedChange={(checked) => onInputChange('isSuspended', checked)}
-          disabled={isSearching}
-        />
-        <Label htmlFor="suspend-user">Suspender acesso</Label>
-      </div>
-
-      <div className="flex items-center justify-between space-x-4">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoUpload}
-          className="hidden"
-          id="photo-upload"
-          disabled={isSearching}
-        />
-        <div className="flex space-x-4">
-          <Button 
-            type="button" 
-            onClick={() => document.getElementById('photo-upload').click()}
-            disabled={isSearching}
-          >
-            <Upload size={20} className="mr-2" />
-            Upload Foto
-          </Button>
-          <Button 
-            type="button" 
-            onClick={onSave}
-            disabled={isSubmitting}
-          >
-            {formData.userCPF ? 'Atualizar Usuário' : 'Cadastrar Usuário'}
-          </Button>
-        </div>
-        {formData.userPhoto && (
-          <img 
-            src={typeof formData.userPhoto === 'string' ? formData.userPhoto : URL.createObjectURL(formData.userPhoto)} 
-            alt="User" 
-            className="w-10 h-10 rounded-full object-cover" 
-          />
-        )}
-      </div>
-    </form>
+    </div>
   );
 };
 
