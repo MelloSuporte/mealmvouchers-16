@@ -4,7 +4,7 @@ CREATE DATABASE sis_voucher;
 
 SET timezone = 'America/Sao_Paulo';
 
-CREATE TABLE IF NOT EXISTS companies (
+CREATE TABLE IF NOT EXISTS empresas (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   cnpj VARCHAR(18) NOT NULL UNIQUE,
@@ -12,15 +12,15 @@ CREATE TABLE IF NOT EXISTS companies (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS usuarios (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  nome VARCHAR(255) NOT NULL,
   cpf VARCHAR(14) NOT NULL UNIQUE,
-  company_id INTEGER REFERENCES companies(id),
+  empresa_id INTEGER REFERENCES empresas(id),
   voucher VARCHAR(4) NOT NULL,
   turno VARCHAR(10) CHECK (turno IN ('central', 'primeiro', 'segundo', 'terceiro')),
-  is_suspended BOOLEAN DEFAULT FALSE,
-  photo TEXT,
+  suspenso BOOLEAN DEFAULT FALSE,
+  foto TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -48,14 +48,14 @@ CREATE TABLE IF NOT EXISTS meal_types (
 
 CREATE TABLE IF NOT EXISTS voucher_usage (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id),
+  user_id INTEGER REFERENCES usuarios(id),
   meal_type_id INTEGER REFERENCES meal_types(id),
   used_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS extra_vouchers (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id),
+  user_id INTEGER REFERENCES usuarios(id),
   authorized_by VARCHAR(255) NOT NULL,
   valid_until DATE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -72,9 +72,9 @@ CREATE TABLE IF NOT EXISTS background_images (
 CREATE TABLE IF NOT EXISTS disposable_vouchers (
   id SERIAL PRIMARY KEY,
   code VARCHAR(8) NOT NULL UNIQUE,
-  user_id INTEGER REFERENCES users(id),
+  user_id INTEGER REFERENCES usuarios(id),
   meal_type_id INTEGER REFERENCES meal_types(id),
-  created_by INTEGER REFERENCES users(id),
+  created_by INTEGER REFERENCES usuarios(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   used_at TIMESTAMP WITH TIME ZONE,
   expired_at TIMESTAMP WITH TIME ZONE,
