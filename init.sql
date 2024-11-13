@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   cpf VARCHAR(14) NOT NULL UNIQUE,
   empresa_id INTEGER REFERENCES empresas(id),
   voucher VARCHAR(4) NOT NULL,
-  turno VARCHAR(10) CHECK (turno IN ('central', 'primeiro', 'segundo', 'terceiro')),
+  turno_id INTEGER REFERENCES turnos(id),
   suspenso BOOLEAN DEFAULT FALSE,
   foto TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
