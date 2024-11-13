@@ -1,34 +1,35 @@
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 
-const generateVoucherCode = (cpf) => {
+const generateVoucherFromCPF = (cpf) => {
   // Remove caracteres não numéricos
   const cleanCPF = cpf.replace(/\D/g, '');
   
-  // Verifica se o CPF tem pelo menos 13 dígitos
-  if (cleanCPF.length < 13) {
-    throw new Error('CPF inválido: deve ter pelo menos 13 dígitos');
+  if (cleanCPF.length !== 11) {
+    throw new Error('CPF inválido: deve ter 11 dígitos');
   }
 
-  // Extrai do 2º ao 13º dígito
-  const relevantDigits = cleanCPF.slice(1, 13);
+  // Pega os 4 últimos dígitos do CPF
+  const lastFourDigits = cleanCPF.slice(-4);
   
   // Soma os dígitos
-  const sum = relevantDigits.split('').reduce((acc, digit) => acc + parseInt(digit), 0);
+  const sum = lastFourDigits.split('').reduce((acc, digit) => acc + parseInt(digit), 0);
   
-  // Gera código de 4 dígitos
-  return sum.toString().padStart(4, '0').slice(-4);
+  // Gera código de 4 dígitos baseado na soma
+  const code = (sum % 9000 + 1000).toString();
+  
+  return code;
 };
 
 export const generateUniqueVoucherFromCPF = async (cpf) => {
   try {
     let attempts = 0;
-    const maxAttempts = 10; // Limite de tentativas para evitar loop infinito
+    const maxAttempts = 10;
     let isUnique = false;
     let voucherCode;
 
     while (!isUnique && attempts < maxAttempts) {
-      voucherCode = generateVoucherCode(cpf);
+      voucherCode = generateVoucherFromCPF(cpf);
       
       // Verifica duplicidade na tabela de usuários
       const { data: existingUsers, error: userError } = await supabase
@@ -45,9 +46,9 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
       if (!existingUsers || existingUsers.length === 0) {
         isUnique = true;
       } else {
-        // Se houver duplicidade, incrementa o código e tenta novamente
         attempts++;
-        cpf = (parseInt(cpf) + 1).toString().padStart(13, '0');
+        // Se houver duplicidade, modifica o CPF ligeiramente para gerar um novo código
+        cpf = (parseInt(cpf) + 1).toString().padStart(11, '0');
       }
     }
 
@@ -62,10 +63,9 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
   }
 };
 
-// Função auxiliar para validar CPF (mantida para compatibilidade)
 export const validateCPF = (cpf) => {
   const cleanCPF = cpf.replace(/\D/g, '');
-  if (cleanCPF.length < 13) {
+  if (cleanCPF.length !== 11) {
     return false;
   }
   return true;
