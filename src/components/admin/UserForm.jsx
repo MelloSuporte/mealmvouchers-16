@@ -38,6 +38,13 @@ const UserForm = () => {
     try {
       setIsSubmitting(true);
       
+      // Verificar se o usuário já existe
+      const { data: existingUser } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('cpf', formData.userCPF.replace(/\D/g, ''))
+        .single();
+      
       const voucher = await generateUniqueVoucherFromCPF(formData.userCPF.replace(/\D/g, ''));
       
       const updatedFormData = {
@@ -69,14 +76,16 @@ const UserForm = () => {
       };
 
       let response;
-      if (formData.id) {
+      if (existingUser) {
+        // Atualizar usuário existente
         response = await supabase
           .from('usuarios')
           .update(userData)
-          .eq('id', formData.id)
+          .eq('id', existingUser.id)
           .select()
           .single();
       } else {
+        // Criar novo usuário
         response = await supabase
           .from('usuarios')
           .insert([userData])
@@ -88,7 +97,7 @@ const UserForm = () => {
         throw response.error;
       }
 
-      toast.success(formData.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
+      toast.success(existingUser ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
       clearForm();
     } catch (error) {
       toast.error(error.message || 'Erro ao salvar usuário');
