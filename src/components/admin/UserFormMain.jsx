@@ -24,17 +24,19 @@ const UserFormMain = ({
     setIsSearching(true);
 
     try {
+      const cleanCPF = searchCPF.replace(/\D/g, '');
       const { data, error } = await supabase
         .from('usuarios')
         .select('*')
-        .eq('cpf', searchCPF.replace(/\D/g, ''))
+        .eq('cpf', cleanCPF)
         .single();
 
       if (error) {
         if (error.code === 'PGRST116') {
           toast.info('Usuário não encontrado');
         } else {
-          throw error;
+          console.error('Erro na consulta:', error);
+          toast.error('Erro ao buscar usuário. Por favor, tente novamente.');
         }
         return;
       }
@@ -42,11 +44,11 @@ const UserFormMain = ({
       if (data) {
         onInputChange('userName', data.nome);
         onInputChange('userCPF', searchCPF);
-        onInputChange('company', data.empresa_id.toString());
-        onInputChange('selectedTurno', data.turno_id.toString());
-        onInputChange('isSuspended', data.suspenso);
-        onInputChange('userPhoto', data.foto);
-        onInputChange('voucher', data.voucher);
+        onInputChange('company', data.empresa_id?.toString() || '');
+        onInputChange('selectedTurno', data.turno_id?.toString() || '');
+        onInputChange('isSuspended', data.suspenso || false);
+        onInputChange('userPhoto', data.foto || null);
+        onInputChange('voucher', data.voucher || '');
         toast.success('Usuário encontrado!');
       }
     } catch (error) {
