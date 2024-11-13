@@ -30,11 +30,7 @@ const UserFormMain = ({
     try {
       const { data, error } = await supabase
         .from('usuarios')
-        .select(`
-          *,
-          empresas (id, nome),
-          turnos (id, tipo_turno)
-        `)
+        .select('*')
         .eq('cpf', searchCPF.replace(/\D/g, ''))
         .single();
 
@@ -46,7 +42,7 @@ const UserFormMain = ({
         onInputChange('userName', data.nome);
         onInputChange('userCPF', searchCPF);
         onInputChange('company', data.empresa_id.toString());
-        onInputChange('selectedTurno', data.turnos.tipo_turno);
+        onInputChange('selectedTurno', data.turno_id.toString());
         onInputChange('isSuspended', data.suspenso);
         onInputChange('userPhoto', data.foto);
         toast.success('Usuário encontrado!');
