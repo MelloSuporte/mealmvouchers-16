@@ -38,7 +38,6 @@ const UserForm = () => {
     try {
       setIsSubmitting(true);
       
-      // Gera o voucher automaticamente a partir do CPF
       const voucher = await generateUniqueVoucherFromCPF(formData.userCPF.replace(/\D/g, ''));
       
       const updatedFormData = {
@@ -53,7 +52,7 @@ const UserForm = () => {
         cpf: updatedFormData.userCPF.replace(/\D/g, ''),
         empresa_id: parseInt(updatedFormData.company),
         voucher: voucher,
-        tipos_turno: updatedFormData.selectedTurno,
+        turno: updatedFormData.selectedTurno, // Atualizado de tipos_turno para turno
         suspenso: updatedFormData.isSuspended,
         foto: updatedFormData.userPhoto instanceof File ? await convertToBase64(updatedFormData.userPhoto) : updatedFormData.userPhoto
       };

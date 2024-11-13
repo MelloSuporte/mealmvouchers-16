@@ -1,0 +1,40 @@
+import React from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const TurnoSelect = ({ value, onValueChange, turnos, isLoadingTurnos }) => {
+  const formatTime = (time) => {
+    if (!time) return '';
+    return time.substring(0, 5);
+  };
+
+  const getTurnoLabel = (tipoTurno) => {
+    const labels = {
+      'central': 'Turno Central (Administrativo)',
+      'primeiro': 'Primeiro Turno',
+      'segundo': 'Segundo Turno',
+      'terceiro': 'Terceiro Turno'
+    };
+    return labels[tipoTurno] || tipoTurno;
+  };
+
+  return (
+    <Select 
+      value={value}
+      onValueChange={onValueChange}
+      disabled={isLoadingTurnos}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder={isLoadingTurnos ? "Carregando turnos..." : "Selecione o turno"} />
+      </SelectTrigger>
+      <SelectContent>
+        {turnos.map((turno) => (
+          <SelectItem key={turno.id} value={turno.tipo_turno}>
+            {getTurnoLabel(turno.tipo_turno)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+};
+
+export default TurnoSelect;

@@ -1,16 +1,16 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from '@/config/supabase';
 import UserSearchSection from './user/UserSearchSection';
 import UserBasicInfo from './user/UserBasicInfo';
 import CompanySelect from './user/CompanySelect';
+import VoucherInput from './user/VoucherInput';
+import TurnoSelect from './user/TurnoSelect';
 
 const UserFormMain = ({
   formData,
@@ -54,68 +54,20 @@ const UserFormMain = ({
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchCPF) {
-      return;
-    }
-
-    try {
-      const response = await api.get(`/usuarios/search?cpf=${searchCPF}`);
-      if (response.data) {
-        const userData = response.data;
-        onInputChange('userName', userData.nome);
-        onInputChange('userCPF', userData.cpf);
-        onInputChange('company', userData.empresa_id?.toString());
-        onInputChange('voucher', userData.voucher);
-        onInputChange('tipos_turno', userData.tipos_turno);
-        onInputChange('isSuspended', userData.suspenso);
-        onInputChange('userPhoto', userData.foto);
-        toast.success('Usuário encontrado!');
-      }
-    } catch (error) {
-      toast.error('Usuário não encontrado ou erro na busca');
-    }
-  };
-
-  const handleCPFChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-      value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
-      onInputChange('userCPF', value);
-    }
-  };
-
-  const formatTime = (time) => {
-    if (!time) return '';
-    return time.substring(0, 5);
-  };
-
-  const getTurnoLabel = (tipoTurno) => {
-    const labels = {
-      'central': 'Turno Central (Administrativo)',
-      'primeiro': 'Primeiro Turno',
-      'segundo': 'Segundo Turno',
-      'terceiro': 'Terceiro Turno'
-    };
-    return labels[tipoTurno] || tipoTurno;
-  };
-
   return (
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-      {/* Campo de pesquisa opcional */}
       <div className="space-y-2">
         <Label>Pesquisar usuário existente (opcional)</Label>
         <UserSearchSection 
           searchCPF={searchCPF}
           setSearchCPF={setSearchCPF}
-          onSearch={handleSearch}
+          onSearch={() => {}}
         />
       </div>
       
       <UserBasicInfo 
         formData={formData}
         onInputChange={onInputChange}
-        handleCPFChange={handleCPFChange}
       />
 
       <CompanySelect 
@@ -123,38 +75,18 @@ const UserFormMain = ({
         onValueChange={(value) => onInputChange('company', value)}
       />
 
-      <div className="flex items-center space-x-2">
-        <Input 
-          placeholder="Voucher (gerado automaticamente)" 
-          value={showVoucher ? formData.voucher : '****'}
-          readOnly
-          className="bg-gray-100"
-        />
-        <Button 
-          type="button" 
-          variant="outline"
-          onClick={() => setShowVoucher(!showVoucher)}
-        >
-          {showVoucher ? <EyeOff size={20} /> : <Eye size={20} />}
-        </Button>
-      </div>
+      <VoucherInput 
+        voucher={formData.voucher}
+        showVoucher={showVoucher}
+        onToggleVoucher={() => setShowVoucher(!showVoucher)}
+      />
 
-      <Select 
-        value={formData.selectedTurno} 
+      <TurnoSelect 
+        value={formData.selectedTurno}
         onValueChange={(value) => onInputChange('selectedTurno', value)}
-        disabled={isLoadingTurnos}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={isLoadingTurnos ? "Carregando turnos..." : "Selecione o turno"} />
-        </SelectTrigger>
-        <SelectContent>
-          {turnos.map((turno) => (
-            <SelectItem key={turno.id} value={turno.tipo_turno}>
-              {getTurnoLabel(turno.tipo_turno)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        turnos={turnos}
+        isLoadingTurnos={isLoadingTurnos}
+      />
 
       <div className="flex items-center space-x-2">
         <Switch

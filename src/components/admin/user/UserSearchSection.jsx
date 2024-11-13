@@ -5,19 +5,14 @@ import { Search } from 'lucide-react';
 
 const UserSearchSection = ({ searchCPF, setSearchCPF, onSearch }) => {
   return (
-    <div className="flex gap-2">
-      <Input 
-        placeholder="Pesquisar por CPF (opcional)" 
+    <div className="flex space-x-2">
+      <Input
+        placeholder="Digite o CPF para buscar"
         value={searchCPF}
         onChange={(e) => setSearchCPF(e.target.value)}
       />
-      <Button 
-        type="button" 
-        onClick={onSearch}
-        disabled={!searchCPF}
-      >
-        <Search size={20} className="mr-2" />
-        Buscar
+      <Button type="button" onClick={onSearch}>
+        <Search size={20} />
       </Button>
     </div>
   );
