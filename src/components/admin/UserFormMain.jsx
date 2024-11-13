@@ -102,11 +102,15 @@ const UserFormMain = ({
 
   return (
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-      <UserSearchSection 
-        searchCPF={searchCPF}
-        setSearchCPF={setSearchCPF}
-        onSearch={handleSearch}
-      />
+      {/* Campo de pesquisa opcional */}
+      <div className="space-y-2">
+        <Label>Pesquisar usuário existente (opcional)</Label>
+        <UserSearchSection 
+          searchCPF={searchCPF}
+          setSearchCPF={setSearchCPF}
+          onSearch={handleSearch}
+        />
+      </div>
       
       <UserBasicInfo 
         formData={formData}
@@ -121,7 +125,7 @@ const UserFormMain = ({
 
       <div className="flex items-center space-x-2">
         <Input 
-          placeholder="Voucher" 
+          placeholder="Voucher (gerado automaticamente)" 
           value={showVoucher ? formData.voucher : '****'}
           readOnly
           className="bg-gray-100"
@@ -136,8 +140,8 @@ const UserFormMain = ({
       </div>
 
       <Select 
-        value={formData.tipos_turno} 
-        onValueChange={(value) => onInputChange('tipos_turno', value)}
+        value={formData.selectedTurno} 
+        onValueChange={(value) => onInputChange('selectedTurno', value)}
         disabled={isLoadingTurnos}
       >
         <SelectTrigger className="w-full">

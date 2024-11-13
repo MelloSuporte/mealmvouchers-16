@@ -18,7 +18,6 @@ const UserForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
-    // Remove voucher da validação já que será gerado automaticamente
     if (!formData.userName || !formData.userCPF || !formData.company || !formData.selectedTurno) {
       toast.error("Por favor, preencha todos os campos obrigatórios");
       return false;
