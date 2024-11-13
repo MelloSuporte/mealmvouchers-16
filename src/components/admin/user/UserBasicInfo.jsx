@@ -16,17 +16,6 @@ const UserBasicInfo = ({ formData, onInputChange, handleCPFChange }) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="userEmail">E-mail</Label>
-        <Input
-          id="userEmail"
-          type="email"
-          placeholder="email@exemplo.com"
-          value={formData.userEmail}
-          onChange={(e) => onInputChange('userEmail', e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="userCPF">CPF</Label>
         <Input
           id="userCPF"
