@@ -32,7 +32,7 @@ const UserFormMain = ({
         .from('usuarios')
         .select(`
           *,
-          empresas (id, name),
+          empresas (id, nome),
           turnos (id, tipo_turno)
         `)
         .eq('cpf', searchCPF.replace(/\D/g, ''))
