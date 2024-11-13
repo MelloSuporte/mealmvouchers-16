@@ -8,6 +8,7 @@ import { generateUniqueVoucherFromCPF } from '../../utils/voucherGenerationUtils
 const UserForm = () => {
   const [formData, setFormData] = useState({
     userName: "",
+    userEmail: "",
     userCPF: "",
     company: "",
     voucher: "",
@@ -18,7 +19,7 @@ const UserForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
-    if (!formData.userName || !formData.userCPF || !formData.company || !formData.selectedTurno) {
+    if (!formData.userName || !formData.userEmail || !formData.userCPF || !formData.company || !formData.selectedTurno) {
       toast.error("Por favor, preencha todos os campos obrigatórios");
       return false;
     }
@@ -26,6 +27,12 @@ const UserForm = () => {
     const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
     if (!cpfRegex.test(formData.userCPF)) {
       toast.error("Por favor, insira um CPF válido no formato XXX.XXX.XXX-XX");
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.userEmail)) {
+      toast.error("Por favor, insira um email válido");
       return false;
     }
 
@@ -51,6 +58,7 @@ const UserForm = () => {
 
       const userData = {
         nome: updatedFormData.userName.trim(),
+        email: updatedFormData.userEmail.trim(),
         cpf: updatedFormData.userCPF.replace(/\D/g, ''),
         empresa_id: parseInt(updatedFormData.company),
         voucher: voucher,
@@ -101,6 +109,7 @@ const UserForm = () => {
   const clearForm = () => {
     setFormData({
       userName: "",
+      userEmail: "",
       userCPF: "",
       company: "",
       voucher: "",
