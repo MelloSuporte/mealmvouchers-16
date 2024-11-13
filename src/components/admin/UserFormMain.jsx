@@ -20,12 +20,15 @@ const UserFormMain = ({
 }) => {
   const [showVoucher, setShowVoucher] = React.useState(false);
   const [searchCPF, setSearchCPF] = React.useState('');
+  const [isSearching, setIsSearching] = React.useState(false);
 
   const handleSearch = async () => {
     if (!searchCPF) {
       toast.error('Por favor, informe um CPF para buscar');
       return;
     }
+
+    setIsSearching(true);
 
     try {
       const { data, error } = await supabase
@@ -48,10 +51,12 @@ const UserFormMain = ({
         toast.success('Usuário encontrado!');
       } else {
         toast.error('Usuário não encontrado');
+        setIsSearching(false);
       }
     } catch (error) {
       console.error('Erro ao buscar usuário:', error);
       toast.error('Erro ao buscar usuário');
+      setIsSearching(false);
     }
   };
 
@@ -88,31 +93,52 @@ const UserFormMain = ({
     }
   };
 
+  const clearSearch = () => {
+    setSearchCPF('');
+    setIsSearching(false);
+    onInputChange('userName', '');
+    onInputChange('userCPF', '');
+    onInputChange('company', '');
+    onInputChange('selectedTurno', '');
+    onInputChange('isSuspended', false);
+    onInputChange('userPhoto', null);
+  };
+
   return (
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
       <div className="space-y-2">
-        <Label>Pesquisar usuário existente (opcional)</Label>
-        <UserSearchSection 
-          searchCPF={searchCPF}
-          setSearchCPF={setSearchCPF}
-          onSearch={handleSearch}
-        />
+        <Label>Pesquisar usuário existente</Label>
+        <div className="flex gap-2">
+          <UserSearchSection 
+            searchCPF={searchCPF}
+            setSearchCPF={setSearchCPF}
+            onSearch={handleSearch}
+          />
+          {isSearching && (
+            <Button type="button" variant="outline" onClick={clearSearch}>
+              Limpar Busca
+            </Button>
+          )}
+        </div>
       </div>
       
       <UserBasicInfo 
         formData={formData}
         onInputChange={onInputChange}
+        disabled={isSearching}
       />
 
       <CompanySelect 
         value={formData.company}
         onValueChange={(value) => onInputChange('company', value)}
+        disabled={isSearching}
       />
 
       <VoucherInput 
         voucher={formData.voucher}
         showVoucher={showVoucher}
         onToggleVoucher={() => setShowVoucher(!showVoucher)}
+        disabled={isSearching}
       />
 
       <TurnoSelect 
@@ -120,6 +146,7 @@ const UserFormMain = ({
         onValueChange={(value) => onInputChange('selectedTurno', value)}
         turnos={turnos}
         isLoadingTurnos={isLoadingTurnos}
+        disabled={isSearching}
       />
 
       <div className="flex items-center space-x-2">
@@ -127,6 +154,7 @@ const UserFormMain = ({
           id="suspend-user"
           checked={formData.isSuspended}
           onCheckedChange={(checked) => onInputChange('isSuspended', checked)}
+          disabled={isSearching}
         />
         <Label htmlFor="suspend-user">Suspender acesso</Label>
       </div>
@@ -138,9 +166,14 @@ const UserFormMain = ({
           onChange={handlePhotoUpload}
           className="hidden"
           id="photo-upload"
+          disabled={isSearching}
         />
         <div className="flex space-x-4">
-          <Button type="button" onClick={() => document.getElementById('photo-upload').click()}>
+          <Button 
+            type="button" 
+            onClick={() => document.getElementById('photo-upload').click()}
+            disabled={isSearching}
+          >
             <Upload size={20} className="mr-2" />
             Upload Foto
           </Button>

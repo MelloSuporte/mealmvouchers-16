@@ -2,7 +2,7 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const UserBasicInfo = ({ formData, onInputChange }) => {
+const UserBasicInfo = ({ formData, onInputChange, disabled }) => {
   const formatCPF = (value) => {
     const cpf = value.replace(/\D/g, '');
     if (cpf.length <= 11) {
@@ -25,6 +25,7 @@ const UserBasicInfo = ({ formData, onInputChange }) => {
           placeholder="Nome completo"
           value={formData.userName}
           onChange={(e) => onInputChange('userName', e.target.value)}
+          disabled={disabled}
         />
       </div>
 
@@ -36,6 +37,7 @@ const UserBasicInfo = ({ formData, onInputChange }) => {
           value={formData.userCPF}
           onChange={handleCPFChange}
           maxLength={14}
+          disabled={disabled}
         />
       </div>
     </div>
