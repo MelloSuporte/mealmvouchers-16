@@ -47,12 +47,23 @@ const UserForm = () => {
       
       setFormData(updatedFormData);
 
+      // Buscar o ID do turno baseado no tipo_turno selecionado
+      const { data: turnoData, error: turnoError } = await supabase
+        .from('turnos')
+        .select('id')
+        .eq('tipo_turno', updatedFormData.selectedTurno)
+        .single();
+
+      if (turnoError) {
+        throw new Error('Erro ao buscar ID do turno');
+      }
+
       const userData = {
         nome: updatedFormData.userName.trim(),
         cpf: updatedFormData.userCPF.replace(/\D/g, ''),
         empresa_id: parseInt(updatedFormData.company),
         voucher: voucher,
-        tipos_turno: updatedFormData.selectedTurno,
+        turno_id: turnoData.id,
         suspenso: updatedFormData.isSuspended,
         foto: updatedFormData.userPhoto instanceof File ? await convertToBase64(updatedFormData.userPhoto) : updatedFormData.userPhoto
       };
