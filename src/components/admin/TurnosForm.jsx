@@ -21,9 +21,9 @@ const TurnosForm = () => {
   const navigate = useNavigate();
   const [dialogoAberto, setDialogoAberto] = React.useState(false);
   const [novoTurno, setNovoTurno] = React.useState({
-    turno: '',
-    hora_inicio: '',
-    hora_fim: '',
+    tipo_turno: '',
+    horario_inicio: '',
+    horario_fim: '',
     ativo: true
   });
 
@@ -33,7 +33,8 @@ const TurnosForm = () => {
       try {
         const { data, error } = await supabase
           .from('turnos')
-          .select('*');
+          .select('*')
+          .order('id');
 
         if (error) {
           toast.error(`Erro ao buscar turnos: ${error.message}`);
@@ -53,9 +54,9 @@ const TurnosForm = () => {
     await handleCreateTurno(novoTurno);
     setDialogoAberto(false);
     setNovoTurno({
-      turno: '',
-      hora_inicio: '',
-      hora_fim: '',
+      tipo_turno: '',
+      horario_inicio: '',
+      horario_fim: '',
       ativo: true
     });
   };
@@ -124,9 +125,9 @@ const TurnosForm = () => {
           <TableBody>
             {turnos.map((turno) => (
               <TableRow key={turno.id}>
-                <TableCell>{getTurnoLabel(turno.turno)}</TableCell>
-                <TableCell>{turno.hora_inicio}</TableCell>
-                <TableCell>{turno.hora_fim}</TableCell>
+                <TableCell>{getTurnoLabel(turno.tipo_turno)}</TableCell>
+                <TableCell>{turno.horario_inicio}</TableCell>
+                <TableCell>{turno.horario_fim}</TableCell>
                 <TableCell>{turno.ativo ? 'Ativo' : 'Inativo'}</TableCell>
               </TableRow>
             ))}
