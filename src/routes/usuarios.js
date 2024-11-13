@@ -20,6 +20,9 @@ router.get('/search', async (req, res) => {
         empresas (
           id,
           nome
+        ),
+        turnos!inner (
+          tipo_turno
         )
       `)
       .eq('cpf', cpf)
@@ -38,7 +41,7 @@ router.get('/search', async (req, res) => {
       cpf: user.cpf,
       company_id: user.empresa_id,
       voucher: user.voucher,
-      tipos_turno: user.tipos_turno,
+      tipos_turno: user.turnos?.tipo_turno,
       is_suspended: user.suspenso,
       photo: user.foto,
       company: user.empresas
