@@ -28,14 +28,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Verificar conexão com timezone America/Sao_Paulo
+// Verificar conexão
 const checkConnection = async () => {
   try {
     const { data, error } = await supabase.auth.getSession();
     if (error) throw error;
-    console.log('Supabase connection verified');
+    console.log('Conexão com Supabase verificada');
   } catch (error) {
-    console.error('Error connecting to Supabase:', error.message);
+    console.error('Erro ao conectar com Supabase:', error.message);
   }
 };
 

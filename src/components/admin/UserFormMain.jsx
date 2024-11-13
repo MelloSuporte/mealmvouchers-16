@@ -83,9 +83,14 @@ const UserFormMain = ({
     return time.substring(0, 5);
   };
 
-  const formatTurnoName = (tipo) => {
-    if (!tipo) return '';
-    return tipo.charAt(0).toUpperCase() + tipo.slice(1);
+  const getTurnoLabel = (tipoTurno) => {
+    const labels = {
+      'central': 'Turno Central (Administrativo)',
+      'primeiro': 'Primeiro Turno',
+      'segundo': 'Segundo Turno',
+      'terceiro': 'Terceiro Turno'
+    };
+    return labels[tipoTurno] || tipoTurno;
   };
 
   return (
@@ -129,7 +134,7 @@ const UserFormMain = ({
         <SelectContent>
           {turnos.map((turno) => (
             <SelectItem key={turno.id} value={turno.tipo_turno}>
-              {formatTurnoName(turno.tipo_turno)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
+              {getTurnoLabel(turno.tipo_turno)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
             </SelectItem>
           ))}
         </SelectContent>
