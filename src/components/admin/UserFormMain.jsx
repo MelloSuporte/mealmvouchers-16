@@ -56,7 +56,6 @@ const UserFormMain = ({
 
   const handleSearch = async () => {
     if (!searchCPF) {
-      toast.error('Por favor, digite um CPF para pesquisar');
       return;
     }
 

@@ -7,11 +7,15 @@ const UserSearchSection = ({ searchCPF, setSearchCPF, onSearch }) => {
   return (
     <div className="flex gap-2">
       <Input 
-        placeholder="Pesquisar por CPF" 
+        placeholder="Pesquisar por CPF (opcional)" 
         value={searchCPF}
         onChange={(e) => setSearchCPF(e.target.value)}
       />
-      <Button type="button" onClick={onSearch}>
+      <Button 
+        type="button" 
+        onClick={onSearch}
+        disabled={!searchCPF}
+      >
         <Search size={20} className="mr-2" />
         Buscar
       </Button>
