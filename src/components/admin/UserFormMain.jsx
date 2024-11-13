@@ -48,6 +48,7 @@ const UserFormMain = ({
         onInputChange('selectedTurno', data.turno_id.toString());
         onInputChange('isSuspended', data.suspenso);
         onInputChange('userPhoto', data.foto);
+        onInputChange('voucher', data.voucher); // Adicionando o voucher aos dados do formulário
         toast.success('Usuário encontrado!');
       } else {
         toast.error('Usuário não encontrado');
@@ -102,6 +103,7 @@ const UserFormMain = ({
     onInputChange('selectedTurno', '');
     onInputChange('isSuspended', false);
     onInputChange('userPhoto', null);
+    onInputChange('voucher', ''); // Limpando o voucher ao limpar a busca
   };
 
   return (
