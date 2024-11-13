@@ -9,7 +9,7 @@ const VoucherInput = ({ voucher, showVoucher, onToggleVoucher, disabled }) => {
     if (showVoucher) {
       timer = setTimeout(() => {
         onToggleVoucher(false);
-      }, 15000); // 15 segundos
+      }, 60000); // Aumentado para 60 segundos
     }
     return () => {
       if (timer) {
