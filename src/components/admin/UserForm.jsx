@@ -45,6 +45,7 @@ const UserForm = () => {
         .eq('cpf', formData.userCPF.replace(/\D/g, ''))
         .single();
       
+      // Sempre gera um novo voucher, seja para usuário novo ou existente
       const voucher = await generateUniqueVoucherFromCPF(formData.userCPF.replace(/\D/g, ''));
       
       const updatedFormData = {
@@ -69,7 +70,7 @@ const UserForm = () => {
         nome: updatedFormData.userName.trim(),
         cpf: updatedFormData.userCPF.replace(/\D/g, ''),
         empresa_id: parseInt(updatedFormData.company),
-        voucher: voucher,
+        voucher: voucher, // Usa o novo voucher gerado
         turno_id: turnoData.id,
         suspenso: updatedFormData.isSuspended,
         foto: updatedFormData.userPhoto instanceof File ? await convertToBase64(updatedFormData.userPhoto) : updatedFormData.userPhoto
@@ -77,7 +78,7 @@ const UserForm = () => {
 
       let response;
       if (existingUser) {
-        // Atualizar usuário existente
+        // Atualizar usuário existente com o novo voucher
         response = await supabase
           .from('usuarios')
           .update(userData)
