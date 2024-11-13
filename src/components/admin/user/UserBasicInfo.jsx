@@ -3,12 +3,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const UserBasicInfo = ({ formData, onInputChange }) => {
-  const handleCPFChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-      value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-      onInputChange('userCPF', value);
+  const formatCPF = (value) => {
+    const cpf = value.replace(/\D/g, '');
+    if (cpf.length <= 11) {
+      return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
     }
+    return value;
+  };
+
+  const handleCPFChange = (e) => {
+    const formattedCPF = formatCPF(e.target.value);
+    onInputChange('userCPF', formattedCPF);
   };
 
   return (

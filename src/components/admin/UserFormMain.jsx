@@ -21,6 +21,44 @@ const UserFormMain = ({
   const [showVoucher, setShowVoucher] = React.useState(false);
   const [searchCPF, setSearchCPF] = React.useState('');
 
+  const handleSearch = async () => {
+    if (!searchCPF) {
+      toast.error('Por favor, informe um CPF para buscar');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select(`
+          *,
+          empresas (id, name),
+          turnos (id, tipo_turno)
+        `)
+        .eq('cpf', searchCPF.replace(/\D/g, ''))
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        onInputChange('userName', data.nome);
+        onInputChange('userCPF', searchCPF);
+        onInputChange('company', data.empresa_id.toString());
+        onInputChange('selectedTurno', data.turnos.tipo_turno);
+        onInputChange('isSuspended', data.suspenso);
+        onInputChange('userPhoto', data.foto);
+        toast.success('Usuário encontrado!');
+      } else {
+        toast.error('Usuário não encontrado');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar usuário:', error);
+      toast.error('Erro ao buscar usuário');
+    }
+  };
+
   const { data: turnosData, isLoading: isLoadingTurnos } = useQuery({
     queryKey: ['turnos'],
     queryFn: async () => {
@@ -61,7 +99,7 @@ const UserFormMain = ({
         <UserSearchSection 
           searchCPF={searchCPF}
           setSearchCPF={setSearchCPF}
-          onSearch={() => {}}
+          onSearch={handleSearch}
         />
       </div>
       
