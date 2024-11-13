@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from 'lucide-react';
 
 const VoucherInput = ({ voucher, showVoucher, onToggleVoucher, disabled }) => {
+  useEffect(() => {
+    let timer;
+    if (showVoucher) {
+      timer = setTimeout(() => {
+        onToggleVoucher(false);
+      }, 15000); // 15 segundos
+    }
+    return () => clearTimeout(timer);
+  }, [showVoucher, onToggleVoucher]);
+
   return (
     <div className="flex items-center space-x-2">
       <Input 
@@ -16,7 +26,7 @@ const VoucherInput = ({ voucher, showVoucher, onToggleVoucher, disabled }) => {
       <Button 
         type="button" 
         variant="outline"
-        onClick={onToggleVoucher}
+        onClick={() => onToggleVoucher(!showVoucher)}
         disabled={disabled}
       >
         {showVoucher ? <EyeOff size={20} /> : <Eye size={20} />}

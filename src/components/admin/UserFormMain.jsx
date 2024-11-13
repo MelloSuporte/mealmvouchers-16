@@ -61,6 +61,10 @@ const UserFormMain = ({
     }
   };
 
+  const handleVoucherToggle = (value) => {
+    setShowVoucher(value);
+  };
+
   const { data: turnosData, isLoading: isLoadingTurnos } = useQuery({
     queryKey: ['turnos'],
     queryFn: async () => {
@@ -139,7 +143,7 @@ const UserFormMain = ({
       <VoucherInput 
         voucher={formData.voucher}
         showVoucher={showVoucher}
-        onToggleVoucher={() => setShowVoucher(!showVoucher)}
+        onToggleVoucher={handleVoucherToggle}
         disabled={isSearching}
       />
 
