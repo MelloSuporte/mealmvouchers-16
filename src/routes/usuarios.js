@@ -31,7 +31,6 @@ router.get('/search', async (req, res) => {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    // Mapeia os campos do banco para o formato do frontend
     const mappedUser = {
       id: user.id,
       name: user.nome,
@@ -39,7 +38,7 @@ router.get('/search', async (req, res) => {
       cpf: user.cpf,
       company_id: user.empresa_id,
       voucher: user.voucher,
-      tipo_turno: user.tipo_turno, // Corrigido de turno para tipo_turno
+      tipos_turno: user.tipos_turno,
       is_suspended: user.suspenso,
       photo: user.foto,
       company: user.empresas
@@ -54,11 +53,11 @@ router.get('/search', async (req, res) => {
 
 // Criar novo usuário
 router.post('/', async (req, res) => {
-  const { nome, email, cpf, empresa_id, voucher, tipo_turno, suspenso, foto } = req.body;
+  const { nome, email, cpf, empresa_id, voucher, tipos_turno, suspenso, foto } = req.body;
   
   try {
     // Validações
-    if (!nome?.trim() || !email?.trim() || !cpf?.trim() || !empresa_id || !voucher || !tipo_turno) {
+    if (!nome?.trim() || !email?.trim() || !cpf?.trim() || !empresa_id || !voucher || !tipos_turno) {
       return res.status(400).json({ 
         error: 'Campos obrigatórios faltando',
         details: 'Nome, email, CPF, empresa, voucher e turno são obrigatórios'
@@ -90,7 +89,7 @@ router.post('/', async (req, res) => {
         cpf,
         empresa_id,
         voucher,
-        tipo_turno, // Corrigido de turno para tipo_turno
+        tipos_turno,
         suspenso: suspenso || false,
         foto
       }])
@@ -117,10 +116,10 @@ router.post('/', async (req, res) => {
 // Atualizar usuário existente
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { nome, email, empresa_id, voucher, tipo_turno, suspenso, foto } = req.body;
+  const { nome, email, empresa_id, voucher, tipos_turno, suspenso, foto } = req.body;
 
   try {
-    if (!nome?.trim() || !email?.trim() || !empresa_id || !voucher || !tipo_turno) {
+    if (!nome?.trim() || !email?.trim() || !empresa_id || !voucher || !tipos_turno) {
       return res.status(400).json({ 
         error: 'Campos obrigatórios faltando',
         details: 'Nome, email, empresa, voucher e turno são obrigatórios'
@@ -152,7 +151,7 @@ router.put('/:id', async (req, res) => {
         email,
         empresa_id,
         voucher,
-        tipo_turno, // Corrigido de turno para tipo_turno
+        tipos_turno,
         suspenso: suspenso || false,
         foto
       })
