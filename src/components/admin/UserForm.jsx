@@ -52,7 +52,7 @@ const UserForm = () => {
         cpf: updatedFormData.userCPF.replace(/\D/g, ''),
         empresa_id: parseInt(updatedFormData.company),
         voucher: voucher,
-        turno: updatedFormData.selectedTurno, // Atualizado de tipos_turno para turno
+        tipo_turno: updatedFormData.selectedTurno, // Corrigido de turno para tipo_turno
         suspenso: updatedFormData.isSuspended,
         foto: updatedFormData.userPhoto instanceof File ? await convertToBase64(updatedFormData.userPhoto) : updatedFormData.userPhoto
       };
