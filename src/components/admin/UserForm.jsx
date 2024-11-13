@@ -41,6 +41,12 @@ const UserForm = () => {
       // Gera voucher único baseado no CPF
       const voucher = await generateUniqueVoucherFromCPF(formData.userCPF.replace(/\D/g, ''));
       
+      // Atualiza o formData com o voucher gerado
+      setFormData(prev => ({
+        ...prev,
+        voucher: voucher
+      }));
+
       const userData = {
         name: formData.userName.trim(),
         cpf: formData.userCPF.replace(/\D/g, ''),
