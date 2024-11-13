@@ -83,6 +83,11 @@ const UserFormMain = ({
     return time.substring(0, 5);
   };
 
+  const formatTurnoName = (tipo) => {
+    if (!tipo) return '';
+    return tipo.charAt(0).toUpperCase() + tipo.slice(1);
+  };
+
   return (
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
       <UserSearchSection 
@@ -123,8 +128,8 @@ const UserFormMain = ({
         </SelectTrigger>
         <SelectContent>
           {turnos.map((turno) => (
-            <SelectItem key={turno.id} value={turno.tipo}>
-              {turno.tipo.charAt(0).toUpperCase() + turno.tipo.slice(1)} ({formatTime(turno.hora_inicio)} - {formatTime(turno.hora_fim)})
+            <SelectItem key={turno.id} value={turno.tipo_turno}>
+              {formatTurnoName(turno.tipo_turno)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
             </SelectItem>
           ))}
         </SelectContent>
