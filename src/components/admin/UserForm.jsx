@@ -67,9 +67,9 @@ const UserForm = () => {
       }
 
       // Garantir que empresa_id seja um número válido
-      const empresaId = parseInt(String(updatedFormData.company).trim());
-      if (isNaN(empresaId)) {
-        toast.error('ID da empresa inválido. Por favor, selecione uma empresa válida.');
+      const empresaId = parseInt(updatedFormData.company);
+      if (isNaN(empresaId) || !updatedFormData.company) {
+        toast.error('Por favor, selecione uma empresa válida');
         return;
       }
 
