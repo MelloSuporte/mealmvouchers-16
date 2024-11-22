@@ -40,15 +40,16 @@ const UserForm = () => {
       
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Buscar turno primeiro
-      const { data: turnoData, error: turnoError } = await supabase
+      // Buscar turno
+      let { data: turnoData } = await supabase
         .from('turnos')
         .select('id')
         .eq('tipo_turno', formData.selectedTurno)
-        .single();
+        .maybeSingle();
 
-      if (turnoError) {
-        throw new Error('Erro ao buscar ID do turno');
+      if (!turnoData) {
+        toast.error('Erro ao buscar ID do turno');
+        return;
       }
 
       // Gera um novo voucher
@@ -61,6 +62,11 @@ const UserForm = () => {
         return;
       }
 
+      let userPhoto = formData.userPhoto;
+      if (formData.userPhoto instanceof File) {
+        userPhoto = await convertToBase64(formData.userPhoto);
+      }
+
       const newUserData = {
         nome: formData.userName.trim(),
         cpf: cleanCPF,
@@ -68,11 +74,11 @@ const UserForm = () => {
         voucher: voucher,
         turno_id: turnoData.id,
         suspenso: formData.isSuspended,
-        foto: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
+        foto: userPhoto
       };
 
       // Buscar usuário existente
-      const { data: existingUser } = await supabase
+      let { data: existingUser } = await supabase
         .from('usuarios')
         .select('id')
         .eq('cpf', cleanCPF)
@@ -85,7 +91,10 @@ const UserForm = () => {
           .update(newUserData)
           .eq('id', existingUser.id);
           
-        if (updateError) throw updateError;
+        if (updateError) {
+          toast.error('Erro ao atualizar usuário');
+          return;
+        }
         
         toast.success("Usuário atualizado com sucesso!");
       } else {
@@ -94,7 +103,10 @@ const UserForm = () => {
           .from('usuarios')
           .insert([newUserData]);
           
-        if (insertError) throw insertError;
+        if (insertError) {
+          toast.error('Erro ao cadastrar usuário');
+          return;
+        }
         
         toast.success("Usuário cadastrado com sucesso!");
       }
