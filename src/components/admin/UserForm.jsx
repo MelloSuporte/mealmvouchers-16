@@ -40,21 +40,12 @@ const UserForm = () => {
       
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Buscar usuário e turno em paralelo
-      const userPromise = supabase
-        .from('usuarios')
-        .select('id')
-        .eq('cpf', cleanCPF)
-        .single();
-
-      const turnoPromise = supabase
+      // Buscar turno primeiro
+      const { data: turnoData, error: turnoError } = await supabase
         .from('turnos')
         .select('id')
         .eq('tipo_turno', formData.selectedTurno)
         .single();
-
-      const [{ data: userData, error: userError }, { data: turnoData, error: turnoError }] = 
-        await Promise.all([userPromise, turnoPromise]);
 
       if (turnoError) {
         throw new Error('Erro ao buscar ID do turno');
@@ -80,16 +71,25 @@ const UserForm = () => {
         foto: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
       };
 
-      if (userData?.id) {
+      // Buscar usuário existente
+      const { data: existingUser } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('cpf', cleanCPF)
+        .maybeSingle();
+
+      if (existingUser?.id) {
+        // Atualizar usuário existente
         const { error: updateError } = await supabase
           .from('usuarios')
           .update(newUserData)
-          .eq('id', userData.id);
+          .eq('id', existingUser.id);
           
         if (updateError) throw updateError;
         
         toast.success("Usuário atualizado com sucesso!");
       } else {
+        // Inserir novo usuário
         const { error: insertError } = await supabase
           .from('usuarios')
           .insert([newUserData]);
