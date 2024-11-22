@@ -77,7 +77,7 @@ const UserFormFields = ({
           onCheckedChange={(checked) => onInputChange('isSuspended', checked)}
           disabled={isSearching}
         />
-        <Label htmlFor="suspend-user">Suspender acesso</Label>
+        <Label htmlFor="suspend-user">Suspender acesso do usuário</Label>
       </div>
 
       <div className="flex items-center justify-between space-x-4">
@@ -96,7 +96,7 @@ const UserFormFields = ({
             disabled={isSearching}
           >
             <Upload size={20} className="mr-2" />
-            Upload Foto
+            Enviar Foto
           </Button>
           <Button 
             type="button" 
@@ -109,7 +109,7 @@ const UserFormFields = ({
         {formData.userPhoto && (
           <img 
             src={typeof formData.userPhoto === 'string' ? formData.userPhoto : URL.createObjectURL(formData.userPhoto)} 
-            alt="User" 
+            alt="Foto do usuário" 
             className="w-10 h-10 rounded-full object-cover" 
           />
         )}

@@ -1,89 +1,52 @@
 import React, { useState } from 'react';
 import { toast } from "sonner";
-import UserFormMain from './UserFormMain';
 import { supabase } from '@/config/supabase';
-import logger from '../../config/logger';
-import { generateUniqueVoucherFromCPF } from '../../utils/voucherGenerationUtils';
+import logger from '@/config/logger';
+import UserFormMain from './UserFormMain';
 
 const UserForm = () => {
-  const [formData, setFormData] = useState({
-    userName: "",
-    userCPF: "",
-    company: "",
-    voucher: "",
-    selectedTurno: "",
-    isSuspended: false,
-    userPhoto: null
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    userName: '',
+    userCPF: '',
+    company: '',
+    selectedTurno: '',
+    isSuspended: false,
+    userPhoto: null,
+    voucher: ''
+  });
 
-  const validateForm = () => {
-    if (!formData.userName || !formData.userCPF || !formData.company || !formData.selectedTurno) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
-      return false;
-    }
-
-    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-    if (!cpfRegex.test(formData.userCPF)) {
-      toast.error("Por favor, insira um CPF válido no formato XXX.XXX.XXX-XX");
-      return false;
-    }
-
-    return true;
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleSaveUser = async () => {
-    if (!validateForm() || isSubmitting) return;
+  const handleSave = async (e) => {
+    e?.preventDefault();
+    
+    if (!formData.userName || !formData.userCPF || !formData.company || !formData.selectedTurno || !formData.voucher) {
+      toast.error("Por favor, preencha todos os campos obrigatórios");
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
-      setIsSubmitting(true);
-      
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Buscar turno
-      const { data: turnoData, error: turnoError } = await supabase
-        .from('turnos')
-        .select('id')
-        .eq('tipo_turno', formData.selectedTurno)
-        .single();
-
-      if (turnoError) {
-        logger.error('Erro ao buscar turno:', turnoError);
-        toast.error('Erro ao buscar turno');
-        return;
-      }
-
-      if (!turnoData) {
-        toast.error('Turno não encontrado');
-        return;
-      }
-
-      // Gera um novo voucher
-      const voucher = await generateUniqueVoucherFromCPF(cleanCPF);
-      
-      // Garantir que empresa_id seja um número válido
-      const empresaId = parseInt(formData.company);
-      if (isNaN(empresaId)) {
-        toast.error('ID da empresa inválido');
-        return;
-      }
-
-      let userPhoto = formData.userPhoto;
-      if (formData.userPhoto instanceof File) {
-        userPhoto = await convertToBase64(formData.userPhoto);
-      }
-
       const newUserData = {
-        nome: formData.userName.trim(),
+        nome: formData.userName,
         cpf: cleanCPF,
-        empresa_id: empresaId,
-        voucher: voucher,
-        turno_id: turnoData.id,
+        empresa_id: parseInt(formData.company),
+        voucher: formData.voucher,
+        turno_id: parseInt(formData.selectedTurno),
         suspenso: formData.isSuspended,
-        foto: userPhoto
+        foto: formData.userPhoto
       };
 
-      // Buscar usuário existente
+      // Verificar se usuário já existe
       const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
@@ -122,53 +85,36 @@ const UserForm = () => {
           toast.error(`Erro ao cadastrar usuário: ${result.error.message}`);
           return;
         }
-        
+
         toast.success("Usuário cadastrado com sucesso!");
       }
 
-      clearForm();
+      // Limpar formulário após sucesso
+      setFormData({
+        userName: '',
+        userCPF: '',
+        company: '',
+        selectedTurno: '',
+        isSuspended: false,
+        userPhoto: null,
+        voucher: ''
+      });
+
     } catch (error) {
-      logger.error('Erro inesperado ao salvar usuário:', error);
-      toast.error(`Erro ao salvar usuário: ${error.message}`);
+      logger.error('Erro ao processar operação:', error);
+      toast.error("Ocorreu um erro ao processar a operação. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const convertToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const clearForm = () => {
-    setFormData({
-      userName: "",
-      userCPF: "",
-      company: "",
-      voucher: "",
-      selectedTurno: "",
-      isSuspended: false,
-      userPhoto: null
-    });
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
   return (
     <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Cadastro de Usuários</h2>
       <UserFormMain
         formData={formData}
         onInputChange={handleInputChange}
-        onSave={handleSaveUser}
+        onSave={handleSave}
         isSubmitting={isSubmitting}
       />
     </div>
