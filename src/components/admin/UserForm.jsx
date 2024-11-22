@@ -95,32 +95,33 @@ const UserForm = () => {
         foto: formData.userPhoto
       };
 
-      let result;
-      
       if (existingUser?.id) {
         // Atualizar usuário existente
-        result = await supabase
+        const { error: updateError } = await supabase
           .from('usuarios')
           .update(newUserData)
           .eq('id', existingUser.id);
 
-        if (result.error) {
-          logger.error('Erro ao atualizar usuário:', result.error);
+        if (updateError) {
+          logger.error('Erro ao atualizar usuário:', updateError);
+          if (updateError.code === '23505') {
+            throw new Error('CPF já cadastrado para outro usuário');
+          }
           throw new Error('Erro ao atualizar usuário. Por favor, verifique os dados e tente novamente.');
         }
         
         toast.success("Usuário atualizado com sucesso!");
       } else {
         // Inserir novo usuário
-        result = await supabase
+        const { error: insertError } = await supabase
           .from('usuarios')
           .insert([newUserData]);
 
-        if (result.error) {
-          if (result.error.code === '23505') {
+        if (insertError) {
+          logger.error('Erro ao inserir usuário:', insertError);
+          if (insertError.code === '23505') {
             throw new Error('CPF já cadastrado no sistema');
           }
-          logger.error('Erro ao inserir usuário:', result.error);
           throw new Error('Erro ao cadastrar usuário. Por favor, verifique os dados e tente novamente.');
         }
         
