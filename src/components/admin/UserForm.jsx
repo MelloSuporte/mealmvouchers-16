@@ -87,31 +87,27 @@ const UserForm = () => {
         foto: updatedFormData.userPhoto instanceof File ? await convertToBase64(updatedFormData.userPhoto) : updatedFormData.userPhoto
       };
 
-      let response;
       if (existingUser) {
         // Atualizar usuário existente com o novo voucher
-        const { data, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .from('usuarios')
           .update(userData)
-          .eq('id', existingUser.id)
-          .select('*, empresas(*)')
-          .single();
+          .eq('id', existingUser.id);
           
         if (updateError) throw updateError;
-        response = { data };
+        
+        toast.success("Usuário atualizado com sucesso!");
       } else {
         // Criar novo usuário
-        const { data, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from('usuarios')
-          .insert([userData])
-          .select('*, empresas(*)')
-          .single();
+          .insert([userData]);
           
         if (insertError) throw insertError;
-        response = { data };
+        
+        toast.success("Usuário cadastrado com sucesso!");
       }
 
-      toast.success(existingUser ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
       clearForm();
     } catch (error) {
       toast.error(error.message || 'Erro ao salvar usuário');
