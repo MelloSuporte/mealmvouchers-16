@@ -40,27 +40,27 @@ const UserForm = () => {
       
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Verificar se o usuário já existe usando maybeSingle()
-      const { data: existingUser } = await supabase
-        .from('usuarios')
-        .select('id')
-        .eq('cpf', cleanCPF)
-        .maybeSingle();
-      
-      // Gera um novo voucher
-      const voucher = await generateUniqueVoucherFromCPF(cleanCPF);
-      
-      // Buscar o ID do turno baseado no tipo_turno selecionado
-      const { data: turnoData } = await supabase
-        .from('turnos')
-        .select('id')
-        .eq('tipo_turno', formData.selectedTurno)
-        .maybeSingle();
+      // Primeiro, buscamos todas as informações necessárias de uma vez
+      const [userResponse, turnoResponse] = await Promise.all([
+        supabase
+          .from('usuarios')
+          .select('id')
+          .eq('cpf', cleanCPF)
+          .maybeSingle(),
+        supabase
+          .from('turnos')
+          .select('id')
+          .eq('tipo_turno', formData.selectedTurno)
+          .maybeSingle()
+      ]);
 
-      if (!turnoData) {
+      if (!turnoResponse.data) {
         throw new Error('Erro ao buscar ID do turno');
       }
 
+      // Gera um novo voucher
+      const voucher = await generateUniqueVoucherFromCPF(cleanCPF);
+      
       // Garantir que empresa_id seja um número válido
       const empresaId = parseInt(formData.company);
       if (isNaN(empresaId) || !formData.company) {
@@ -73,16 +73,16 @@ const UserForm = () => {
         cpf: cleanCPF,
         empresa_id: empresaId,
         voucher: voucher,
-        turno_id: turnoData.id,
+        turno_id: turnoResponse.data.id,
         suspenso: formData.isSuspended,
         foto: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
       };
 
-      if (existingUser) {
+      if (userResponse.data) {
         const { error: updateError } = await supabase
           .from('usuarios')
           .update(userData)
-          .eq('id', existingUser.id);
+          .eq('id', userResponse.data.id);
           
         if (updateError) throw updateError;
         
