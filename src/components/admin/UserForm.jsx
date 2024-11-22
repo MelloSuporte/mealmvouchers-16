@@ -73,16 +73,12 @@ const UserForm = () => {
     try {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Verificar se usuário já existe antes de tentar inserir/atualizar
-      const { data: existingUser, error: searchError } = await supabase
+      // Primeiro, verificar se o usuário existe
+      const { data: existingUser } = await supabase
         .from('usuarios')
         .select('id')
         .eq('cpf', cleanCPF)
-        .single();
-
-      if (searchError && searchError.code !== 'PGRST116') {
-        throw searchError;
-      }
+        .maybeSingle();
 
       const newUserData = {
         nome: formData.userName,
@@ -100,16 +96,24 @@ const UserForm = () => {
           .from('usuarios')
           .update(newUserData)
           .eq('id', existingUser.id);
-          
-        if (updateError) throw updateError;
+
+        if (updateError) {
+          logger.error('Erro ao atualizar usuário:', updateError);
+          throw new Error('Erro ao atualizar usuário');
+        }
+        
         toast.success("Usuário atualizado com sucesso!");
       } else {
         // Inserir novo usuário
         const { error: insertError } = await supabase
           .from('usuarios')
           .insert([newUserData]);
-          
-        if (insertError) throw insertError;
+
+        if (insertError) {
+          logger.error('Erro ao inserir usuário:', insertError);
+          throw new Error('Erro ao cadastrar usuário');
+        }
+        
         toast.success("Usuário cadastrado com sucesso!");
       }
 
@@ -126,7 +130,7 @@ const UserForm = () => {
 
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
-      toast.error("Ocorreu um erro ao processar a operação. Por favor, tente novamente.");
+      toast.error(error.message || "Ocorreu um erro ao processar a operação. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
