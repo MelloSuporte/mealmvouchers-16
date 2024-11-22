@@ -88,22 +88,40 @@ const UserForm = () => {
       };
 
       if (existingUser) {
-        // Atualizar usuário existente com o novo voucher
+        // Primeiro atualiza os dados
         const { error: updateError } = await supabase
           .from('usuarios')
           .update(userData)
           .eq('id', existingUser.id);
           
         if (updateError) throw updateError;
+
+        // Depois busca os dados atualizados em uma operação separada
+        const { data: updatedData, error: fetchError } = await supabase
+          .from('usuarios')
+          .select('*, empresas(*)')
+          .eq('id', existingUser.id)
+          .single();
+
+        if (fetchError) throw fetchError;
         
         toast.success("Usuário atualizado com sucesso!");
       } else {
-        // Criar novo usuário
+        // Primeiro insere os dados
         const { error: insertError } = await supabase
           .from('usuarios')
           .insert([userData]);
           
         if (insertError) throw insertError;
+
+        // Depois busca os dados inseridos em uma operação separada
+        const { data: insertedData, error: fetchError } = await supabase
+          .from('usuarios')
+          .select('*, empresas(*)')
+          .eq('cpf', userData.cpf)
+          .single();
+
+        if (fetchError) throw fetchError;
         
         toast.success("Usuário cadastrado com sucesso!");
       }
