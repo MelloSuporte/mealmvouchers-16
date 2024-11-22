@@ -6,14 +6,14 @@ import CompanyList from './company/CompanyList';
 import CompanyFormFields from './company/CompanyFormFields';
 
 const CompanyForm = () => {
-  const [companyName, setCompanyName] = useState("");
+  const [nomeEmpresa, setNomeEmpresa] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [logo, setLogo] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingCompany, setEditingCompany] = useState(null);
+  const [empresaEditando, setEmpresaEditando] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: companies = [], isLoading, error } = useQuery({
+  const { data: empresas = [], isLoading, error } = useQuery({
     queryKey: ['empresas'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -26,34 +26,34 @@ const CompanyForm = () => {
         throw new Error(error.message);
       }
 
-      return (data || []).map(company => ({
-        id: company.id,
-        name: company.nome,
-        cnpj: company.cnpj,
-        logo: company.logo,
-        createdAt: company.created_at
+      return (data || []).map(empresa => ({
+        id: empresa.id,
+        nome: empresa.nome,
+        cnpj: empresa.cnpj,
+        logo: empresa.logo,
+        createdAt: empresa.created_at
       }));
     }
   });
 
-  const handleEditCompany = (company) => {
-    if (!company) return;
+  const handleEditEmpresa = (empresa) => {
+    if (!empresa) return;
     
-    setEditingCompany(company);
-    setCompanyName(company.name || '');
-    setCnpj(company.cnpj || '');
-    setLogo(company.logo);
+    setEmpresaEditando(empresa);
+    setNomeEmpresa(empresa.nome || '');
+    setCnpj(empresa.cnpj || '');
+    setLogo(empresa.logo);
   };
 
   const resetForm = () => {
-    setCompanyName("");
+    setNomeEmpresa("");
     setCnpj("");
     setLogo(null);
-    setEditingCompany(null);
+    setEmpresaEditando(null);
   };
 
-  const handleSaveCompany = async () => {
-    const trimmedName = companyName?.trim();
+  const handleSaveEmpresa = async () => {
+    const trimmedName = nomeEmpresa?.trim();
     
     if (!trimmedName) {
       toast.error('Nome da empresa é obrigatório');
@@ -68,24 +68,24 @@ const CompanyForm = () => {
     try {
       setIsSubmitting(true);
       
-      const companyData = {
+      const empresaData = {
         nome: trimmedName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
         logo: logo
       };
 
-      if (editingCompany) {
+      if (empresaEditando) {
         const { error } = await supabase
           .from('empresas')
-          .update(companyData)
-          .eq('id', editingCompany.id);
+          .update(empresaData)
+          .eq('id', empresaEditando.id);
 
         if (error) throw error;
         toast.success('Empresa atualizada com sucesso!');
       } else {
         const { error } = await supabase
           .from('empresas')
-          .insert([companyData]);
+          .insert([empresaData]);
 
         if (error) throw error;
         toast.success('Empresa cadastrada com sucesso!');
@@ -108,21 +108,21 @@ const CompanyForm = () => {
   return (
     <div className="space-y-6">
       <CompanyFormFields
-        companyName={companyName}
-        setCompanyName={setCompanyName}
+        companyName={nomeEmpresa}
+        setCompanyName={setNomeEmpresa}
         cnpj={cnpj}
         setCnpj={setCnpj}
         logo={logo}
         setLogo={setLogo}
         isSubmitting={isSubmitting}
-        editingCompany={editingCompany}
-        onSave={handleSaveCompany}
+        editingCompany={empresaEditando}
+        onSave={handleSaveEmpresa}
       />
 
       <CompanyList
-        companies={companies}
+        companies={empresas}
         isLoading={isLoading}
-        onEdit={handleEditCompany}
+        onEdit={handleEditEmpresa}
       />
     </div>
   );
