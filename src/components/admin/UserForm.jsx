@@ -45,7 +45,7 @@ const UserForm = () => {
         .from('turnos')
         .select('id')
         .eq('tipo_turno', formData.selectedTurno)
-        .maybeSingle();
+        .single();
 
       if (turnoError) {
         logger.error('Erro ao buscar turno:', turnoError);
@@ -84,38 +84,48 @@ const UserForm = () => {
       };
 
       // Buscar usuário existente
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
         .eq('cpf', cleanCPF)
-        .maybeSingle();
+        .single();
 
-      let result;
-      
-      if (existingUser?.id) {
-        // Atualizar usuário existente
-        result = await supabase
-          .from('usuarios')
-          .update(newUserData)
-          .eq('id', existingUser.id)
-          .select()
-          .single();
-      } else {
-        // Inserir novo usuário
-        result = await supabase
-          .from('usuarios')
-          .insert([newUserData])
-          .select()
-          .single();
-      }
-
-      if (result.error) {
-        logger.error('Erro ao salvar usuário:', result.error);
-        toast.error(`Erro ao ${existingUser ? 'atualizar' : 'cadastrar'} usuário: ${result.error.message}`);
+      if (searchError && searchError.code !== 'PGRST116') {
+        logger.error('Erro ao buscar usuário existente:', searchError);
+        toast.error('Erro ao verificar usuário existente');
         return;
       }
 
-      toast.success(existingUser ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
+      let result;
+      if (existingUser?.id) {
+        // Atualizar usuário existente
+        const { error: updateError } = await supabase
+          .from('usuarios')
+          .update(newUserData)
+          .eq('id', existingUser.id);
+
+        if (updateError) {
+          logger.error('Erro ao atualizar usuário:', updateError);
+          toast.error(`Erro ao atualizar usuário: ${updateError.message}`);
+          return;
+        }
+        
+        toast.success("Usuário atualizado com sucesso!");
+      } else {
+        // Inserir novo usuário
+        const { error: insertError } = await supabase
+          .from('usuarios')
+          .insert([newUserData]);
+
+        if (insertError) {
+          logger.error('Erro ao cadastrar usuário:', insertError);
+          toast.error(`Erro ao cadastrar usuário: ${insertError.message}`);
+          return;
+        }
+        
+        toast.success("Usuário cadastrado com sucesso!");
+      }
+
       clearForm();
     } catch (error) {
       logger.error('Erro inesperado ao salvar usuário:', error);
