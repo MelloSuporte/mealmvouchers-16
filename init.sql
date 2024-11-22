@@ -6,10 +6,20 @@ SET timezone = 'America/Sao_Paulo';
 
 CREATE TABLE IF NOT EXISTS empresas (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  nome VARCHAR(255) NOT NULL,
   cnpj VARCHAR(18) NOT NULL UNIQUE,
   logo TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS turnos (
+  id SERIAL PRIMARY KEY,
+  tipo_turno VARCHAR(10) CHECK (tipo_turno IN ('central', 'primeiro', 'segundo', 'terceiro')),
+  horario_inicio TIME NOT NULL,
+  horario_fim TIME NOT NULL,
+  ativo BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -24,64 +34,64 @@ CREATE TABLE IF NOT EXISTS usuarios (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS turnos (
+CREATE TABLE IF NOT EXISTS tipos_refeicao (
   id SERIAL PRIMARY KEY,
-  tipo_turno VARCHAR(10) CHECK (tipo_turno IN ('central', 'primeiro', 'segundo', 'terceiro')),
-  horario_inicio TIME NOT NULL,
-  horario_fim TIME NOT NULL,
+  nome VARCHAR(255) NOT NULL,
+  horario_inicio TIME,
+  horario_fim TIME,
+  valor DECIMAL(10,2) NOT NULL,
   ativo BOOLEAN DEFAULT TRUE,
+  max_usuarios_por_dia INTEGER,
+  minutos_tolerancia INTEGER DEFAULT 15,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS uso_voucher (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER REFERENCES usuarios(id),
+  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
+  usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS vouchers_extra (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER REFERENCES usuarios(id),
+  autorizado_por VARCHAR(255) NOT NULL,
+  valido_ate DATE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS imagens_fundo (
+  id SERIAL PRIMARY KEY,
+  pagina VARCHAR(50) NOT NULL,
+  url_imagem TEXT NOT NULL,
+  ativo BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS vouchers_descartaveis (
+  id SERIAL PRIMARY KEY,
+  codigo VARCHAR(8) NOT NULL UNIQUE,
+  usuario_id INTEGER REFERENCES usuarios(id),
+  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
+  criado_por INTEGER REFERENCES usuarios(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  usado_em TIMESTAMP WITH TIME ZONE,
+  expira_em TIMESTAMP WITH TIME ZONE,
+  usado BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE IF NOT EXISTS meal_types (
+CREATE TABLE IF NOT EXISTS usuarios_admin (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  start_time TIME,
-  end_time TIME,
-  value DECIMAL(10,2) NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  max_users_per_day INTEGER,
-  tolerance_minutes INTEGER DEFAULT 15,
+  nome VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  senha VARCHAR(255) NOT NULL,
+  empresa_id INTEGER REFERENCES empresas(id),
+  permissoes JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS voucher_usage (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES usuarios(id),
-  meal_type_id INTEGER REFERENCES meal_types(id),
-  used_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS extra_vouchers (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES usuarios(id),
-  authorized_by VARCHAR(255) NOT NULL,
-  valid_until DATE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS background_images (
-  id SERIAL PRIMARY KEY,
-  page VARCHAR(50) NOT NULL,
-  image_url TEXT NOT NULL,
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS disposable_vouchers (
-  id SERIAL PRIMARY KEY,
-  code VARCHAR(8) NOT NULL UNIQUE,
-  user_id INTEGER REFERENCES usuarios(id),
-  meal_type_id INTEGER REFERENCES meal_types(id),
-  created_by INTEGER REFERENCES usuarios(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  used_at TIMESTAMP WITH TIME ZONE,
-  expired_at TIMESTAMP WITH TIME ZONE,
-  is_used BOOLEAN DEFAULT FALSE
-);
-
--- Insert default shift configurations
+-- Inserir configurações padrão de turnos
 INSERT INTO turnos (tipo_turno, horario_inicio, horario_fim, ativo) VALUES
   ('central', '08:00:00', '17:00:00', true),
   ('primeiro', '06:00:00', '14:00:00', true),
