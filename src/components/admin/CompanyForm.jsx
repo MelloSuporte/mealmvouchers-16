@@ -74,24 +74,23 @@ const CompanyForm = () => {
         logo: logo
       };
 
-      let response;
-      
       if (editingCompany) {
-        response = await supabase
+        const { error: updateError } = await supabase
           .from('companies')
           .update(companyData)
           .eq('id', editingCompany.id);
+
+        if (updateError) throw new Error(updateError.message);
+        toast.success('Empresa atualizada com sucesso!');
       } else {
-        response = await supabase
+        const { error: insertError } = await supabase
           .from('companies')
           .insert([companyData]);
+
+        if (insertError) throw new Error(insertError.message);
+        toast.success('Empresa cadastrada com sucesso!');
       }
 
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      toast.success(editingCompany ? 'Empresa atualizada com sucesso!' : 'Empresa cadastrada com sucesso!');
       resetForm();
       queryClient.invalidateQueries(['empresas']);
     } catch (error) {
