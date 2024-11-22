@@ -29,6 +29,7 @@ router.get('/', async (req, res) => {
     if (error) {
       logger.error('Erro ao buscar imagens:', error);
       return res.status(500).json({ 
+        success: false,
         error: 'Erro ao buscar imagens de fundo',
         details: error.message 
       });
@@ -39,6 +40,7 @@ router.get('/', async (req, res) => {
   } catch (error) {
     logger.error('Erro não esperado ao buscar imagens:', error);
     res.status(500).json({ 
+      success: false,
       error: 'Erro interno ao buscar imagens',
       details: error.message 
     });
@@ -52,7 +54,10 @@ router.post('/', upload.any(), async (req, res) => {
     
     if (!req.files?.length) {
       logger.warn('Nenhum arquivo recebido');
-      return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Nenhum arquivo enviado' 
+      });
     }
 
     // Desativa imagens existentes
@@ -67,7 +72,11 @@ router.post('/', upload.any(), async (req, res) => {
 
     if (deactivateError) {
       logger.error('Erro ao desativar imagens antigas:', deactivateError);
-      throw deactivateError;
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao desativar imagens antigas',
+        details: deactivateError.message
+      });
     }
 
     // Insere novas imagens
@@ -87,7 +96,11 @@ router.post('/', upload.any(), async (req, res) => {
 
       if (insertError) {
         logger.error('Erro ao inserir nova imagem:', insertError);
-        throw insertError;
+        return res.status(500).json({
+          success: false,
+          error: 'Erro ao salvar nova imagem',
+          details: insertError.message
+        });
       }
     }
 
@@ -100,6 +113,7 @@ router.post('/', upload.any(), async (req, res) => {
   } catch (error) {
     logger.error('Erro não esperado ao salvar imagens:', error);
     res.status(500).json({ 
+      success: false,
       error: 'Erro ao salvar imagens de fundo',
       details: error.message 
     });
