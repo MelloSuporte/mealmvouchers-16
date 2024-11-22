@@ -66,7 +66,7 @@ const UserForm = () => {
         throw new Error('Erro ao buscar ID do turno');
       }
 
-      // Garantir que empresa_id seja um número válido
+      // Garantir que empresas seja um número válido
       const empresaId = parseInt(String(updatedFormData.company).trim());
       if (isNaN(empresaId)) {
         toast.error('ID da empresa inválido. Por favor, selecione uma empresa válida.');
@@ -76,7 +76,7 @@ const UserForm = () => {
       const userData = {
         nome: updatedFormData.userName.trim(),
         cpf: updatedFormData.userCPF.replace(/\D/g, ''),
-        empresa_id: empresaId,
+        empresas: empresaId,
         voucher: voucher,
         turno_id: turnoData.id,
         suspenso: updatedFormData.isSuspended,
