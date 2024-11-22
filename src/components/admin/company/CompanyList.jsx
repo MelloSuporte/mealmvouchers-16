@@ -26,7 +26,7 @@ const CompanyList = ({ companies = [], isLoading, onEdit }) => {
           {companyArray.length > 0 ? (
             companyArray.map((company) => (
               <TableRow key={company.id}>
-                <TableCell className="font-medium">{company.name}</TableCell>
+                <TableCell className="font-medium">{company.nome}</TableCell>
                 <TableCell>{company.cnpj}</TableCell>
                 <TableCell>
                   {company.createdAt && format(new Date(company.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
