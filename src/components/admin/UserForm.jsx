@@ -40,21 +40,23 @@ const UserForm = () => {
       
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Primeiro, buscamos todas as informações necessárias de uma vez
-      const [userResponse, turnoResponse] = await Promise.all([
-        supabase
-          .from('usuarios')
-          .select('id')
-          .eq('cpf', cleanCPF)
-          .maybeSingle(),
-        supabase
-          .from('turnos')
-          .select('id')
-          .eq('tipo_turno', formData.selectedTurno)
-          .maybeSingle()
-      ]);
+      // Buscar usuário e turno em paralelo
+      const userPromise = supabase
+        .from('usuarios')
+        .select('id')
+        .eq('cpf', cleanCPF)
+        .single();
 
-      if (!turnoResponse.data) {
+      const turnoPromise = supabase
+        .from('turnos')
+        .select('id')
+        .eq('tipo_turno', formData.selectedTurno)
+        .single();
+
+      const [{ data: userData, error: userError }, { data: turnoData, error: turnoError }] = 
+        await Promise.all([userPromise, turnoPromise]);
+
+      if (turnoError) {
         throw new Error('Erro ao buscar ID do turno');
       }
 
@@ -68,21 +70,21 @@ const UserForm = () => {
         return;
       }
 
-      const userData = {
+      const newUserData = {
         nome: formData.userName.trim(),
         cpf: cleanCPF,
         empresa_id: empresaId,
         voucher: voucher,
-        turno_id: turnoResponse.data.id,
+        turno_id: turnoData.id,
         suspenso: formData.isSuspended,
         foto: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
       };
 
-      if (userResponse.data) {
+      if (userData?.id) {
         const { error: updateError } = await supabase
           .from('usuarios')
-          .update(userData)
-          .eq('id', userResponse.data.id);
+          .update(newUserData)
+          .eq('id', userData.id);
           
         if (updateError) throw updateError;
         
@@ -90,7 +92,7 @@ const UserForm = () => {
       } else {
         const { error: insertError } = await supabase
           .from('usuarios')
-          .insert([userData]);
+          .insert([newUserData]);
           
         if (insertError) throw insertError;
         
