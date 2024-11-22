@@ -75,19 +75,23 @@ const CompanyForm = () => {
       };
 
       if (editingCompany) {
-        const { error: updateError } = await supabase
+        const { data: updatedData, error: updateError } = await supabase
           .from('companies')
           .update(companyData)
-          .eq('id', editingCompany.id);
+          .eq('id', editingCompany.id)
+          .select()
+          .single();
 
-        if (updateError) throw new Error(updateError.message);
+        if (updateError) throw updateError;
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        const { error: insertError } = await supabase
+        const { data: insertedData, error: insertError } = await supabase
           .from('companies')
-          .insert([companyData]);
+          .insert([companyData])
+          .select()
+          .single();
 
-        if (insertError) throw new Error(insertError.message);
+        if (insertError) throw insertError;
         toast.success('Empresa cadastrada com sucesso!');
       }
 
