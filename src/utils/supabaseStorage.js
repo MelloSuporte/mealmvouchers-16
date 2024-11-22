@@ -1,49 +1,29 @@
-import { supabase } from '../config/supabase.js';
-import logger from '../config/logger.js';
+import { supabase } from '../config/supabase';
+import { toast } from "sonner";
 
-export const ensureLogosBucket = async () => {
+export const uploadLogo = async (file) => {
   try {
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const logosBucket = buckets?.find(b => b.name === 'logos');
-    
-    if (!logosBucket) {
-      const { error: createBucketError } = await supabase.storage.createBucket('logos', {
-        public: true,
-        fileSizeLimit: 5242880, // 5MB
-        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif']
-      });
-      
-      if (createBucketError) throw createBucketError;
-      logger.info('Created logos bucket successfully');
-    }
-  } catch (error) {
-    logger.error('Error ensuring logos bucket exists:', error);
-    throw error;
-  }
-};
+    if (!file) return null;
 
-export const uploadLogo = async (fileBuffer, originalName) => {
-  try {
-    await ensureLogosBucket();
-    
-    const fileName = `company-logos/${Date.now()}-${originalName}`;
-    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `logos/${fileName}`;
+
     const { error: uploadError } = await supabase.storage
       .from('logos')
-      .upload(fileName, fileBuffer, {
-        cacheControl: '3600',
-        upsert: false
-      });
+      .upload(filePath, file);
 
-    if (uploadError) throw uploadError;
-    
+    if (uploadError) {
+      throw uploadError;
+    }
+
     const { data } = supabase.storage
       .from('logos')
-      .getPublicUrl(fileName);
-      
+      .getPublicUrl(filePath);
+
     return data.publicUrl;
   } catch (error) {
-    logger.error('Error uploading logo:', error);
+    toast.error('Erro ao fazer upload do logo: ' + error.message);
     throw error;
   }
 };

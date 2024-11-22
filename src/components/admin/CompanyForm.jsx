@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from '../../config/supabase';
 import CompanyList from './company/CompanyList';
 import CompanyFormFields from './company/CompanyFormFields';
+import { uploadLogo } from '../../utils/supabaseStorage';
 
 const CompanyForm = () => {
   const [nomeEmpresa, setNomeEmpresa] = useState("");
@@ -68,10 +69,17 @@ const CompanyForm = () => {
     try {
       setIsSubmitting(true);
       
+      let logoUrl = null;
+      if (logo instanceof File) {
+        logoUrl = await uploadLogo(logo);
+      } else {
+        logoUrl = logo; // Mantém a URL existente se não houver novo upload
+      }
+
       const empresaData = {
         nome: trimmedName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
-        logo: logo
+        logo: logoUrl
       };
 
       if (empresaEditando) {
