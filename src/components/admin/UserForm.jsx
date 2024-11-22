@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from '@/config/supabase';
 import logger from '@/config/logger';
 import UserFormMain from './UserFormMain';
+import { generateUniqueVoucherFromCPF } from '@/utils/voucherGenerationUtils';
 
 const UserForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,11 +17,24 @@ const UserForm = () => {
     voucher: ''
   });
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = async (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+
+    // Gerar voucher automaticamente quando o CPF é preenchido
+    if (field === 'userCPF' && value.length >= 11) {
+      try {
+        const voucherCode = await generateUniqueVoucherFromCPF(value);
+        setFormData(prev => ({
+          ...prev,
+          voucher: voucherCode
+        }));
+      } catch (error) {
+        toast.error('Erro ao gerar voucher. Por favor, tente novamente.');
+      }
+    }
   };
 
   const validateForm = () => {

@@ -33,7 +33,7 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
       
       // Verifica duplicidade na tabela de usuários
       const { data: existingUsers, error: userError } = await supabase
-        .from('usuarios')  // Alterado de 'users' para 'usuarios'
+        .from('usuarios')
         .select('id')
         .eq('voucher', voucherCode)
         .limit(1);
@@ -61,12 +61,4 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
     logger.error('Erro ao gerar voucher único:', error);
     throw error;
   }
-};
-
-export const validateCPF = (cpf) => {
-  const cleanCPF = cpf.replace(/\D/g, '');
-  if (cleanCPF.length !== 11) {
-    return false;
-  }
-  return true;
 };
