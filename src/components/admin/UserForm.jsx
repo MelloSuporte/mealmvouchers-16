@@ -23,11 +23,34 @@ const UserForm = () => {
     }));
   };
 
+  const validateForm = () => {
+    const errors = [];
+    
+    if (!formData.userName.trim()) {
+      errors.push('Nome completo');
+    }
+    if (!formData.userCPF.trim()) {
+      errors.push('CPF');
+    }
+    if (!formData.company) {
+      errors.push('Empresa');
+    }
+    if (!formData.selectedTurno) {
+      errors.push('Turno');
+    }
+    if (!formData.voucher.trim()) {
+      errors.push('Voucher');
+    }
+
+    return errors;
+  };
+
   const handleSave = async (e) => {
     e?.preventDefault();
     
-    if (!formData.userName || !formData.userCPF || !formData.company || !formData.selectedTurno || !formData.voucher) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
+    const missingFields = validateForm();
+    if (missingFields.length > 0) {
+      toast.error(`Por favor, preencha os seguintes campos obrigatórios: ${missingFields.join(', ')}`);
       return;
     }
 
