@@ -17,9 +17,9 @@ const CompanyForm = () => {
     queryKey: ['empresas'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('companies')
+        .from('empresas')
         .select('*')
-        .order('name');
+        .order('nome');
 
       if (error) {
         console.error('Erro ao carregar empresas:', error);
@@ -28,7 +28,7 @@ const CompanyForm = () => {
 
       return (data || []).map(company => ({
         id: company.id,
-        name: company.name,
+        name: company.nome,
         cnpj: company.cnpj,
         logo: company.logo,
         createdAt: company.created_at
@@ -69,14 +69,14 @@ const CompanyForm = () => {
       setIsSubmitting(true);
       
       const companyData = {
-        name: trimmedName,
+        nome: trimmedName,
         cnpj: cnpj.replace(/[^\d]/g, ''),
         logo: logo
       };
 
       if (editingCompany) {
         const { error } = await supabase
-          .from('companies')
+          .from('empresas')
           .update(companyData)
           .eq('id', editingCompany.id);
 
@@ -84,7 +84,7 @@ const CompanyForm = () => {
         toast.success('Empresa atualizada com sucesso!');
       } else {
         const { error } = await supabase
-          .from('companies')
+          .from('empresas')
           .insert([companyData]);
 
         if (error) throw error;
