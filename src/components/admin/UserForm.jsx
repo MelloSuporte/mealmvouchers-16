@@ -72,17 +72,11 @@ const UserForm = () => {
     try {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Verificar se usuário já existe
-      const { data: existingUser, error: searchError } = await supabase
+      const { data: existingUser } = await supabase
         .from('usuarios')
         .select('id')
         .eq('cpf', cleanCPF)
         .maybeSingle();
-
-      if (searchError) {
-        logger.error('Erro ao buscar usuário:', searchError);
-        throw new Error('Erro ao verificar usuário existente');
-      }
 
       const newUserData = {
         nome: formData.userName,
@@ -94,40 +88,29 @@ const UserForm = () => {
         foto: formData.userPhoto
       };
 
+      let result;
+
       if (existingUser?.id) {
-        // Atualizar usuário existente
-        const { error: updateError } = await supabase
+        result = await supabase
           .from('usuarios')
           .update(newUserData)
           .eq('id', existingUser.id);
-
-        if (updateError) {
-          if (updateError.code === '23505') {
-            toast.error('CPF já cadastrado para outro usuário');
-            return;
-          }
-          throw updateError;
-        }
-        
-        toast.success("Usuário atualizado com sucesso!");
       } else {
-        // Inserir novo usuário
-        const { error: insertError } = await supabase
+        result = await supabase
           .from('usuarios')
           .insert([newUserData]);
-
-        if (insertError) {
-          if (insertError.code === '23505') {
-            toast.error('CPF já cadastrado no sistema');
-            return;
-          }
-          throw insertError;
-        }
-        
-        toast.success("Usuário cadastrado com sucesso!");
       }
 
-      // Limpar formulário após sucesso
+      if (result.error) {
+        if (result.error.code === '23505') {
+          toast.error('CPF já cadastrado no sistema');
+          return;
+        }
+        throw result.error;
+      }
+
+      toast.success(existingUser?.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
+
       setFormData({
         userName: '',
         userCPF: '',
@@ -140,7 +123,12 @@ const UserForm = () => {
 
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
-      toast.error("Erro ao processar operação. Por favor, tente novamente.");
+      
+      if (error.message?.includes('duplicate key')) {
+        toast.error('CPF já cadastrado no sistema');
+      } else {
+        toast.error('Erro ao processar operação. Por favor, verifique os dados e tente novamente.');
+      }
     } finally {
       setIsSubmitting(false);
     }
