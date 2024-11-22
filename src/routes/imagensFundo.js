@@ -13,7 +13,7 @@ const upload = multer({
 // Criar cliente Supabase com service role
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_SERVICE_ROLE
+  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY
 );
 
 // GET /imagens-fundo
@@ -80,10 +80,8 @@ router.post('/', upload.any(), async (req, res) => {
     }
 
     // Insere novas imagens
-    for (const file of req.files) {
+    const insertPromises = req.files.map(async (file) => {
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-      
-      logger.info(`Salvando imagem para página: ${file.fieldname}`);
       
       const { error: insertError } = await supabase
         .from('background_images')
@@ -95,14 +93,11 @@ router.post('/', upload.any(), async (req, res) => {
         }]);
 
       if (insertError) {
-        logger.error('Erro ao inserir nova imagem:', insertError);
-        return res.status(500).json({
-          success: false,
-          error: 'Erro ao salvar nova imagem',
-          details: insertError.message
-        });
+        throw insertError;
       }
-    }
+    });
+
+    await Promise.all(insertPromises);
 
     logger.info('Upload de imagens concluído com sucesso');
     res.json({ 

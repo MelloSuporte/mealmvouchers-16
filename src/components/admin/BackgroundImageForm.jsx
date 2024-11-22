@@ -124,7 +124,7 @@ const BackgroundImageForm = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      if (!response.data || response.data.success !== true) {
+      if (!response.data?.success) {
         throw new Error(response.data?.error || 'Erro ao processar resposta do servidor');
       }
 
