@@ -41,14 +41,20 @@ const UserForm = () => {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
       // Buscar turno
-      let { data: turnoData } = await supabase
+      const { data: turnoData, error: turnoError } = await supabase
         .from('turnos')
         .select('id')
         .eq('tipo_turno', formData.selectedTurno)
         .maybeSingle();
 
+      if (turnoError) {
+        logger.error('Erro ao buscar turno:', turnoError);
+        toast.error('Erro ao buscar turno');
+        return;
+      }
+
       if (!turnoData) {
-        toast.error('Erro ao buscar ID do turno');
+        toast.error('Turno não encontrado');
         return;
       }
 
@@ -57,8 +63,8 @@ const UserForm = () => {
       
       // Garantir que empresa_id seja um número válido
       const empresaId = parseInt(formData.company);
-      if (isNaN(empresaId) || !formData.company) {
-        toast.error('Por favor, selecione uma empresa válida');
+      if (isNaN(empresaId)) {
+        toast.error('ID da empresa inválido');
         return;
       }
 
@@ -78,11 +84,17 @@ const UserForm = () => {
       };
 
       // Buscar usuário existente
-      let { data: existingUser } = await supabase
+      const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
         .eq('cpf', cleanCPF)
         .maybeSingle();
+
+      if (searchError) {
+        logger.error('Erro ao buscar usuário existente:', searchError);
+        toast.error('Erro ao verificar usuário existente');
+        return;
+      }
 
       if (existingUser?.id) {
         // Atualizar usuário existente
@@ -92,7 +104,8 @@ const UserForm = () => {
           .eq('id', existingUser.id);
           
         if (updateError) {
-          toast.error('Erro ao atualizar usuário');
+          logger.error('Erro ao atualizar usuário:', updateError);
+          toast.error(`Erro ao atualizar usuário: ${updateError.message}`);
           return;
         }
         
@@ -104,7 +117,8 @@ const UserForm = () => {
           .insert([newUserData]);
           
         if (insertError) {
-          toast.error('Erro ao cadastrar usuário');
+          logger.error('Erro ao cadastrar usuário:', insertError);
+          toast.error(`Erro ao cadastrar usuário: ${insertError.message}`);
           return;
         }
         
@@ -113,8 +127,8 @@ const UserForm = () => {
 
       clearForm();
     } catch (error) {
-      toast.error(error.message || 'Erro ao salvar usuário');
-      logger.error('Erro ao salvar usuário:', error);
+      logger.error('Erro inesperado ao salvar usuário:', error);
+      toast.error(`Erro ao salvar usuário: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
