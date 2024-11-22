@@ -88,15 +88,15 @@ const UserForm = () => {
         .from('usuarios')
         .select('id')
         .eq('cpf', cleanCPF)
-        .single();
+        .maybeSingle();
 
+      // Se houver erro que não seja "não encontrado", retornar
       if (searchError && searchError.code !== 'PGRST116') {
         logger.error('Erro ao buscar usuário existente:', searchError);
         toast.error('Erro ao verificar usuário existente');
         return;
       }
 
-      let result;
       if (existingUser?.id) {
         // Atualizar usuário existente
         const { error: updateError } = await supabase
