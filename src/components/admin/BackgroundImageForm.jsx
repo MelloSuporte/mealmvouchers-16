@@ -46,11 +46,11 @@ const BackgroundImageForm = () => {
   const loadSavedBackgrounds = async () => {
     try {
       const response = await api.get('/imagens-fundo');
-      if (!response.data) {
-        throw new Error('Dados inválidos recebidos do servidor');
+      if (!response.data?.success) {
+        throw new Error('Erro ao carregar imagens de fundo');
       }
 
-      const images = response.data;
+      const images = response.data.data;
       
       if (!Array.isArray(images)) {
         console.error('Formato de dados inválido:', images);

@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
     }
     
     logger.info(`${images?.length || 0} imagens encontradas`);
-    res.json(images || []);
+    res.json({ success: true, data: images || [] });
   } catch (error) {
     logger.error('Erro não esperado ao buscar imagens:', error);
     res.status(500).json({ 
