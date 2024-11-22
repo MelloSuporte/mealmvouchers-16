@@ -39,13 +39,17 @@ const UserForm = () => {
       setIsSubmitting(true);
       
       // Verificar se o usuário já existe
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
         .eq('cpf', formData.userCPF.replace(/\D/g, ''))
         .single();
+
+      if (searchError && searchError.code !== 'PGRST116') {
+        throw searchError;
+      }
       
-      // Sempre gera um novo voucher, seja para usuário novo ou existente
+      // Gera um novo voucher
       const voucher = await generateUniqueVoucherFromCPF(formData.userCPF.replace(/\D/g, ''));
       
       const updatedFormData = {
@@ -86,23 +90,25 @@ const UserForm = () => {
       let response;
       if (existingUser) {
         // Atualizar usuário existente com o novo voucher
-        response = await supabase
+        const { data, error: updateError } = await supabase
           .from('usuarios')
           .update(userData)
           .eq('id', existingUser.id)
           .select('*, empresas(*)')
           .single();
+          
+        if (updateError) throw updateError;
+        response = { data };
       } else {
         // Criar novo usuário
-        response = await supabase
+        const { data, error: insertError } = await supabase
           .from('usuarios')
           .insert([userData])
           .select('*, empresas(*)')
           .single();
-      }
-
-      if (response.error) {
-        throw response.error;
+          
+        if (insertError) throw insertError;
+        response = { data };
       }
 
       toast.success(existingUser ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
