@@ -38,53 +38,44 @@ const UserForm = () => {
     try {
       setIsSubmitting(true);
       
-      // Verificar se o usuário já existe
-      const { data: existingUser, error: searchError } = await supabase
+      const cleanCPF = formData.userCPF.replace(/\D/g, '');
+      
+      // Verificar se o usuário já existe usando maybeSingle()
+      const { data: existingUser } = await supabase
         .from('usuarios')
         .select('id')
-        .eq('cpf', formData.userCPF.replace(/\D/g, ''))
-        .single();
-
-      if (searchError && searchError.code !== 'PGRST116') {
-        throw searchError;
-      }
+        .eq('cpf', cleanCPF)
+        .maybeSingle();
       
       // Gera um novo voucher
-      const voucher = await generateUniqueVoucherFromCPF(formData.userCPF.replace(/\D/g, ''));
+      const voucher = await generateUniqueVoucherFromCPF(cleanCPF);
       
-      const updatedFormData = {
-        ...formData,
-        voucher: voucher
-      };
-      
-      setFormData(updatedFormData);
-
       // Buscar o ID do turno baseado no tipo_turno selecionado
-      const { data: turnoData, error: turnoError } = await supabase
+      const { data: turnoData } = await supabase
         .from('turnos')
         .select('id')
-        .eq('tipo_turno', updatedFormData.selectedTurno)
-        .single();
+        .eq('tipo_turno', formData.selectedTurno)
+        .maybeSingle();
 
-      if (turnoError) {
+      if (!turnoData) {
         throw new Error('Erro ao buscar ID do turno');
       }
 
       // Garantir que empresa_id seja um número válido
-      const empresaId = parseInt(updatedFormData.company);
-      if (isNaN(empresaId) || !updatedFormData.company) {
+      const empresaId = parseInt(formData.company);
+      if (isNaN(empresaId) || !formData.company) {
         toast.error('Por favor, selecione uma empresa válida');
         return;
       }
 
       const userData = {
-        nome: updatedFormData.userName.trim(),
-        cpf: updatedFormData.userCPF.replace(/\D/g, ''),
+        nome: formData.userName.trim(),
+        cpf: cleanCPF,
         empresa_id: empresaId,
         voucher: voucher,
         turno_id: turnoData.id,
-        suspenso: updatedFormData.isSuspended,
-        foto: updatedFormData.userPhoto instanceof File ? await convertToBase64(updatedFormData.userPhoto) : updatedFormData.userPhoto
+        suspenso: formData.isSuspended,
+        foto: formData.userPhoto instanceof File ? await convertToBase64(formData.userPhoto) : formData.userPhoto
       };
 
       if (existingUser) {
