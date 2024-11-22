@@ -23,7 +23,6 @@ const UserForm = () => {
       [field]: value
     }));
 
-    // Gerar voucher automaticamente quando o CPF é preenchido
     if (field === 'userCPF' && value.length >= 11) {
       try {
         const voucherCode = await generateUniqueVoucherFromCPF(value);
@@ -103,11 +102,11 @@ const UserForm = () => {
           .eq('id', existingUser.id);
 
         if (updateError) {
-          logger.error('Erro ao atualizar usuário:', updateError);
           if (updateError.code === '23505') {
-            throw new Error('CPF já cadastrado para outro usuário');
+            toast.error('CPF já cadastrado para outro usuário');
+            return;
           }
-          throw new Error('Erro ao atualizar usuário. Por favor, verifique os dados e tente novamente.');
+          throw updateError;
         }
         
         toast.success("Usuário atualizado com sucesso!");
@@ -118,11 +117,11 @@ const UserForm = () => {
           .insert([newUserData]);
 
         if (insertError) {
-          logger.error('Erro ao inserir usuário:', insertError);
           if (insertError.code === '23505') {
-            throw new Error('CPF já cadastrado no sistema');
+            toast.error('CPF já cadastrado no sistema');
+            return;
           }
-          throw new Error('Erro ao cadastrar usuário. Por favor, verifique os dados e tente novamente.');
+          throw insertError;
         }
         
         toast.success("Usuário cadastrado com sucesso!");
@@ -141,7 +140,7 @@ const UserForm = () => {
 
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
-      toast.error(error.message || "Erro ao processar operação. Por favor, tente novamente.");
+      toast.error("Erro ao processar operação. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
