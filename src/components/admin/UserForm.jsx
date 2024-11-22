@@ -73,12 +73,17 @@ const UserForm = () => {
     try {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Primeiro, verificar se o usuário existe
-      const { data: existingUser } = await supabase
+      // Verificar se usuário já existe
+      const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
         .eq('cpf', cleanCPF)
         .maybeSingle();
+
+      if (searchError) {
+        logger.error('Erro ao buscar usuário:', searchError);
+        throw new Error('Erro ao verificar usuário existente');
+      }
 
       const newUserData = {
         nome: formData.userName,
@@ -90,28 +95,33 @@ const UserForm = () => {
         foto: formData.userPhoto
       };
 
+      let result;
+      
       if (existingUser?.id) {
         // Atualizar usuário existente
-        const { error: updateError } = await supabase
+        result = await supabase
           .from('usuarios')
           .update(newUserData)
           .eq('id', existingUser.id);
 
-        if (updateError) {
-          logger.error('Erro ao atualizar usuário:', updateError);
-          throw new Error('Erro ao atualizar usuário');
+        if (result.error) {
+          logger.error('Erro ao atualizar usuário:', result.error);
+          throw new Error('Erro ao atualizar usuário. Por favor, verifique os dados e tente novamente.');
         }
         
         toast.success("Usuário atualizado com sucesso!");
       } else {
         // Inserir novo usuário
-        const { error: insertError } = await supabase
+        result = await supabase
           .from('usuarios')
           .insert([newUserData]);
 
-        if (insertError) {
-          logger.error('Erro ao inserir usuário:', insertError);
-          throw new Error('Erro ao cadastrar usuário');
+        if (result.error) {
+          if (result.error.code === '23505') {
+            throw new Error('CPF já cadastrado no sistema');
+          }
+          logger.error('Erro ao inserir usuário:', result.error);
+          throw new Error('Erro ao cadastrar usuário. Por favor, verifique os dados e tente novamente.');
         }
         
         toast.success("Usuário cadastrado com sucesso!");
@@ -130,7 +140,7 @@ const UserForm = () => {
 
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
-      toast.error(error.message || "Ocorreu um erro ao processar a operação. Por favor, tente novamente.");
+      toast.error(error.message || "Erro ao processar operação. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
