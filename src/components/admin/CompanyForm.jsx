@@ -74,24 +74,26 @@ const CompanyForm = () => {
         logo: logo
       };
 
+      let response;
+
       if (editingCompany) {
-        const { data: updatedData, error: updateError } = await supabase
+        response = await supabase
           .from('companies')
           .update(companyData)
           .eq('id', editingCompany.id)
           .select()
           .single();
 
-        if (updateError) throw updateError;
+        if (response.error) throw response.error;
         toast.success('Empresa atualizada com sucesso!');
       } else {
-        const { data: insertedData, error: insertError } = await supabase
+        response = await supabase
           .from('companies')
           .insert([companyData])
           .select()
           .single();
 
-        if (insertError) throw insertError;
+        if (response.error) throw response.error;
         toast.success('Empresa cadastrada com sucesso!');
       }
 
