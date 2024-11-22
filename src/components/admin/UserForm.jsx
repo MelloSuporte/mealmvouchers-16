@@ -74,11 +74,15 @@ const UserForm = () => {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
       // Verificar se usuário já existe antes de tentar inserir/atualizar
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
         .eq('cpf', cleanCPF)
-        .maybeSingle();
+        .single();
+
+      if (searchError && searchError.code !== 'PGRST116') {
+        throw searchError;
+      }
 
       const newUserData = {
         nome: formData.userName,
@@ -90,28 +94,22 @@ const UserForm = () => {
         foto: formData.userPhoto
       };
 
-      let result;
-      
       if (existingUser?.id) {
         // Atualizar usuário existente
-        result = await supabase
+        const { error: updateError } = await supabase
           .from('usuarios')
           .update(newUserData)
-          .eq('id', existingUser.id)
-          .select()
-          .single();
+          .eq('id', existingUser.id);
           
-        if (result.error) throw result.error;
+        if (updateError) throw updateError;
         toast.success("Usuário atualizado com sucesso!");
       } else {
         // Inserir novo usuário
-        result = await supabase
+        const { error: insertError } = await supabase
           .from('usuarios')
-          .insert([newUserData])
-          .select()
-          .single();
+          .insert([newUserData]);
           
-        if (result.error) throw result.error;
+        if (insertError) throw insertError;
         toast.success("Usuário cadastrado com sucesso!");
       }
 
