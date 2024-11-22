@@ -91,7 +91,7 @@ const UserForm = () => {
         .maybeSingle();
 
       // Se houver erro que não seja "não encontrado", retornar
-      if (searchError && searchError.code !== 'PGRST116') {
+      if (searchError) {
         logger.error('Erro ao buscar usuário existente:', searchError);
         toast.error('Erro ao verificar usuário existente');
         return;
