@@ -46,6 +46,10 @@ const BackgroundImageForm = () => {
   const loadSavedBackgrounds = async () => {
     try {
       const response = await api.get('/imagens-fundo');
+      if (!response.data) {
+        throw new Error('Dados inválidos recebidos do servidor');
+      }
+
       const images = response.data;
       
       if (!Array.isArray(images)) {
@@ -120,15 +124,15 @@ const BackgroundImageForm = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      if (response.data.success) {
-        localStorage.setItem('lastImageModification', Date.now().toString());
-        setLastModified(new Date());
-        toast.success("Imagens de fundo atualizadas com sucesso!");
-        await loadSavedBackgrounds();
-        setBackgrounds({ voucher: null, userConfirmation: null, bomApetite: null });
-      } else {
-        throw new Error(response.data.error || 'Erro ao salvar imagens');
+      if (!response.data || response.data.success !== true) {
+        throw new Error(response.data?.error || 'Erro ao processar resposta do servidor');
       }
+
+      localStorage.setItem('lastImageModification', Date.now().toString());
+      setLastModified(new Date());
+      toast.success("Imagens de fundo atualizadas com sucesso!");
+      await loadSavedBackgrounds();
+      setBackgrounds({ voucher: null, userConfirmation: null, bomApetite: null });
     } catch (error) {
       const errorMessage = error.response?.data?.error || error.message;
       toast.error(`Erro ao salvar imagens de fundo: ${errorMessage}`);
