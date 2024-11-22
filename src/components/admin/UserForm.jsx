@@ -72,11 +72,17 @@ const UserForm = () => {
     try {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
         .eq('cpf', cleanCPF)
         .maybeSingle();
+
+      if (searchError) {
+        logger.error('Erro ao buscar usuário:', searchError);
+        toast.error('Erro ao verificar usuário existente. Por favor, tente novamente.');
+        return;
+      }
 
       const newUserData = {
         nome: formData.userName,
@@ -88,28 +94,36 @@ const UserForm = () => {
         foto: formData.userPhoto
       };
 
-      let result;
-
       if (existingUser?.id) {
-        result = await supabase
+        const { error: updateError } = await supabase
           .from('usuarios')
           .update(newUserData)
           .eq('id', existingUser.id);
+
+        if (updateError) {
+          if (updateError.code === '23505') {
+            toast.error('CPF já cadastrado para outro usuário');
+            return;
+          }
+          throw updateError;
+        }
+        
+        toast.success("Usuário atualizado com sucesso!");
       } else {
-        result = await supabase
+        const { error: insertError } = await supabase
           .from('usuarios')
           .insert([newUserData]);
-      }
 
-      if (result.error) {
-        if (result.error.code === '23505') {
-          toast.error('CPF já cadastrado no sistema');
-          return;
+        if (insertError) {
+          if (insertError.code === '23505') {
+            toast.error('CPF já cadastrado no sistema');
+            return;
+          }
+          throw insertError;
         }
-        throw result.error;
+        
+        toast.success("Usuário cadastrado com sucesso!");
       }
-
-      toast.success(existingUser?.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
 
       setFormData({
         userName: '',
@@ -124,8 +138,10 @@ const UserForm = () => {
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
       
-      if (error.message?.includes('duplicate key')) {
+      if (error.code === '23505' || error.message?.includes('duplicate key')) {
         toast.error('CPF já cadastrado no sistema');
+      } else if (error.code === '23503') {
+        toast.error('Erro: Empresa ou turno selecionado não existe');
       } else {
         toast.error('Erro ao processar operação. Por favor, verifique os dados e tente novamente.');
       }
