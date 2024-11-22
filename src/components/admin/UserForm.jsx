@@ -90,36 +90,36 @@ const UserForm = () => {
         .eq('cpf', cleanCPF)
         .maybeSingle();
 
-      // Se houver erro que não seja "não encontrado", retornar
-      if (searchError) {
+      if (searchError && searchError.code !== 'PGRST116') {
         logger.error('Erro ao buscar usuário existente:', searchError);
         toast.error('Erro ao verificar usuário existente');
         return;
       }
 
+      let result;
       if (existingUser?.id) {
         // Atualizar usuário existente
-        const { error: updateError } = await supabase
+        result = await supabase
           .from('usuarios')
           .update(newUserData)
           .eq('id', existingUser.id);
 
-        if (updateError) {
-          logger.error('Erro ao atualizar usuário:', updateError);
-          toast.error(`Erro ao atualizar usuário: ${updateError.message}`);
+        if (result.error) {
+          logger.error('Erro ao atualizar usuário:', result.error);
+          toast.error(`Erro ao atualizar usuário: ${result.error.message}`);
           return;
         }
         
         toast.success("Usuário atualizado com sucesso!");
       } else {
         // Inserir novo usuário
-        const { error: insertError } = await supabase
+        result = await supabase
           .from('usuarios')
           .insert([newUserData]);
 
-        if (insertError) {
-          logger.error('Erro ao cadastrar usuário:', insertError);
-          toast.error(`Erro ao cadastrar usuário: ${insertError.message}`);
+        if (result.error) {
+          logger.error('Erro ao cadastrar usuário:', result.error);
+          toast.error(`Erro ao cadastrar usuário: ${result.error.message}`);
           return;
         }
         
