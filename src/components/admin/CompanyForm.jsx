@@ -16,26 +16,23 @@ const CompanyForm = () => {
   const { data: companies = [], isLoading, error } = useQuery({
     queryKey: ['empresas'],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('companies')
-          .select('*')
-          .order('name');
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .order('name');
 
-        if (error) throw error;
-
-        return (data || []).map(company => ({
-          id: company.id,
-          name: company.name,
-          cnpj: company.cnpj,
-          logo: company.logo,
-          createdAt: company.created_at
-        }));
-      } catch (error) {
+      if (error) {
         console.error('Erro ao carregar empresas:', error);
-        toast.error('Erro ao carregar empresas: ' + error.message);
-        return [];
+        throw new Error(error.message);
       }
+
+      return (data || []).map(company => ({
+        id: company.id,
+        name: company.name,
+        cnpj: company.cnpj,
+        logo: company.logo,
+        createdAt: company.created_at
+      }));
     }
   });
 
@@ -77,28 +74,29 @@ const CompanyForm = () => {
         logo: logo
       };
 
+      let response;
+      
       if (editingCompany) {
-        const { error } = await supabase
+        response = await supabase
           .from('companies')
           .update(companyData)
           .eq('id', editingCompany.id);
-
-        if (error) throw error;
-        toast.success('Empresa atualizada com sucesso!');
       } else {
-        const { error } = await supabase
+        response = await supabase
           .from('companies')
           .insert([companyData]);
-
-        if (error) throw error;
-        toast.success('Empresa cadastrada com sucesso!');
       }
-      
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      toast.success(editingCompany ? 'Empresa atualizada com sucesso!' : 'Empresa cadastrada com sucesso!');
       resetForm();
       queryClient.invalidateQueries(['empresas']);
     } catch (error) {
       console.error('Erro ao salvar empresa:', error);
-      toast.error('Erro ao salvar empresa: ' + error.message);
+      toast.error(`Erro ao salvar empresa: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
