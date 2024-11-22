@@ -73,6 +73,13 @@ const UserForm = () => {
     try {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
+      // Verificar se usuário já existe antes de tentar inserir/atualizar
+      const { data: existingUser } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('cpf', cleanCPF)
+        .maybeSingle();
+
       const newUserData = {
         nome: formData.userName,
         cpf: cleanCPF,
@@ -83,46 +90,28 @@ const UserForm = () => {
         foto: formData.userPhoto
       };
 
-      // Verificar se usuário já existe
-      const { data: existingUser, error: searchError } = await supabase
-        .from('usuarios')
-        .select('id')
-        .eq('cpf', cleanCPF)
-        .maybeSingle();
-
-      if (searchError && searchError.code !== 'PGRST116') {
-        logger.error('Erro ao buscar usuário existente:', searchError);
-        toast.error('Erro ao verificar usuário existente');
-        return;
-      }
-
       let result;
+      
       if (existingUser?.id) {
         // Atualizar usuário existente
         result = await supabase
           .from('usuarios')
           .update(newUserData)
-          .eq('id', existingUser.id);
-
-        if (result.error) {
-          logger.error('Erro ao atualizar usuário:', result.error);
-          toast.error(`Erro ao atualizar usuário: ${result.error.message}`);
-          return;
-        }
-        
+          .eq('id', existingUser.id)
+          .select()
+          .single();
+          
+        if (result.error) throw result.error;
         toast.success("Usuário atualizado com sucesso!");
       } else {
         // Inserir novo usuário
         result = await supabase
           .from('usuarios')
-          .insert([newUserData]);
-
-        if (result.error) {
-          logger.error('Erro ao cadastrar usuário:', result.error);
-          toast.error(`Erro ao cadastrar usuário: ${result.error.message}`);
-          return;
-        }
-
+          .insert([newUserData])
+          .select()
+          .single();
+          
+        if (result.error) throw result.error;
         toast.success("Usuário cadastrado com sucesso!");
       }
 
