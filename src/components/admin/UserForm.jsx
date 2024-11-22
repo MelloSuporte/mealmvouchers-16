@@ -66,11 +66,17 @@ const UserForm = () => {
         throw new Error('Erro ao buscar ID do turno');
       }
 
+      // Garantir que empresa_id seja um número
+      const empresaId = parseInt(updatedFormData.company);
+      if (isNaN(empresaId)) {
+        throw new Error('ID da empresa inválido');
+      }
+
       const userData = {
         nome: updatedFormData.userName.trim(),
         cpf: updatedFormData.userCPF.replace(/\D/g, ''),
-        empresa_id: parseInt(updatedFormData.company),
-        voucher: voucher, // Usa o novo voucher gerado
+        empresa_id: empresaId,
+        voucher: voucher,
         turno_id: turnoData.id,
         suspenso: updatedFormData.isSuspended,
         foto: updatedFormData.userPhoto instanceof File ? await convertToBase64(updatedFormData.userPhoto) : updatedFormData.userPhoto
@@ -83,14 +89,14 @@ const UserForm = () => {
           .from('usuarios')
           .update(userData)
           .eq('id', existingUser.id)
-          .select()
+          .select('*, empresas(*)')
           .single();
       } else {
         // Criar novo usuário
         response = await supabase
           .from('usuarios')
           .insert([userData])
-          .select()
+          .select('*, empresas(*)')
           .single();
       }
 
