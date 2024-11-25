@@ -47,7 +47,7 @@ const BackgroundImageForm = () => {
     try {
       const response = await api.get('/imagens-fundo');
       if (!response.data?.success) {
-        throw new Error('Erro ao carregar imagens de fundo');
+        throw new Error(response.data?.error || 'Erro ao carregar imagens de fundo');
       }
 
       const images = response.data.data;
@@ -70,7 +70,7 @@ const BackgroundImageForm = () => {
       });
     } catch (error) {
       console.error('Erro ao carregar imagens:', error);
-      toast.error("Erro ao carregar imagens de fundo");
+      toast.error(error.message || "Erro ao carregar imagens de fundo");
     }
   };
 

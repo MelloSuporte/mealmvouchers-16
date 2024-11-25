@@ -100,8 +100,8 @@ router.post('/', upload.any(), async (req, res) => {
     logger.error('Erro não esperado ao salvar imagens:', error);
     res.status(500).json({ 
       success: false,
-      error: 'Erro ao salvar imagens de fundo',
-      details: error.message 
+      error: error.message || 'Erro ao salvar imagens de fundo',
+      details: error.details || error.message
     });
   }
 });
