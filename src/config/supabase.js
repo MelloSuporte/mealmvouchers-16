@@ -42,13 +42,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         'Pragma': 'no-cache'
       }
     }).then(async response => {
-      // Cria uma cópia da resposta para evitar problemas de stream
-      const data = await response.clone().json();
-      return new Response(JSON.stringify(data), {
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers
-      });
+      try {
+        // Cria uma cópia da resposta para evitar problemas de stream
+        const data = await response.clone().json();
+        return new Response(JSON.stringify(data), {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers
+        });
+      } catch (error) {
+        logger.error('Erro ao processar resposta:', error);
+        throw error;
+      }
     });
   }
 });

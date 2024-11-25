@@ -73,7 +73,7 @@ const UserForm = () => {
     try {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Primeiro, verificamos se o usuário existe
+      // Verificar se o usuário já existe
       const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
@@ -82,8 +82,7 @@ const UserForm = () => {
 
       if (searchError) {
         logger.error('Erro ao buscar usuário:', searchError);
-        toast.error('Erro ao verificar usuário existente: ' + searchError.message);
-        return;
+        throw new Error('Erro ao verificar usuário existente: ' + searchError.message);
       }
 
       const newUserData = {
@@ -127,15 +126,11 @@ const UserForm = () => {
           return;
         }
 
-        // Mensagem de erro mais específica
-        const errorMessage = response.error.message || 'Erro desconhecido';
-        toast.error(`Erro ao processar operação: ${errorMessage}`);
-        return;
+        throw new Error(response.error.message || 'Erro desconhecido');
       }
 
       if (!response.data) {
-        toast.error('Erro: Nenhum dado retornado da operação');
-        return;
+        throw new Error('Erro: Nenhum dado retornado da operação');
       }
 
       toast.success(existingUser?.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
@@ -154,7 +149,6 @@ const UserForm = () => {
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
       
-      // Mensagens de erro mais específicas baseadas no tipo de erro
       if (error.code === '23505') {
         toast.error('CPF já cadastrado no sistema');
       } else if (error.code === '23503') {
