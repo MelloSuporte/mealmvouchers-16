@@ -57,51 +57,50 @@ router.post('/', upload.single('image'), async (req, res) => {
       });
     }
 
-    // Desativa imagem existente para a página específica
-    const { error: deactivateError } = await supabase
+    // Converte a imagem para base64
+    const base64Image = req.file.buffer.toString('base64');
+    const imageUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+
+    // Desativa imagens anteriores da mesma página
+    const { error: updateError } = await supabase
       .from('background_images')
       .update({ is_active: false })
-      .eq('page', req.body.page)
-      .eq('is_active', true);
+      .eq('page', req.body.page);
 
-    if (deactivateError) {
-      logger.error('Erro ao desativar imagem antiga:', deactivateError);
-      throw deactivateError;
+    if (updateError) {
+      logger.error('Erro ao desativar imagens antigas:', updateError);
+      throw updateError;
     }
 
-    // Converte e insere nova imagem
-    const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-    
+    // Insere nova imagem
     const { data, error: insertError } = await supabase
       .from('background_images')
-      .insert({
+      .insert([{
         page: req.body.page,
-        image_url: base64Image,
-        is_active: true,
-        created_at: new Date().toISOString()
-      })
+        image_url: imageUrl,
+        is_active: true
+      }])
       .select()
       .single();
 
     if (insertError) {
-      logger.error(`Erro ao inserir imagem para ${req.body.page}:`, insertError);
+      logger.error('Erro ao inserir nova imagem:', insertError);
       throw insertError;
     }
 
-    logger.info(`Upload de imagem para ${req.body.page} concluído com sucesso`);
-    
-    return res.json({ 
-      success: true, 
-      message: 'Imagem de fundo atualizada com sucesso',
+    logger.info(`Imagem salva com sucesso para a página ${req.body.page}`);
+    return res.json({
+      success: true,
+      message: 'Imagem salva com sucesso',
       data
     });
 
   } catch (error) {
     logger.error('Erro ao salvar imagem:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
       message: 'Erro ao salvar imagem de fundo',
-      error: error.message 
+      error: error.message
     });
   }
 });
