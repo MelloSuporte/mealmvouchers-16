@@ -20,14 +20,14 @@ router.use('/health', healthRoutes);
 router.use('/admin', adminRoutes);
 
 // API routes
-router.use('/api/empresas', empresasRoutes);
-router.use('/api/vouchers', voucherRoutes);
-router.use('/api/relatorios', relatoriosRoutes);
-router.use('/api/refeicoes', refeicoesRoutes);
-router.use('/api/usuarios', usuariosRoutes);
-router.use('/api/vouchers-extra', vouchersExtraRoutes);
-router.use('/api/imagens-fundo', imagensFundoRoutes); // Adicionando o prefixo /api
-router.use('/api/turnos', turnosRoutes);
-router.use('/api/usuarios-admin', usuariosAdminRoutes);
+router.use('/empresas', empresasRoutes);
+router.use('/vouchers', voucherRoutes);
+router.use('/relatorios', relatoriosRoutes);
+router.use('/refeicoes', refeicoesRoutes);
+router.use('/usuarios', usuariosRoutes);
+router.use('/vouchers-extra', vouchersExtraRoutes);
+router.use('/imagens-fundo', imagensFundoRoutes);
+router.use('/turnos', turnosRoutes);
+router.use('/usuarios-admin', usuariosAdminRoutes);
 
 export default router;
