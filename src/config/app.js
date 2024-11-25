@@ -29,13 +29,23 @@ const createApp = () => {
 
   // Add request logging
   app.use((req, res, next) => {
+    // Adiciona um middleware para garantir que a resposta só seja enviada uma vez
+    res.sendResponse = res.send;
+    res.send = function(body) {
+      if (!this.headersSent) {
+        return res.sendResponse(body);
+      } else {
+        logger.warn('Tentativa de enviar resposta múltipla evitada');
+      }
+    };
+    
     logger.info(`${req.method} ${req.path}`);
     next();
   });
 
   // Health check endpoint (without database middleware)
   app.get('/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Servidor está funcionando' });
+    res.json({ status: 'OK', mensagem: 'Servidor está funcionando' });
   });
 
   // Mount all routes with database connection
@@ -44,14 +54,6 @@ const createApp = () => {
 
   // Global error handler - must be last
   app.use(errorHandler);
-
-  // Prevent multiple response attempts
-  app.use((err, req, res, next) => {
-    if (res.headersSent) {
-      return next(err);
-    }
-    next(err);
-  });
 
   return app;
 };

@@ -6,44 +6,29 @@ import logger from '../config/logger.js';
 const router = express.Router();
 
 // Rota de busca de usuário
-router.get('/search', async (req, res) => {
+router.get('/search', async (req, res, next) => {
   try {
-    const result = await searchUser(req, res);
-    return result;
+    await searchUser(req, res);
   } catch (error) {
-    logger.error('Erro na rota de busca:', error);
-    return res.status(500).json({
-      error: 'Erro ao buscar usuário',
-      details: error.message
-    });
+    next(error);
   }
 });
 
 // Rota de criação de usuário
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
-    const result = await createUser(req, res);
-    return result;
+    await createUser(req, res);
   } catch (error) {
-    logger.error('Erro na rota de criação:', error);
-    return res.status(500).json({
-      error: 'Erro ao criar usuário',
-      details: error.message
-    });
+    next(error);
   }
 });
 
 // Rota de atualização de usuário
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res, next) => {
   try {
-    const result = await updateUser(req, res);
-    return result;
+    await updateUser(req, res);
   } catch (error) {
-    logger.error('Erro na rota de atualização:', error);
-    return res.status(500).json({
-      error: 'Erro ao atualizar usuário',
-      details: error.message
-    });
+    next(error);
   }
 });
 
