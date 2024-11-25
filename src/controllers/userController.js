@@ -50,10 +50,10 @@ export const searchUser = async (req, res) => {
       empresa: user.empresas
     };
 
-    return res.json({ sucesso: true, dados: mappedUser });
+    res.json({ sucesso: true, dados: mappedUser });
   } catch (error) {
     logger.error('Erro ao buscar usuário:', error);
-    return res.status(500).json({
+    res.status(500).json({
       erro: 'Erro ao buscar usuário',
       mensagem: error.message
     });
@@ -109,14 +109,14 @@ export const createUser = async (req, res) => {
     }
 
     logger.info(`Novo usuário cadastrado - ID: ${newUser.id}, Nome: ${nome}`);
-    return res.status(201).json({
+    res.status(201).json({
       sucesso: true,
       mensagem: 'Usuário cadastrado com sucesso',
       usuario: newUser
     });
   } catch (error) {
     logger.error('Erro ao cadastrar usuário:', error);
-    return res.status(500).json({
+    res.status(500).json({
       erro: 'Erro ao cadastrar usuário',
       mensagem: error.message
     });
@@ -179,14 +179,14 @@ export const updateUser = async (req, res) => {
     }
 
     logger.info(`Usuário atualizado - ID: ${id}, Nome: ${nome}`);
-    return res.json({
+    res.json({
       sucesso: true,
       mensagem: 'Usuário atualizado com sucesso',
       usuario: updatedUser
     });
   } catch (error) {
     logger.error('Erro ao atualizar usuário:', error);
-    return res.status(500).json({
+    res.status(500).json({
       erro: 'Erro ao atualizar usuário',
       mensagem: error.message
     });
