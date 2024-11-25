@@ -5,7 +5,6 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Configuração do multer para armazenamento em memória
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -34,8 +33,8 @@ router.get('/', async (req, res) => {
     logger.error('Erro ao buscar imagens:', error);
     return res.status(500).json({ 
       success: false,
-      error: 'Erro ao buscar imagens de fundo',
-      message: error.message 
+      message: 'Erro ao buscar imagens de fundo',
+      error: error.message 
     });
   }
 });
@@ -107,8 +106,8 @@ router.post('/', upload.any(), async (req, res) => {
     logger.error('Erro ao salvar imagens:', error);
     return res.status(500).json({ 
       success: false,
-      error: 'Erro ao salvar imagens de fundo',
-      message: error.message
+      message: 'Erro ao salvar imagens de fundo',
+      error: error.message
     });
   }
 });
