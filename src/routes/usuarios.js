@@ -3,16 +3,38 @@ import { searchUser, createUser, updateUser } from '../controllers/userControlle
 
 const router = express.Router();
 
-router.get('/search', (req, res, next) => {
-  searchUser(req, res).catch(next);
+// Rotas com tratamento de erro unificado
+router.get('/search', async (req, res) => {
+  try {
+    await searchUser(req, res);
+  } catch (error) {
+    res.status(500).json({
+      erro: 'Erro interno do servidor',
+      mensagem: error.message
+    });
+  }
 });
 
-router.post('/', (req, res, next) => {
-  createUser(req, res).catch(next);
+router.post('/', async (req, res) => {
+  try {
+    await createUser(req, res);
+  } catch (error) {
+    res.status(500).json({
+      erro: 'Erro ao criar usuário',
+      mensagem: error.message
+    });
+  }
 });
 
-router.put('/:id', (req, res, next) => {
-  updateUser(req, res).catch(next);
+router.put('/:id', async (req, res) => {
+  try {
+    await updateUser(req, res);
+  } catch (error) {
+    res.status(500).json({
+      erro: 'Erro ao atualizar usuário',
+      mensagem: error.message
+    });
+  }
 });
 
 export default router;
