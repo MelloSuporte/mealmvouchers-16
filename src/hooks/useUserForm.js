@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { toast } from "sonner";
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
-import { validateUserData } from '../utils/userValidations';
+import { validateUserData, formatCPF } from '../utils/userValidations';
 
 export const useUserForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,9 +17,16 @@ export const useUserForm = () => {
   });
 
   const handleInputChange = (field, value) => {
+    let processedValue = value;
+    
+    // Formatação especial para CPF
+    if (field === 'userCPF') {
+      processedValue = formatCPF(value);
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: processedValue
     }));
   };
 
@@ -49,11 +56,16 @@ export const useUserForm = () => {
     }
 
     setIsSubmitting(true);
-    logger.info('Iniciando cadastro/atualização de usuário:', formData);
+    logger.info('Iniciando cadastro/atualização de usuário:', { 
+      nome: formData.userName,
+      empresa: formData.company,
+      turno: formData.selectedTurno
+    });
 
     try {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
+      // Verifica se o usuário já existe
       const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
@@ -61,9 +73,11 @@ export const useUserForm = () => {
         .maybeSingle();
 
       if (searchError) {
+        logger.error('Erro ao verificar usuário existente:', searchError);
         throw new Error(`Erro ao verificar usuário: ${searchError.message}`);
       }
 
+      // Prepara os dados para inserção/atualização
       const userData = {
         nome: formData.userName.trim(),
         cpf: cleanCPF,
@@ -74,14 +88,17 @@ export const useUserForm = () => {
         foto: formData.userPhoto
       };
 
+      // Realiza a operação de inserção ou atualização
+      const operation = existingUser?.id ? 'update' : 'insert';
       const { data, error } = await supabase
         .from('usuarios')
-        [existingUser?.id ? 'update' : 'insert']([userData])
-        [existingUser?.id ? 'eq' : 'select']('id', existingUser?.id)
+        [operation]([userData])
         .select()
         .single();
 
       if (error) {
+        logger.error(`Erro na operação ${operation}:`, error);
+        
         if (error.code === '23505') {
           throw new Error('CPF já cadastrado no sistema');
         }
@@ -95,7 +112,10 @@ export const useUserForm = () => {
         throw new Error('Nenhum dado retornado da operação');
       }
 
-      toast.success(existingUser?.id ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!');
+      toast.success(existingUser?.id ? 
+        'Usuário atualizado com sucesso!' : 
+        'Usuário cadastrado com sucesso!'
+      );
       resetForm();
       
     } catch (error) {

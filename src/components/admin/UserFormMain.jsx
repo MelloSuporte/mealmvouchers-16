@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from '@/config/supabase';
 import UserFormFields from './user/UserFormFields';
 import { useVoucherVisibility } from '../../hooks/useVoucherVisibility';
+import logger from '../../config/logger';
 
 const UserFormMain = ({
   formData,
@@ -22,6 +23,7 @@ const UserFormMain = ({
     }
 
     setIsSearching(true);
+    logger.info('Iniciando busca por CPF:', searchCPF);
 
     try {
       const cleanCPF = searchCPF.replace(/\D/g, '');
@@ -33,15 +35,17 @@ const UserFormMain = ({
 
       if (error) {
         if (error.code === 'PGRST116') {
+          logger.info('Usuário não encontrado para CPF:', cleanCPF);
           toast.info('Usuário não encontrado');
         } else {
-          console.error('Erro na consulta:', error);
+          logger.error('Erro na consulta:', error);
           toast.error('Erro ao buscar usuário. Por favor, tente novamente.');
         }
         return;
       }
 
       if (data) {
+        logger.info('Usuário encontrado:', { id: data.id, nome: data.nome });
         onInputChange('userName', data.nome);
         onInputChange('userCPF', searchCPF);
         onInputChange('company', data.empresa_id?.toString() || '');
@@ -52,7 +56,7 @@ const UserFormMain = ({
         toast.success('Usuário encontrado!');
       }
     } catch (error) {
-      console.error('Erro ao buscar usuário:', error);
+      logger.error('Erro ao buscar usuário:', error);
       toast.error('Erro ao buscar usuário. Por favor, tente novamente.');
     } finally {
       setIsSearching(false);
@@ -68,7 +72,10 @@ const UserFormMain = ({
         .eq('ativo', true)
         .order('id');
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao carregar turnos:', error);
+        throw error;
+      }
       return data || [];
     }
   });
