@@ -80,7 +80,7 @@ router.post('/', upload.any(), async (req, res) => {
     const insertPromises = req.files.map(async (file) => {
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       
-      return supabase
+      const { data, error } = await supabase
         .from('background_images')
         .insert([{
           page: file.fieldname,
@@ -90,6 +90,8 @@ router.post('/', upload.any(), async (req, res) => {
         }])
         .select()
         .single();
+
+      return { data, error, page: file.fieldname };
     });
 
     const results = await Promise.all(insertPromises);
@@ -104,11 +106,16 @@ router.post('/', upload.any(), async (req, res) => {
       });
     }
 
+    const successfulInserts = results.map(result => ({
+      page: result.page,
+      id: result.data?.id
+    }));
+
     logger.info('Upload de imagens concluído com sucesso');
     return res.status(200).json({ 
       success: true, 
       message: 'Imagens de fundo atualizadas com sucesso',
-      updatedPages: pagesToUpdate
+      data: successfulInserts
     });
   } catch (error) {
     logger.error('Erro não esperado ao salvar imagens:', error);
