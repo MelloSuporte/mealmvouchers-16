@@ -133,12 +133,15 @@ const BackgroundImageForm = () => {
       localStorage.setItem('lastImageModification', Date.now().toString());
       setLastModified(new Date());
       toast.success("Imagens de fundo atualizadas com sucesso!");
-      await loadSavedBackgrounds();
+      
+      // Limpa os backgrounds após salvar com sucesso
       setBackgrounds({ voucher: null, userConfirmation: null, bomApetite: null });
+      
+      // Recarrega as imagens para mostrar as atualizações
+      await loadSavedBackgrounds();
     } catch (error) {
       console.error('Erro completo:', error);
-      const errorMessage = error.response?.data?.message || error.message;
-      toast.error(`Erro ao salvar imagens de fundo: ${errorMessage}`);
+      toast.error(`Erro ao salvar imagens de fundo: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
