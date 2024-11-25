@@ -1,5 +1,6 @@
-import { HomeIcon } from "lucide-react";
+import { HomeIcon, ImageIcon } from "lucide-react";
 import Index from "./pages/Index.jsx";
+import BackgroundImages from "./pages/BackgroundImages.jsx";
 
 export const navItems = [
   {
@@ -7,5 +8,11 @@ export const navItems = [
     to: "/",
     icon: <HomeIcon className="h-4 w-4" />,
     page: <Index />,
+  },
+  {
+    title: "Imagens de Fundo",
+    to: "/imagens-fundo",
+    icon: <ImageIcon className="h-4 w-4" />,
+    page: <BackgroundImages />,
   },
 ];
