@@ -26,9 +26,13 @@ export const searchUser = async (req, res) => {
         )
       `)
       .eq('cpf', cpf)
-      .maybeSingle();
+      .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro na busca:', error);
+      res.status(500).json({ erro: 'Erro ao buscar usuário', detalhes: error.message });
+      return;
+    }
     
     if (!user) {
       res.status(404).json({ erro: 'Usuário não encontrado' });
@@ -52,10 +56,7 @@ export const searchUser = async (req, res) => {
     res.json({ sucesso: true, dados: mappedUser });
   } catch (error) {
     logger.error('Erro ao buscar usuário:', error);
-    res.status(500).json({
-      erro: 'Erro ao buscar usuário',
-      mensagem: error.message
-    });
+    res.status(500).json({ erro: 'Erro interno do servidor', mensagem: error.message });
   }
 };
 
@@ -75,9 +76,13 @@ export const createUser = async (req, res) => {
       .from('usuarios')
       .select('id, cpf')
       .eq('cpf', cpf)
-      .maybeSingle();
+      .single();
 
-    if (searchError) throw searchError;
+    if (searchError && searchError.code !== 'PGRST116') {
+      logger.error('Erro na verificação de usuário existente:', searchError);
+      res.status(500).json({ erro: 'Erro ao verificar usuário existente', detalhes: searchError.message });
+      return;
+    }
 
     if (existingUser) {
       res.status(409).json({ 
@@ -101,7 +106,11 @@ export const createUser = async (req, res) => {
       .select()
       .single();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      logger.error('Erro na inserção:', insertError);
+      res.status(500).json({ erro: 'Erro ao criar usuário', detalhes: insertError.message });
+      return;
+    }
 
     logger.info(`Novo usuário cadastrado - ID: ${newUser.id}, Nome: ${nome}`);
     res.status(201).json({
@@ -111,10 +120,7 @@ export const createUser = async (req, res) => {
     });
   } catch (error) {
     logger.error('Erro ao cadastrar usuário:', error);
-    res.status(500).json({
-      erro: 'Erro ao cadastrar usuário',
-      mensagem: error.message
-    });
+    res.status(500).json({ erro: 'Erro interno do servidor', mensagem: error.message });
   }
 };
 
@@ -136,9 +142,13 @@ export const updateUser = async (req, res) => {
       .select('id, cpf')
       .eq('cpf', cpf)
       .neq('id', id)
-      .maybeSingle();
+      .single();
 
-    if (searchError) throw searchError;
+    if (searchError && searchError.code !== 'PGRST116') {
+      logger.error('Erro na verificação de usuário existente:', searchError);
+      res.status(500).json({ erro: 'Erro ao verificar usuário existente', detalhes: searchError.message });
+      return;
+    }
 
     if (existingUser) {
       res.status(409).json({ 
@@ -163,7 +173,11 @@ export const updateUser = async (req, res) => {
       .select()
       .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      logger.error('Erro na atualização:', updateError);
+      res.status(500).json({ erro: 'Erro ao atualizar usuário', detalhes: updateError.message });
+      return;
+    }
 
     if (!updatedUser) {
       res.status(404).json({ erro: 'Usuário não encontrado' });
@@ -178,9 +192,6 @@ export const updateUser = async (req, res) => {
     });
   } catch (error) {
     logger.error('Erro ao atualizar usuário:', error);
-    res.status(500).json({
-      erro: 'Erro ao atualizar usuário',
-      mensagem: error.message
-    });
+    res.status(500).json({ erro: 'Erro interno do servidor', mensagem: error.message });
   }
 };
