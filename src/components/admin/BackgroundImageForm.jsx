@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import api from '../../utils/api';
 import { validateImage } from '../../utils/imageHandling';
 import ImagePreview from './ImagePreview';
+import { Save } from 'lucide-react';
 
 const ALLOWED_PAGES = ['voucher', 'userConfirmation', 'bomApetite'];
 
@@ -170,7 +171,9 @@ const BackgroundImageForm = () => {
               type="button" 
               onClick={() => handleSaveBackground(key)}
               disabled={isLoading || !backgrounds[key] || !checkRecentModification()}
+              className="w-fit"
             >
+              <Save className="mr-2 h-4 w-4" />
               {isLoading ? "Salvando..." : `Salvar Imagem ${label}`}
             </Button>
             <ImagePreview imageUrl={previews[key]} label={label} />
