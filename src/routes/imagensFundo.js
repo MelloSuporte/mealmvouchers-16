@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
@@ -9,12 +9,6 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
-
-// Criar cliente Supabase com service role
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY
-);
 
 // GET /imagens-fundo
 router.get('/', async (req, res) => {
@@ -75,8 +69,9 @@ router.post('/', upload.any(), async (req, res) => {
       throw deactivateError;
     }
 
-    // Insere novas imagens
+    // Converte e insere novas imagens
     const insertPromises = req.files.map(async (file) => {
+      // Converte o buffer da imagem para base64
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       
       const { error: insertError } = await supabase
