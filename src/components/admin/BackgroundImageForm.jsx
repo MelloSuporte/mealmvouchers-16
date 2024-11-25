@@ -3,12 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import api from '../../utils/api';
-import { validateImage } from '../../utils/imageHandling';
-import ImagePreview from './ImagePreview';
 import { Save } from 'lucide-react';
-
-const ALLOWED_PAGES = ['voucher', 'userConfirmation', 'bomApetite'];
+import ImagePreview from './ImagePreview';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../../config/supabase';
 
 const BackgroundImageForm = () => {
   const [backgrounds, setBackgrounds] = useState({
@@ -24,107 +22,125 @@ const BackgroundImageForm = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [lastModified, setLastModified] = useState(null);
+  const queryClient = useQueryClient();
+
+  const { data: savedBackgrounds } = useQuery({
+    queryKey: ['background-images'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('background_images')
+        .select('*')
+        .eq('is_active', true);
+
+      if (error) {
+        toast.error("Erro ao carregar imagens de fundo");
+        throw error;
+      }
+
+      return data || [];
+    }
+  });
 
   useEffect(() => {
-    loadSavedBackgrounds();
-    const lastMod = localStorage.getItem('lastImageModification');
-    if (lastMod) setLastModified(new Date(parseInt(lastMod)));
-  }, []);
-
-  const loadSavedBackgrounds = async () => {
-    try {
-      const response = await api.get('/imagens-fundo');
-      
-      if (!response.data?.success) {
-        throw new Error(response.data?.message || 'Erro ao carregar imagens');
-      }
-
-      const images = response.data.data;
-      
-      if (!Array.isArray(images)) {
-        console.error('Formato de dados inválido:', images);
-        throw new Error('Formato de dados inválido');
-      }
-
-      const validImages = images.filter(img => 
-        ALLOWED_PAGES.includes(img.page) && 
-        typeof img.image_url === 'string' &&
-        img.image_url.startsWith('data:image/')
-      );
-      
-      setPreviews(prevPreviews => ({
-        ...prevPreviews,
-        voucher: validImages.find(img => img.page === 'voucher')?.image_url || '',
-        userConfirmation: validImages.find(img => img.page === 'userConfirmation')?.image_url || '',
-        bomApetite: validImages.find(img => img.page === 'bomApetite')?.image_url || ''
-      }));
-    } catch (error) {
-      console.error('Erro ao carregar imagens:', error);
-      toast.error("Erro ao carregar imagens de fundo");
+    if (savedBackgrounds) {
+      const newPreviews = { ...previews };
+      savedBackgrounds.forEach(bg => {
+        if (bg.page && bg.image_url) {
+          newPreviews[bg.page] = bg.image_url;
+        }
+      });
+      setPreviews(newPreviews);
     }
-  };
+  }, [savedBackgrounds]);
+
+  const uploadMutation = useMutation({
+    mutationFn: async ({ page, file }) => {
+      if (!file) return null;
+
+      // Converte a imagem para base64
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          try {
+            // Desativa imagens anteriores
+            const { error: updateError } = await supabase
+              .from('background_images')
+              .update({ is_active: false })
+              .eq('page', page);
+
+            if (updateError) throw updateError;
+
+            // Insere nova imagem
+            const { data, error } = await supabase
+              .from('background_images')
+              .insert([{
+                page,
+                image_url: reader.result,
+                is_active: true
+              }])
+              .select()
+              .single();
+
+            if (error) throw error;
+            resolve(data);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+        reader.readAsDataURL(file);
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['background-images']);
+      toast.success('Imagem salva com sucesso!');
+    },
+    onError: (error) => {
+      toast.error(`Erro ao salvar imagem: ${error.message}`);
+    }
+  });
 
   const handleFileChange = (page, event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (!ALLOWED_PAGES.includes(page)) {
-      toast.error("Página inválida");
-      event.target.value = '';
-      return;
-    }
-
     try {
-      validateImage(file);
+      // Validação básica do arquivo
+      if (!file.type.startsWith('image/')) {
+        toast.error('Por favor, selecione apenas arquivos de imagem');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        toast.error('O arquivo deve ter no máximo 5MB');
+        return;
+      }
+
       setBackgrounds(prev => ({ ...prev, [page]: file }));
       
+      // Preview local
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviews(prev => ({ ...prev, [page]: reader.result }));
       };
-      reader.onerror = () => {
-        toast.error("Erro ao ler o arquivo. Tente novamente.");
-        event.target.value = '';
-      };
       reader.readAsDataURL(file);
     } catch (error) {
-      toast.error(error.message);
-      event.target.value = '';
+      toast.error('Erro ao processar arquivo');
+      console.error('Erro ao processar arquivo:', error);
     }
   };
 
   const handleSaveBackground = async (page) => {
+    const file = backgrounds[page];
+    if (!file) {
+      toast.error("Nenhuma imagem selecionada");
+      return;
+    }
+
     try {
       setIsLoading(true);
-      
-      const file = backgrounds[page];
-      if (!file) {
-        toast.error("Nenhuma imagem selecionada");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append('page', page);
-      formData.append('image', file);
-
-      const response = await api.post('/imagens-fundo', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      if (!response.data?.success) {
-        throw new Error(response.data?.message || 'Erro ao salvar imagem');
-      }
-
-      localStorage.setItem('lastImageModification', Date.now().toString());
-      setLastModified(new Date());
-      toast.success(`Imagem de fundo para ${page} atualizada com sucesso!`);
-      
+      await uploadMutation.mutateAsync({ page, file });
       setBackgrounds(prev => ({ ...prev, [page]: null }));
-      await loadSavedBackgrounds();
-    } catch (error) {
-      console.error('Erro ao salvar imagem:', error);
-      toast.error(`Erro ao salvar imagem de fundo: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -132,12 +148,6 @@ const BackgroundImageForm = () => {
 
   return (
     <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-      {lastModified && (
-        <div className="text-sm text-gray-500">
-          Última modificação: {lastModified.toLocaleString()}
-        </div>
-      )}
-      
       {Object.entries({
         voucher: 'Tela Voucher',
         userConfirmation: 'Tela Confirmação de Usuário',
