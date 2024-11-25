@@ -5,7 +5,7 @@ export const searchUser = async (req, res) => {
   const { cpf } = req.query;
   
   if (!cpf) {
-    return res.status(400).json({ error: 'CPF é obrigatório para a busca' });
+    return res.status(400).json({ erro: 'CPF é obrigatório para a busca' });
   }
 
   try {
@@ -33,27 +33,30 @@ export const searchUser = async (req, res) => {
     }
     
     if (!user) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
+      return res.status(404).json({ erro: 'Usuário não encontrado' });
     }
 
     const mappedUser = {
       id: user.id,
-      name: user.nome,
+      nome: user.nome,
       cpf: user.cpf,
-      company_id: user.empresa_id,
+      empresa_id: user.empresa_id,
       voucher: user.voucher,
       turno: user.turnos?.tipo_turno,
       horario_inicio: user.turnos?.horario_inicio,
       horario_fim: user.turnos?.horario_fim,
-      is_suspended: user.suspenso,
-      photo: user.foto,
-      company: user.empresas
+      suspenso: user.suspenso,
+      foto: user.foto,
+      empresa: user.empresas
     };
 
-    return res.json({ success: true, data: mappedUser });
+    return res.json({ sucesso: true, dados: mappedUser });
   } catch (error) {
     logger.error('Erro ao buscar usuário:', error);
-    throw error;
+    return res.status(500).json({
+      erro: 'Erro ao buscar usuário',
+      mensagem: error.message
+    });
   }
 };
 
@@ -63,8 +66,8 @@ export const createUser = async (req, res) => {
   try {
     if (!nome?.trim() || !cpf?.trim() || !empresa_id || !voucher || !turno_id) {
       return res.status(400).json({ 
-        error: 'Campos obrigatórios faltando',
-        details: 'Nome, CPF, empresa, voucher e turno são obrigatórios'
+        erro: 'Campos obrigatórios faltando',
+        detalhes: 'Nome, CPF, empresa, voucher e turno são obrigatórios'
       });
     }
 
@@ -81,8 +84,8 @@ export const createUser = async (req, res) => {
 
     if (existingUser) {
       return res.status(409).json({ 
-        error: 'Usuário já existe',
-        details: 'Já existe um usuário cadastrado com este CPF'
+        erro: 'Usuário já existe',
+        detalhes: 'Já existe um usuário cadastrado com este CPF'
       });
     }
 
@@ -107,13 +110,16 @@ export const createUser = async (req, res) => {
 
     logger.info(`Novo usuário cadastrado - ID: ${newUser.id}, Nome: ${nome}`);
     return res.status(201).json({
-      success: true,
-      message: 'Usuário cadastrado com sucesso',
-      user: newUser
+      sucesso: true,
+      mensagem: 'Usuário cadastrado com sucesso',
+      usuario: newUser
     });
   } catch (error) {
     logger.error('Erro ao cadastrar usuário:', error);
-    throw error;
+    return res.status(500).json({
+      erro: 'Erro ao cadastrar usuário',
+      mensagem: error.message
+    });
   }
 };
 
@@ -124,8 +130,8 @@ export const updateUser = async (req, res) => {
   try {
     if (!nome?.trim() || !cpf?.trim() || !empresa_id || !voucher || !turno_id) {
       return res.status(400).json({ 
-        error: 'Campos obrigatórios faltando',
-        details: 'Nome, CPF, empresa, voucher e turno são obrigatórios'
+        erro: 'Campos obrigatórios faltando',
+        detalhes: 'Nome, CPF, empresa, voucher e turno são obrigatórios'
       });
     }
 
@@ -143,8 +149,8 @@ export const updateUser = async (req, res) => {
 
     if (existingUser) {
       return res.status(409).json({ 
-        error: 'CPF já em uso',
-        details: 'Este CPF já está sendo usado por outro usuário'
+        erro: 'CPF já em uso',
+        detalhes: 'Este CPF já está sendo usado por outro usuário'
       });
     }
 
@@ -169,17 +175,20 @@ export const updateUser = async (req, res) => {
     }
 
     if (!updatedUser) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
+      return res.status(404).json({ erro: 'Usuário não encontrado' });
     }
 
     logger.info(`Usuário atualizado - ID: ${id}, Nome: ${nome}`);
     return res.json({
-      success: true,
-      message: 'Usuário atualizado com sucesso',
-      user: updatedUser
+      sucesso: true,
+      mensagem: 'Usuário atualizado com sucesso',
+      usuario: updatedUser
     });
   } catch (error) {
     logger.error('Erro ao atualizar usuário:', error);
-    throw error;
+    return res.status(500).json({
+      erro: 'Erro ao atualizar usuário',
+      mensagem: error.message
+    });
   }
 };

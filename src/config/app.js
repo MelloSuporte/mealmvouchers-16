@@ -35,15 +35,23 @@ const createApp = () => {
 
   // Health check endpoint (without database middleware)
   app.get('/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Server is running' });
+    res.json({ status: 'OK', message: 'Servidor está funcionando' });
   });
 
-  // Mount all routes
+  // Mount all routes with database connection
   app.use(withDatabase);
   app.use('/', routes);
 
   // Global error handler - must be last
   app.use(errorHandler);
+
+  // Prevent multiple response attempts
+  app.use((err, req, res, next) => {
+    if (res.headersSent) {
+      return next(err);
+    }
+    next(err);
+  });
 
   return app;
 };

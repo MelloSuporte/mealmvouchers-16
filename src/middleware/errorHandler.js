@@ -1,11 +1,16 @@
 import logger from '../config/logger.js';
 
 export const errorHandler = (err, req, res, next) => {
+  // Evita múltiplas tentativas de enviar resposta
+  if (res.headersSent) {
+    return next(err);
+  }
+
   logger.error('Detalhes do erro:', {
-    message: err.message,
+    mensagem: err.message,
     stack: err.stack,
-    path: req.path,
-    method: req.method,
+    caminho: req.path,
+    metodo: req.method,
     query: req.query,
     body: req.body,
     timestamp: new Date().toISOString()
@@ -14,48 +19,48 @@ export const errorHandler = (err, req, res, next) => {
   // Erros de conexão com banco de dados
   if (err.code === 'ECONNREFUSED' || err.code === 'PROTOCOL_CONNECTION_LOST') {
     return res.status(503).json({
-      error: 'Erro de conexão com o banco de dados',
-      message: 'O sistema está temporariamente indisponível. Tentando reconectar automaticamente...'
+      erro: 'Erro de conexão com o banco de dados',
+      mensagem: 'O sistema está temporariamente indisponível. Tentando reconectar automaticamente...'
     });
   }
 
   // Erros de timeout
   if (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') {
     return res.status(504).json({
-      error: 'Tempo limite excedido',
-      message: 'A operação demorou muito para responder. Por favor, tente novamente.'
+      erro: 'Tempo limite excedido',
+      mensagem: 'A operação demorou muito para responder. Por favor, tente novamente.'
     });
   }
 
   // Erros de consulta SQL
   if (err.code === 'ER_PARSE_ERROR' || err.code === 'ER_BAD_FIELD_ERROR') {
     return res.status(400).json({
-      error: 'Erro na consulta ao banco de dados',
-      message: 'Dados inválidos ou mal formatados'
+      erro: 'Erro na consulta ao banco de dados',
+      mensagem: 'Dados inválidos ou mal formatados'
     });
   }
 
   // Erros de validação
   if (err.name === 'ValidationError') {
     return res.status(400).json({
-      error: 'Erro de validação',
-      message: err.message,
-      details: err.details
+      erro: 'Erro de validação',
+      mensagem: err.message,
+      detalhes: err.details
     });
   }
 
   // Erros de autenticação
   if (err.name === 'UnauthorizedError') {
     return res.status(401).json({
-      error: 'Erro de autenticação',
-      message: 'Sessão expirada ou inválida'
+      erro: 'Erro de autenticação',
+      mensagem: 'Sessão expirada ou inválida'
     });
   }
 
   // Resposta padrão para outros erros
   res.status(err.status || 500).json({
-    error: 'Erro interno do servidor',
-    message: process.env.NODE_ENV === 'development' 
+    erro: 'Erro interno do servidor',
+    mensagem: process.env.NODE_ENV === 'development' 
       ? err.message 
       : 'Ocorreu um erro ao processar sua requisição. Por favor, tente novamente.'
   });
