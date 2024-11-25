@@ -31,6 +31,7 @@ const UserForm = () => {
           voucher: voucherCode
         }));
       } catch (error) {
+        logger.error('Erro ao gerar voucher:', error);
         toast.error('Erro ao gerar voucher. Por favor, tente novamente.');
       }
     }
@@ -72,6 +73,7 @@ const UserForm = () => {
     try {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
+      // Primeiro, verificamos se o usuário existe
       const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
@@ -80,7 +82,7 @@ const UserForm = () => {
 
       if (searchError) {
         logger.error('Erro ao buscar usuário:', searchError);
-        toast.error('Erro ao verificar usuário existente. Por favor, tente novamente.');
+        toast.error('Erro ao verificar usuário existente: ' + searchError.message);
         return;
       }
 
@@ -96,6 +98,7 @@ const UserForm = () => {
 
       let response;
 
+      // Atualiza ou cria usuário baseado na existência
       if (existingUser?.id) {
         response = await supabase
           .from('usuarios')
@@ -112,15 +115,32 @@ const UserForm = () => {
       }
 
       if (response.error) {
+        logger.error('Erro na operação do banco:', response.error);
+        
         if (response.error.code === '23505') {
           toast.error('CPF já cadastrado no sistema');
           return;
         }
-        throw response.error;
+        
+        if (response.error.code === '23503') {
+          toast.error('Empresa ou turno selecionado não existe no sistema');
+          return;
+        }
+
+        // Mensagem de erro mais específica
+        const errorMessage = response.error.message || 'Erro desconhecido';
+        toast.error(`Erro ao processar operação: ${errorMessage}`);
+        return;
+      }
+
+      if (!response.data) {
+        toast.error('Erro: Nenhum dado retornado da operação');
+        return;
       }
 
       toast.success(existingUser?.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
 
+      // Limpa o formulário após sucesso
       setFormData({
         userName: '',
         userCPF: '',
@@ -134,12 +154,17 @@ const UserForm = () => {
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
       
+      // Mensagens de erro mais específicas baseadas no tipo de erro
       if (error.code === '23505') {
         toast.error('CPF já cadastrado no sistema');
       } else if (error.code === '23503') {
         toast.error('Erro: Empresa ou turno selecionado não existe');
+      } else if (error.message?.includes('network')) {
+        toast.error('Erro de conexão. Por favor, verifique sua internet e tente novamente.');
+      } else if (error.message?.includes('timeout')) {
+        toast.error('A operação excedeu o tempo limite. Por favor, tente novamente.');
       } else {
-        toast.error(error.message || 'Erro ao processar operação. Por favor, verifique os dados e tente novamente.');
+        toast.error(`Erro ao processar operação: ${error.message || 'Erro desconhecido'}`);
       }
     } finally {
       setIsSubmitting(false);

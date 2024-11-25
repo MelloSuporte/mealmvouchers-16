@@ -27,11 +27,30 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       eventsPerSecond: 10
     }
   },
-  // Configurações adicionais para melhorar a estabilidade
+  // Configurações para melhorar a estabilidade
   persistSession: true,
   detectSessionInUrl: false,
   maxRetryCount: 3,
-  retryInterval: 1000
+  retryInterval: 1000,
+  // Configurações adicionais para evitar problemas de stream
+  fetch: (url, options = {}) => {
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    }).then(async response => {
+      // Cria uma cópia da resposta para evitar problemas de stream
+      const data = await response.clone().json();
+      return new Response(JSON.stringify(data), {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers
+      });
+    });
+  }
 });
 
 // Verificar conexão com retry automático
