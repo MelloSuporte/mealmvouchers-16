@@ -38,9 +38,9 @@ const createApp = () => {
     res.json({ status: 'OK', mensagem: 'Servidor está funcionando' });
   });
 
-  // Mount all routes with database connection
+  // Mount all routes with database connection and /api prefix
   app.use(withDatabase);
-  app.use('/', routes);
+  app.use('/api', routes);
 
   // Global error handler - must be last
   app.use(errorHandler);
