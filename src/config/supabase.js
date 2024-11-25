@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
+import logger from './logger.js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase environment variables are not properly configured');
+  throw new Error('Variáveis de ambiente do Supabase não estão configuradas corretamente');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -33,9 +34,10 @@ const checkConnection = async () => {
   try {
     const { data, error } = await supabase.auth.getSession();
     if (error) throw error;
-    console.log('Conexão com Supabase verificada');
+    logger.info('Conexão com Supabase verificada com sucesso');
   } catch (error) {
-    console.error('Erro ao conectar com Supabase:', error.message);
+    logger.error('Erro ao conectar com Supabase:', error.message);
+    throw error;
   }
 };
 

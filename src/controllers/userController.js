@@ -27,7 +27,10 @@ export const searchUser = async (req, res) => {
       .eq('cpf', cpf)
       .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro na busca:', error);
+      throw error;
+    }
     
     if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
@@ -50,10 +53,7 @@ export const searchUser = async (req, res) => {
     return res.json({ success: true, data: mappedUser });
   } catch (error) {
     logger.error('Erro ao buscar usuário:', error);
-    return res.status(500).json({ 
-      error: 'Erro ao buscar usuário',
-      details: error.message
-    });
+    throw error;
   }
 };
 
@@ -74,7 +74,10 @@ export const createUser = async (req, res) => {
       .eq('cpf', cpf)
       .maybeSingle();
 
-    if (searchError) throw searchError;
+    if (searchError) {
+      logger.error('Erro na verificação de usuário existente:', searchError);
+      throw searchError;
+    }
 
     if (existingUser) {
       return res.status(409).json({ 
@@ -97,7 +100,10 @@ export const createUser = async (req, res) => {
       .select()
       .single();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      logger.error('Erro na inserção:', insertError);
+      throw insertError;
+    }
 
     logger.info(`Novo usuário cadastrado - ID: ${newUser.id}, Nome: ${nome}`);
     return res.status(201).json({
@@ -107,18 +113,7 @@ export const createUser = async (req, res) => {
     });
   } catch (error) {
     logger.error('Erro ao cadastrar usuário:', error);
-    
-    if (error.code === '23505') {
-      return res.status(409).json({ 
-        error: 'CPF já cadastrado',
-        details: 'Este CPF já está sendo usado por outro usuário'
-      });
-    }
-    
-    return res.status(500).json({ 
-      error: 'Erro ao cadastrar usuário',
-      details: error.message 
-    });
+    throw error;
   }
 };
 
@@ -141,7 +136,10 @@ export const updateUser = async (req, res) => {
       .neq('id', id)
       .maybeSingle();
 
-    if (searchError) throw searchError;
+    if (searchError) {
+      logger.error('Erro na verificação de usuário existente:', searchError);
+      throw searchError;
+    }
 
     if (existingUser) {
       return res.status(409).json({ 
@@ -165,7 +163,10 @@ export const updateUser = async (req, res) => {
       .select()
       .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      logger.error('Erro na atualização:', updateError);
+      throw updateError;
+    }
 
     if (!updatedUser) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
@@ -179,17 +180,6 @@ export const updateUser = async (req, res) => {
     });
   } catch (error) {
     logger.error('Erro ao atualizar usuário:', error);
-    
-    if (error.code === '23505') {
-      return res.status(409).json({ 
-        error: 'CPF já cadastrado',
-        details: 'Este CPF já está sendo usado por outro usuário'
-      });
-    }
-    
-    return res.status(500).json({ 
-      error: 'Erro ao atualizar usuário',
-      details: error.message 
-    });
+    throw error;
   }
 };
