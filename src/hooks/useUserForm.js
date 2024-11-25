@@ -19,7 +19,6 @@ export const useUserForm = () => {
   const handleInputChange = (field, value) => {
     let processedValue = value;
     
-    // Formatação especial para CPF
     if (field === 'userCPF') {
       processedValue = formatCPF(value);
     }
@@ -42,13 +41,17 @@ export const useUserForm = () => {
     });
   };
 
-  const handleSave = async () => {
+  const validateFormData = () => {
     const validationErrors = validateUserData(formData);
-    
     if (validationErrors.length > 0) {
       validationErrors.forEach(error => toast.error(error));
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!validateFormData()) return;
 
     if (isSubmitting) {
       toast.warning('Uma operação já está em andamento');
@@ -88,11 +91,13 @@ export const useUserForm = () => {
         foto: formData.userPhoto
       };
 
+      logger.info('Dados preparados para operação:', userData);
+
       // Realiza a operação de inserção ou atualização
       const operation = existingUser?.id ? 'update' : 'insert';
       const { data, error } = await supabase
         .from('usuarios')
-        [operation]([userData])
+        [operation](userData)
         .select()
         .single();
 
@@ -105,22 +110,51 @@ export const useUserForm = () => {
         if (error.code === '23503') {
           throw new Error('Empresa ou turno selecionado não existe no sistema');
         }
-        throw error;
+        
+        // Log detalhado do erro
+        logger.error('Detalhes do erro:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        throw new Error(`Erro ao ${operation === 'insert' ? 'cadastrar' : 'atualizar'} usuário: ${error.message}`);
       }
 
       if (!data) {
         throw new Error('Nenhum dado retornado da operação');
       }
 
+      logger.info(`Usuário ${operation === 'insert' ? 'cadastrado' : 'atualizado'} com sucesso:`, {
+        id: data.id,
+        nome: data.nome
+      });
+
       toast.success(existingUser?.id ? 
         'Usuário atualizado com sucesso!' : 
         'Usuário cadastrado com sucesso!'
       );
+      
       resetForm();
       
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
-      toast.error(error.message || 'Erro ao processar operação. Por favor, tente novamente.');
+      
+      // Mensagens de erro mais específicas
+      let errorMessage = 'Erro ao processar operação. ';
+      
+      if (error.message.includes('CPF já cadastrado')) {
+        errorMessage = 'Este CPF já está cadastrado no sistema.';
+      } else if (error.message.includes('empresa ou turno')) {
+        errorMessage = 'Empresa ou turno selecionado é inválido.';
+      } else if (error.message.includes('foreign key constraint')) {
+        errorMessage = 'Erro de relacionamento: verifique se a empresa e o turno existem.';
+      } else {
+        errorMessage += 'Por favor, verifique os dados e tente novamente.';
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
