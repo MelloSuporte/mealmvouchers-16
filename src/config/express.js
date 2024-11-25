@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { securityMiddleware } from '../middleware/security.js';
-import routes from './routes.js';
+import routes from '../routes/index.js';
 
 export const configureExpress = (app) => {
   app.use(cors({
@@ -14,11 +14,11 @@ export const configureExpress = (app) => {
   
   app.use(securityMiddleware);
   
-  // Health check route
+  // Rota de verificação de saúde
   app.get('/health', (req, res) => {
     res.json({ status: 'OK' });
   });
   
-  // Mount all routes with /api prefix
+  // Todas as rotas são montadas com o prefixo /api
   app.use('/api', routes);
 };
