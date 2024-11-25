@@ -19,6 +19,6 @@ export const configureExpress = (app) => {
     res.json({ status: 'OK' });
   });
   
-  // Mount all routes without /api prefix
-  app.use('/', routes);
+  // Mount all routes with /api prefix
+  app.use('/api', routes);
 };
