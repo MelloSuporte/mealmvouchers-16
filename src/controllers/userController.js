@@ -5,7 +5,8 @@ export const searchUser = async (req, res) => {
   const { cpf } = req.query;
   
   if (!cpf) {
-    return res.status(400).json({ erro: 'CPF é obrigatório para a busca' });
+    res.status(400).json({ erro: 'CPF é obrigatório para a busca' });
+    return;
   }
 
   try {
@@ -27,13 +28,11 @@ export const searchUser = async (req, res) => {
       .eq('cpf', cpf)
       .maybeSingle();
 
-    if (error) {
-      logger.error('Erro na busca:', error);
-      throw error;
-    }
+    if (error) throw error;
     
     if (!user) {
-      return res.status(404).json({ erro: 'Usuário não encontrado' });
+      res.status(404).json({ erro: 'Usuário não encontrado' });
+      return;
     }
 
     const mappedUser = {
@@ -65,10 +64,11 @@ export const createUser = async (req, res) => {
   
   try {
     if (!nome?.trim() || !cpf?.trim() || !empresa_id || !voucher || !turno_id) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         erro: 'Campos obrigatórios faltando',
         detalhes: 'Nome, CPF, empresa, voucher e turno são obrigatórios'
       });
+      return;
     }
 
     const { data: existingUser, error: searchError } = await supabase
@@ -77,16 +77,14 @@ export const createUser = async (req, res) => {
       .eq('cpf', cpf)
       .maybeSingle();
 
-    if (searchError) {
-      logger.error('Erro na verificação de usuário existente:', searchError);
-      throw searchError;
-    }
+    if (searchError) throw searchError;
 
     if (existingUser) {
-      return res.status(409).json({ 
+      res.status(409).json({ 
         erro: 'Usuário já existe',
         detalhes: 'Já existe um usuário cadastrado com este CPF'
       });
+      return;
     }
 
     const { data: newUser, error: insertError } = await supabase
@@ -103,10 +101,7 @@ export const createUser = async (req, res) => {
       .select()
       .single();
 
-    if (insertError) {
-      logger.error('Erro na inserção:', insertError);
-      throw insertError;
-    }
+    if (insertError) throw insertError;
 
     logger.info(`Novo usuário cadastrado - ID: ${newUser.id}, Nome: ${nome}`);
     res.status(201).json({
@@ -129,10 +124,11 @@ export const updateUser = async (req, res) => {
 
   try {
     if (!nome?.trim() || !cpf?.trim() || !empresa_id || !voucher || !turno_id) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         erro: 'Campos obrigatórios faltando',
         detalhes: 'Nome, CPF, empresa, voucher e turno são obrigatórios'
       });
+      return;
     }
 
     const { data: existingUser, error: searchError } = await supabase
@@ -142,16 +138,14 @@ export const updateUser = async (req, res) => {
       .neq('id', id)
       .maybeSingle();
 
-    if (searchError) {
-      logger.error('Erro na verificação de usuário existente:', searchError);
-      throw searchError;
-    }
+    if (searchError) throw searchError;
 
     if (existingUser) {
-      return res.status(409).json({ 
+      res.status(409).json({ 
         erro: 'CPF já em uso',
         detalhes: 'Este CPF já está sendo usado por outro usuário'
       });
+      return;
     }
 
     const { data: updatedUser, error: updateError } = await supabase
@@ -169,13 +163,11 @@ export const updateUser = async (req, res) => {
       .select()
       .single();
 
-    if (updateError) {
-      logger.error('Erro na atualização:', updateError);
-      throw updateError;
-    }
+    if (updateError) throw updateError;
 
     if (!updatedUser) {
-      return res.status(404).json({ erro: 'Usuário não encontrado' });
+      res.status(404).json({ erro: 'Usuário não encontrado' });
+      return;
     }
 
     logger.info(`Usuário atualizado - ID: ${id}, Nome: ${nome}`);
