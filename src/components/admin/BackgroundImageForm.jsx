@@ -45,7 +45,7 @@ const BackgroundImageForm = () => {
 
   const loadSavedBackgrounds = async () => {
     try {
-      const response = await api.get('/api/imagens-fundo');
+      const response = await api.get('/imagens-fundo');
       
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Erro ao carregar imagens');
@@ -105,44 +105,39 @@ const BackgroundImageForm = () => {
     }
   };
 
-  const handleSaveBackgrounds = async () => {
+  const handleSaveBackground = async (page) => {
     if (!checkRecentModification()) return;
-
+    
     try {
       setIsLoading(true);
       
-      const hasChanges = Object.values(backgrounds).some(Boolean);
-      if (!hasChanges) {
-        toast.error("Nenhuma alteração para salvar");
+      const file = backgrounds[page];
+      if (!file) {
+        toast.error("Nenhuma imagem selecionada");
         return;
       }
 
-      // Salva cada imagem individualmente
-      for (const [page, file] of Object.entries(backgrounds)) {
-        if (!file) continue;
+      const formData = new FormData();
+      formData.append('page', page);
+      formData.append('image', file);
 
-        const formData = new FormData();
-        formData.append('page', page);
-        formData.append('image', file);
+      const response = await api.post('/imagens-fundo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
-        const response = await api.post('/imagens-fundo', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-
-        if (!response.data?.success) {
-          throw new Error(response.data?.message || 'Erro ao salvar imagem');
-        }
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || 'Erro ao salvar imagem');
       }
 
       localStorage.setItem('lastImageModification', Date.now().toString());
       setLastModified(new Date());
-      toast.success("Imagens de fundo atualizadas com sucesso!");
+      toast.success(`Imagem de fundo para ${page} atualizada com sucesso!`);
       
-      setBackgrounds({ voucher: null, userConfirmation: null, bomApetite: null });
+      setBackgrounds(prev => ({ ...prev, [page]: null }));
       await loadSavedBackgrounds();
     } catch (error) {
       console.error('Erro completo:', error);
-      toast.error(`Erro ao salvar imagens de fundo: ${error.message}`);
+      toast.error(`Erro ao salvar imagem de fundo: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -163,24 +158,25 @@ const BackgroundImageForm = () => {
       }).map(([key, label]) => (
         <div key={key} className="space-y-2">
           <Label htmlFor={key}>{label}</Label>
-          <Input
-            id={key}
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleFileChange(key, e)}
-            disabled={isLoading || !checkRecentModification()}
-          />
-          <ImagePreview imageUrl={previews[key]} label={label} />
+          <div className="flex flex-col gap-4">
+            <Input
+              id={key}
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileChange(key, e)}
+              disabled={isLoading || !checkRecentModification()}
+            />
+            <Button 
+              type="button" 
+              onClick={() => handleSaveBackground(key)}
+              disabled={isLoading || !backgrounds[key] || !checkRecentModification()}
+            >
+              {isLoading ? "Salvando..." : `Salvar Imagem ${label}`}
+            </Button>
+            <ImagePreview imageUrl={previews[key]} label={label} />
+          </div>
         </div>
       ))}
-      
-      <Button 
-        type="button" 
-        onClick={handleSaveBackgrounds}
-        disabled={isLoading || !Object.values(backgrounds).some(Boolean) || !checkRecentModification()}
-      >
-        {isLoading ? "Salvando..." : "Salvar Imagens de Fundo"}
-      </Button>
     </form>
   );
 };

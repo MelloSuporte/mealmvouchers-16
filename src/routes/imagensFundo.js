@@ -20,7 +20,6 @@ router.get('/', async (req, res) => {
     const { data, error } = await supabase
       .from('background_images')
       .select('*')
-      .order('created_at', { ascending: false })
       .eq('is_active', true);
 
     if (error) throw error;
@@ -53,14 +52,15 @@ router.post('/', upload.single('image'), async (req, res) => {
       });
     }
 
-    // Desativa imagens existentes para a página específica
+    // Desativa imagem existente para a página específica
     const { error: deactivateError } = await supabase
       .from('background_images')
       .update({ is_active: false })
-      .eq('page', req.body.page);
+      .eq('page', req.body.page)
+      .eq('is_active', true);
 
     if (deactivateError) {
-      logger.error('Erro ao desativar imagens antigas:', deactivateError);
+      logger.error('Erro ao desativar imagem antiga:', deactivateError);
       throw deactivateError;
     }
 
@@ -83,7 +83,7 @@ router.post('/', upload.single('image'), async (req, res) => {
       throw insertError;
     }
 
-    logger.info('Upload de imagem concluído com sucesso');
+    logger.info(`Upload de imagem para ${req.body.page} concluído com sucesso`);
     
     return res.json({ 
       success: true, 
