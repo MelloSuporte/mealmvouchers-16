@@ -94,36 +94,32 @@ const UserForm = () => {
         foto: formData.userPhoto
       };
 
+      let response;
+
       if (existingUser?.id) {
-        const { error: updateError } = await supabase
+        response = await supabase
           .from('usuarios')
           .update(newUserData)
-          .eq('id', existingUser.id);
-
-        if (updateError) {
-          if (updateError.code === '23505') {
-            toast.error('CPF já cadastrado para outro usuário');
-            return;
-          }
-          throw updateError;
-        }
-        
-        toast.success("Usuário atualizado com sucesso!");
+          .eq('id', existingUser.id)
+          .select()
+          .single();
       } else {
-        const { error: insertError } = await supabase
+        response = await supabase
           .from('usuarios')
-          .insert([newUserData]);
-
-        if (insertError) {
-          if (insertError.code === '23505') {
-            toast.error('CPF já cadastrado no sistema');
-            return;
-          }
-          throw insertError;
-        }
-        
-        toast.success("Usuário cadastrado com sucesso!");
+          .insert([newUserData])
+          .select()
+          .single();
       }
+
+      if (response.error) {
+        if (response.error.code === '23505') {
+          toast.error('CPF já cadastrado no sistema');
+          return;
+        }
+        throw response.error;
+      }
+
+      toast.success(existingUser?.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
 
       setFormData({
         userName: '',
@@ -138,12 +134,12 @@ const UserForm = () => {
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
       
-      if (error.code === '23505' || error.message?.includes('duplicate key')) {
+      if (error.code === '23505') {
         toast.error('CPF já cadastrado no sistema');
       } else if (error.code === '23503') {
         toast.error('Erro: Empresa ou turno selecionado não existe');
       } else {
-        toast.error('Erro ao processar operação. Por favor, verifique os dados e tente novamente.');
+        toast.error(error.message || 'Erro ao processar operação. Por favor, verifique os dados e tente novamente.');
       }
     } finally {
       setIsSubmitting(false);
