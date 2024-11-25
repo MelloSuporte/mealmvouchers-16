@@ -24,20 +24,17 @@ router.get('/', async (req, res) => {
 
     if (error) {
       logger.error('Erro do Supabase:', error);
-      throw error;
-    }
-
-    if (!data) {
-      return res.status(200).json({
-        success: true,
-        data: []
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar imagens de fundo',
+        error: error.message
       });
     }
 
-    logger.info(`${data.length} imagens encontradas`);
+    logger.info(`${data?.length || 0} imagens encontradas`);
     return res.status(200).json({ 
       success: true, 
-      data: data 
+      data: data || [] 
     });
 
   } catch (error) {
@@ -80,7 +77,8 @@ router.post('/', upload.any(), async (req, res) => {
     }
 
     // Converte e insere novas imagens
-    const insertPromises = req.files.map(async (file) => {
+    const insertResults = [];
+    for (const file of req.files) {
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       
       const { data, error } = await supabase
@@ -96,19 +94,22 @@ router.post('/', upload.any(), async (req, res) => {
 
       if (error) {
         logger.error(`Erro ao inserir imagem para ${file.fieldname}:`, error);
-        throw error;
+        return res.status(500).json({
+          success: false,
+          message: `Erro ao inserir imagem para ${file.fieldname}`,
+          error: error.message
+        });
       }
       
-      return { data, page: file.fieldname };
-    });
+      insertResults.push({ data, page: file.fieldname });
+    }
 
-    const results = await Promise.all(insertPromises);
     logger.info('Upload de imagens concluído com sucesso');
     
     return res.status(200).json({ 
       success: true, 
       message: 'Imagens de fundo atualizadas com sucesso',
-      data: results.map(result => ({
+      data: insertResults.map(result => ({
         page: result.page,
         id: result.data?.id
       }))
