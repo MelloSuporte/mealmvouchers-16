@@ -119,7 +119,11 @@ const BackgroundImageForm = () => {
 
       const formData = new FormData();
       Object.entries(backgrounds).forEach(([key, value]) => {
-        if (value) formData.append(key, value);
+        if (value) {
+          // Usando o nome correto do campo que corresponde à coluna da tabela
+          formData.append('page', key);
+          formData.append('image', value);
+        }
       });
 
       const response = await api.post('/api/imagens-fundo', formData, {
@@ -134,10 +138,7 @@ const BackgroundImageForm = () => {
       setLastModified(new Date());
       toast.success("Imagens de fundo atualizadas com sucesso!");
       
-      // Limpa os backgrounds após salvar com sucesso
       setBackgrounds({ voucher: null, userConfirmation: null, bomApetite: null });
-      
-      // Recarrega as imagens para mostrar as atualizações
       await loadSavedBackgrounds();
     } catch (error) {
       console.error('Erro completo:', error);
