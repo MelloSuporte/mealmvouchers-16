@@ -6,8 +6,10 @@ import routes from '../routes/index.js';
 export const configureExpress = (app) => {
   // Configuração do CORS
   app.use(cors({
-    origin: true,
-    credentials: true
+    origin: process.env.FRONTEND_URL || true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   }));
   
   // Configuração dos limites de payload
@@ -19,7 +21,7 @@ export const configureExpress = (app) => {
   
   // Rota de verificação de saúde
   app.get('/health', (req, res) => {
-    res.json({ status: 'OK' });
+    res.json({ status: 'OK', message: 'Servidor funcionando normalmente' });
   });
   
   // Montagem das rotas da API

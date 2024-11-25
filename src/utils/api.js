@@ -36,7 +36,7 @@ api.interceptors.response.use(
     } else if (error.code === 'ECONNABORTED') {
       toast.error('A requisição demorou muito para responder. Tente novamente.');
     } else {
-      const errorMessage = error.response?.data?.erro || error.message;
+      const errorMessage = error.response?.data?.message || error.message;
       toast.error(`Erro na requisição: ${errorMessage}`);
     }
     

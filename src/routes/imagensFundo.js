@@ -16,27 +16,21 @@ const upload = multer({
 // GET /api/imagens-fundo
 router.get('/', async (req, res) => {
   try {
-    logger.info('Buscando imagens de fundo');
-    
     const { data, error } = await supabase
       .from('background_images')
       .select('*')
       .eq('is_active', true);
 
-    if (error) {
-      logger.error('Erro ao buscar imagens:', error);
-      throw error;
-    }
+    if (error) throw error;
 
-    logger.info(`${data?.length || 0} imagens encontradas`);
-    return res.json({ 
+    res.json({ 
       success: true, 
       data: data || [] 
     });
 
   } catch (error) {
     logger.error('Erro ao buscar imagens:', error);
-    return res.status(500).json({ 
+    res.status(500).json({ 
       success: false,
       message: 'Erro ao buscar imagens de fundo',
       error: error.message 
@@ -47,10 +41,7 @@ router.get('/', async (req, res) => {
 // POST /api/imagens-fundo
 router.post('/', upload.single('image'), async (req, res) => {
   try {
-    logger.info('Iniciando upload de imagem');
-    
     if (!req.file || !req.body.page) {
-      logger.warn('Requisição inválida - arquivo ou página faltando');
       return res.status(400).json({
         success: false,
         message: 'Arquivo de imagem e página são obrigatórios'
@@ -67,10 +58,7 @@ router.post('/', upload.single('image'), async (req, res) => {
       .update({ is_active: false })
       .eq('page', req.body.page);
 
-    if (updateError) {
-      logger.error('Erro ao desativar imagens antigas:', updateError);
-      throw updateError;
-    }
+    if (updateError) throw updateError;
 
     // Insere nova imagem
     const { data, error: insertError } = await supabase
@@ -83,13 +71,9 @@ router.post('/', upload.single('image'), async (req, res) => {
       .select()
       .single();
 
-    if (insertError) {
-      logger.error('Erro ao inserir nova imagem:', insertError);
-      throw insertError;
-    }
+    if (insertError) throw insertError;
 
-    logger.info(`Imagem salva com sucesso para a página ${req.body.page}`);
-    return res.json({
+    res.json({
       success: true,
       message: 'Imagem salva com sucesso',
       data
@@ -97,7 +81,7 @@ router.post('/', upload.single('image'), async (req, res) => {
 
   } catch (error) {
     logger.error('Erro ao salvar imagem:', error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: 'Erro ao salvar imagem de fundo',
       error: error.message
