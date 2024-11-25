@@ -74,11 +74,12 @@ const UserForm = () => {
     }
 
     setIsSubmitting(true);
+    logger.info('Iniciando operação de salvamento do usuário...');
 
     try {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Verificar se o usuário já existe
+      logger.info('Verificando existência do usuário...');
       const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
@@ -91,6 +92,7 @@ const UserForm = () => {
         return;
       }
 
+      logger.info('Preparando dados do usuário...');
       const newUserData = {
         nome: formData.userName.trim(),
         cpf: cleanCPF,
@@ -101,10 +103,11 @@ const UserForm = () => {
         foto: formData.userPhoto
       };
 
-      let response;
+      logger.info('Dados do usuário preparados:', newUserData);
 
-      // Atualiza ou cria usuário baseado na existência
+      let response;
       if (existingUser?.id) {
+        logger.info('Atualizando usuário existente...');
         response = await supabase
           .from('usuarios')
           .update(newUserData)
@@ -112,6 +115,7 @@ const UserForm = () => {
           .select()
           .single();
       } else {
+        logger.info('Criando novo usuário...');
         response = await supabase
           .from('usuarios')
           .insert([newUserData])
@@ -132,15 +136,23 @@ const UserForm = () => {
           return;
         }
 
+        if (response.error.code === '23514') {
+          toast.error('Erro de validação: verifique se todos os campos estão preenchidos corretamente');
+          return;
+        }
+
         toast.error(`Erro ao processar operação: ${response.error.message || 'Erro desconhecido'}`);
+        logger.error('Detalhes do erro:', response.error);
         return;
       }
 
       if (!response.data) {
+        logger.error('Nenhum dado retornado da operação');
         toast.error('Erro: Nenhum dado retornado da operação');
         return;
       }
 
+      logger.info('Operação concluída com sucesso:', response.data);
       toast.success(existingUser?.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
 
       // Limpa o formulário após sucesso
@@ -167,6 +179,11 @@ const UserForm = () => {
         toast.error('A operação excedeu o tempo limite. Por favor, tente novamente.');
       } else {
         toast.error('Erro ao processar operação. Por favor, tente novamente mais tarde.');
+        logger.error('Detalhes completos do erro:', {
+          code: error.code,
+          message: error.message,
+          details: error.details
+        });
       }
     } finally {
       setIsSubmitting(false);
