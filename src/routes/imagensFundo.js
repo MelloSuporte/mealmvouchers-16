@@ -69,11 +69,7 @@ router.post('/', upload.any(), async (req, res) => {
 
     if (deactivateError) {
       logger.error('Erro ao desativar imagens antigas:', deactivateError);
-      return res.status(500).json({
-        success: false,
-        error: 'Erro ao desativar imagens antigas',
-        details: deactivateError.message
-      });
+      throw deactivateError;
     }
 
     // Converte e insere novas imagens
@@ -82,12 +78,12 @@ router.post('/', upload.any(), async (req, res) => {
       
       const { error: insertError } = await supabase
         .from('background_images')
-        .insert([{
+        .insert({
           page: file.fieldname,
           image_url: base64Image,
           is_active: true,
           created_at: new Date().toISOString()
-        }]);
+        });
 
       if (insertError) {
         throw insertError;
@@ -97,7 +93,7 @@ router.post('/', upload.any(), async (req, res) => {
     await Promise.all(insertPromises);
 
     logger.info('Upload de imagens concluído com sucesso');
-    return res.json({ 
+    return res.status(200).json({ 
       success: true, 
       message: 'Imagens de fundo atualizadas com sucesso',
       updatedPages: pagesToUpdate
