@@ -69,57 +69,51 @@ router.post('/', upload.any(), async (req, res) => {
 
     if (deactivateError) {
       logger.error('Erro ao desativar imagens antigas:', deactivateError);
-      return res.status(500).json({
-        success: false,
-        message: 'Erro ao desativar imagens antigas',
-        error: deactivateError.message
-      });
+      throw deactivateError;
     }
 
     // Converte e insere novas imagens
-    const insertResults = [];
-    for (const file of req.files) {
+    const insertPromises = req.files.map(async (file) => {
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       
       const { data, error } = await supabase
         .from('background_images')
-        .insert([{
+        .insert({
           page: file.fieldname,
           image_url: base64Image,
           is_active: true,
           created_at: new Date().toISOString()
-        }])
+        })
         .select()
         .single();
 
       if (error) {
         logger.error(`Erro ao inserir imagem para ${file.fieldname}:`, error);
-        return res.status(500).json({
-          success: false,
-          message: `Erro ao inserir imagem para ${file.fieldname}`,
-          error: error.message
-        });
+        throw error;
       }
       
-      insertResults.push({ data, page: file.fieldname });
-    }
+      return { data, page: file.fieldname };
+    });
+
+    const results = await Promise.all(insertPromises);
 
     logger.info('Upload de imagens concluído com sucesso');
     
     return res.status(200).json({ 
       success: true, 
       message: 'Imagens de fundo atualizadas com sucesso',
-      data: insertResults.map(result => ({
+      data: results.map(result => ({
         page: result.page,
         id: result.data?.id
       }))
     });
+
   } catch (error) {
     logger.error('Erro ao salvar imagens:', error);
     return res.status(500).json({ 
       success: false,
       message: 'Erro ao salvar imagens de fundo',
-      error: error.message
+      error: error.message || 'Erro desconhecido'
     });
   }
 });

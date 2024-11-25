@@ -29,7 +29,7 @@ const BackgroundImageForm = () => {
     const lastMod = localStorage.getItem('lastImageModification');
     if (lastMod) {
       const timeDiff = Date.now() - parseInt(lastMod);
-      if (timeDiff < 300000) {
+      if (timeDiff < 300000) { // 5 minutos
         toast.error("Aguarde 5 minutos antes de fazer novas alterações");
         return false;
       }
@@ -136,6 +136,7 @@ const BackgroundImageForm = () => {
       await loadSavedBackgrounds();
       setBackgrounds({ voucher: null, userConfirmation: null, bomApetite: null });
     } catch (error) {
+      console.error('Erro completo:', error);
       const errorMessage = error.response?.data?.message || error.message;
       toast.error(`Erro ao salvar imagens de fundo: ${errorMessage}`);
     } finally {
