@@ -26,18 +26,6 @@ const BackgroundImageForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastModified, setLastModified] = useState(null);
 
-  const checkRecentModification = () => {
-    const lastMod = localStorage.getItem('lastImageModification');
-    if (lastMod) {
-      const timeDiff = Date.now() - parseInt(lastMod);
-      if (timeDiff < 300000) { // 5 minutos
-        toast.error("Aguarde 5 minutos antes de fazer novas alterações");
-        return false;
-      }
-    }
-    return true;
-  };
-
   useEffect(() => {
     loadSavedBackgrounds();
     const lastMod = localStorage.getItem('lastImageModification');
@@ -107,8 +95,6 @@ const BackgroundImageForm = () => {
   };
 
   const handleSaveBackground = async (page) => {
-    if (!checkRecentModification()) return;
-    
     try {
       setIsLoading(true);
       
@@ -165,12 +151,12 @@ const BackgroundImageForm = () => {
               type="file"
               accept="image/*"
               onChange={(e) => handleFileChange(key, e)}
-              disabled={isLoading || !checkRecentModification()}
+              disabled={isLoading}
             />
             <Button 
               type="button" 
               onClick={() => handleSaveBackground(key)}
-              disabled={isLoading || !backgrounds[key] || !checkRecentModification()}
+              disabled={isLoading || !backgrounds[key]}
               className="w-fit"
             >
               <Save className="mr-2 h-4 w-4" />

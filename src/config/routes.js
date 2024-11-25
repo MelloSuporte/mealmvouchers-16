@@ -13,13 +13,13 @@ import adminRoutes from '../routes/admin.js';
 
 const router = express.Router();
 
-// Health check route
+// Rotas de verificação de saúde
 router.use('/health', healthRoutes);
 
-// Admin routes
+// Rotas administrativas
 router.use('/admin', adminRoutes);
 
-// API routes
+// Rotas da API
 router.use('/empresas', empresasRoutes);
 router.use('/vouchers', voucherRoutes);
 router.use('/relatorios', relatoriosRoutes);

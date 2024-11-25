@@ -5,10 +5,11 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
+// Configuração do multer para upload de arquivos
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 5 * 1024 * 1024 // limite de 5MB
   }
 });
 
@@ -22,7 +23,10 @@ router.get('/', async (req, res) => {
       .select('*')
       .eq('is_active', true);
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro ao buscar imagens:', error);
+      throw error;
+    }
 
     logger.info(`${data?.length || 0} imagens encontradas`);
     return res.json({ 
@@ -46,6 +50,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     logger.info('Iniciando upload de imagem');
     
     if (!req.file || !req.body.page) {
+      logger.warn('Requisição inválida - arquivo ou página faltando');
       return res.status(400).json({
         success: false,
         message: 'Arquivo de imagem e página são obrigatórios'
