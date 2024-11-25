@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
   try {
     logger.info('Iniciando busca de imagens de fundo');
     
-    const { data: images, error } = await supabase
+    const { data, error } = await supabase
       .from('background_images')
       .select('*')
       .eq('is_active', true);
@@ -25,21 +25,21 @@ router.get('/', async (req, res) => {
       return res.status(500).json({ 
         success: false,
         error: 'Erro ao buscar imagens de fundo',
-        details: error.message 
+        message: error.message 
       });
     }
     
-    logger.info(`${images?.length || 0} imagens encontradas`);
+    logger.info(`${data?.length || 0} imagens encontradas`);
     return res.status(200).json({ 
       success: true, 
-      data: images || [] 
+      data: data || [] 
     });
   } catch (error) {
     logger.error('Erro não esperado ao buscar imagens:', error);
     return res.status(500).json({ 
       success: false,
       error: 'Erro interno ao buscar imagens',
-      details: error.message 
+      message: error.message 
     });
   }
 });
@@ -72,15 +72,15 @@ router.post('/', upload.any(), async (req, res) => {
       return res.status(500).json({
         success: false,
         error: 'Erro ao desativar imagens antigas',
-        details: deactivateError.message
+        message: deactivateError.message
       });
     }
 
     // Converte e insere novas imagens
-    for (const file of req.files) {
+    const insertPromises = req.files.map(async (file) => {
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       
-      const { data: insertData, error: insertError } = await supabase
+      return supabase
         .from('background_images')
         .insert([{
           page: file.fieldname,
@@ -90,17 +90,18 @@ router.post('/', upload.any(), async (req, res) => {
         }])
         .select()
         .single();
+    });
 
-      if (insertError) {
-        logger.error('Erro ao inserir nova imagem:', insertError);
-        return res.status(500).json({
-          success: false,
-          error: 'Erro ao inserir nova imagem',
-          details: insertError.message
-        });
-      }
+    const results = await Promise.all(insertPromises);
+    const errors = results.filter(result => result.error);
 
-      logger.info(`Imagem inserida com sucesso para página ${file.fieldname}`);
+    if (errors.length > 0) {
+      logger.error('Erros ao inserir novas imagens:', errors);
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao inserir novas imagens',
+        message: errors[0].error.message
+      });
     }
 
     logger.info('Upload de imagens concluído com sucesso');
@@ -113,8 +114,8 @@ router.post('/', upload.any(), async (req, res) => {
     logger.error('Erro não esperado ao salvar imagens:', error);
     return res.status(500).json({ 
       success: false,
-      error: error.message || 'Erro ao salvar imagens de fundo',
-      details: error.details || error.message
+      error: 'Erro ao salvar imagens de fundo',
+      message: error.message
     });
   }
 });
