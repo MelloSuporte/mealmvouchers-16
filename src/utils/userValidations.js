@@ -1,7 +1,6 @@
 export const validateUserData = (formData) => {
   const errors = [];
   
-  // Validação do nome
   if (!formData.userName?.trim()) {
     errors.push('Nome é obrigatório');
   } else if (formData.userName.trim().length < 3) {
@@ -10,7 +9,6 @@ export const validateUserData = (formData) => {
     errors.push('Nome não pode ter mais de 255 caracteres');
   }
 
-  // Validação do CPF
   if (!formData.userCPF?.trim()) {
     errors.push('CPF é obrigatório');
   } else {
@@ -22,21 +20,18 @@ export const validateUserData = (formData) => {
     }
   }
 
-  // Validação da empresa
   if (!formData.company) {
     errors.push('Empresa é obrigatória');
   } else if (isNaN(parseInt(formData.company))) {
     errors.push('ID da empresa inválido');
   }
 
-  // Validação do turno
   if (!formData.selectedTurno) {
     errors.push('Turno é obrigatório');
   } else if (isNaN(parseInt(formData.selectedTurno))) {
     errors.push('ID do turno inválido');
   }
 
-  // Validação do voucher
   if (!formData.voucher?.trim()) {
     errors.push('Voucher é obrigatório');
   } else if (formData.voucher.trim().length !== 4) {

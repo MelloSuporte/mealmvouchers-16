@@ -41,34 +41,25 @@ export const useUserForm = () => {
     });
   };
 
-  const validateFormData = () => {
-    const validationErrors = validateUserData(formData);
-    if (validationErrors.length > 0) {
-      validationErrors.forEach(error => toast.error(error));
-      return false;
-    }
-    return true;
-  };
-
   const handleSave = async () => {
-    if (!validateFormData()) return;
-
     if (isSubmitting) {
       toast.warning('Uma operação já está em andamento');
       return;
     }
 
-    setIsSubmitting(true);
-    logger.info('Iniciando cadastro/atualização de usuário:', { 
-      nome: formData.userName,
-      empresa: formData.company,
-      turno: formData.selectedTurno
-    });
+    const validationErrors = validateUserData(formData);
+    if (validationErrors.length > 0) {
+      validationErrors.forEach(error => toast.error(error));
+      return;
+    }
 
+    setIsSubmitting(true);
+    
     try {
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
       
-      // Verifica se o usuário já existe
+      logger.info('Iniciando verificação de usuário existente:', { cpf: cleanCPF });
+      
       const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('id')
@@ -77,10 +68,9 @@ export const useUserForm = () => {
 
       if (searchError) {
         logger.error('Erro ao verificar usuário existente:', searchError);
-        throw new Error(`Erro ao verificar usuário: ${searchError.message}`);
+        throw new Error('Erro ao verificar usuário existente');
       }
 
-      // Prepara os dados para inserção/atualização
       const userData = {
         nome: formData.userName.trim(),
         cpf: cleanCPF,
@@ -93,17 +83,28 @@ export const useUserForm = () => {
 
       logger.info('Dados preparados para operação:', userData);
 
-      // Realiza a operação de inserção ou atualização
       const operation = existingUser?.id ? 'update' : 'insert';
-      const { data, error } = await supabase
-        .from('usuarios')
-        [operation](userData)
-        .select()
-        .single();
+      
+      logger.info(`Iniciando operação ${operation}:`, userData);
+
+      let query = supabase.from('usuarios');
+      
+      if (operation === 'update') {
+        query = query.update(userData).eq('id', existingUser.id);
+      } else {
+        query = query.insert(userData);
+      }
+
+      const { data, error } = await query.select().single();
 
       if (error) {
-        logger.error(`Erro na operação ${operation}:`, error);
-        
+        logger.error(`Erro na operação ${operation}:`, {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+
         if (error.code === '23505') {
           throw new Error('CPF já cadastrado no sistema');
         }
@@ -111,15 +112,7 @@ export const useUserForm = () => {
           throw new Error('Empresa ou turno selecionado não existe no sistema');
         }
         
-        // Log detalhado do erro
-        logger.error('Detalhes do erro:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        
-        throw new Error(`Erro ao ${operation === 'insert' ? 'cadastrar' : 'atualizar'} usuário: ${error.message}`);
+        throw new Error(`Erro na operação ${operation}: ${error.message}`);
       }
 
       if (!data) {
@@ -141,20 +134,15 @@ export const useUserForm = () => {
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
       
-      // Mensagens de erro mais específicas
-      let errorMessage = 'Erro ao processar operação. ';
-      
       if (error.message.includes('CPF já cadastrado')) {
-        errorMessage = 'Este CPF já está cadastrado no sistema.';
+        toast.error('Este CPF já está cadastrado no sistema');
       } else if (error.message.includes('empresa ou turno')) {
-        errorMessage = 'Empresa ou turno selecionado é inválido.';
+        toast.error('Empresa ou turno selecionado é inválido');
       } else if (error.message.includes('foreign key constraint')) {
-        errorMessage = 'Erro de relacionamento: verifique se a empresa e o turno existem.';
+        toast.error('Erro de relacionamento: verifique se a empresa e o turno existem');
       } else {
-        errorMessage += 'Por favor, verifique os dados e tente novamente.';
+        toast.error(`Erro ao processar operação: ${error.message}`);
       }
-      
-      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
