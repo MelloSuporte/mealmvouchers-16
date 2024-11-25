@@ -48,7 +48,7 @@ router.post('/', upload.any(), async (req, res) => {
     if (!req.files?.length) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Nenhum arquivo enviado' 
+        message: 'Nenhum arquivo enviado' 
       });
     }
 
@@ -62,7 +62,11 @@ router.post('/', upload.any(), async (req, res) => {
 
     if (deactivateError) {
       logger.error('Erro ao desativar imagens antigas:', deactivateError);
-      throw deactivateError;
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao desativar imagens antigas',
+        error: deactivateError.message
+      });
     }
 
     // Converte e insere novas imagens
@@ -89,8 +93,8 @@ router.post('/', upload.any(), async (req, res) => {
     });
 
     const results = await Promise.all(insertPromises);
-
     logger.info('Upload de imagens concluído com sucesso');
+    
     return res.status(200).json({ 
       success: true, 
       message: 'Imagens de fundo atualizadas com sucesso',

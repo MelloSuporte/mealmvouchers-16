@@ -46,13 +46,12 @@ const BackgroundImageForm = () => {
   const loadSavedBackgrounds = async () => {
     try {
       const response = await api.get('/imagens-fundo');
-      console.log('Resposta do GET:', response);
       
-      if (!response.data) {
-        throw new Error('Resposta inválida do servidor');
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || 'Erro ao carregar imagens');
       }
 
-      const images = response.data.data || response.data;
+      const images = response.data.data;
       
       if (!Array.isArray(images)) {
         console.error('Formato de dados inválido:', images);
@@ -122,11 +121,9 @@ const BackgroundImageForm = () => {
         if (value) formData.append(key, value);
       });
 
-      console.log('Enviando requisição POST...'); // Debug
       const response = await api.post('/imagens-fundo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      console.log('Resposta do POST:', response); // Debug
 
       if (!response.data?.success) {
         throw new Error(response.data?.message || 'Erro ao salvar imagens');
@@ -138,8 +135,7 @@ const BackgroundImageForm = () => {
       await loadSavedBackgrounds();
       setBackgrounds({ voucher: null, userConfirmation: null, bomApetite: null });
     } catch (error) {
-      console.error('Erro completo:', error);
-      const errorMessage = error.response?.data?.error || error.message;
+      const errorMessage = error.response?.data?.message || error.message;
       toast.error(`Erro ao salvar imagens de fundo: ${errorMessage}`);
     } finally {
       setIsLoading(false);
