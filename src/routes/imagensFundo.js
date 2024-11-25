@@ -72,7 +72,11 @@ router.post('/', upload.any(), async (req, res) => {
 
     if (deactivateError) {
       logger.error('Erro ao desativar imagens antigas:', deactivateError);
-      throw deactivateError;
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao desativar imagens antigas',
+        error: deactivateError.message
+      });
     }
 
     // Converte e insere novas imagens
