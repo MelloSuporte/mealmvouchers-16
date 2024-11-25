@@ -68,6 +68,11 @@ const UserForm = () => {
       return;
     }
 
+    if (isSubmitting) {
+      toast.error('Uma operação já está em andamento. Aguarde...');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -82,14 +87,15 @@ const UserForm = () => {
 
       if (searchError) {
         logger.error('Erro ao buscar usuário:', searchError);
-        throw new Error('Erro ao verificar usuário existente: ' + searchError.message);
+        toast.error('Erro ao verificar usuário existente. Por favor, tente novamente.');
+        return;
       }
 
       const newUserData = {
-        nome: formData.userName,
+        nome: formData.userName.trim(),
         cpf: cleanCPF,
         empresa_id: parseInt(formData.company),
-        voucher: formData.voucher,
+        voucher: formData.voucher.trim(),
         turno_id: parseInt(formData.selectedTurno),
         suspenso: formData.isSuspended,
         foto: formData.userPhoto
@@ -126,11 +132,13 @@ const UserForm = () => {
           return;
         }
 
-        throw new Error(response.error.message || 'Erro desconhecido');
+        toast.error(`Erro ao processar operação: ${response.error.message || 'Erro desconhecido'}`);
+        return;
       }
 
       if (!response.data) {
-        throw new Error('Erro: Nenhum dado retornado da operação');
+        toast.error('Erro: Nenhum dado retornado da operação');
+        return;
       }
 
       toast.success(existingUser?.id ? "Usuário atualizado com sucesso!" : "Usuário cadastrado com sucesso!");
@@ -152,13 +160,13 @@ const UserForm = () => {
       if (error.code === '23505') {
         toast.error('CPF já cadastrado no sistema');
       } else if (error.code === '23503') {
-        toast.error('Erro: Empresa ou turno selecionado não existe');
+        toast.error('Empresa ou turno selecionado não existe no sistema');
       } else if (error.message?.includes('network')) {
         toast.error('Erro de conexão. Por favor, verifique sua internet e tente novamente.');
       } else if (error.message?.includes('timeout')) {
         toast.error('A operação excedeu o tempo limite. Por favor, tente novamente.');
       } else {
-        toast.error(`Erro ao processar operação: ${error.message || 'Erro desconhecido'}`);
+        toast.error('Erro ao processar operação. Por favor, tente novamente mais tarde.');
       }
     } finally {
       setIsSubmitting(false);
