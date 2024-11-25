@@ -29,16 +29,6 @@ const createApp = () => {
 
   // Add request logging
   app.use((req, res, next) => {
-    // Adiciona um middleware para garantir que a resposta só seja enviada uma vez
-    res.sendResponse = res.send;
-    res.send = function(body) {
-      if (!this.headersSent) {
-        return res.sendResponse(body);
-      } else {
-        logger.warn('Tentativa de enviar resposta múltipla evitada');
-      }
-    };
-    
     logger.info(`${req.method} ${req.path}`);
     next();
   });

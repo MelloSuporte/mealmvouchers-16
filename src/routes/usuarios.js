@@ -6,30 +6,18 @@ import logger from '../config/logger.js';
 const router = express.Router();
 
 // Rota de busca de usuário
-router.get('/search', async (req, res, next) => {
-  try {
-    await searchUser(req, res);
-  } catch (error) {
-    next(error);
-  }
+router.get('/search', (req, res, next) => {
+  searchUser(req, res).catch(next);
 });
 
 // Rota de criação de usuário
-router.post('/', async (req, res, next) => {
-  try {
-    await createUser(req, res);
-  } catch (error) {
-    next(error);
-  }
+router.post('/', (req, res, next) => {
+  createUser(req, res).catch(next);
 });
 
 // Rota de atualização de usuário
-router.put('/:id', async (req, res, next) => {
-  try {
-    await updateUser(req, res);
-  } catch (error) {
-    next(error);
-  }
+router.put('/:id', (req, res, next) => {
+  updateUser(req, res).catch(next);
 });
 
 export default router;

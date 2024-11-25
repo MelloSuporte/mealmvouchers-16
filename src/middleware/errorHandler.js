@@ -3,7 +3,6 @@ import logger from '../config/logger.js';
 export const errorHandler = (err, req, res, next) => {
   // Evita múltiplas tentativas de enviar resposta
   if (res.headersSent) {
-    logger.warn('Tentativa de enviar resposta múltipla evitada');
     return next(err);
   }
 
