@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
     }
     
     logger.info(`${images?.length || 0} imagens encontradas`);
-    return res.json({ 
+    return res.status(200).json({ 
       success: true, 
       data: images || [] 
     });
@@ -69,28 +69,35 @@ router.post('/', upload.any(), async (req, res) => {
 
     if (deactivateError) {
       logger.error('Erro ao desativar imagens antigas:', deactivateError);
-      throw deactivateError;
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao desativar imagens antigas',
+        details: deactivateError.message
+      });
     }
 
     // Converte e insere novas imagens
-    const insertPromises = req.files.map(async (file) => {
+    for (const file of req.files) {
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       
       const { error: insertError } = await supabase
         .from('background_images')
-        .insert({
+        .insert([{
           page: file.fieldname,
           image_url: base64Image,
           is_active: true,
           created_at: new Date().toISOString()
-        });
+        }]);
 
       if (insertError) {
-        throw insertError;
+        logger.error('Erro ao inserir nova imagem:', insertError);
+        return res.status(500).json({
+          success: false,
+          error: 'Erro ao inserir nova imagem',
+          details: insertError.message
+        });
       }
-    });
-
-    await Promise.all(insertPromises);
+    }
 
     logger.info('Upload de imagens concluído com sucesso');
     return res.status(200).json({ 
