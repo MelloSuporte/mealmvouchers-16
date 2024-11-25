@@ -1,11 +1,11 @@
 import logger from '../config/logger.js';
 
 export const errorHandler = (err, req, res, next) => {
-  // Evita múltiplas tentativas de enviar resposta
   if (res.headersSent) {
     return next(err);
   }
 
+  // Log detalhado do erro
   logger.error('Detalhes do erro:', {
     mensagem: err.message,
     stack: err.stack,
@@ -16,7 +16,16 @@ export const errorHandler = (err, req, res, next) => {
     timestamp: new Date().toISOString()
   });
 
-  // Erros de conexão com banco de dados
+  // Erros específicos do Supabase
+  if (err.code?.startsWith('PGRST')) {
+    return res.status(400).json({
+      erro: 'Erro na consulta ao banco de dados',
+      mensagem: 'Dados inválidos ou mal formatados',
+      detalhes: process.env.NODE_ENV === 'development' ? err.message : null
+    });
+  }
+
+  // Erros de conexão
   if (err.code === 'ECONNREFUSED' || err.code === 'PROTOCOL_CONNECTION_LOST') {
     return res.status(503).json({
       erro: 'Erro de conexão com o banco de dados',
@@ -29,14 +38,6 @@ export const errorHandler = (err, req, res, next) => {
     return res.status(504).json({
       erro: 'Tempo limite excedido',
       mensagem: 'A operação demorou muito para responder. Por favor, tente novamente.'
-    });
-  }
-
-  // Erros de consulta SQL
-  if (err.code === 'ER_PARSE_ERROR' || err.code === 'ER_BAD_FIELD_ERROR') {
-    return res.status(400).json({
-      erro: 'Erro na consulta ao banco de dados',
-      mensagem: 'Dados inválidos ou mal formatados'
     });
   }
 
@@ -62,6 +63,7 @@ export const errorHandler = (err, req, res, next) => {
     erro: 'Erro interno do servidor',
     mensagem: process.env.NODE_ENV === 'development' 
       ? err.message 
-      : 'Ocorreu um erro ao processar sua requisição. Por favor, tente novamente.'
+      : 'Ocorreu um erro ao processar sua requisição. Por favor, tente novamente.',
+    codigo: err.code || 'UNKNOWN_ERROR'
   });
 };

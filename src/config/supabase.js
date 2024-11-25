@@ -26,30 +26,40 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     params: {
       eventsPerSecond: 10
     }
-  }
+  },
+  // Configurações adicionais para melhorar a estabilidade
+  persistSession: true,
+  detectSessionInUrl: false,
+  maxRetryCount: 3,
+  retryInterval: 1000
 });
 
-// Verificar conexão e configurar retry
-const checkConnection = async () => {
-  let retries = 3;
-  while (retries > 0) {
+// Verificar conexão com retry automático
+const checkConnection = async (retries = 3, delay = 1000) => {
+  for (let i = 0; i < retries; i++) {
     try {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
       logger.info('Conexão com Supabase verificada com sucesso');
       return true;
     } catch (error) {
-      retries--;
-      if (retries === 0) {
-        logger.error('Erro ao conectar com Supabase após todas as tentativas:', error.message);
+      const attemptsLeft = retries - i - 1;
+      logger.warn(`Tentativa ${i + 1} falhou. Tentativas restantes: ${attemptsLeft}`);
+      
+      if (attemptsLeft === 0) {
+        logger.error('Erro ao conectar com Supabase após todas as tentativas:', error);
         throw error;
       }
-      logger.warn(`Tentativa de reconexão com Supabase. Tentativas restantes: ${retries}`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 };
 
-checkConnection();
+// Inicializar conexão
+checkConnection().catch(error => {
+  logger.error('Falha ao inicializar conexão com Supabase:', error);
+  process.exit(1);
+});
 
 export default supabase;
