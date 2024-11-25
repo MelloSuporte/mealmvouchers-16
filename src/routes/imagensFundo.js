@@ -80,14 +80,16 @@ router.post('/', upload.any(), async (req, res) => {
     for (const file of req.files) {
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       
-      const { error: insertError } = await supabase
+      const { data: insertData, error: insertError } = await supabase
         .from('background_images')
         .insert([{
           page: file.fieldname,
           image_url: base64Image,
           is_active: true,
           created_at: new Date().toISOString()
-        }]);
+        }])
+        .select()
+        .single();
 
       if (insertError) {
         logger.error('Erro ao inserir nova imagem:', insertError);
@@ -97,6 +99,8 @@ router.post('/', upload.any(), async (req, res) => {
           details: insertError.message
         });
       }
+
+      logger.info(`Imagem inserida com sucesso para página ${file.fieldname}`);
     }
 
     logger.info('Upload de imagens concluído com sucesso');
