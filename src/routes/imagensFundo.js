@@ -4,7 +4,10 @@ import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
+
+// Configuração do multer para armazenamento em memória
 const upload = multer({
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
   }
@@ -57,7 +60,10 @@ router.post('/', upload.any(), async (req, res) => {
       .update({ is_active: false })
       .in('page', pagesToUpdate);
 
-    if (deactivateError) throw deactivateError;
+    if (deactivateError) {
+      logger.error('Erro ao desativar imagens antigas:', deactivateError);
+      throw deactivateError;
+    }
 
     // Converte e insere novas imagens
     const insertPromises = req.files.map(async (file) => {
@@ -74,7 +80,11 @@ router.post('/', upload.any(), async (req, res) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error(`Erro ao inserir imagem para ${file.fieldname}:`, error);
+        throw error;
+      }
+      
       return { data, page: file.fieldname };
     });
 
