@@ -30,10 +30,13 @@ router.get('/', async (req, res) => {
     }
     
     logger.info(`${images?.length || 0} imagens encontradas`);
-    res.json({ success: true, data: images || [] });
+    return res.json({ 
+      success: true, 
+      data: images || [] 
+    });
   } catch (error) {
     logger.error('Erro não esperado ao buscar imagens:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       error: 'Erro interno ao buscar imagens',
       details: error.message 
@@ -66,12 +69,15 @@ router.post('/', upload.any(), async (req, res) => {
 
     if (deactivateError) {
       logger.error('Erro ao desativar imagens antigas:', deactivateError);
-      throw deactivateError;
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao desativar imagens antigas',
+        details: deactivateError.message
+      });
     }
 
     // Converte e insere novas imagens
     const insertPromises = req.files.map(async (file) => {
-      // Converte o buffer da imagem para base64
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       
       const { error: insertError } = await supabase
@@ -91,14 +97,14 @@ router.post('/', upload.any(), async (req, res) => {
     await Promise.all(insertPromises);
 
     logger.info('Upload de imagens concluído com sucesso');
-    res.json({ 
+    return res.json({ 
       success: true, 
       message: 'Imagens de fundo atualizadas com sucesso',
       updatedPages: pagesToUpdate
     });
   } catch (error) {
     logger.error('Erro não esperado ao salvar imagens:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       error: error.message || 'Erro ao salvar imagens de fundo',
       details: error.details || error.message
