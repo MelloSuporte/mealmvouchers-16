@@ -12,7 +12,7 @@ const upload = multer({
   }
 });
 
-// GET /imagens-fundo
+// GET /api/imagens-fundo
 router.get('/', async (req, res) => {
   try {
     logger.info('Iniciando busca de imagens de fundo');
@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /imagens-fundo
+// POST /api/imagens-fundo
 router.post('/', upload.any(), async (req, res) => {
   try {
     logger.info('Iniciando upload de imagens');
