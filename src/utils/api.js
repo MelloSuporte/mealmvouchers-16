@@ -15,13 +15,6 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
-  // Log detalhado da requisição
-  console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
-    headers: config.headers,
-    data: config.data
-  });
-  
   return config;
 }, (error) => {
   console.error('[API Request Error]', error);
@@ -31,21 +24,9 @@ api.interceptors.request.use((config) => {
 // Interceptor para tratar erros globalmente
 api.interceptors.response.use(
   (response) => {
-    console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
-      status: response.status,
-      data: response.data
-    });
     return response;
   },
   (error) => {
-    console.error('[API Error]', {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    });
-
     if (error.response?.status === 401) {
       toast.error('Sessão expirada. Por favor, faça login novamente.');
       localStorage.removeItem('adminToken');
