@@ -22,13 +22,24 @@ router.get('/', async (req, res) => {
       .select('*')
       .eq('is_active', true);
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro do Supabase:', error);
+      throw error;
+    }
 
-    logger.info(`${data?.length || 0} imagens encontradas`);
+    if (!data) {
+      return res.status(200).json({
+        success: true,
+        data: []
+      });
+    }
+
+    logger.info(`${data.length} imagens encontradas`);
     return res.status(200).json({ 
       success: true, 
-      data: data || [] 
+      data: data 
     });
+
   } catch (error) {
     logger.error('Erro ao buscar imagens:', error);
     return res.status(500).json({ 
@@ -61,11 +72,7 @@ router.post('/', upload.any(), async (req, res) => {
 
     if (deactivateError) {
       logger.error('Erro ao desativar imagens antigas:', deactivateError);
-      return res.status(500).json({
-        success: false,
-        message: 'Erro ao desativar imagens antigas',
-        error: deactivateError.message
-      });
+      throw deactivateError;
     }
 
     // Converte e insere novas imagens

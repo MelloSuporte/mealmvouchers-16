@@ -64,11 +64,12 @@ const BackgroundImageForm = () => {
         img.image_url.startsWith('data:image/')
       );
       
-      setPreviews({
+      setPreviews(prevPreviews => ({
+        ...prevPreviews,
         voucher: validImages.find(img => img.page === 'voucher')?.image_url || '',
         userConfirmation: validImages.find(img => img.page === 'userConfirmation')?.image_url || '',
         bomApetite: validImages.find(img => img.page === 'bomApetite')?.image_url || ''
-      });
+      }));
     } catch (error) {
       console.error('Erro ao carregar imagens:', error);
       toast.error(error.message || "Erro ao carregar imagens de fundo");
