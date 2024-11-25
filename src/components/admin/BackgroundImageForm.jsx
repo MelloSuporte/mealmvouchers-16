@@ -117,21 +117,21 @@ const BackgroundImageForm = () => {
         return;
       }
 
-      const formData = new FormData();
-      Object.entries(backgrounds).forEach(([key, value]) => {
-        if (value) {
-          // Usando o nome correto do campo que corresponde à coluna da tabela
-          formData.append('page', key);
-          formData.append('image', value);
+      // Salva cada imagem individualmente
+      for (const [page, file] of Object.entries(backgrounds)) {
+        if (!file) continue;
+
+        const formData = new FormData();
+        formData.append('page', page);
+        formData.append('image', file);
+
+        const response = await api.post('/imagens-fundo', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        if (!response.data?.success) {
+          throw new Error(response.data?.message || 'Erro ao salvar imagem');
         }
-      });
-
-      const response = await api.post('/api/imagens-fundo', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      if (!response.data?.success) {
-        throw new Error(response.data?.message || 'Erro ao salvar imagens');
       }
 
       localStorage.setItem('lastImageModification', Date.now().toString());

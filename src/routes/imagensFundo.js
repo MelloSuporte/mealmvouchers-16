@@ -12,10 +12,10 @@ const upload = multer({
   }
 });
 
-// GET /api/imagens-fundo
+// GET /imagens-fundo
 router.get('/', async (req, res) => {
   try {
-    logger.info('Iniciando busca de imagens de fundo');
+    logger.info('Buscando imagens de fundo');
     
     const { data, error } = await supabase
       .from('background_images')
@@ -41,64 +41,61 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/imagens-fundo
-router.post('/', upload.array('image'), async (req, res) => {
+// POST /imagens-fundo
+router.post('/', upload.single('image'), async (req, res) => {
   try {
-    logger.info('Iniciando upload de imagens');
+    logger.info('Iniciando upload de imagem');
     
-    if (!req.files?.length) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Nenhum arquivo enviado' 
+    if (!req.file || !req.body.page) {
+      return res.status(400).json({
+        success: false,
+        message: 'Arquivo de imagem e página são obrigatórios'
       });
     }
 
-    // Desativa imagens existentes
+    // Desativa imagens existentes para a página específica
     const { error: deactivateError } = await supabase
       .from('background_images')
       .update({ is_active: false })
-      .eq('is_active', true);
+      .eq('page', req.body.page);
 
-    if (deactivateError) throw deactivateError;
-
-    // Converte e insere novas imagens
-    const insertResults = [];
-    
-    for (const file of req.files) {
-      const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-      
-      const { data, error: insertError } = await supabase
-        .from('background_images')
-        .insert({
-          page: req.body.page,
-          image_url: base64Image,
-          is_active: true,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        logger.error(`Erro ao inserir imagem para ${req.body.page}:`, insertError);
-        throw insertError;
-      }
-      
-      insertResults.push(data);
+    if (deactivateError) {
+      logger.error('Erro ao desativar imagens antigas:', deactivateError);
+      throw deactivateError;
     }
 
-    logger.info('Upload de imagens concluído com sucesso');
+    // Converte e insere nova imagem
+    const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    
+    const { data, error: insertError } = await supabase
+      .from('background_images')
+      .insert({
+        page: req.body.page,
+        image_url: base64Image,
+        is_active: true,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      logger.error(`Erro ao inserir imagem para ${req.body.page}:`, insertError);
+      throw insertError;
+    }
+
+    logger.info('Upload de imagem concluído com sucesso');
     
     return res.json({ 
       success: true, 
-      message: 'Imagens de fundo atualizadas com sucesso',
-      data: insertResults
+      message: 'Imagem de fundo atualizada com sucesso',
+      data
     });
 
   } catch (error) {
-    logger.error('Erro ao salvar imagens:', error);
+    logger.error('Erro ao salvar imagem:', error);
     return res.status(500).json({ 
       success: false,
-      message: 'Erro ao salvar imagens de fundo',
+      message: 'Erro ao salvar imagem de fundo',
       error: error.message 
     });
   }
