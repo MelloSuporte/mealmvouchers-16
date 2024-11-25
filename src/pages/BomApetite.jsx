@@ -27,8 +27,8 @@ const BomApetite = () => {
     // Função para buscar e validar a imagem de fundo
     const fetchBackgroundImage = async () => {
       try {
-        const response = await api.get('/background-images');
-        const images = response.data;
+        const response = await api.get('/imagens-fundo');
+        const images = response.data.data;
         
         // Busca especificamente a imagem para a página de bom apetite
         const bomApetiteBackground = images.find(img => img.page === 'bomApetite')?.image_url;
