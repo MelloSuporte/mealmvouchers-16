@@ -1,7 +1,7 @@
 import { toast } from "sonner";
-import { supabase } from '../config/supabase';
 import logger from '../config/logger';
-import { validateUserData, formatCPF } from '../utils/userValidations';
+import { validateUserData, handleValidationErrors } from './user/useUserValidation';
+import { saveUserToDatabase, findUserByCPF } from './user/useUserDatabase';
 import { generateUniqueVoucherFromCPF } from '../utils/voucherGenerationUtils';
 
 export const useUserFormHandlers = (
@@ -15,10 +15,9 @@ export const useUserFormHandlers = (
     let processedValue = value;
     
     if (field === 'userCPF') {
-      processedValue = formatCPF(value);
+      processedValue = value.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
       try {
-        // Gera voucher automaticamente quando o CPF é inserido
-        if (processedValue.length === 14) { // CPF completo com máscara
+        if (processedValue.length === 14) {
           const voucher = await generateUniqueVoucherFromCPF(processedValue);
           setFormData(prev => ({
             ...prev,
@@ -105,34 +104,18 @@ export const useUserFormHandlers = (
   };
 
   const handleSave = async () => {
-    if (isSubmitting) {
-      toast.warning('Uma operação já está em andamento');
-      return;
+    if (setIsSubmitting) {
+      setIsSubmitting(true);
     }
 
-    const validationErrors = validateUserData(formData);
-    if (validationErrors.length > 0) {
-      validationErrors.forEach(error => toast.error(error));
-      return;
-    }
-
-    setIsSubmitting(true);
-    
     try {
-      const cleanCPF = formData.userCPF.replace(/\D/g, '');
-      
-      logger.info('Iniciando verificação de usuário existente:', { cpf: cleanCPF });
-      
-      const { data: existingUser, error: searchError } = await supabase
-        .from('usuarios')
-        .select('id')
-        .eq('cpf', cleanCPF)
-        .maybeSingle();
-
-      if (searchError) {
-        logger.error('Erro ao verificar usuário existente:', searchError);
-        throw new Error('Erro ao verificar usuário existente');
+      const validationErrors = validateUserData(formData);
+      if (!handleValidationErrors(validationErrors)) {
+        return;
       }
+
+      const cleanCPF = formData.userCPF.replace(/\D/g, '');
+      const existingUser = await findUserByCPF(cleanCPF);
 
       const userData = {
         nome: formData.userName.trim(),
@@ -144,33 +127,11 @@ export const useUserFormHandlers = (
         foto: formData.userPhoto
       };
 
-      logger.info('Dados preparados para operação:', userData);
+      const { data, error } = await saveUserToDatabase(userData, !!existingUser);
 
-      const operation = existingUser?.id ? 'update' : 'insert';
-      
-      logger.info(`Iniciando operação ${operation}:`, userData);
+      if (error) throw error;
 
-      let query = supabase.from('usuarios');
-      
-      if (operation === 'update') {
-        query = query.update(userData).eq('id', existingUser.id);
-      } else {
-        query = query.insert(userData);
-      }
-
-      const { data, error } = await query.select().single();
-
-      if (error) {
-        logger.error(`Erro na operação ${operation}:`, error);
-        throw error;
-      }
-
-      logger.info(`Usuário ${operation === 'update' ? 'atualizado' : 'cadastrado'} com sucesso:`, {
-        id: data.id,
-        nome: data.nome
-      });
-
-      toast.success(existingUser?.id ? 
+      toast.success(existingUser ? 
         'Usuário atualizado com sucesso!' : 
         'Usuário cadastrado com sucesso!'
       );
@@ -189,7 +150,9 @@ export const useUserFormHandlers = (
       logger.error('Erro ao processar operação:', error);
       toast.error(`Erro ao processar operação: ${error.message}`);
     } finally {
-      setIsSubmitting(false);
+      if (setIsSubmitting) {
+        setIsSubmitting(false);
+      }
     }
   };
 
