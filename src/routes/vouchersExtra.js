@@ -4,20 +4,20 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
-  const { userId, dates } = req.body;
+router.post('/vouchers-extras', async (req, res) => {
+  const { user_id, dates } = req.body;
 
   try {
-    if (!userId || !dates || !Array.isArray(dates)) {
+    if (!user_id || !dates || !Array.isArray(dates)) {
       return res.status(400).json({ 
         error: 'Dados inválidos. Usuário e datas são obrigatórios.' 
       });
     }
 
     const { data: user } = await supabase
-      .from('users')
+      .from('usuarios')
       .select('id, nome')
-      .eq('id', userId)
+      .eq('id', user_id)
       .single();
 
     if (!user) {
@@ -30,9 +30,9 @@ router.post('/', async (req, res) => {
     
     for (const date of dates) {
       const { data: voucher, error } = await supabase
-        .from('extra_vouchers')
+        .from('vouchers_extras')
         .insert([{
-          user_id: userId,
+          user_id: user_id,
           authorized_by: 1, // TODO: Get from authenticated user
           valid_until: new Date(date).toISOString()
         }])

@@ -63,7 +63,7 @@ const RLSForm = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await api.post('/vouchers-extra', {
+      const response = await api.post('/vouchers-extras', {
         user_id: selectedUser,
         dates: selectedDates
       });
