@@ -8,10 +8,8 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
   const { data: empresas = [], isLoading, error } = useQuery({
     queryKey: ['empresas'],
     queryFn: async () => {
-      console.log('Iniciando busca de empresas via API...');
       try {
         const response = await api.get('/empresas');
-        console.log('Resposta da API:', response.data);
         return response.data || [];
       } catch (error) {
         console.error('Erro ao carregar empresas:', error);
