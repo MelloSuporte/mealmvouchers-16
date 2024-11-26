@@ -2,15 +2,21 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import api from '../../../utils/api';
+import { supabase } from '../../../config/supabase';
 
 const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeholder = "Selecione a empresa" }) => {
   const { data: empresas = [], isLoading, error } = useQuery({
     queryKey: ['empresas'],
     queryFn: async () => {
       try {
-        const response = await api.get('/empresas');
-        return response.data || [];
+        const { data, error } = await supabase
+          .from('empresas')
+          .select('id, nome')
+          .eq('ativo', true)
+          .order('nome');
+
+        if (error) throw error;
+        return data || [];
       } catch (error) {
         console.error('Erro ao carregar empresas:', error);
         toast.error('Erro ao carregar empresas: ' + error.message);

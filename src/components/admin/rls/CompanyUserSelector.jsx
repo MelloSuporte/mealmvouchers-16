@@ -1,6 +1,9 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '../../../config/supabase';
+import { toast } from "sonner";
 
 const CompanyUserSelector = ({
   selectedCompany,
@@ -9,17 +12,32 @@ const CompanyUserSelector = ({
   setSearchTerm,
   selectedUser,
   setSelectedUser,
-  companies = [],
   users = [],
-  isLoadingCompanies,
   isLoadingUsers
 }) => {
-  const companiesList = Array.isArray(companies) ? companies : [];
-  const usersList = Array.isArray(users) ? users : [];
+  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
+    queryKey: ['empresas'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('empresas')
+          .select('id, nome')
+          .eq('ativo', true)
+          .order('nome');
+
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('Erro ao carregar empresas:', error);
+        toast.error('Erro ao carregar empresas: ' + error.message);
+        return [];
+      }
+    }
+  });
 
   const handleInputChange = (e) => {
     const value = e.target.value;
-    if (value.length <= 14) { // Limita o tamanho total incluindo pontos e traço
+    if (value.length <= 14) {
       setSearchTerm(value);
     }
   };
@@ -40,7 +58,7 @@ const CompanyUserSelector = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as Empresas</SelectItem>
-            {companiesList.map((company) => (
+            {companies.map((company) => (
               <SelectItem key={company.id} value={company.id.toString()}>
                 {company.nome}
               </SelectItem>
@@ -77,7 +95,7 @@ const CompanyUserSelector = ({
               <SelectValue placeholder="Selecione um usuário" />
             </SelectTrigger>
             <SelectContent>
-              {usersList.map((user) => (
+              {users.map((user) => (
                 <SelectItem key={user.id} value={user.id.toString()}>
                   {user.nome} - {user.cpf}
                 </SelectItem>
