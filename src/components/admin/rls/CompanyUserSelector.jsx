@@ -54,7 +54,7 @@ const CompanyUserSelector = ({
         <SelectContent>
           {usersList.map((user) => (
             <SelectItem key={user.id} value={user.id.toString()}>
-              {user.name} - {user.cpf}
+              {user.nome} - {user.cpf}
             </SelectItem>
           ))}
         </SelectContent>
