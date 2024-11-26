@@ -44,9 +44,21 @@ export const findUserByCPF = async (cpf) => {
   try {
     const { data, error } = await supabase
       .from('usuarios')
-      .select('*')
+      .select(`
+        *,
+        empresas (
+          id,
+          nome
+        ),
+        turnos (
+          id,
+          tipo_turno,
+          horario_inicio,
+          horario_fim
+        )
+      `)
       .eq('cpf', cpf)
-      .single();
+      .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
       logger.error('Erro ao buscar usuário:', error);
