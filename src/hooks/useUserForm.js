@@ -6,6 +6,9 @@ import { validateUserData, formatCPF } from '../utils/userValidations';
 
 export const useUserForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchCPF, setSearchCPF] = useState('');
+  const [showVoucher, setShowVoucher] = useState(true);
   const [formData, setFormData] = useState({
     userName: '',
     userCPF: '',
@@ -27,6 +30,71 @@ export const useUserForm = () => {
       ...prev,
       [field]: processedValue
     }));
+  };
+
+  const handleVoucherToggle = () => {
+    setShowVoucher(prev => !prev);
+  };
+
+  const handleSearch = async () => {
+    if (!searchCPF) {
+      toast.error('Por favor, informe um CPF para buscar');
+      return;
+    }
+
+    setIsSearching(true);
+    logger.info('Iniciando busca por CPF:', searchCPF);
+
+    try {
+      const cleanCPF = searchCPF.replace(/\D/g, '');
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select(`
+          *,
+          empresas (
+            id,
+            nome
+          ),
+          turnos (
+            id,
+            tipo_turno,
+            horario_inicio,
+            horario_fim
+          )
+        `)
+        .eq('cpf', cleanCPF)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          logger.info('Usuário não encontrado para CPF:', cleanCPF);
+          toast.info('Usuário não encontrado');
+        } else {
+          logger.error('Erro na consulta:', error);
+          toast.error('Erro ao buscar usuário');
+        }
+        return;
+      }
+
+      if (data) {
+        logger.info('Usuário encontrado:', { id: data.id, nome: data.nome });
+        setFormData({
+          userName: data.nome,
+          userCPF: searchCPF,
+          company: data.empresa_id?.toString() || '',
+          selectedTurno: data.turno_id?.toString() || '',
+          isSuspended: data.suspenso || false,
+          userPhoto: data.foto || null,
+          voucher: data.voucher || ''
+        });
+        toast.success('Usuário encontrado!');
+      }
+    } catch (error) {
+      logger.error('Erro ao buscar usuário:', error);
+      toast.error('Erro ao buscar usuário');
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const resetForm = () => {
@@ -98,28 +166,11 @@ export const useUserForm = () => {
       const { data, error } = await query.select().single();
 
       if (error) {
-        logger.error(`Erro na operação ${operation}:`, {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-
-        if (error.code === '23505') {
-          throw new Error('CPF já cadastrado no sistema');
-        }
-        if (error.code === '23503') {
-          throw new Error('Empresa ou turno selecionado não existe no sistema');
-        }
-        
-        throw new Error(`Erro na operação ${operation}: ${error.message}`);
+        logger.error(`Erro na operação ${operation}:`, error);
+        throw error;
       }
 
-      if (!data) {
-        throw new Error('Nenhum dado retornado da operação');
-      }
-
-      logger.info(`Usuário ${operation === 'insert' ? 'cadastrado' : 'atualizado'} com sucesso:`, {
+      logger.info(`Usuário ${operation === 'update' ? 'atualizado' : 'cadastrado'} com sucesso:`, {
         id: data.id,
         nome: data.nome
       });
@@ -133,16 +184,7 @@ export const useUserForm = () => {
       
     } catch (error) {
       logger.error('Erro ao processar operação:', error);
-      
-      if (error.message.includes('CPF já cadastrado')) {
-        toast.error('Este CPF já está cadastrado no sistema');
-      } else if (error.message.includes('empresa ou turno')) {
-        toast.error('Empresa ou turno selecionado é inválido');
-      } else if (error.message.includes('foreign key constraint')) {
-        toast.error('Erro de relacionamento: verifique se a empresa e o turno existem');
-      } else {
-        toast.error(`Erro ao processar operação: ${error.message}`);
-      }
+      toast.error(`Erro ao processar operação: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -151,7 +193,13 @@ export const useUserForm = () => {
   return {
     formData,
     isSubmitting,
+    searchCPF,
+    setSearchCPF,
+    handleSearch,
+    isSearching,
     handleInputChange,
-    handleSave
+    handleSave,
+    showVoucher,
+    handleVoucherToggle
   };
 };
