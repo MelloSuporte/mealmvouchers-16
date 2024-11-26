@@ -4,7 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const TurnoSelect = ({ value, onValueChange, turnos = [], isLoadingTurnos }) => {
   const formatTime = (time) => {
     if (!time) return '';
-    return time.substring(0, 5);
+    const [hours, minutes] = time.split(':');
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
   };
 
   const getTurnoLabel = (tipoTurno) => {
@@ -19,7 +20,7 @@ const TurnoSelect = ({ value, onValueChange, turnos = [], isLoadingTurnos }) => 
 
   return (
     <Select 
-      value={value?.toString() || undefined}
+      value={value?.toString()}
       onValueChange={onValueChange}
       disabled={isLoadingTurnos}
     >
@@ -28,11 +29,16 @@ const TurnoSelect = ({ value, onValueChange, turnos = [], isLoadingTurnos }) => 
       </SelectTrigger>
       <SelectContent>
         {turnos && turnos.length > 0 ? (
-          turnos.map((turno) => (
-            <SelectItem key={turno.id} value={turno.id.toString()}>
-              {getTurnoLabel(turno.tipo_turno)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
-            </SelectItem>
-          ))
+          turnos
+            .filter(turno => turno.ativo)
+            .map((turno) => (
+              <SelectItem 
+                key={turno.id} 
+                value={turno.id.toString()}
+              >
+                {`${getTurnoLabel(turno.tipo_turno)} (${formatTime(turno.horario_inicio)} - ${formatTime(turno.horario_fim)})`}
+              </SelectItem>
+            ))
         ) : (
           <SelectItem value="no-turnos" disabled>
             Nenhum turno disponível
