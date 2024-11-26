@@ -19,7 +19,7 @@ const RLSForm = () => {
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        const response = await api.get('/companies');
+        const response = await api.get('/empresas');
         return response.data || [];
       } catch (error) {
         toast.error("Erro ao carregar empresas: " + (error.response?.data?.message || error.message));
