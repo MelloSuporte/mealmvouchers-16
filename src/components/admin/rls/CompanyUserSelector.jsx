@@ -29,6 +29,7 @@ const CompanyUserSelector = ({
   };
 
   const usersList = Array.isArray(users) ? users : [];
+  const companiesList = Array.isArray(companies) ? companies : [];
 
   return (
     <div className="space-y-4">
@@ -42,7 +43,7 @@ const CompanyUserSelector = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as empresas</SelectItem>
-            {companies?.map((company) => (
+            {companiesList.map((company) => (
               <SelectItem key={company.id} value={company.id.toString()}>
                 {company.nome}
               </SelectItem>
