@@ -34,10 +34,35 @@ const CompanyUserSelector = ({
     }
   });
 
+  const { data: searchedUser, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['usuario', searchTerm],
+    queryFn: async () => {
+      if (!searchTerm || searchTerm.length < 11) return null;
+      try {
+        const cleanCPF = searchTerm.replace(/\D/g, '');
+        const { data, error } = await supabase
+          .from('usuarios')
+          .select('id, nome, cpf')
+          .eq('cpf', cleanCPF)
+          .single();
+
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Erro ao buscar usuário:', error);
+        return null;
+      }
+    },
+    enabled: searchTerm.length >= 11
+  });
+
   const handleInputChange = (e) => {
     const value = e.target.value;
     if (value.length <= 14) {
       setSearchTerm(value);
+      if (searchedUser) {
+        setSelectedUser(searchedUser.id.toString());
+      }
     }
   };
 
@@ -80,7 +105,7 @@ const CompanyUserSelector = ({
         />
       </div>
 
-      {searchTerm.length >= 3 && (
+      {searchTerm.length >= 11 && searchedUser && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Selecionar Usuário
@@ -88,17 +113,15 @@ const CompanyUserSelector = ({
           <Select
             value={selectedUser}
             onValueChange={setSelectedUser}
-            disabled={isLoadingUsers}
+            disabled={isLoadingUser}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione um usuário" />
             </SelectTrigger>
             <SelectContent>
-              {users.map((user) => (
-                <SelectItem key={user.id} value={user.id.toString()}>
-                  {user.nome} - {user.cpf}
-                </SelectItem>
-              ))}
+              <SelectItem value={searchedUser.id.toString()}>
+                {searchedUser.nome} - {searchedUser.cpf}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
