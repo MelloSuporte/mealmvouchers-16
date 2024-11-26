@@ -14,6 +14,9 @@ const CompanyUserSelector = ({
   users = [],
   isLoadingUsers 
 }) => {
+  // Garantir que users seja sempre um array
+  const usersList = Array.isArray(users) ? users : [];
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -49,7 +52,7 @@ const CompanyUserSelector = ({
           <SelectValue placeholder={isLoadingUsers ? "Carregando usuários..." : "Selecione o usuário"} />
         </SelectTrigger>
         <SelectContent>
-          {users.map((user) => (
+          {usersList.map((user) => (
             <SelectItem key={user.id} value={user.id.toString()}>
               {user.name} - {user.cpf}
             </SelectItem>
