@@ -15,7 +15,7 @@ const RLSForm = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: companiesData = [], isLoading: isLoadingCompanies, error: companiesError } = useQuery({
+  const { data: companiesData = [], isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       try {
@@ -25,26 +25,23 @@ const RLSForm = () => {
         toast.error("Erro ao carregar empresas: " + (error.response?.data?.message || error.message));
         return [];
       }
-    },
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 30000)
+    }
   });
 
-  const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useQuery({
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['users', searchTerm, selectedCompany],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 3) return [];
       try {
-        const response = await api.get(`/users/search?term=${searchTerm}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
+        const cleanCPF = searchTerm.replace(/\D/g, '');
+        const response = await api.get(`/users/search?cpf=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
         return response.data || [];
       } catch (error) {
         toast.error("Erro ao buscar usuários: " + (error.response?.data?.message || error.message));
         return [];
       }
     },
-    enabled: searchTerm.length >= 3,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 30000)
+    enabled: searchTerm.length >= 3
   });
 
   const validateDates = (dates) => {
@@ -100,10 +97,6 @@ const RLSForm = () => {
       setIsSubmitting(false);
     }
   };
-
-  if (companiesError || usersError) {
-    toast.error("Erro ao carregar dados. Por favor, recarregue a página.");
-  }
 
   return (
     <div className="space-y-6">
