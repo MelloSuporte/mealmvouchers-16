@@ -5,8 +5,8 @@ import logger from './logger';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 // Configuração Supabase (Desenvolvimento)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 // Configuração PostgreSQL (Produção)
 const pgConfig = {
@@ -20,7 +20,33 @@ const pgConfig = {
 // Cliente do banco de dados
 let dbClient;
 
+const testConnection = async () => {
+  try {
+    if (isDevelopment) {
+      const { data, error } = await dbClient
+        .from('empresas')
+        .select('count', { count: 'exact', head: true });
+
+      if (error) throw error;
+      
+      logger.info('Conexão com Supabase testada com sucesso');
+      return true;
+    } else {
+      await dbClient.query('SELECT NOW()');
+      logger.info('Conexão com PostgreSQL testada com sucesso');
+      return true;
+    }
+  } catch (error) {
+    logger.error('Erro ao testar conexão com banco:', error);
+    throw error;
+  }
+};
+
 if (isDevelopment) {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Variáveis de ambiente do Supabase não configuradas');
+  }
+  
   // Usar Supabase em desenvolvimento
   dbClient = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
@@ -30,36 +56,29 @@ if (isDevelopment) {
     }
   });
   
-  logger.info('Conectado ao Supabase em modo desenvolvimento');
+  logger.info('Cliente Supabase inicializado em modo desenvolvimento');
 } else {
   // Usar PostgreSQL em produção
-  const pool = new pg.Pool(pgConfig);
-  dbClient = pool;
+  const pool = new pg.Pool({
+    ...pgConfig,
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 30000,
+    max: 20
+  });
   
-  logger.info('Conectado ao PostgreSQL em modo produção');
+  dbClient = pool;
+  logger.info('Pool PostgreSQL inicializado em modo produção');
 }
 
-// Verificar conexão
-if (isDevelopment) {
-  dbClient.from('empresas')
-    .select('count', { count: 'exact', head: true })
-    .then(({ error }) => {
-      if (error) {
-        logger.error('Erro ao conectar com banco:', error);
-        throw error;
-      } else {
-        logger.info('Conexão com banco testada com sucesso');
-      }
-    });
-} else {
-  dbClient.query('SELECT NOW()')
-    .then(() => {
-      logger.info('Conexão com banco testada com sucesso');
-    })
-    .catch((error) => {
-      logger.error('Erro ao conectar com banco:', error);
-      throw error;
-    });
-}
+// Testar conexão inicial
+testConnection()
+  .then(() => {
+    logger.info('Conexão inicial com banco estabelecida com sucesso');
+  })
+  .catch((error) => {
+    logger.error('Falha na conexão inicial com banco:', error);
+    process.exit(1);
+  });
 
 export default dbClient;
+export { testConnection };
