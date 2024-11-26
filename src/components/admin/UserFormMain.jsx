@@ -89,7 +89,7 @@ const UserFormMain = () => {
         setFormData({
           userName: data.nome,
           userCPF: formatCPF(data.cpf),
-          company: data.empresa_id?.toString() || '',
+          company: data.empresas?.id?.toString() || '',
           selectedTurno: data.turno_id?.toString() || '',
           isSuspended: data.suspenso || false,
           userPhoto: data.foto || null,
