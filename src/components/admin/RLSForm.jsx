@@ -6,6 +6,7 @@ import CompanyUserSelector from './rls/CompanyUserSelector';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { ptBR } from 'date-fns/locale';
+import { formatCPF } from '../../utils/formatters';
 
 const RLSForm = () => {
   const [selectedCompany, setSelectedCompany] = useState("all");
@@ -32,7 +33,12 @@ const RLSForm = () => {
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 3) return [];
       try {
-        const response = await api.get(`/users/search?term=${searchTerm}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
+        // Formata o CPF antes de enviar para a API
+        const formattedSearchTerm = searchTerm.includes('.') || searchTerm.includes('-') 
+          ? searchTerm 
+          : formatCPF(searchTerm);
+        
+        const response = await api.get(`/users/search?term=${formattedSearchTerm}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
         return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         toast.error("Erro ao buscar usuários: " + (error.response?.data?.message || error.message));
