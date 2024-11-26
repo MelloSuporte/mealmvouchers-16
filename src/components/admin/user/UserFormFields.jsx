@@ -16,7 +16,6 @@ const UserFormFields = ({
   setSearchCPF,
   onSearch,
   isSearching,
-  clearSearch,
   showVoucher,
   onToggleVoucher,
   handlePhotoUpload,

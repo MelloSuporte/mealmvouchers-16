@@ -114,6 +114,7 @@ const UserFormMain = () => {
     
     try {
       // Add save logic here
+      console.log('Salvando usuário:', formData);
     } catch (error) {
       logger.error('Erro ao salvar usuário:', error);
       toast.error('Erro ao salvar usuário. Por favor, tente novamente.');
