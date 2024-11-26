@@ -18,7 +18,7 @@ import AdminManagement from './AdminManagement';
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("users");
   const navigate = useNavigate();
-  const { isMasterAdmin, isManager } = useAdmin();
+  const { isMasterAdmin, isManager, logout } = useAdmin();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const Admin = () => {
       const token = localStorage.getItem('adminToken');
       if (!token) {
         toast.error("Sessão expirada. Por favor, faça login novamente.");
-        navigate('/admin-login');
+        navigate('/login');
         return false;
       }
       return true;
@@ -56,8 +56,7 @@ const Admin = () => {
   }, [navigate, isMasterAdmin, isManager]);
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminType');
+    logout();
     toast.success("Logout realizado com sucesso!");
     navigate('/voucher');
   };
