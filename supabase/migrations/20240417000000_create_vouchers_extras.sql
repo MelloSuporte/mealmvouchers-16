@@ -1,7 +1,7 @@
 -- Criar tabela vouchers_extras se não existir
 CREATE TABLE IF NOT EXISTS vouchers_extras (
-  id SERIAL PRIMARY KEY,
-  usuario_id INTEGER REFERENCES usuarios(id),
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  usuario_id uuid REFERENCES usuarios(id),
   autorizado_por VARCHAR(255) NOT NULL,
   valido_ate DATE,
   criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
