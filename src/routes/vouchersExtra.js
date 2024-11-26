@@ -4,7 +4,6 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Rota para gerar vouchers extras
 router.post('/generate', async (req, res) => {
   const { usuario_id, datas, observacao } = req.body;
 
