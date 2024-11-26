@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminProvider } from "./contexts/AdminContext";
 import SelfServices from "./pages/SelfServices";
-import Home from "./pages/Home";
 import User from "./pages/User";
 import Login from "./pages/Login";
 import Voucher from "./pages/Voucher";
