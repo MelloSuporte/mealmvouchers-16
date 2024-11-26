@@ -5,6 +5,8 @@ import api from '../../utils/api';
 import CompanyUserSelector from './rls/CompanyUserSelector';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ptBR } from 'date-fns/locale';
 import { formatCPF } from '../../utils/formatters';
 
@@ -14,6 +16,7 @@ const RLSForm = () => {
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [observacao, setObservacao] = useState("");
 
   const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useQuery({
     queryKey: ['users', searchTerm, selectedCompany],
@@ -63,7 +66,7 @@ const RLSForm = () => {
       const response = await api.post('/vouchers-extra/generate', {
         usuario_id: selectedUser,
         datas: formattedDates,
-        observacao: 'Voucher extra gerado via sistema'
+        observacao: observacao || 'Voucher extra gerado via sistema'
       });
 
       if (response.data.success) {
@@ -71,6 +74,7 @@ const RLSForm = () => {
         setSelectedUser("");
         setSelectedDates([]);
         setSearchTerm("");
+        setObservacao("");
       } else {
         throw new Error(response.data.error || 'Erro ao gerar vouchers');
       }
@@ -94,6 +98,16 @@ const RLSForm = () => {
         users={users}
         isLoadingUsers={isLoadingUsers}
       />
+
+      <div className="space-y-2">
+        <Label htmlFor="observacao">Observação</Label>
+        <Input
+          id="observacao"
+          value={observacao}
+          onChange={(e) => setObservacao(e.target.value)}
+          placeholder="Digite uma observação para o voucher extra"
+        />
+      </div>
 
       <div className="space-y-2">
         <label className="block text-sm font-medium">Datas para Voucher Extra</label>
