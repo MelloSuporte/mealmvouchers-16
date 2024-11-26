@@ -33,11 +33,12 @@ api.interceptors.response.use(
       window.location.href = '/login';
     } else if (error.response?.status === 404) {
       console.error('URL da requisição:', error.config?.url);
-      toast.error('Erro: Rota não encontrada. Por favor, contate o suporte.');
+      const errorMessage = error.response?.data?.error || 'Recurso não encontrado';
+      toast.error(`Erro: ${errorMessage}`);
     } else if (error.code === 'ECONNABORTED') {
       toast.error('A requisição demorou muito para responder. Tente novamente.');
     } else {
-      const errorMessage = error.response?.data?.message || error.message;
+      const errorMessage = error.response?.data?.error || error.message;
       toast.error(`Erro na requisição: ${errorMessage}`);
     }
     

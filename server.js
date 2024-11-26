@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { configureExpress } from './src/config/express.js';
 import { startServer } from './src/config/server.js';
 import createApp from './src/config/app.js';
+import vouchersExtraRouter from './src/routes/vouchersExtra.js';
 
 /**
  * SISTEMA DE VOUCHERS - DOCUMENTAÇÃO DE FUNCIONALIDADES ESTÁVEIS
@@ -37,5 +38,15 @@ if (process.env.MAINTENANCE_MODE === 'true') {
 }
 
 const app = createApp();
+
+// Configura CORS
+app.use(cors());
+
+// Configura body parser
+app.use(express.json());
+
+// Adiciona a rota de vouchers extras
+app.use('/api/vouchers-extra', vouchersExtraRouter);
+
 configureExpress(app);
 startServer(app);
