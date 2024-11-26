@@ -4,7 +4,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { ptBR } from 'date-fns/locale';
 import { toast } from "sonner";
 import { useQuery } from '@tanstack/react-query';
-import api from '../../utils/api';
+import { supabase } from '../../config/supabase';
 import CompanyUserSelector from './rls/CompanyUserSelector';
 import { startOfDay, isBefore, isAfter, addMonths } from 'date-fns';
 
@@ -19,13 +19,20 @@ const RLSForm = () => {
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        const response = await api.get('/empresas');
-        return response.data || [];
+        const { data, error } = await supabase
+          .from('empresas')
+          .select('*')
+          .order('nome');
+
+        if (error) throw error;
+        return data || [];
       } catch (error) {
-        toast.error("Erro ao carregar empresas: " + (error.response?.data?.message || error.message));
+        toast.error("Erro ao carregar empresas: " + error.message);
         return [];
       }
-    }
+    },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 30000)
   });
 
   const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useQuery({
@@ -33,14 +40,28 @@ const RLSForm = () => {
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 3) return [];
       try {
-        const response = await api.get(`/users/search?term=${searchTerm}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
-        return response.data || [];
+        const query = supabase
+          .from('usuarios')
+          .select('*')
+          .ilike('nome', `%${searchTerm}%`)
+          .or(`cpf.ilike.%${searchTerm}%`);
+
+        if (selectedCompany !== "all") {
+          query.eq('empresa_id', selectedCompany);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        return data || [];
       } catch (error) {
-        toast.error("Erro ao buscar usuários: " + (error.response?.data?.message || error.message));
+        toast.error("Erro ao buscar usuários: " + error.message);
         return [];
       }
     },
-    enabled: searchTerm.length >= 3
+    enabled: searchTerm.length >= 3,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 30000)
   });
 
   const validateDates = (dates) => {
