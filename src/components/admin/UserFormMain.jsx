@@ -43,6 +43,14 @@ const UserFormMain = () => {
     }
   });
 
+  const formatCPF = (cpf) => {
+    const cleaned = cpf.replace(/\D/g, '');
+    if (cleaned.length <= 11) {
+      return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    return cpf;
+  };
+
   const handleSearch = async () => {
     if (!searchCPF) {
       toast.error('Por favor, informe um CPF para buscar');
@@ -87,7 +95,7 @@ const UserFormMain = () => {
         logger.info('Usuário encontrado:', { id: data.id, nome: data.nome });
         setFormData({
           userName: data.nome,
-          userCPF: searchCPF,
+          userCPF: formatCPF(data.cpf),
           company: data.empresa_id?.toString() || '',
           selectedTurno: data.turno_id?.toString() || '',
           isSuspended: data.suspenso || false,
@@ -105,6 +113,9 @@ const UserFormMain = () => {
   };
 
   const handleInputChange = (field, value) => {
+    if (field === 'userCPF') {
+      value = formatCPF(value);
+    }
     setFormData(prev => ({
       ...prev,
       [field]: value

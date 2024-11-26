@@ -5,9 +5,9 @@ import { Search } from 'lucide-react';
 
 const UserSearchSection = ({ searchCPF, setSearchCPF, onSearch, isSearching }) => {
   const formatCPF = (value) => {
-    const cpf = value.replace(/\D/g, '');
-    if (cpf.length <= 11) {
-      return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 11) {
+      return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     }
     return value;
   };
