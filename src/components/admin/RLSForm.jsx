@@ -15,12 +15,13 @@ const RLSForm = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: companiesData = [], isLoading: isLoadingCompanies, error: companiesError } = useQuery({
+  const { data: companiesData, isLoading: isLoadingCompanies, error: companiesError } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       try {
         const response = await api.get('/empresas');
-        return response.data || [];
+        // Garantir que o retorno seja sempre um array
+        return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         toast.error("Erro ao carregar empresas: " + (error.response?.data?.message || error.message));
         return [];
@@ -28,13 +29,14 @@ const RLSForm = () => {
     }
   });
 
-  const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useQuery({
+  const { data: users, isLoading: isLoadingUsers, error: usersError } = useQuery({
     queryKey: ['users', searchTerm, selectedCompany],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 3) return [];
       try {
         const response = await api.get(`/users/search?term=${searchTerm}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
-        return response.data || [];
+        // Garantir que o retorno seja sempre um array
+        return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         toast.error("Erro ao buscar usuários: " + (error.response?.data?.message || error.message));
         return [];
@@ -110,8 +112,8 @@ const RLSForm = () => {
         setSearchTerm={setSearchTerm}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
-        companies={companiesData}
-        users={users}
+        companies={companiesData || []}
+        users={users || []}
         isLoadingCompanies={isLoadingCompanies}
         isLoadingUsers={isLoadingUsers}
       />
