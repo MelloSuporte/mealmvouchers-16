@@ -15,16 +15,16 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
     empresa_id: adminToEdit?.empresa_id || '',
     senha: '',
     permissoes: {
-      gerenciar_vouchers_extra: false,
-      gerenciar_vouchers_descartaveis: false,
-      gerenciar_usuarios: false,
-      gerenciar_relatorios: false
+      gerenciar_vouchers_extra: adminToEdit?.permissoes?.gerenciar_vouchers_extra || false,
+      gerenciar_vouchers_descartaveis: adminToEdit?.permissoes?.gerenciar_vouchers_descartaveis || false,
+      gerenciar_usuarios: adminToEdit?.permissoes?.gerenciar_usuarios || false,
+      gerenciar_relatorios: adminToEdit?.permissoes?.gerenciar_relatorios || false
     }
   });
 
   const handleCPFChange = (e) => {
     const formattedCPF = formatCPF(e.target.value);
-    setFormData({ ...formData, cpf: formattedCPF });
+    setFormData(prev => ({ ...prev, cpf: formattedCPF }));
   };
 
   const handleSubmit = async (e) => {
