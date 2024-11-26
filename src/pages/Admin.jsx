@@ -19,40 +19,19 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState("users");
   const navigate = useNavigate();
   const { isMasterAdmin, isManager, logout } = useAdmin();
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
-        navigate('/login');
-        return false;
-      }
-      return true;
-    };
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      toast.error("Sessão expirada. Por favor, faça login novamente.");
+      navigate('/login');
+      return;
+    }
 
-    const initializeAdmin = async () => {
-      try {
-        setIsLoading(true);
-        const isAuthenticated = checkAuth();
-        if (!isAuthenticated) return;
-        
-        if (!isMasterAdmin && !isManager) {
-          toast.error("Erro ao carregar permissões. Recarregando...");
-          window.location.reload();
-          return;
-        }
-
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Erro ao inicializar admin:', error);
-        toast.error("Erro ao carregar painel administrativo");
-        setIsLoading(false);
-      }
-    };
-
-    initializeAdmin();
+    if (!isMasterAdmin && !isManager) {
+      toast.error("Acesso não autorizado");
+      navigate('/login');
+    }
   }, [navigate, isMasterAdmin, isManager]);
 
   const handleLogout = () => {
@@ -61,14 +40,6 @@ const Admin = () => {
     navigate('/voucher');
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
@@ -76,7 +47,7 @@ const Admin = () => {
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
 
-      <Tabs defaultValue="users" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="users">
         <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
