@@ -4,11 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminProvider } from "./contexts/AdminContext";
-import Layout from "./components/Layout";
 import SelfServices from "./pages/SelfServices";
 import Home from "./pages/Home";
-import Menu from "./pages/Menu";
-import Profile from "./pages/Profile";
 import User from "./pages/User";
 import Login from "./pages/Login";
 import Voucher from "./pages/Voucher";
@@ -79,11 +76,6 @@ function App() {
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/turnos" element={<Turnos />} />
                 <Route path="/admin/managers" element={<AdminManagement />} />
-                <Route path="/app" element={<Layout />}>
-                  <Route index element={<Home />} />
-                  <Route path="menu" element={<Menu />} />
-                  <Route path="profile" element={<Profile />} />
-                </Route>
               </Routes>
             </BrowserRouter>
           </AdminProvider>
