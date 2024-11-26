@@ -6,6 +6,7 @@ import UserFormFields from './user/UserFormFields';
 import UserSearchSection from './user/UserSearchSection';
 import { useVoucherVisibility } from '../../hooks/useVoucherVisibility';
 import logger from '../../config/logger';
+import { formatCPF } from '../../utils/formatters';
 
 const UserFormMain = () => {
   const [formData, setFormData] = React.useState({
@@ -43,14 +44,6 @@ const UserFormMain = () => {
     }
   });
 
-  const formatCPF = (cpf) => {
-    const cleaned = cpf.replace(/\D/g, '');
-    if (cleaned.length <= 11) {
-      return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
-    return cpf;
-  };
-
   const handleSearch = async () => {
     if (!searchCPF) {
       toast.error('Por favor, informe um CPF para buscar');
@@ -86,7 +79,7 @@ const UserFormMain = () => {
           toast.info('Usuário não encontrado');
         } else {
           logger.error('Erro na consulta:', error);
-          toast.error('Erro ao buscar usuário. Por favor, tente novamente.');
+          toast.error('Erro ao buscar usuário');
         }
         return;
       }
@@ -106,7 +99,7 @@ const UserFormMain = () => {
       }
     } catch (error) {
       logger.error('Erro ao buscar usuário:', error);
-      toast.error('Erro ao buscar usuário. Por favor, tente novamente.');
+      toast.error('Erro ao buscar usuário');
     } finally {
       setIsSearching(false);
     }

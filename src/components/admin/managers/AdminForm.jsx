@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import api from '../../../utils/api';
 import CompanySelect from '../user/CompanySelect';
+import { formatCPF } from '../../../utils/formatters';
 
 const AdminForm = ({ onClose, adminToEdit = null }) => {
   const [formData, setFormData] = useState({
@@ -20,14 +21,6 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
       gerenciar_relatorios: false
     }
   });
-
-  const formatCPF = (value) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length <= 11) {
-      return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
-    return value;
-  };
 
   const handleCPFChange = (e) => {
     const formattedCPF = formatCPF(e.target.value);

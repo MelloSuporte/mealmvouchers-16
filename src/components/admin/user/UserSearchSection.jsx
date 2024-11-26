@@ -2,16 +2,9 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from 'lucide-react';
+import { formatCPF } from '../../../utils/formatters';
 
 const UserSearchSection = ({ searchCPF, setSearchCPF, onSearch, isSearching }) => {
-  const formatCPF = (value) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length <= 11) {
-      return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
-    return value;
-  };
-
   const handleCPFChange = (e) => {
     const formattedCPF = formatCPF(e.target.value);
     setSearchCPF(formattedCPF);

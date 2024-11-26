@@ -1,16 +1,9 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatCPF } from '../../../utils/formatters';
 
 const UserBasicInfo = ({ formData, onInputChange, disabled }) => {
-  const formatCPF = (value) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length <= 11) {
-      return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
-    return value;
-  };
-
   const handleCPFChange = (e) => {
     const formattedCPF = formatCPF(e.target.value);
     onInputChange('userCPF', formattedCPF);
