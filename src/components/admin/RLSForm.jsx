@@ -33,12 +33,8 @@ const RLSForm = () => {
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 3) return [];
       try {
-        // Formata o CPF antes de enviar para a API
-        const formattedSearchTerm = searchTerm.includes('.') || searchTerm.includes('-') 
-          ? searchTerm 
-          : formatCPF(searchTerm);
-        
-        const response = await api.get(`/users/search?term=${formattedSearchTerm}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
+        const cleanCPF = searchTerm.replace(/\D/g, '');
+        const response = await api.get(`/users/search?term=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
         return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         toast.error("Erro ao buscar usuários: " + (error.response?.data?.message || error.message));
@@ -47,6 +43,11 @@ const RLSForm = () => {
     },
     enabled: searchTerm.length >= 3
   });
+
+  const handleSearchTermChange = (value) => {
+    const formattedValue = formatCPF(value);
+    setSearchTerm(formattedValue);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,7 +93,7 @@ const RLSForm = () => {
         selectedCompany={selectedCompany}
         setSelectedCompany={setSelectedCompany}
         searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
+        setSearchTerm={handleSearchTermChange}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
         companies={companiesData}

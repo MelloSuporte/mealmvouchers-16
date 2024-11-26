@@ -17,6 +17,10 @@ const CompanyUserSelector = ({
   const companiesList = Array.isArray(companies) ? companies : [];
   const usersList = Array.isArray(users) ? users : [];
 
+  const handleInputChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -49,9 +53,10 @@ const CompanyUserSelector = ({
         <Input
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleInputChange}
           placeholder="Digite o nome ou CPF do usuário"
           className="w-full"
+          maxLength={14}
         />
       </div>
 
