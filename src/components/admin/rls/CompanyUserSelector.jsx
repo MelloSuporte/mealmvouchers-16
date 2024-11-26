@@ -18,7 +18,10 @@ const CompanyUserSelector = ({
   const usersList = Array.isArray(users) ? users : [];
 
   const handleInputChange = (e) => {
-    setSearchTerm(e.target.value);
+    const value = e.target.value;
+    if (value.length <= 14) { // Limita o tamanho total incluindo pontos e traço
+      setSearchTerm(value);
+    }
   };
 
   return (
@@ -54,7 +57,7 @@ const CompanyUserSelector = ({
           type="text"
           value={searchTerm}
           onChange={handleInputChange}
-          placeholder="Digite o nome ou CPF do usuário"
+          placeholder="Digite o CPF do usuário"
           className="w-full"
           maxLength={14}
         />
