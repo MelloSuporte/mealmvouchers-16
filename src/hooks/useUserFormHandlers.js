@@ -121,9 +121,9 @@ export const useUserFormHandlers = (
       const userData = {
         nome: formData.userName.trim(),
         cpf: cleanCPF,
-        empresa_id: parseInt(formData.company),
+        empresa_id: Number(formData.company),
         voucher: formData.voucher.trim(),
-        turno_id: parseInt(formData.selectedTurno),
+        turno_id: Number(formData.selectedTurno),
         suspenso: formData.isSuspended,
         foto: formData.userPhoto
       };

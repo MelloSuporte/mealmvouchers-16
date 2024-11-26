@@ -9,30 +9,34 @@ export const saveUserToDatabase = async (userData, isUpdate = false) => {
 
   // Converter IDs para números
   if (cleanUserData.empresa_id) {
-    cleanUserData.empresa_id = parseInt(cleanUserData.empresa_id);
+    cleanUserData.empresa_id = Number(cleanUserData.empresa_id);
   }
   if (cleanUserData.turno_id) {
-    cleanUserData.turno_id = parseInt(cleanUserData.turno_id);
+    cleanUserData.turno_id = Number(cleanUserData.turno_id);
   }
 
-  const query = supabase.from('usuarios');
-  
   try {
+    const query = supabase.from('usuarios');
+    
     if (isUpdate && userData.id) {
-      return await query
+      const { data, error } = await query
         .update(cleanUserData)
         .eq('id', userData.id)
-        .select()
-        .single();
+        .select();
+
+      if (error) throw error;
+      return { data: data[0], error: null };
     }
     
-    return await query
+    const { data, error } = await query
       .insert([cleanUserData])
-      .select()
-      .single();
+      .select();
+
+    if (error) throw error;
+    return { data: data[0], error: null };
   } catch (error) {
     logger.error('Erro ao salvar usuário:', error);
-    throw error;
+    return { data: null, error };
   }
 };
 
@@ -42,9 +46,9 @@ export const findUserByCPF = async (cpf) => {
       .from('usuarios')
       .select('*')
       .eq('cpf', cpf)
-      .maybeSingle();
+      .single();
 
-    if (error) {
+    if (error && error.code !== 'PGRST116') {
       logger.error('Erro ao buscar usuário:', error);
       throw error;
     }
