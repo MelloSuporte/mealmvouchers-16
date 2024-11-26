@@ -16,6 +16,25 @@ const UserFormMain = ({
   const [isSearching, setIsSearching] = React.useState(false);
   const { showVoucher, handleVoucherToggle } = useVoucherVisibility();
 
+  const { data: turnos, isLoading: isLoadingTurnos } = useQuery({
+    queryKey: ['turnos'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('turnos')
+        .select('*')
+        .eq('ativo', true)
+        .order('id');
+
+      if (error) {
+        logger.error('Erro ao carregar turnos:', error);
+        toast.error('Erro ao carregar turnos');
+        throw error;
+      }
+
+      return data || [];
+    }
+  });
+
   const handleSearch = async () => {
     if (!searchCPF) {
       toast.error('Por favor, informe um CPF para buscar');
@@ -63,23 +82,6 @@ const UserFormMain = ({
     }
   };
 
-  const { data: turnosData, isLoading: isLoadingTurnos } = useQuery({
-    queryKey: ['turnos'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('turnos')
-        .select('*')
-        .eq('ativo', true)
-        .order('id');
-
-      if (error) {
-        logger.error('Erro ao carregar turnos:', error);
-        throw error;
-      }
-      return data || [];
-    }
-  });
-
   const handlePhotoUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -114,7 +116,7 @@ const UserFormMain = ({
         showVoucher={showVoucher}
         onToggleVoucher={handleVoucherToggle}
         handlePhotoUpload={handlePhotoUpload}
-        turnos={turnosData}
+        turnos={turnos}
         isLoadingTurnos={isLoadingTurnos}
       />
     </div>
