@@ -49,12 +49,15 @@ const UserFormFields = ({
         />
       </div>
 
-      <CompanySelect
-        value={formData.company}
-        onValueChange={(value) => onInputChange('company', value)}
-        required
-        className={!formData.company ? 'border-red-500' : ''}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="company" className="required">Empresa</Label>
+        <CompanySelect
+          value={formData.company}
+          onValueChange={(value) => onInputChange('company', value)}
+          required
+          className={!formData.company ? 'border-red-500' : ''}
+        />
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="turno" className="required">Turno</Label>

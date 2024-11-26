@@ -1,17 +1,23 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from "sonner";
-import { supabase } from '@/config/supabase';
+import { supabase } from '../../config/supabase';
 import UserFormFields from './user/UserFormFields';
 import { useVoucherVisibility } from '../../hooks/useVoucherVisibility';
 import logger from '../../config/logger';
 
-const UserFormMain = ({
-  formData,
-  onInputChange,
-  onSave,
-  isSubmitting
-}) => {
+const UserFormMain = () => {
+  const [formData, setFormData] = React.useState({
+    userName: '',
+    userCPF: '',
+    company: '',
+    selectedTurno: '',
+    isSuspended: false,
+    userPhoto: null,
+    voucher: ''
+  });
+
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [searchCPF, setSearchCPF] = React.useState('');
   const [isSearching, setIsSearching] = React.useState(false);
   const { showVoucher, handleVoucherToggle } = useVoucherVisibility();
@@ -65,13 +71,15 @@ const UserFormMain = ({
 
       if (data) {
         logger.info('Usuário encontrado:', { id: data.id, nome: data.nome });
-        onInputChange('userName', data.nome);
-        onInputChange('userCPF', searchCPF);
-        onInputChange('company', data.empresa_id?.toString() || '');
-        onInputChange('selectedTurno', data.turno_id?.toString() || '');
-        onInputChange('isSuspended', data.suspenso || false);
-        onInputChange('userPhoto', data.foto || null);
-        onInputChange('voucher', data.voucher || '');
+        setFormData({
+          userName: data.nome,
+          userCPF: searchCPF,
+          company: data.empresa_id?.toString() || '',
+          selectedTurno: data.turno_id?.toString() || '',
+          isSuspended: data.suspenso || false,
+          userPhoto: data.foto || null,
+          voucher: data.voucher || ''
+        });
         toast.success('Usuário encontrado!');
       }
     } catch (error) {
@@ -82,37 +90,49 @@ const UserFormMain = ({
     }
   };
 
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handlePhotoUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      onInputChange('userPhoto', file);
+      handleInputChange('userPhoto', file);
     }
   };
 
-  const clearSearch = () => {
-    setSearchCPF('');
-    setIsSearching(false);
-    onInputChange('userName', '');
-    onInputChange('userCPF', '');
-    onInputChange('company', '');
-    onInputChange('selectedTurno', '');
-    onInputChange('isSuspended', false);
-    onInputChange('userPhoto', null);
-    onInputChange('voucher', '');
+  const handleSave = async () => {
+    if (isSubmitting) {
+      toast.warning('Uma operação já está em andamento');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      // Add save logic here
+    } catch (error) {
+      logger.error('Erro ao salvar usuário:', error);
+      toast.error('Erro ao salvar usuário. Por favor, tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="space-y-4">
       <UserFormFields
         formData={formData}
-        onInputChange={onInputChange}
-        onSave={onSave}
+        onInputChange={handleInputChange}
+        onSave={handleSave}
         isSubmitting={isSubmitting}
         searchCPF={searchCPF}
         setSearchCPF={setSearchCPF}
         onSearch={handleSearch}
         isSearching={isSearching}
-        clearSearch={clearSearch}
         showVoucher={showVoucher}
         onToggleVoucher={handleVoucherToggle}
         handlePhotoUpload={handlePhotoUpload}

@@ -19,7 +19,7 @@ const TurnoSelect = ({ value, onValueChange, turnos = [], isLoadingTurnos }) => 
 
   return (
     <Select 
-      value={value}
+      value={value?.toString() || ''}
       onValueChange={onValueChange}
       disabled={isLoadingTurnos}
     >
