@@ -45,8 +45,14 @@ app.use(cors());
 // Configura body parser
 app.use(express.json());
 
-// Adiciona a rota de vouchers extras
+// Adiciona a rota de vouchers extras - Corrigido para corresponder à chamada do cliente
 app.use('/api/vouchers-extra', vouchersExtraRouter);
+
+// Adiciona log para debug da rota
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
 
 configureExpress(app);
 startServer(app);
