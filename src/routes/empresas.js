@@ -10,12 +10,19 @@ const upload = multer();
 // Listar empresas
 router.get('/', async (req, res) => {
   try {
+    console.log('Iniciando busca de empresas...');
+    
     const { data: empresas, error } = await supabase
       .from('empresas')
       .select('*')
       .order('nome');
 
-    if (error) throw error;
+    if (error) {
+      console.error('Erro do Supabase:', error);
+      throw error;
+    }
+
+    console.log('Empresas encontradas:', empresas?.length || 0);
     res.json(empresas || []);
   } catch (error) {
     logger.error('Erro ao buscar empresas:', error);
