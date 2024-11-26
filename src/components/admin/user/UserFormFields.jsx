@@ -6,6 +6,9 @@ import { Switch } from "@/components/ui/switch";
 import CompanySelect from './CompanySelect';
 import TurnoSelect from './TurnoSelect';
 import { Upload } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/config/supabase';
+import { toast } from 'sonner';
 
 const UserFormFields = ({
   formData,
@@ -18,10 +21,26 @@ const UserFormFields = ({
   isSearching,
   showVoucher,
   onToggleVoucher,
-  handlePhotoUpload,
-  turnos,
-  isLoadingTurnos
+  handlePhotoUpload
 }) => {
+  const { data: turnos, isLoading: isLoadingTurnos } = useQuery({
+    queryKey: ['turnos'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('turnos')
+        .select('*')
+        .eq('ativo', true)
+        .order('id');
+
+      if (error) {
+        toast.error('Erro ao carregar turnos');
+        throw error;
+      }
+
+      return data || [];
+    }
+  });
+
   return (
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
       <div className="space-y-2">
