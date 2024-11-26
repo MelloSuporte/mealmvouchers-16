@@ -61,7 +61,7 @@ export const useUserFormHandlers = (
         setFormData({
           userName: data.nome,
           userCPF: searchCPF,
-          company: data.empresa_id?.toString() || '',
+          company: data.empresa_id, // Mantém o UUID original
           selectedTurno: data.turno_id?.toString() || '',
           isSuspended: data.suspenso || false,
           userPhoto: data.foto || null,
@@ -97,7 +97,7 @@ export const useUserFormHandlers = (
       const userData = {
         nome: formData.userName.trim(),
         cpf: cleanCPF,
-        empresa_id: formData.company,
+        empresa_id: formData.company, // Mantém o UUID original
         voucher: formData.voucher.trim(),
         turno_id: formData.selectedTurno,
         suspenso: formData.isSuspended,

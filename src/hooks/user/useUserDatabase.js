@@ -1,5 +1,6 @@
 import { supabase } from '../../config/supabase';
 import logger from '../../config/logger';
+import { toast } from "sonner";
 
 export const findUserByCPF = async (cpf) => {
   try {
@@ -35,11 +36,11 @@ export const findUserByCPF = async (cpf) => {
 
 export const saveUserToDatabase = async (userData) => {
   try {
-    // Garantir que empresa_id seja um número
+    // Garantir que empresa_id seja um UUID válido
     const cleanUserData = {
       nome: userData.nome,
       cpf: userData.cpf,
-      empresa_id: parseInt(userData.empresa_id, 10),
+      empresa_id: userData.empresa_id, // Mantém o UUID original
       turno_id: parseInt(userData.turno_id, 10),
       voucher: userData.voucher,
       suspenso: userData.suspenso,
