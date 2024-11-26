@@ -15,7 +15,6 @@ import TurnosForm from '../components/admin/TurnosForm';
 import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("users");
   const navigate = useNavigate();
   const { isMasterAdmin, isManager, logout } = useAdmin();
 
@@ -40,13 +39,13 @@ const Admin = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
+    <div className="container mx-auto p-4 space-y-4">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Painel de Administração</h1>
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
 
-      <Tabs defaultValue="users" className="w-full">
+      <Tabs defaultValue="users" className="w-full space-y-4">
         <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
