@@ -1,25 +1,11 @@
 import express from 'express';
-import empresasRoutes from './empresas.js';
-import voucherRoutes from './vouchers.js';
-import relatoriosRoutes from './relatorios.js';
-import healthRoutes from './health.js';
-import refeicoesRoutes from './refeicoes.js';
-import usuariosRoutes from './usuarios.js';
-import vouchersExtraRoutes from './vouchersExtra.js';
-import imagensFundoRoutes from './imagensFundo.js';
+import vouchersExtraRouter from './vouchersExtra.js';
+import someOtherRouter from './someOtherRoute.js'; // Example for other routes, replace with actual imports
 
 const router = express.Router();
 
-// Rotas de verificação de saúde
-router.use('/health', healthRoutes);
-
-// Rotas da API
-router.use('/empresas', empresasRoutes);
-router.use('/vouchers', voucherRoutes);
-router.use('/relatorios', relatoriosRoutes);
-router.use('/refeicoes', refeicoesRoutes);
-router.use('/usuarios', usuariosRoutes);
-router.use('/vouchers-extra', vouchersExtraRoutes);
-router.use('/imagens-fundo', imagensFundoRoutes);
+// Define all API routes
+router.use('/vouchers-extras', vouchersExtraRouter);
+router.use('/some-other-route', someOtherRouter); // Example for another route
 
 export default router;

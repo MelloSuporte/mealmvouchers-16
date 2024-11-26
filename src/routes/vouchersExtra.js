@@ -4,7 +4,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/vouchers-extras', async (req, res) => {
+router.post('/', async (req, res) => {
   const { user_id, dates } = req.body;
 
   try {
@@ -32,9 +32,9 @@ router.post('/vouchers-extras', async (req, res) => {
       const { data: voucher, error } = await supabase
         .from('vouchers_extras')
         .insert([{
-          user_id: user_id,
-          authorized_by: 1, // TODO: Get from authenticated user
-          valid_until: new Date(date).toISOString()
+          usuario_id: user_id,
+          autorizado_por: 'Sistema', // Pode ser alterado para pegar o usuário autenticado
+          valido_ate: new Date(date).toISOString()
         }])
         .select()
         .single();
