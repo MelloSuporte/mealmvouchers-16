@@ -28,7 +28,7 @@ const TurnoSelect = ({ value, onValueChange, turnos = [], isLoadingTurnos }) => 
       </SelectTrigger>
       <SelectContent>
         {Array.isArray(turnos) && turnos.map((turno) => (
-          <SelectItem key={turno.id} value={turno.tipo_turno}>
+          <SelectItem key={turno.id} value={turno.id.toString()}>
             {getTurnoLabel(turno.tipo_turno)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
           </SelectItem>
         ))}

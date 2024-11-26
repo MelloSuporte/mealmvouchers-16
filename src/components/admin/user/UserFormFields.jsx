@@ -11,7 +11,17 @@ const UserFormFields = ({
   formData,
   onInputChange,
   onSave,
-  isSubmitting
+  isSubmitting,
+  searchCPF,
+  setSearchCPF,
+  onSearch,
+  isSearching,
+  clearSearch,
+  showVoucher,
+  onToggleVoucher,
+  handlePhotoUpload,
+  turnos,
+  isLoadingTurnos
 }) => {
   return (
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
@@ -46,12 +56,15 @@ const UserFormFields = ({
         className={!formData.company ? 'border-red-500' : ''}
       />
 
-      <TurnoSelect
-        value={formData.selectedTurno}
-        onValueChange={(value) => onInputChange('selectedTurno', value)}
-        required
-        className={!formData.selectedTurno ? 'border-red-500' : ''}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="turno" className="required">Turno</Label>
+        <TurnoSelect
+          value={formData.selectedTurno}
+          onValueChange={(value) => onInputChange('selectedTurno', value)}
+          turnos={turnos}
+          isLoadingTurnos={isLoadingTurnos}
+        />
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="voucher" className="required">Voucher</Label>
@@ -78,7 +91,7 @@ const UserFormFields = ({
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => onInputChange('userPhoto', e.target.files[0])}
+          onChange={handlePhotoUpload}
           className="hidden"
           id="photo-upload"
         />
