@@ -6,41 +6,18 @@ import { Switch } from "@/components/ui/switch";
 import CompanySelect from './CompanySelect';
 import TurnoSelect from './TurnoSelect';
 import { Upload } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/config/supabase';
-import { toast } from 'sonner';
+import ImagePreview from '../ImagePreview';
 
 const UserFormFields = ({
   formData,
   onInputChange,
   onSave,
   isSubmitting,
-  searchCPF,
-  setSearchCPF,
-  onSearch,
-  isSearching,
   showVoucher,
-  onToggleVoucher,
-  handlePhotoUpload
+  handlePhotoUpload,
+  turnos,
+  isLoadingTurnos
 }) => {
-  const { data: turnos, isLoading: isLoadingTurnos } = useQuery({
-    queryKey: ['turnos'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('turnos')
-        .select('*')
-        .eq('ativo', true)
-        .order('id');
-
-      if (error) {
-        toast.error('Erro ao carregar turnos');
-        throw error;
-      }
-
-      return data || [];
-    }
-  });
-
   return (
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
       <div className="space-y-2">
@@ -108,36 +85,38 @@ const UserFormFields = ({
         <Label htmlFor="suspend-user">Suspender acesso do usuário</Label>
       </div>
 
-      <div className="flex items-center justify-between space-x-4">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoUpload}
-          className="hidden"
-          id="photo-upload"
-        />
-        <div className="flex space-x-4">
-          <Button 
-            type="button" 
-            variant="outline"
-            onClick={() => document.getElementById('photo-upload').click()}
-          >
-            <Upload size={20} className="mr-2" />
-            Enviar Foto
-          </Button>
-          <Button 
-            type="button" 
-            onClick={onSave}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Processando...' : 'Salvar Usuário'}
-          </Button>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoUpload}
+            className="hidden"
+            id="photo-upload"
+          />
+          <div className="flex space-x-4">
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={() => document.getElementById('photo-upload').click()}
+            >
+              <Upload size={20} className="mr-2" />
+              Enviar Foto
+            </Button>
+            <Button 
+              type="button" 
+              onClick={onSave}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Processando...' : 'Salvar Usuário'}
+            </Button>
+          </div>
         </div>
+        
         {formData.userPhoto && (
-          <img 
-            src={typeof formData.userPhoto === 'string' ? formData.userPhoto : URL.createObjectURL(formData.userPhoto)} 
-            alt="Foto do usuário" 
-            className="w-10 h-10 rounded-full object-cover" 
+          <ImagePreview 
+            imageUrl={formData.userPhoto} 
+            label="foto do usuário"
           />
         )}
       </div>
