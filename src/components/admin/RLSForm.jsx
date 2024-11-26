@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../utils/api';
 import CompanyUserSelector from './rls/CompanyUserSelector';
 import { startOfDay, isBefore, isAfter, addMonths } from 'date-fns';
+import { supabase } from '../../config/supabase';
 
 const RLSForm = () => {
   const [selectedUser, setSelectedUser] = useState("");
@@ -19,10 +20,15 @@ const RLSForm = () => {
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        const response = await api.get('/empresas');
-        return response.data || [];
+        const { data, error } = await supabase
+          .from('empresas')
+          .select('*')
+          .order('nome');
+
+        if (error) throw error;
+        return data || [];
       } catch (error) {
-        toast.error("Erro ao carregar empresas: " + (error.response?.data?.message || error.message));
+        toast.error("Erro ao carregar empresas: " + error.message);
         return [];
       }
     },
