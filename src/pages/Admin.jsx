@@ -13,6 +13,7 @@ import BackgroundImageForm from '../components/admin/BackgroundImageForm';
 import ReportForm from '../components/admin/ReportForm';
 import TurnosForm from '../components/admin/TurnosForm';
 import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
+import AdminList from '../components/admin/managers/AdminList';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ const Admin = () => {
       </div>
 
       <Tabs defaultValue="users" className="w-full space-y-4">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
           <TabsTrigger value="meals">Refeições</TabsTrigger>
@@ -55,6 +56,7 @@ const Admin = () => {
           <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>
           <TabsTrigger value="reports">Relatórios</TabsTrigger>
           <TabsTrigger value="turnos">Turnos</TabsTrigger>
+          <TabsTrigger value="managers">Gerentes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -117,6 +119,14 @@ const Admin = () => {
           <Card>
             <CardContent className="pt-6">
               <TurnosForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="managers">
+          <Card>
+            <CardContent className="pt-6">
+              <AdminList />
             </CardContent>
           </Card>
         </TabsContent>
