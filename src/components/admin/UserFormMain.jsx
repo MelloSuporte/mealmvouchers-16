@@ -25,6 +25,7 @@ const UserFormMain = () => {
   const { data: turnos, isLoading: isLoadingTurnos } = useQuery({
     queryKey: ['turnos'],
     queryFn: async () => {
+      logger.info('Buscando turnos ativos...');
       const { data, error } = await supabase
         .from('turnos')
         .select('*')
@@ -37,6 +38,7 @@ const UserFormMain = () => {
         throw error;
       }
 
+      logger.info(`${data?.length || 0} turnos encontrados`);
       return data || [];
     }
   });

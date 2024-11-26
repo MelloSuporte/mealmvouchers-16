@@ -27,11 +27,17 @@ const TurnoSelect = ({ value, onValueChange, turnos = [], isLoadingTurnos }) => 
         <SelectValue placeholder={isLoadingTurnos ? "Carregando turnos..." : "Selecione o turno"} />
       </SelectTrigger>
       <SelectContent>
-        {Array.isArray(turnos) && turnos.map((turno) => (
-          <SelectItem key={turno.id} value={turno.id.toString()}>
-            {getTurnoLabel(turno.tipo_turno)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
+        {turnos && turnos.length > 0 ? (
+          turnos.map((turno) => (
+            <SelectItem key={turno.id} value={turno.id.toString()}>
+              {getTurnoLabel(turno.tipo_turno)} ({formatTime(turno.horario_inicio)} - {formatTime(turno.horario_fim)})
+            </SelectItem>
+          ))
+        ) : (
+          <SelectItem value="" disabled>
+            Nenhum turno disponível
           </SelectItem>
-        ))}
+        )}
       </SelectContent>
     </Select>
   );
