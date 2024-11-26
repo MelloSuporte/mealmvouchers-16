@@ -8,6 +8,24 @@ router.post('/', async (req, res) => {
   const { userId, dates } = req.body;
 
   try {
+    if (!userId || !dates || !Array.isArray(dates)) {
+      return res.status(400).json({ 
+        error: 'Dados inválidos. Usuário e datas são obrigatórios.' 
+      });
+    }
+
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, nome')
+      .eq('id', userId)
+      .single();
+
+    if (!user) {
+      return res.status(404).json({ 
+        error: 'Usuário não encontrado' 
+      });
+    }
+
     const vouchers = [];
     
     for (const date of dates) {
@@ -15,13 +33,15 @@ router.post('/', async (req, res) => {
         .from('extra_vouchers')
         .insert([{
           user_id: userId,
-          authorized_by: 1, // TODO: Get from authenticated user
           valid_until: new Date(date).toISOString()
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao criar voucher extra:', error);
+        throw error;
+      }
       
       if (voucher) {
         vouchers.push(voucher);
@@ -35,7 +55,9 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error creating extra vouchers:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      error: error.message || 'Erro ao criar vouchers extras'
+    });
   }
 });
 

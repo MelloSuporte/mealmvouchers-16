@@ -21,10 +21,7 @@ const CompanyUserSelector = ({
   isLoadingUsers
 }) => {
   const formatCPF = (cpf) => {
-    // Remove caracteres não numéricos
     const cleanCPF = cpf.replace(/\D/g, '');
-    
-    // Aplica a máscara
     return cleanCPF.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 
@@ -37,6 +34,7 @@ const CompanyUserSelector = ({
         <Select
           value={selectedCompany}
           onValueChange={setSelectedCompany}
+          disabled={isLoadingCompanies}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione a empresa" />
@@ -65,6 +63,7 @@ const CompanyUserSelector = ({
         <Select
           value={selectedUser}
           onValueChange={setSelectedUser}
+          disabled={isLoadingUsers || usersList.length === 0}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione o usuário" />
