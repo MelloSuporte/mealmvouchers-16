@@ -1,6 +1,6 @@
 import express from 'express';
-import { supabase } from '../config/supabase';
-import logger from '../config/logger';
+import { supabase } from '../config/supabase.js';
+import logger from '../config/logger.js';
 
 const router = express.Router();
 
@@ -23,8 +23,7 @@ router.post('/generate', async (req, res) => {
         .from('vouchers_extras')
         .insert([{
           usuario_id,
-          autorizado_por: 'Sistema',
-          valido_ate: new Date(data),
+          data_validade: new Date(data),
           observacao: observacao || 'Voucher extra gerado pelo sistema'
         }])
         .select()
@@ -50,27 +49,6 @@ router.post('/generate', async (req, res) => {
     res.status(500).json({ 
       success: false,
       error: error.message || 'Erro ao criar vouchers extras'
-    });
-  }
-});
-
-// Rota para listar vouchers extras de um usuário
-router.get('/user/:id', async (req, res) => {
-  try {
-    const { data: vouchers, error } = await supabase
-      .from('vouchers_extras')
-      .select('*')
-      .eq('usuario_id', req.params.id)
-      .order('criado_em', { ascending: false });
-
-    if (error) throw error;
-
-    res.json(vouchers);
-  } catch (error) {
-    logger.error('Error fetching user extra vouchers:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Erro ao buscar vouchers extras' 
     });
   }
 });
