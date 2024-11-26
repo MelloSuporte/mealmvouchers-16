@@ -5,14 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminProvider } from "./contexts/AdminContext";
 import SelfServices from "./pages/SelfServices";
-import User from "./pages/User";
-import Login from "./pages/Login";
 import Voucher from "./pages/Voucher";
 import BomApetite from "./pages/BomApetite";
 import Admin from "./pages/Admin";
-import Turnos from "./pages/Turnos";
 import UserConfirmation from "./pages/UserConfirmation";
-import AdminManagement from "./pages/AdminManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,11 +66,7 @@ function App() {
                 <Route path="/user-confirmation" element={<UserConfirmation />} />
                 <Route path="/self-services" element={<SelfServices />} />
                 <Route path="/bom-apetite/:userName" element={<BomApetite />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/user" element={<User />} />
                 <Route path="/admin" element={<Admin />} />
-                <Route path="/turnos" element={<Turnos />} />
-                <Route path="/admin/managers" element={<AdminManagement />} />
               </Routes>
             </BrowserRouter>
           </AdminProvider>
