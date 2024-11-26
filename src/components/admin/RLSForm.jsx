@@ -36,7 +36,6 @@ const RLSForm = () => {
         const cleanCPF = searchTerm.replace(/\D/g, '');
         const response = await api.get(`/users/search?term=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
         
-        // Formatar os dados do usuário para exibição
         if (response.data && Array.isArray(response.data)) {
           return response.data.map(user => ({
             id: user.id,
@@ -72,16 +71,22 @@ const RLSForm = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await api.post('/vouchers-extras', {
-        user_id: selectedUser,
-        dates: selectedDates
+      const formattedDates = selectedDates.map(date => date.toISOString().split('T')[0]);
+      
+      const response = await api.post('/vouchers-extra/generate', {
+        usuario_id: selectedUser,
+        datas: formattedDates,
+        observacao: 'Voucher extra gerado via sistema'
       });
 
-      toast.success("Vouchers extras gerados com sucesso!");
-      setSelectedUser("");
-      setSelectedDates([]);
-      setSearchTerm("");
+      if (response.data.success) {
+        toast.success("Vouchers extras gerados com sucesso!");
+        setSelectedUser("");
+        setSelectedDates([]);
+        setSearchTerm("");
+      }
     } catch (error) {
+      console.error('Erro detalhado:', error);
       toast.error("Erro ao gerar vouchers: " + (error.response?.data?.message || error.message));
     } finally {
       setIsSubmitting(false);
