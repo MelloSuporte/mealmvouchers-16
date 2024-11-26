@@ -35,33 +35,34 @@ export const findUserByCPF = async (cpf) => {
 
 export const saveUserToDatabase = async (userData) => {
   try {
-    // Limpa e converte os dados antes de salvar
+    // Garantir que empresa_id seja um número
     const cleanUserData = {
-      ...userData,
-      empresa_id: userData.empresa_id ? Number(userData.empresa_id) : null,
-      turno_id: userData.turno_id ? Number(userData.turno_id) : null
+      nome: userData.nome,
+      cpf: userData.cpf,
+      empresa_id: parseInt(userData.empresa_id, 10),
+      turno_id: parseInt(userData.turno_id, 10),
+      voucher: userData.voucher,
+      suspenso: userData.suspenso,
+      foto: userData.foto
     };
+
+    logger.info('Dados limpos para salvar:', cleanUserData);
 
     // Verifica se o usuário já existe pelo CPF
     const { data: existingUser } = await supabase
       .from('usuarios')
-      .select('id')
+      .select('id, empresa_id')
       .eq('cpf', cleanUserData.cpf)
       .single();
 
+    let result;
+
     if (existingUser) {
-      // Se existe, faz update
+      // Atualiza usuário existente
       logger.info('Atualizando usuário existente:', existingUser.id);
       const { data, error } = await supabase
         .from('usuarios')
-        .update({
-          nome: cleanUserData.nome,
-          empresa_id: cleanUserData.empresa_id,
-          voucher: cleanUserData.voucher,
-          turno_id: cleanUserData.turno_id,
-          suspenso: cleanUserData.suspenso,
-          foto: cleanUserData.foto
-        })
+        .update(cleanUserData)
         .eq('id', existingUser.id)
         .select(`
           *,
@@ -75,12 +76,13 @@ export const saveUserToDatabase = async (userData) => {
             horario_inicio,
             horario_fim
           )
-        `);
+        `)
+        .single();
 
       if (error) throw error;
-      return { data: data[0], error: null };
+      result = { data, error: null };
     } else {
-      // Se não existe, faz insert
+      // Cria novo usuário
       logger.info('Criando novo usuário');
       const { data, error } = await supabase
         .from('usuarios')
@@ -97,11 +99,15 @@ export const saveUserToDatabase = async (userData) => {
             horario_inicio,
             horario_fim
           )
-        `);
+        `)
+        .single();
 
       if (error) throw error;
-      return { data: data[0], error: null };
+      result = { data, error: null };
     }
+
+    logger.info('Operação concluída com sucesso:', result.data);
+    return result;
   } catch (error) {
     logger.error('Erro ao salvar usuário:', error);
     return { data: null, error };

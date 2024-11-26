@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import logger from '../config/logger';
-import { validateUserData, handleValidationErrors } from './user/useUserValidation';
+import { validateUserData } from './user/useUserValidation';
 import { saveUserToDatabase, findUserByCPF } from './user/useUserDatabase';
 import { generateUniqueVoucherFromCPF } from '../utils/voucherGenerationUtils';
 import { supabase } from '../config/supabase';
@@ -54,34 +54,7 @@ export const useUserFormHandlers = (
 
     try {
       const cleanCPF = searchCPF.replace(/\D/g, '');
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select(`
-          *,
-          empresas (
-            id,
-            nome
-          ),
-          turnos (
-            id,
-            tipo_turno,
-            horario_inicio,
-            horario_fim
-          )
-        `)
-        .eq('cpf', cleanCPF)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          logger.info('Usuário não encontrado para CPF:', cleanCPF);
-          toast.info('Usuário não encontrado');
-        } else {
-          logger.error('Erro na consulta:', error);
-          toast.error('Erro ao buscar usuário');
-        }
-        return;
-      }
+      const data = await findUserByCPF(cleanCPF);
 
       if (data) {
         logger.info('Usuário encontrado:', { id: data.id, nome: data.nome });
@@ -95,6 +68,9 @@ export const useUserFormHandlers = (
           voucher: data.voucher || ''
         });
         toast.success('Usuário encontrado!');
+      } else {
+        logger.info('Usuário não encontrado para CPF:', cleanCPF);
+        toast.info('Usuário não encontrado');
       }
     } catch (error) {
       logger.error('Erro ao buscar usuário:', error);
@@ -111,31 +87,30 @@ export const useUserFormHandlers = (
 
     try {
       const validationErrors = validateUserData(formData);
-      if (!handleValidationErrors(validationErrors)) {
+      if (validationErrors.length > 0) {
+        validationErrors.forEach(error => toast.error(error));
         return;
       }
 
       const cleanCPF = formData.userCPF.replace(/\D/g, '');
-      const existingUser = await findUserByCPF(cleanCPF);
-
+      
       const userData = {
         nome: formData.userName.trim(),
         cpf: cleanCPF,
-        empresa_id: Number(formData.company),
+        empresa_id: formData.company,
         voucher: formData.voucher.trim(),
-        turno_id: Number(formData.selectedTurno),
+        turno_id: formData.selectedTurno,
         suspenso: formData.isSuspended,
         foto: formData.userPhoto
       };
 
-      const { data, error } = await saveUserToDatabase(userData, !!existingUser);
+      logger.info('Dados para salvar:', userData);
+
+      const { data, error } = await saveUserToDatabase(userData);
 
       if (error) throw error;
 
-      toast.success(existingUser ? 
-        'Usuário atualizado com sucesso!' : 
-        'Usuário cadastrado com sucesso!'
-      );
+      toast.success(data.id ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!');
       
       setFormData({
         userName: '',
