@@ -18,7 +18,7 @@ const RLSForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [observacao, setObservacao] = useState("");
 
-  const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useQuery({
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['users', searchTerm, selectedCompany],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 3) return [];
@@ -35,6 +35,7 @@ const RLSForm = () => {
         }
         return [];
       } catch (error) {
+        console.error('Erro ao buscar usuários:', error);
         toast.error("Erro ao buscar usuários: " + (error.response?.data?.message || error.message));
         return [];
       }
@@ -49,6 +50,7 @@ const RLSForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!selectedUser) {
       toast.error("Por favor, selecione um usuário");
       return;
@@ -70,7 +72,7 @@ const RLSForm = () => {
       });
 
       if (response.data.success) {
-        toast.success("Vouchers extras gerados com sucesso!");
+        toast.success(`${formattedDates.length} voucher(s) extra(s) gerado(s) com sucesso!`);
         setSelectedUser("");
         setSelectedDates([]);
         setSearchTerm("");
@@ -79,8 +81,9 @@ const RLSForm = () => {
         throw new Error(response.data.error || 'Erro ao gerar vouchers');
       }
     } catch (error) {
-      console.error('Erro detalhado:', error);
-      toast.error("Erro ao gerar vouchers: " + (error.response?.data?.error || error.message));
+      console.error('Erro ao gerar vouchers:', error.response || error);
+      const errorMessage = error.response?.data?.error || error.message || 'Erro ao gerar vouchers';
+      toast.error(`Erro ao gerar vouchers: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
