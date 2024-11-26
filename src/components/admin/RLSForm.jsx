@@ -19,7 +19,7 @@ const RLSForm = () => {
     queryFn: async () => {
       try {
         const response = await api.get('/empresas');
-        return response.data || [];
+        return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         toast.error("Erro ao carregar empresas: " + (error.response?.data?.message || error.message));
         return [];
@@ -33,7 +33,7 @@ const RLSForm = () => {
       if (!searchTerm || searchTerm.length < 3) return [];
       try {
         const response = await api.get(`/users/search?term=${searchTerm}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
-        return response.data || [];
+        return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         toast.error("Erro ao buscar usuários: " + (error.response?.data?.message || error.message));
         return [];
