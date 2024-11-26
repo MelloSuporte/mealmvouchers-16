@@ -14,7 +14,6 @@ const CompanyUserSelector = ({
   isLoadingCompanies,
   isLoadingUsers
 }) => {
-  // Garantir que companies e users sejam sempre arrays
   const companiesList = Array.isArray(companies) ? companies : [];
   const usersList = Array.isArray(users) ? users : [];
 
