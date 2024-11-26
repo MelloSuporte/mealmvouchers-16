@@ -1,8 +1,8 @@
 export const formatCPF = (value) => {
   if (!value) return '';
   const cleaned = value.replace(/\D/g, '');
-  if (cleaned.length <= 11) {
+  if (cleaned.length === 11) {
     return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   }
-  return value;
+  return cleaned;
 };

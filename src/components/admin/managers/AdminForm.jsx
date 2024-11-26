@@ -11,7 +11,7 @@ import { formatCPF } from '../../../utils/formatters';
 const AdminForm = ({ onClose, adminToEdit = null }) => {
   const [formData, setFormData] = useState({
     nome: adminToEdit?.nome || '',
-    cpf: adminToEdit?.cpf || '',
+    cpf: formatCPF(adminToEdit?.cpf) || '',
     empresa_id: adminToEdit?.empresa_id || '',
     senha: '',
     permissoes: {
