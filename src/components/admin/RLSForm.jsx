@@ -25,9 +25,7 @@ const RLSForm = () => {
         toast.error("Erro ao carregar empresas: " + (error.response?.data?.message || error.message));
         return [];
       }
-    },
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 30000)
+    }
   });
 
   const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useQuery({
@@ -42,9 +40,7 @@ const RLSForm = () => {
         return [];
       }
     },
-    enabled: searchTerm.length >= 3,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 30000)
+    enabled: searchTerm.length >= 3
   });
 
   const validateDates = (dates) => {
