@@ -21,7 +21,10 @@ const CompanyUserSelector = ({
   isLoadingUsers
 }) => {
   const formatCPF = (cpf) => {
+    // Remove caracteres não numéricos
     const cleanCPF = cpf.replace(/\D/g, '');
+    
+    // Aplica a máscara
     return cleanCPF.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 

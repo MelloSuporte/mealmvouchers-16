@@ -33,6 +33,7 @@ router.post('/', async (req, res) => {
         .from('extra_vouchers')
         .insert([{
           user_id: userId,
+          authorized_by: 1, // TODO: Get from authenticated user
           valid_until: new Date(date).toISOString()
         }])
         .select()
