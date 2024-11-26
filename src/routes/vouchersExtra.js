@@ -8,7 +8,6 @@ router.post('/generate', async (req, res) => {
   const { usuario_id, datas, observacao } = req.body;
 
   try {
-    // Validação dos dados de entrada
     if (!usuario_id) {
       return res.status(400).json({ 
         success: false,
@@ -48,7 +47,7 @@ router.post('/generate', async (req, res) => {
           .from('vouchers_extras')
           .select('id')
           .eq('usuario_id', usuario_id)
-          .eq('data_validade', data)
+          .eq('valido_ate', data)
           .single();
 
         if (existingVoucher) {
@@ -56,24 +55,28 @@ router.post('/generate', async (req, res) => {
           continue;
         }
 
-        const { data: voucher, error } = await supabase
+        // Inserir novo voucher
+        const { data: voucher, error: insertError } = await supabase
           .from('vouchers_extras')
-          .insert([{
-            usuario_id,
-            data_validade: data,
+          .insert({
+            usuario_id: usuario_id,
+            valido_ate: data,
             observacao: observacao || 'Voucher extra gerado pelo sistema',
-            autorizado_por: 'Sistema'
-          }])
+            autorizado_por: 'Sistema',
+            usado: false
+          })
           .select()
           .single();
 
-        if (error) {
-          erros.push(`Erro ao gerar voucher para data ${data}: ${error.message}`);
-        } else if (voucher) {
+        if (insertError) {
+          logger.error('Erro ao inserir voucher:', insertError);
+          erros.push(`Erro ao gerar voucher para data ${data}`);
+        } else {
           vouchers.push(voucher);
         }
       } catch (error) {
-        erros.push(`Erro ao processar data ${data}: ${error.message}`);
+        logger.error('Erro ao processar voucher:', error);
+        erros.push(`Erro ao processar data ${data}`);
       }
     }
 
@@ -81,22 +84,23 @@ router.post('/generate', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: erros.length > 0 
-          ? `Não foi possível gerar vouchers: ${erros.join(', ')}` 
+          ? `Erro ao gerar vouchers: ${erros.join(', ')}` 
           : 'Não foi possível gerar nenhum voucher extra'
       });
     }
 
-    res.status(201).json({ 
+    return res.status(201).json({ 
       success: true,
       message: `${vouchers.length} voucher(s) extra(s) criado(s) com sucesso`,
       vouchers: vouchers,
       warnings: erros.length > 0 ? erros : undefined
     });
+
   } catch (error) {
     logger.error('Erro ao criar vouchers extras:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
-      error: 'Erro ao gerar vouchers extras. Por favor, tente novamente.'
+      error: 'Erro ao gerar vouchers extras'
     });
   }
 });
