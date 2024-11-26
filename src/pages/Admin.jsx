@@ -23,13 +23,13 @@ const Admin = () => {
     const token = localStorage.getItem('adminToken');
     if (!token) {
       toast.error("Sessão expirada. Por favor, faça login novamente.");
-      navigate('/login');
+      navigate('/voucher');
       return;
     }
 
     if (!isMasterAdmin && !isManager) {
       toast.error("Acesso não autorizado");
-      navigate('/login');
+      navigate('/voucher');
     }
   }, [navigate, isMasterAdmin, isManager]);
 
@@ -46,7 +46,7 @@ const Admin = () => {
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
 
-      <Tabs defaultValue="users">
+      <Tabs defaultValue="users" className="w-full">
         <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="companies">Empresas</TabsTrigger>
