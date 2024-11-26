@@ -1,6 +1,6 @@
 import express from 'express';
-import vouchersExtraRouter from './vouchersExtra.js';
-import vouchersRouter from './vouchers.js';
+import vouchersExtraRouter from './vouchersExtra';
+import vouchersRouter from './vouchers';
 
 const router = express.Router();
 

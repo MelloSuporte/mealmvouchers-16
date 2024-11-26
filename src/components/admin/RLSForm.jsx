@@ -15,19 +15,6 @@ const RLSForm = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: companiesData = [], isLoading: isLoadingCompanies, error: companiesError } = useQuery({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      try {
-        const response = await api.get('/empresas');
-        return Array.isArray(response.data) ? response.data : [];
-      } catch (error) {
-        toast.error("Erro ao carregar empresas: " + (error.response?.data?.message || error.message));
-        return [];
-      }
-    }
-  });
-
   const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useQuery({
     queryKey: ['users', searchTerm, selectedCompany],
     queryFn: async () => {
@@ -84,22 +71,16 @@ const RLSForm = () => {
         setSelectedUser("");
         setSelectedDates([]);
         setSearchTerm("");
+      } else {
+        throw new Error(response.data.error || 'Erro ao gerar vouchers');
       }
     } catch (error) {
       console.error('Erro detalhado:', error);
-      toast.error("Erro ao gerar vouchers: " + (error.response?.data?.message || error.message));
+      toast.error("Erro ao gerar vouchers: " + (error.response?.data?.error || error.message));
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  if (companiesError) {
-    return <div>Erro ao carregar empresas: {companiesError.message}</div>;
-  }
-
-  if (usersError) {
-    return <div>Erro ao carregar usuários: {usersError.message}</div>;
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -110,9 +91,7 @@ const RLSForm = () => {
         setSearchTerm={handleSearchTermChange}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
-        companies={companiesData}
         users={users}
-        isLoadingCompanies={isLoadingCompanies}
         isLoadingUsers={isLoadingUsers}
       />
 
