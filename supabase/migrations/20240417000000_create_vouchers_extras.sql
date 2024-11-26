@@ -18,3 +18,16 @@ CREATE POLICY "Vouchers extras são visíveis para todos"
 CREATE POLICY "Apenas usuários autenticados podem inserir vouchers extras"
   ON vouchers_extras FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
+
+-- Inserir dados de exemplo
+INSERT INTO vouchers_extras (usuario_id, autorizado_por, valido_ate)
+SELECT 
+  u.id,
+  'Sistema',
+  CURRENT_DATE + INTERVAL '30 days'
+FROM usuarios u
+WHERE u.id IN (
+  SELECT id FROM usuarios 
+  ORDER BY RANDOM() 
+  LIMIT 5
+);
