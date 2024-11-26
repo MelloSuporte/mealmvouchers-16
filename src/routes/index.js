@@ -1,11 +1,10 @@
 import express from 'express';
+import vouchersRouter from './vouchers.js';
 import vouchersExtraRouter from './vouchersExtra.js';
-import someOtherRouter from './someOtherRoute.js'; // Example for other routes, replace with actual imports
 
 const router = express.Router();
 
-// Define all API routes
-router.use('/vouchers-extras', vouchersExtraRouter);
-router.use('/some-other-route', someOtherRouter); // Example for another route
+router.use('/vouchers', vouchersRouter);
+router.use('/vouchers-extra', vouchersExtraRouter);
 
 export default router;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { format } from 'date-fns';
 import { supabase } from '../../../config/supabase';
+import api from '../../../utils/api';
 
 export const useDisposableVoucherForm = () => {
   const [quantity, setQuantity] = useState(1);
@@ -11,6 +12,52 @@ export const useDisposableVoucherForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [allVouchers, setAllVouchers] = useState([]);
+
+  const handleGenerateVouchers = async () => {
+    if (!selectedDates.length) {
+      toast.error("Selecione pelo menos uma data");
+      return;
+    }
+
+    if (!selectedMealTypes.length) {
+      toast.error("Selecione pelo menos um tipo de refeição");
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDates.some(date => date < today)) {
+      toast.error("Não é possível gerar vouchers para datas passadas");
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
+      
+      const response = await api.post('/vouchers-extra/generate', {
+        usuario_id: selectedMealTypes[0], // Usando primeiro tipo selecionado como exemplo
+        datas: formattedDates,
+        observacao: 'Voucher extra gerado via sistema'
+      });
+
+      if (response.data.success) {
+        setAllVouchers(prev => [...response.data.vouchers, ...prev]);
+        toast.success(`${response.data.vouchers.length} voucher(s) extra(s) gerado(s) com sucesso!`);
+        
+        setQuantity(1);
+        setSelectedMealTypes([]);
+        setSelectedDates([]);
+      }
+    } catch (error) {
+      toast.error("Erro ao gerar vouchers: " + error.message);
+      console.error('Erro detalhado:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
     loadMealTypes();
@@ -88,84 +135,6 @@ export const useDisposableVoucherForm = () => {
 
     const lastCode = lastVoucher ? parseInt(lastVoucher.codigo) : 0;
     return String(lastCode + 1).padStart(4, '0');
-  };
-
-  const handleGenerateVouchers = async () => {
-    if (!selectedDates.length) {
-      toast.error("Selecione pelo menos uma data");
-      return;
-    }
-
-    if (!selectedMealTypes.length) {
-      toast.error("Selecione pelo menos um tipo de refeição");
-      return;
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (selectedDates.some(date => date < today)) {
-      toast.error("Não é possível gerar vouchers para datas passadas");
-      return;
-    }
-
-    setIsGenerating(true);
-    const newVouchers = [];
-
-    try {
-      for (const date of selectedDates) {
-        // Set expiration time to 23:59:59 of the selected date
-        const expirationDate = new Date(date);
-        expirationDate.setHours(23, 59, 59, 999);
-        
-        for (const mealTypeId of selectedMealTypes) {
-          for (let i = 0; i < quantity; i++) {
-            const codigo = await generateSequentialCode();
-            const { data, error } = await supabase
-              .from('vouchers_descartaveis')
-              .insert([{
-                codigo,
-                tipo_refeicao_id: mealTypeId,
-                data_expiracao: expirationDate.toISOString(),
-                usado: false
-              }])
-              .select(`
-                *,
-                tipos_refeicao (
-                  nome
-                )
-              `)
-              .single();
-
-            if (error) {
-              toast.error(`Erro ao gerar voucher: ${error.message}`);
-              continue;
-            }
-
-            if (data) {
-              const formattedVoucher = {
-                ...data,
-                tipo_refeicao_nome: data.tipos_refeicao?.nome || 'Não especificado'
-              };
-              newVouchers.push(formattedVoucher);
-            }
-          }
-        }
-      }
-
-      if (newVouchers.length > 0) {
-        setAllVouchers(prev => [...newVouchers, ...prev]);
-        toast.success(`${newVouchers.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
-        
-        setQuantity(1);
-        setSelectedMealTypes([]);
-        setSelectedDates([]);
-      }
-    } catch (error) {
-      toast.error("Erro ao gerar vouchers: " + error.message);
-    } finally {
-      setIsGenerating(false);
-    }
   };
 
   return {

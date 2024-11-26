@@ -4,37 +4,27 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
-  const { user_id, dates } = req.body;
+// Rota para gerar vouchers extras
+router.post('/generate', async (req, res) => {
+  const { usuario_id, datas, observacao } = req.body;
 
   try {
-    if (!user_id || !dates || !Array.isArray(dates)) {
+    if (!usuario_id || !datas || !Array.isArray(datas)) {
       return res.status(400).json({ 
         error: 'Dados inválidos. Usuário e datas são obrigatórios.' 
       });
     }
 
-    const { data: user } = await supabase
-      .from('usuarios')
-      .select('id, nome')
-      .eq('id', user_id)
-      .single();
-
-    if (!user) {
-      return res.status(404).json({ 
-        error: 'Usuário não encontrado' 
-      });
-    }
-
     const vouchers = [];
     
-    for (const date of dates) {
+    for (const data of datas) {
       const { data: voucher, error } = await supabase
         .from('vouchers_extras')
         .insert([{
-          usuario_id: user_id,
-          autorizado_por: 'Sistema', // Pode ser alterado para pegar o usuário autenticado
-          valido_ate: new Date(date).toISOString()
+          usuario_id,
+          autorizado_por: 'Sistema',
+          valido_ate: new Date(data).toISOString(),
+          observacao: observacao || 'Voucher extra gerado pelo sistema'
         }])
         .select()
         .single();
@@ -59,6 +49,24 @@ router.post('/', async (req, res) => {
     res.status(500).json({ 
       error: error.message || 'Erro ao criar vouchers extras'
     });
+  }
+});
+
+// Rota para listar vouchers extras de um usuário
+router.get('/user/:id', async (req, res) => {
+  try {
+    const { data: vouchers, error } = await supabase
+      .from('vouchers_extras')
+      .select('*')
+      .eq('usuario_id', req.params.id)
+      .order('criado_em', { ascending: false });
+
+    if (error) throw error;
+
+    res.json(vouchers);
+  } catch (error) {
+    logger.error('Error fetching user extra vouchers:', error);
+    res.status(500).json({ error: 'Erro ao buscar vouchers extras' });
   }
 });
 
