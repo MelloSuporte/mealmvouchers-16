@@ -1,6 +1,38 @@
 import { supabase } from '../../config/supabase';
 import logger from '../../config/logger';
 
+export const findUserByCPF = async (cpf) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select(`
+        *,
+        empresas (
+          id,
+          nome
+        ),
+        turnos (
+          id,
+          tipo_turno,
+          horario_inicio,
+          horario_fim
+        )
+      `)
+      .eq('cpf', cpf)
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') {
+      logger.error('Erro ao buscar usuário:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    logger.error('Erro ao buscar usuário por CPF:', error);
+    throw error;
+  }
+};
+
 export const saveUserToDatabase = async (userData) => {
   try {
     // Limpa e converte os dados antes de salvar
@@ -36,6 +68,12 @@ export const saveUserToDatabase = async (userData) => {
           empresas (
             id,
             nome
+          ),
+          turnos (
+            id,
+            tipo_turno,
+            horario_inicio,
+            horario_fim
           )
         `);
 
@@ -52,6 +90,12 @@ export const saveUserToDatabase = async (userData) => {
           empresas (
             id,
             nome
+          ),
+          turnos (
+            id,
+            tipo_turno,
+            horario_inicio,
+            horario_fim
           )
         `);
 
