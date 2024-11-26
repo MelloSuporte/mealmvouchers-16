@@ -1,64 +1,82 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import CompanySelect from '../user/CompanySelect';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const CompanyUserSelector = ({ 
-  selectedCompany, 
-  setSelectedCompany, 
-  searchTerm, 
-  setSearchTerm, 
-  selectedUser, 
+const CompanyUserSelector = ({
+  selectedCompany,
+  setSelectedCompany,
+  searchTerm,
+  setSearchTerm,
+  selectedUser,
   setSelectedUser,
-  users = [],
-  isLoadingUsers 
+  companies,
+  users,
+  isLoadingCompanies,
+  isLoadingUsers
 }) => {
-  // Garantir que users seja sempre um array
+  const formatCPF = (cpf) => {
+    // Remove caracteres não numéricos
+    const cleanCPF = cpf.replace(/\D/g, '');
+    
+    // Aplica a máscara
+    return cleanCPF.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  };
+
   const usersList = Array.isArray(users) ? users : [];
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="company">Empresa</Label>
-        <CompanySelect 
+      <div>
+        <Select
           value={selectedCompany}
           onValueChange={setSelectedCompany}
-          includeAllOption={true}
-        />
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione a empresa" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as empresas</SelectItem>
+            {companies?.map((company) => (
+              <SelectItem key={company.id} value={company.id.toString()}>
+                {company.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="searchUser">Buscar Usuário (CPF)</Label>
+      <div>
         <Input
-          id="searchUser"
+          placeholder="Digite o nome ou CPF do usuário"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Digite o CPF do usuário"
+          disabled={isLoadingUsers}
         />
-        {searchTerm.length < 3 && (
-          <p className="text-sm text-gray-500">
-            Digite pelo menos 3 caracteres para buscar
-          </p>
-        )}
       </div>
 
-      <Select 
-        value={selectedUser} 
-        onValueChange={setSelectedUser}
-        disabled={isLoadingUsers}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder={isLoadingUsers ? "Carregando usuários..." : "Selecione o usuário"} />
-        </SelectTrigger>
-        <SelectContent>
-          {usersList.map((user) => (
-            <SelectItem key={user.id} value={user.id.toString()}>
-              {user.nome} - {user.cpf}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div>
+        <Select
+          value={selectedUser}
+          onValueChange={setSelectedUser}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o usuário" />
+          </SelectTrigger>
+          <SelectContent>
+            {usersList.map((user) => (
+              <SelectItem key={user.id} value={user.id.toString()}>
+                {user.nome} - {formatCPF(user.cpf)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 };
