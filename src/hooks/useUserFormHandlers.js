@@ -3,6 +3,7 @@ import logger from '../config/logger';
 import { validateUserData, handleValidationErrors } from './user/useUserValidation';
 import { saveUserToDatabase, findUserByCPF } from './user/useUserDatabase';
 import { generateUniqueVoucherFromCPF } from '../utils/voucherGenerationUtils';
+import { supabase } from '../config/supabase';
 
 export const useUserFormHandlers = (
   formData,
