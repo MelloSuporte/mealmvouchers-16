@@ -14,7 +14,8 @@ router.get('/', async (req, res) => {
     
     const { data: empresas, error } = await supabase
       .from('empresas')
-      .select('*')
+      .select('id, nome, cnpj, logo')
+      .eq('ativo', true)
       .order('nome');
 
     if (error) {
