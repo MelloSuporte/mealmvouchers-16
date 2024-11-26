@@ -1,4 +1,3 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -12,7 +11,6 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
         const { data, error } = await supabase
           .from('empresas')
           .select('id, nome')
-          .eq('ativo', true)
           .order('nome');
 
         if (error) throw error;

@@ -22,7 +22,6 @@ const CompanyUserSelector = ({
         const { data, error } = await supabase
           .from('empresas')
           .select('id, nome')
-          .eq('ativo', true)
           .order('nome');
 
         if (error) throw error;
