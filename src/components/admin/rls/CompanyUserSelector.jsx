@@ -9,11 +9,15 @@ const CompanyUserSelector = ({
   setSearchTerm,
   selectedUser,
   setSelectedUser,
-  companies,
-  users,
+  companies = [],
+  users = [],
   isLoadingCompanies,
   isLoadingUsers
 }) => {
+  // Garantir que companies e users sejam sempre arrays
+  const companiesList = Array.isArray(companies) ? companies : [];
+  const usersList = Array.isArray(users) ? users : [];
+
   return (
     <div className="space-y-4">
       <div>
@@ -30,7 +34,7 @@ const CompanyUserSelector = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as Empresas</SelectItem>
-            {companies.map((company) => (
+            {companiesList.map((company) => (
               <SelectItem key={company.id} value={company.id.toString()}>
                 {company.nome}
               </SelectItem>
@@ -66,7 +70,7 @@ const CompanyUserSelector = ({
               <SelectValue placeholder="Selecione um usuário" />
             </SelectTrigger>
             <SelectContent>
-              {users.map((user) => (
+              {usersList.map((user) => (
                 <SelectItem key={user.id} value={user.id.toString()}>
                   {user.nome} - {user.cpf}
                 </SelectItem>
