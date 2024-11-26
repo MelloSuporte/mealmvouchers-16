@@ -35,7 +35,16 @@ const RLSForm = () => {
       try {
         const cleanCPF = searchTerm.replace(/\D/g, '');
         const response = await api.get(`/users/search?term=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
-        return Array.isArray(response.data) ? response.data : [];
+        
+        // Formatar os dados do usuário para exibição
+        if (response.data && Array.isArray(response.data)) {
+          return response.data.map(user => ({
+            id: user.id,
+            nome: user.nome,
+            cpf: formatCPF(user.cpf)
+          }));
+        }
+        return [];
       } catch (error) {
         toast.error("Erro ao buscar usuários: " + (error.response?.data?.message || error.message));
         return [];
@@ -44,9 +53,9 @@ const RLSForm = () => {
     enabled: searchTerm.length >= 3
   });
 
-  const handleSearchTermChange = (value) => {
-    const formattedValue = formatCPF(value);
-    setSearchTerm(formattedValue);
+  const handleSearchTermChange = (e) => {
+    const formattedCPF = formatCPF(e);
+    setSearchTerm(formattedCPF);
   };
 
   const handleSubmit = async (e) => {
