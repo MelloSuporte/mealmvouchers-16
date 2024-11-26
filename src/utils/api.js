@@ -32,7 +32,8 @@ api.interceptors.response.use(
       localStorage.removeItem('adminToken');
       window.location.href = '/login';
     } else if (error.response?.status === 404) {
-      toast.error('Recurso não encontrado. Verifique a URL da requisição.');
+      console.error('URL da requisição:', error.config?.url);
+      toast.error('Erro: Rota não encontrada. Por favor, contate o suporte.');
     } else if (error.code === 'ECONNABORTED') {
       toast.error('A requisição demorou muito para responder. Tente novamente.');
     } else {

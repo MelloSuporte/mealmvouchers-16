@@ -5,10 +5,14 @@ import { configureExpress } from './config/express.js';
 import { startServer } from './config/server.js';
 import createApp from './config/app.js';
 import logger from './config/logger.js';
+import vouchersExtraRouter from './routes/vouchersExtra.js';
 
 dotenv.config();
 
 const app = createApp();
+
+// Adiciona a rota de vouchers extras
+app.use('/api/vouchers-extra', vouchersExtraRouter);
 
 // Enhanced error handling middleware
 app.use((err, req, res, next) => {
