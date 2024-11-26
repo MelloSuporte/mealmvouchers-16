@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from 'lucide-react';
 
-const UserSearchSection = ({ searchCPF, setSearchCPF, onSearch }) => {
+const UserSearchSection = ({ searchCPF, setSearchCPF, onSearch, isSearching }) => {
   const formatCPF = (value) => {
     const cpf = value.replace(/\D/g, '');
     if (cpf.length <= 11) {
@@ -25,8 +25,12 @@ const UserSearchSection = ({ searchCPF, setSearchCPF, onSearch }) => {
         onChange={handleCPFChange}
         maxLength={14}
       />
-      <Button type="button" onClick={onSearch}>
-        <Search size={20} />
+      <Button 
+        type="button" 
+        onClick={onSearch}
+        disabled={isSearching}
+      >
+        <Search className="h-4 w-4" />
       </Button>
     </div>
   );

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from "sonner";
 import { supabase } from '../../config/supabase';
 import UserFormFields from './user/UserFormFields';
+import UserSearchSection from './user/UserSearchSection';
 import { useVoucherVisibility } from '../../hooks/useVoucherVisibility';
 import logger from '../../config/logger';
 
@@ -127,6 +128,12 @@ const UserFormMain = () => {
 
   return (
     <div className="space-y-4">
+      <UserSearchSection 
+        searchCPF={searchCPF}
+        setSearchCPF={setSearchCPF}
+        onSearch={handleSearch}
+        isSearching={isSearching}
+      />
       <UserFormFields
         formData={formData}
         onInputChange={handleInputChange}
