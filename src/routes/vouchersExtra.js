@@ -58,19 +58,18 @@ router.post('/generate', async (req, res) => {
         const { data: novoVoucher, error: insertError } = await supabase
           .from('vouchers_extras')
           .insert([{
-            usuario_id: usuario_id,
+            usuario_id,
             empresa_id: usuario.empresa_id,
             valido_ate: data,
             observacao: observacao || 'Voucher extra gerado pelo sistema',
             autorizado_por: 'Sistema',
-            usado: false
+            usado: false,
+            criado_em: new Date().toISOString()
           }])
           .select()
           .single();
 
-        if (insertError) {
-          throw insertError;
-        }
+        if (insertError) throw insertError;
 
         vouchersGerados.push(novoVoucher);
         logger.info(`Voucher gerado com sucesso para data ${data}`);

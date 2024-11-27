@@ -11,14 +11,16 @@ dotenv.config();
 
 const app = createApp();
 
-// Adiciona a rota de vouchers extras
+// Configurar Express primeiro
+configureExpress(app);
+
+// Adicionar rotas depois da configuração
 app.use('/api/vouchers-extra', vouchersExtraRouter);
 
 // Enhanced error handling middleware
 app.use((err, req, res, next) => {
   logger.error('Server error:', err);
   
-  // Handle specific database errors
   if (err.code === 'ECONNREFUSED') {
     return res.status(503).json({
       error: 'Database connection failed',
@@ -26,7 +28,6 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Handle validation errors
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       error: 'Validation error',
@@ -34,14 +35,12 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Default error response
   res.status(500).json({ 
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
   });
 });
 
-configureExpress(app);
 startServer(app);
 
 // Graceful shutdown handling

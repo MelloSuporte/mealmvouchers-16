@@ -102,7 +102,7 @@ export const useDisposableVoucherForm = () => {
             nome
           )
         `)
-        .order('data_criacao', { ascending: false });
+        .order('criado_em', { ascending: false });
 
       if (error) throw error;
 
