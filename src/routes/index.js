@@ -13,6 +13,7 @@ import healthRoutes from './health.js';
 
 const router = express.Router();
 
+// Registrar todas as rotas
 router.use('/admin', adminRoutes);
 router.use('/empresas', empresasRoutes);
 router.use('/usuarios', usuariosRoutes);

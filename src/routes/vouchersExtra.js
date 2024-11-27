@@ -5,9 +5,9 @@ import logger from '../config/logger.js';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const { usuario_id, datas, observacao } = req.body;
+  const { usuario_id, datas, tipos_refeicao_ids, observacao } = req.body;
   
-  logger.info('Recebida requisição para gerar vouchers extras:', { usuario_id, datas });
+  logger.info('Recebida requisição para gerar vouchers extras:', { usuario_id, datas, tipos_refeicao_ids });
 
   try {
     if (!usuario_id || !datas || !Array.isArray(datas) || datas.length === 0) {
@@ -17,28 +17,26 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Buscar tipos de refeição ativos
-    const { data: tiposRefeicao, error: tiposError } = await supabase
-      .from('tipos_refeicao')
-      .select('id')
-      .eq('ativo', true);
+    // Se não foram especificados tipos de refeição, buscar todos os ativos
+    let tiposRefeicao = tipos_refeicao_ids;
+    if (!tiposRefeicao || !Array.isArray(tiposRefeicao) || tiposRefeicao.length === 0) {
+      const { data: tiposAtivos, error: tiposError } = await supabase
+        .from('tipos_refeicao')
+        .select('id')
+        .eq('ativo', true);
 
-    if (tiposError) {
-      logger.error('Erro ao buscar tipos de refeição:', tiposError);
-      throw new Error('Erro ao buscar tipos de refeição');
-    }
+      if (tiposError) {
+        logger.error('Erro ao buscar tipos de refeição:', tiposError);
+        throw new Error('Erro ao buscar tipos de refeição');
+      }
 
-    if (!tiposRefeicao || tiposRefeicao.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Nenhum tipo de refeição ativo encontrado'
-      });
+      tiposRefeicao = tiposAtivos.map(tipo => tipo.id);
     }
 
     const vouchersParaInserir = datas.flatMap(data => 
-      tiposRefeicao.map(tipo => ({
+      tiposRefeicao.map(tipo_refeicao_id => ({
         usuario_id,
-        tipo_refeicao_id: tipo.id,
+        tipo_refeicao_id,
         data_expiracao: new Date(data + 'T23:59:59-03:00').toISOString(),
         codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
         observacao: observacao || 'Voucher extra gerado via sistema',
