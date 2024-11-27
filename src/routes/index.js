@@ -1,5 +1,5 @@
 import express from 'express';
-import vouchersExtraRouter from './vouchersExtra.js';
+import vouchersExtraRouter from '../api/routes/vouchersExtra.js';
 import vouchersRouter from './vouchers.js';
 import usuariosRouter from './usuarios.js';
 import empresasRouter from './empresas.js';
