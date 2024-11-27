@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from "sonner";
 
 const api = axios.create({
-  baseURL: '/routes',
+  baseURL: '/',
   headers: {
     'Content-Type': 'application/json',
   },
