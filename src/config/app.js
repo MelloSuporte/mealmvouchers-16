@@ -27,6 +27,7 @@ const createApp = () => {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.use(securityMiddleware);
+  app.use(withDatabase);
 
   // Add detailed request logging
   app.use((req, res, next) => {
@@ -70,8 +71,7 @@ const createApp = () => {
     }
   });
 
-  // Mount all routes with database connection and /api prefix
-  app.use(withDatabase);
+  // Mount all routes with /api prefix
   app.use('/api', routes);
 
   // Global error handler - must be last
