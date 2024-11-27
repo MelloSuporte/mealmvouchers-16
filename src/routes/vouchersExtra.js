@@ -1,6 +1,6 @@
 import express from 'express';
-import { supabase } from '../../config/supabase.js';
-import logger from '../../config/logger.js';
+import { supabase } from '../config/supabase.js';
+import logger from '../config/logger.js';
 
 const router = express.Router();
 
@@ -37,7 +37,6 @@ router.post('/generate', async (req, res) => {
     for (const data of datas) {
       for (const tipo_refeicao_id of tipos_refeicao_ids) {
         try {
-          // Verifica se já existe um voucher para esta data, usuário e tipo de refeição
           const { data: existingVoucher, error: checkError } = await supabase
             .from('vouchers_extras')
             .select('id')
@@ -55,7 +54,6 @@ router.post('/generate', async (req, res) => {
             continue;
           }
 
-          // Insere novo voucher
           const { data: novoVoucher, error: insertError } = await supabase
             .from('vouchers_extras')
             .insert([{
