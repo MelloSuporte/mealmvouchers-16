@@ -5,9 +5,9 @@ import logger from '../config/logger.js';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const { usuario_id, tipos_refeicao_ids, datas, observacao } = req.body;
+  const { usuario_id, datas, observacao } = req.body;
 
-  logger.info('Iniciando geração de vouchers extras:', { usuario_id, tipos_refeicao_ids, datas });
+  logger.info('Iniciando geração de vouchers extras:', { usuario_id, datas });
 
   try {
     if (!datas || !Array.isArray(datas) || datas.length === 0) {
