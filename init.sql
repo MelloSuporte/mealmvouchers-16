@@ -97,3 +97,7 @@ INSERT INTO turnos (tipo_turno, horario_inicio, horario_fim, ativo) VALUES
   ('primeiro', '06:00:00', '14:00:00', true),
   ('segundo', '14:00:00', '22:00:00', true),
   ('terceiro', '22:00:00', '06:00:00', true);
+
+-- Inserir tipo de refeição extra padrão
+INSERT INTO tipos_refeicao (nome, valor, ativo, minutos_tolerancia) VALUES
+  ('Refeição Extra', 15.00, true, 15);

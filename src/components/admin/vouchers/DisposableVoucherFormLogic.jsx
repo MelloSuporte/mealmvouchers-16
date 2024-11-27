@@ -12,6 +12,7 @@ export const useDisposableVoucherForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [allVouchers, setAllVouchers] = useState([]);
+  const [extraMealType, setExtraMealType] = useState(null);
 
   const handleGenerateVouchers = async () => {
     if (!selectedDates.length) {
@@ -19,8 +20,8 @@ export const useDisposableVoucherForm = () => {
       return;
     }
 
-    if (!selectedMealTypes.length) {
-      toast.error("Selecione pelo menos um tipo de refeição");
+    if (!extraMealType) {
+      toast.error("Tipo de refeição extra não encontrado");
       return;
     }
 
@@ -38,7 +39,7 @@ export const useDisposableVoucherForm = () => {
       const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
       
       const response = await api.post('/api/vouchers-extra/generate', {
-        usuario_id: selectedMealTypes[0],
+        tipo_refeicao_id: extraMealType.id,
         datas: formattedDates,
         observacao: 'Voucher extra gerado via sistema'
       });
@@ -70,23 +71,20 @@ export const useDisposableVoucherForm = () => {
       const { data, error } = await supabase
         .from('tipos_refeicao')
         .select('id, nome, hora_inicio, hora_fim, ativo')
-        .eq('ativo', true);
+        .eq('nome', 'Refeição Extra')
+        .single();
 
       if (error) throw error;
 
       if (data) {
-        const formattedMealTypes = data.map(meal => ({
-          id: meal.id,
-          name: meal.nome,
-          start_time: meal.hora_inicio,
-          end_time: meal.hora_fim,
-          is_active: meal.ativo
-        }));
-        setMealTypes(formattedMealTypes);
+        setExtraMealType(data);
+        setMealTypes([data]);
+      } else {
+        toast.error("Tipo de refeição 'Refeição Extra' não encontrado");
       }
     } catch (error) {
       console.error('Error loading meal types:', error);
-      toast.error("Erro ao carregar tipos de refeição");
+      toast.error("Erro ao carregar tipo de refeição extra");
     } finally {
       setIsLoading(false);
     }
