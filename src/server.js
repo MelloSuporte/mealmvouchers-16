@@ -1,7 +1,5 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { configureExpress } from './config/express.js';
-import { startServer } from './config/server.js';
 import createApp from './config/app.js';
 import logger from './config/logger.js';
 
@@ -10,7 +8,10 @@ dotenv.config();
 const app = createApp();
 
 // Iniciar o servidor
-startServer(app);
+const port = process.env.PORT || 5000;
+const server = app.listen(port, '0.0.0.0', () => {
+  logger.info(`Server running on port ${port}`);
+});
 
 // Graceful shutdown handling
 process.on('SIGTERM', () => {
