@@ -38,7 +38,7 @@ export const useDisposableVoucherForm = () => {
     try {
       const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
       
-      const response = await api.post('/api/vouchers-extra/generate', {
+      const response = await api.post('/vouchers-extra/generate', {
         tipo_refeicao_id: extraMealType.id,
         datas: formattedDates,
         observacao: 'Voucher extra gerado via sistema'
