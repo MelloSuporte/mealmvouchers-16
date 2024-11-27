@@ -37,7 +37,7 @@ export const useDisposableVoucherFormLogic = () => {
     try {
       const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
       
-      const response = await api.post('/api/route/vouchers-extra/generate', {
+      const response = await api.post('/api/vouchers-extra', {
         tipos_refeicao_ids: selectedMealTypes,
         datas: formattedDates,
         observacao: 'Voucher extra gerado via sistema'
@@ -59,7 +59,7 @@ export const useDisposableVoucherFormLogic = () => {
       }
     } catch (error) {
       console.error('Erro detalhado:', error);
-      toast.error(error.response?.data?.error || "Erro ao gerar vouchers");
+      toast.error("Serviço de vouchers extras indisponível. Por favor, tente novamente mais tarde.");
     } finally {
       setIsGenerating(false);
     }

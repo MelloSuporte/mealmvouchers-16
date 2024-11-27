@@ -5,42 +5,32 @@ import logger from '../config/logger.js';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const { usuario_id, datas, observacao } = req.body;
+  const { tipos_refeicao_ids, datas, observacao } = req.body;
   
-  logger.info('Recebida requisição para gerar vouchers extras:', { usuario_id, datas });
+  logger.info('Recebida requisição para gerar vouchers extras:', { tipos_refeicao_ids, datas });
 
   try {
-    if (!usuario_id || !datas || !Array.isArray(datas) || datas.length === 0) {
+    if (!tipos_refeicao_ids || !datas || !Array.isArray(datas) || datas.length === 0) {
       return res.status(400).json({
         success: false,
         error: 'Dados inválidos para geração de vouchers'
       });
     }
 
-    // Busca o tipo de refeição extra padrão
-    const { data: tipoRefeicao, error: tipoError } = await supabase
-      .from('tipos_refeicao')
-      .select('id')
-      .eq('nome', 'Refeição Extra')
-      .single();
-
-    if (tipoError || !tipoRefeicao) {
-      logger.error('Erro ao buscar tipo de refeição:', tipoError);
-      return res.status(500).json({
-        success: false,
-        error: 'Erro ao buscar tipo de refeição'
-      });
+    const vouchersParaInserir = [];
+    
+    for (const data of datas) {
+      for (const tipo_refeicao_id of tipos_refeicao_ids) {
+        vouchersParaInserir.push({
+          tipo_refeicao_id,
+          valido_ate: data,
+          autorizado_por: 'Sistema',
+          observacao: observacao || 'Voucher extra gerado via sistema',
+          usado: false,
+          criado_em: new Date().toISOString()
+        });
+      }
     }
-
-    const vouchersParaInserir = datas.map(data => ({
-      usuario_id: usuario_id,
-      tipo_refeicao_id: tipoRefeicao.id,
-      valido_ate: data,
-      autorizado_por: 'Sistema',
-      observacao: observacao || 'Voucher extra gerado via sistema',
-      usado: false,
-      criado_em: new Date().toISOString()
-    }));
 
     const { data: vouchersInseridos, error: insertError } = await supabase
       .from('vouchers_extras')
