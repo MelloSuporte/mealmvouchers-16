@@ -24,6 +24,6 @@ export const configureExpress = (app) => {
     res.json({ status: 'OK', message: 'Servidor funcionando normalmente' });
   });
   
-  // Montagem das rotas da API (exceto vouchers extras que é configurado separadamente)
+  // Montagem das rotas da API
   app.use('/api', routes);
 };
