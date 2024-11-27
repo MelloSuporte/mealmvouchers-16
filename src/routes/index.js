@@ -7,6 +7,7 @@ import refeicaoRouter from './refeicoes.js';
 import relatoriosRouter from './relatorios.js';
 import imagensFundoRouter from './imagensFundo.js';
 import adminRouter from './admin.js';
+import vouchersExtraRouter from './vouchersExtra.js';
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use('/refeicoes', refeicaoRouter);
 router.use('/relatorios', relatoriosRouter);
 router.use('/imagens-fundo', imagensFundoRouter);
 router.use('/admin', adminRouter);
+router.use('/vouchers-extra', vouchersExtraRouter);
 
 export default router;
