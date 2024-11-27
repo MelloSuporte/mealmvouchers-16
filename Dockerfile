@@ -3,26 +3,32 @@ FROM oven/bun:1-debian as builder
 
 WORKDIR /app
 
-# Install dependencies
+# Copiar arquivos de configuração primeiro
 COPY package.json bun.lockb ./
+
+# Instalar dependências
 RUN bun install
 
-# Copy source code
+# Copiar código fonte
 COPY . .
 
-# Build the application
+# Construir a aplicação
 RUN bun run build
 
 # Production stage
 FROM nginx:alpine
 
-# Copy nginx configuration
+# Copiar configuração do nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy built files from builder stage
+# Copiar arquivos construídos do estágio anterior
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port
+# Criar diretório para logs
+RUN mkdir -p /var/log/nginx
+
+# Expor porta
 EXPOSE 80
 
+# Comando para iniciar o nginx
 CMD ["nginx", "-g", "daemon off;"]
