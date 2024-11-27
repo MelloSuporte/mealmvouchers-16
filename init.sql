@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS uso_voucher (
 CREATE TABLE IF NOT EXISTS vouchers_extras (
   id SERIAL PRIMARY KEY,
   usuario_id INTEGER REFERENCES usuarios(id),
-  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
+  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id) NOT NULL,
   autorizado_por VARCHAR(255) NOT NULL,
   valido_ate DATE,
   usado BOOLEAN DEFAULT FALSE,
