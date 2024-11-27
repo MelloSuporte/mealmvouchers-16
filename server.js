@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { configureExpress } from './src/config/express.js';
 import { startServer } from './src/config/server.js';
 import createApp from './src/config/app.js';
-import vouchersExtraRouter from './src/routes/vouchersExtra.js';
+import vouchersExtraRouter from './src/api/routes/vouchersExtra.js';
 
 dotenv.config();
 
