@@ -42,12 +42,26 @@ const CompanyUserSelector = ({
           .from('usuarios')
           .select('id, nome, cpf')
           .eq('cpf', cleanCPF)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          // Verifica se o erro é de "nenhum resultado encontrado"
+          if (error.code === 'PGRST116') {
+            toast.info('Usuário não encontrado');
+            return null;
+          }
+          throw error;
+        }
+
+        if (!data) {
+          toast.info('Usuário não encontrado');
+          return null;
+        }
+
         return data;
       } catch (error) {
         console.error('Erro ao buscar usuário:', error);
+        toast.error('Erro ao buscar usuário: ' + error.message);
         return null;
       }
     },
