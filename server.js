@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 // Configura as rotas da aplicação
 configureExpress(app);
 
-// Adiciona todas as rotas da API
+// Adiciona todas as rotas da API com prefixo /api
 app.use('/api', routes);
 
 // Inicia o servidor
