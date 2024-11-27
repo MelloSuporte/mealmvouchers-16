@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import { securityMiddleware } from '../middleware/security.js';
 import routes from '../routes/index.js';
-import vouchersExtraRouter from '../routes/vouchersExtra.js';
 
 export const configureExpress = (app) => {
   // Configuração do CORS
@@ -25,9 +24,6 @@ export const configureExpress = (app) => {
     res.json({ status: 'OK', message: 'Servidor funcionando normalmente' });
   });
   
-  // Rota de vouchers extras
-  app.use('/api/vouchers-extra', vouchersExtraRouter);
-  
-  // Montagem das rotas da API
+  // Montagem das rotas da API (exceto vouchers extras que é configurado separadamente)
   app.use('/api', routes);
 };
