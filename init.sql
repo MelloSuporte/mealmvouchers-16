@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS turnos (
 );
 
 CREATE TABLE IF NOT EXISTS usuarios (
-  id SERIAL PRIMARY KEY,
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
   cpf VARCHAR(14) NOT NULL UNIQUE,
   empresa_id INTEGER REFERENCES empresas(id),
@@ -49,14 +49,14 @@ CREATE TABLE IF NOT EXISTS tipos_refeicao (
 
 CREATE TABLE IF NOT EXISTS uso_voucher (
   id SERIAL PRIMARY KEY,
-  usuario_id INTEGER REFERENCES usuarios(id),
+  usuario_id UUID REFERENCES usuarios(id),
   tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
   usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS vouchers_extras (
   id SERIAL PRIMARY KEY,
-  usuario_id INTEGER REFERENCES usuarios(id),
+  usuario_id UUID REFERENCES usuarios(id),
   tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id) NOT NULL,
   autorizado_por VARCHAR(255) NOT NULL,
   codigo VARCHAR(8) NOT NULL UNIQUE,
