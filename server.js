@@ -27,8 +27,8 @@ app.use((req, res, next) => {
 configureExpress(app);
 
 // Adiciona todas as rotas da API
-app.use('/', routes);
-app.use('/vouchers-extra', vouchersExtraRouter);
+app.use('/api', routes);
+app.use('/api/vouchers-extra', vouchersExtraRouter);
 
 // Inicia o servidor
 startServer(app);
