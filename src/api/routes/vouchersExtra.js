@@ -5,9 +5,9 @@ import logger from '../../config/logger.js';
 const router = express.Router();
 
 router.post('/generate', async (req, res) => {
-  const { usuario_id, datas, observacao } = req.body;
+  const { usuario_id, datas, tipos_refeicao_ids, observacao } = req.body;
 
-  logger.info('Iniciando geração de vouchers extras:', { usuario_id, datas });
+  logger.info('Iniciando geração de vouchers extras:', { usuario_id, datas, tipos_refeicao_ids });
 
   try {
     if (!usuario_id) {
@@ -24,49 +24,60 @@ router.post('/generate', async (req, res) => {
       });
     }
 
+    if (!tipos_refeicao_ids || !Array.isArray(tipos_refeicao_ids) || tipos_refeicao_ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Selecione pelo menos um tipo de refeição'
+      });
+    }
+
     const vouchersGerados = [];
     const warnings = [];
 
     for (const data of datas) {
-      try {
-        // Verifica se já existe um voucher para esta data e usuário
-        const { data: existingVoucher, error: checkError } = await supabase
-          .from('vouchers_extras')
-          .select('id')
-          .eq('usuario_id', usuario_id)
-          .eq('valido_ate', data)
-          .single();
+      for (const tipo_refeicao_id of tipos_refeicao_ids) {
+        try {
+          // Verifica se já existe um voucher para esta data, usuário e tipo de refeição
+          const { data: existingVoucher, error: checkError } = await supabase
+            .from('vouchers_extras')
+            .select('id')
+            .eq('usuario_id', usuario_id)
+            .eq('valido_ate', data)
+            .eq('tipo_refeicao_id', tipo_refeicao_id)
+            .single();
 
-        if (checkError && checkError.code !== 'PGRST116') {
-          throw checkError;
+          if (checkError && checkError.code !== 'PGRST116') {
+            throw checkError;
+          }
+
+          if (existingVoucher) {
+            warnings.push(`Já existe um voucher para a data ${data} e tipo de refeição selecionado`);
+            continue;
+          }
+
+          // Insere novo voucher
+          const { data: novoVoucher, error: insertError } = await supabase
+            .from('vouchers_extras')
+            .insert([{
+              usuario_id: usuario_id,
+              tipo_refeicao_id: tipo_refeicao_id,
+              valido_ate: data,
+              observacao: observacao || 'Voucher extra gerado pelo sistema',
+              autorizado_por: 'Sistema',
+              usado: false,
+              criado_em: new Date().toISOString()
+            }])
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+
+          vouchersGerados.push(novoVoucher);
+          logger.info(`Voucher gerado com sucesso para data ${data} e tipo de refeição ${tipo_refeicao_id}`);
+        } catch (error) {
+          logger.error(`Erro ao gerar voucher para data ${data} e tipo de refeição ${tipo_refeicao_id}:`, error);
+          warnings.push(`Erro ao gerar voucher para data ${data}: ${error.message}`);
         }
-
-        if (existingVoucher) {
-          warnings.push(`Já existe um voucher para a data ${data}`);
-          continue;
-        }
-
-        // Insere novo voucher
-        const { data: novoVoucher, error: insertError } = await supabase
-          .from('vouchers_extras')
-          .insert([{
-            usuario_id: usuario_id,
-            valido_ate: data,
-            observacao: observacao || 'Voucher extra gerado pelo sistema',
-            autorizado_por: 'Sistema',
-            usado: false,
-            criado_em: new Date().toISOString()
-          }])
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-
-        vouchersGerados.push(novoVoucher);
-        logger.info(`Voucher gerado com sucesso para data ${data}`);
-      } catch (error) {
-        logger.error(`Erro ao gerar voucher para data ${data}:`, error);
-        warnings.push(`Erro ao gerar voucher para data ${data}: ${error.message}`);
       }
     }
 
