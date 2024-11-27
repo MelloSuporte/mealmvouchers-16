@@ -5,32 +5,40 @@ import logger from '../config/logger.js';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const { tipos_refeicao_ids, datas, observacao } = req.body;
+  const { usuario_id, datas, observacao } = req.body;
   
-  logger.info('Recebida requisição para gerar vouchers extras:', { tipos_refeicao_ids, datas });
+  logger.info('Recebida requisição para gerar vouchers extras:', { usuario_id, datas });
 
   try {
-    if (!tipos_refeicao_ids || !datas || !Array.isArray(datas) || datas.length === 0) {
+    if (!usuario_id || !datas || !Array.isArray(datas) || datas.length === 0) {
       return res.status(400).json({
         success: false,
         error: 'Dados inválidos para geração de vouchers'
       });
     }
 
-    const vouchersParaInserir = [];
-    
-    for (const data of datas) {
-      for (const tipo_refeicao_id of tipos_refeicao_ids) {
-        vouchersParaInserir.push({
-          tipo_refeicao_id,
-          valido_ate: data,
-          autorizado_por: 'Sistema',
-          observacao: observacao || 'Voucher extra gerado via sistema',
-          usado: false,
-          criado_em: new Date().toISOString()
-        });
-      }
+    // Buscar tipos de refeição ativos
+    const { data: tiposRefeicao, error: tiposError } = await supabase
+      .from('tipos_refeicao')
+      .select('id')
+      .eq('ativo', true)
+      .single();
+
+    if (tiposError) {
+      logger.error('Erro ao buscar tipos de refeição:', tiposError);
+      throw new Error('Erro ao buscar tipos de refeição');
     }
+
+    const vouchersParaInserir = datas.map(data => ({
+      usuario_id,
+      tipo_refeicao_id: tiposRefeicao.id,
+      valido_ate: data,
+      autorizado_por: 'Sistema',
+      codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
+      observacao: observacao || 'Voucher extra gerado via sistema',
+      usado: false,
+      criado_em: new Date().toISOString()
+    }));
 
     const { data: vouchersInseridos, error: insertError } = await supabase
       .from('vouchers_extras')
