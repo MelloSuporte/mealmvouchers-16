@@ -24,7 +24,7 @@ const RLSForm = () => {
       if (!searchTerm || searchTerm.length < 3) return [];
       try {
         const cleanCPF = searchTerm.replace(/\D/g, '');
-        const response = await api.get(`/api/usuarios/search?term=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
+        const response = await api.get(`/usuarios/search?term=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
         
         if (!response.data) {
           toast.error("Nenhum usuário encontrado");
@@ -52,7 +52,7 @@ const RLSForm = () => {
     const formattedCPF = formatCPF(e);
     setSearchTerm(formattedCPF);
     if (selectedUser) {
-      setSelectedUser(""); // Limpa o usuário selecionado quando mudar a busca
+      setSelectedUser("");
     }
   };
 
@@ -86,7 +86,7 @@ const RLSForm = () => {
     try {
       const formattedDates = selectedDates.map(date => date.toISOString().split('T')[0]);
       
-      const response = await api.post('/api/vouchers-extra', {
+      const response = await api.post('/vouchers-extra', {
         usuario_id: selectedUser,
         datas: formattedDates,
         observacao: observacao.trim() || 'Voucher extra gerado via sistema'
