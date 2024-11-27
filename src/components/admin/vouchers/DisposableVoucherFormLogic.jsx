@@ -96,7 +96,7 @@ export const useDisposableVoucherForm = () => {
         .from('vouchers_extras')
         .select(`
           *,
-          tipos_refeicao:tipo_refeicao_id (
+          tipos_refeicao (
             nome
           )
         `)
