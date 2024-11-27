@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
   });
 
   try {
-    if (!datas || !Array.isArray(datas) || datas.length === 0) {
+    if (!usuario_id || !datas || !Array.isArray(datas) || datas.length === 0) {
       return res.status(400).json({
         success: false,
         error: 'Dados inválidos para geração de vouchers'
@@ -41,6 +41,7 @@ router.post('/', async (req, res) => {
 
     const vouchersParaInserir = datas.flatMap(data => 
       tiposRefeicao.map(tipo_refeicao_id => ({
+        usuario_id,
         tipo_refeicao_id,
         data_expiracao: new Date(data + 'T23:59:59-03:00').toISOString(),
         codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
