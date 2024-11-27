@@ -65,7 +65,7 @@ const RLSForm = () => {
     try {
       const formattedDates = selectedDates.map(date => date.toISOString().split('T')[0]);
       
-      const response = await api.post('/vouchers-extra/generate', {
+      const response = await api.post('/vouchers-extra', {
         usuario_id: selectedUser,
         datas: formattedDates,
         observacao: observacao || 'Voucher extra gerado via sistema'
@@ -81,7 +81,7 @@ const RLSForm = () => {
         throw new Error(response.data.error || 'Erro ao gerar vouchers');
       }
     } catch (error) {
-      console.error('Erro ao gerar vouchers:', error.response || error);
+      console.error('Erro ao gerar vouchers:', error);
       const errorMessage = error.response?.data?.error || error.message || 'Erro ao gerar vouchers';
       toast.error(`Erro ao gerar vouchers: ${errorMessage}`);
     } finally {
