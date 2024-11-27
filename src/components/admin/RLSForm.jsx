@@ -24,7 +24,7 @@ const RLSForm = () => {
       if (!searchTerm || searchTerm.length < 3) return [];
       try {
         const cleanCPF = searchTerm.replace(/\D/g, '');
-        const response = await api.get(`/users/search?term=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
+        const response = await api.get(`/usuarios/search?term=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
         
         if (response.data && Array.isArray(response.data)) {
           return response.data.map(user => ({
@@ -65,7 +65,7 @@ const RLSForm = () => {
     try {
       const formattedDates = selectedDates.map(date => date.toISOString().split('T')[0]);
       
-      const response = await api.post('/api/route/vouchers-extra/generate', {
+      const response = await api.post('/vouchers-extra/generate', {
         usuario_id: selectedUser,
         datas: formattedDates,
         observacao: observacao || 'Voucher extra gerado via sistema'
