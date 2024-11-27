@@ -3,15 +3,16 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Criar tabela vouchers_extras se não existir
 CREATE TABLE IF NOT EXISTS vouchers_extras (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-  usuario_id uuid REFERENCES usuarios(id),
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER REFERENCES usuarios(id),
   tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id) NOT NULL,
   autorizado_por VARCHAR(255) NOT NULL,
-  valido_ate DATE,
-  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  codigo VARCHAR(8) NOT NULL UNIQUE,
+  valido_ate DATE NOT NULL,
   usado BOOLEAN DEFAULT FALSE,
   usado_em TIMESTAMP WITH TIME ZONE,
-  observacao TEXT
+  observacao TEXT,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Comentários na tabela e colunas
@@ -20,6 +21,7 @@ COMMENT ON COLUMN vouchers_extras.id IS 'Identificador único do voucher extra';
 COMMENT ON COLUMN vouchers_extras.usuario_id IS 'ID do usuário que recebeu o voucher extra';
 COMMENT ON COLUMN vouchers_extras.tipo_refeicao_id IS 'ID do tipo de refeição associado ao voucher';
 COMMENT ON COLUMN vouchers_extras.autorizado_por IS 'Nome ou identificação de quem autorizou o voucher extra';
+COMMENT ON COLUMN vouchers_extras.codigo IS 'Código único do voucher extra';
 COMMENT ON COLUMN vouchers_extras.valido_ate IS 'Data limite de validade do voucher extra';
 COMMENT ON COLUMN vouchers_extras.criado_em IS 'Data e hora de criação do registro';
 COMMENT ON COLUMN vouchers_extras.usado IS 'Indica se o voucher já foi utilizado';
@@ -43,3 +45,4 @@ CREATE INDEX idx_vouchers_extras_usuario_id ON vouchers_extras(usuario_id);
 CREATE INDEX idx_vouchers_extras_tipo_refeicao_id ON vouchers_extras(tipo_refeicao_id);
 CREATE INDEX idx_vouchers_extras_valido_ate ON vouchers_extras(valido_ate);
 CREATE INDEX idx_vouchers_extras_usado ON vouchers_extras(usado);
+CREATE INDEX idx_vouchers_extras_codigo ON vouchers_extras(codigo);
