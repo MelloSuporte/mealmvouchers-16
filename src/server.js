@@ -5,7 +5,7 @@ import { configureExpress } from './config/express.js';
 import { startServer } from './config/server.js';
 import createApp from './config/app.js';
 import logger from './config/logger.js';
-import vouchersExtraRouter from './routes/vouchersExtra.js';
+import vouchersExtraRouter from './api/routes/vouchersExtra.js';
 
 dotenv.config();
 
