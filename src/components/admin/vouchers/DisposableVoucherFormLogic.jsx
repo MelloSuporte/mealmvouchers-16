@@ -59,7 +59,7 @@ export const useDisposableVoucherFormLogic = () => {
       }
     } catch (error) {
       console.error('Erro detalhado:', error);
-      toast.error("Serviço de vouchers extras indisponível. Por favor, tente novamente mais tarde.");
+      toast.error("Erro ao gerar vouchers extras. Por favor, tente novamente mais tarde.");
     } finally {
       setIsGenerating(false);
     }
