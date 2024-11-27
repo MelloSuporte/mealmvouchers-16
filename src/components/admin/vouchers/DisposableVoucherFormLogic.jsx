@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { supabase } from '../../../config/supabase';
 import api from '../../../utils/api';
 
-export const useDisposableVoucherForm = () => {
+export const useDisposableVoucherFormLogic = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
@@ -37,7 +37,6 @@ export const useDisposableVoucherForm = () => {
     try {
       const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
       
-      // Removido o /api do início da URL pois já está configurado no baseURL do axios
       const response = await api.post('vouchers-extra/generate', {
         tipos_refeicao_ids: selectedMealTypes,
         datas: formattedDates,
