@@ -65,7 +65,7 @@ const RLSForm = () => {
     try {
       const formattedDates = selectedDates.map(date => date.toISOString().split('T')[0]);
       
-      const response = await api.post('/route/vouchers-extra/generate', {
+      const response = await api.post('/api/route/vouchers-extra/generate', {
         usuario_id: selectedUser,
         datas: formattedDates,
         observacao: observacao || 'Voucher extra gerado via sistema'
