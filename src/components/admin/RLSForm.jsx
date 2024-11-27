@@ -48,6 +48,12 @@ const RLSForm = () => {
     setSearchTerm(formattedCPF);
   };
 
+  const validateDates = (dates) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return !dates.some(date => date < today);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -58,6 +64,11 @@ const RLSForm = () => {
 
     if (!selectedDates.length) {
       toast.error("Por favor, selecione pelo menos uma data");
+      return;
+    }
+
+    if (!validateDates(selectedDates)) {
+      toast.error("Não é possível gerar vouchers para datas passadas");
       return;
     }
 

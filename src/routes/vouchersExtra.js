@@ -16,10 +16,30 @@ router.post('/', async (req, res) => {
   });
 
   try {
-    if (!usuario_id || !datas || !Array.isArray(datas) || datas.length === 0) {
+    // Validação dos dados de entrada
+    if (!usuario_id) {
       return res.status(400).json({
         success: false,
-        error: 'Dados inválidos para geração de vouchers'
+        error: 'ID do usuário é obrigatório'
+      });
+    }
+
+    if (!datas || !Array.isArray(datas) || datas.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'É necessário fornecer pelo menos uma data válida'
+      });
+    }
+
+    // Validação de datas passadas
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const hasInvalidDate = datas.some(date => new Date(date) < today);
+    if (hasInvalidDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'Não é possível gerar vouchers para datas passadas'
       });
     }
 
@@ -39,15 +59,31 @@ router.post('/', async (req, res) => {
       tiposRefeicao = tiposAtivos.map(tipo => tipo.id);
     }
 
+    // Verificar se o usuário existe
+    const { data: userExists, error: userError } = await supabase
+      .from('usuarios')
+      .select('id')
+      .eq('id', usuario_id)
+      .single();
+
+    if (userError || !userExists) {
+      logger.error('Usuário não encontrado:', userError);
+      return res.status(404).json({
+        success: false,
+        error: 'Usuário não encontrado'
+      });
+    }
+
     const vouchersParaInserir = datas.flatMap(data => 
       tiposRefeicao.map(tipo_refeicao_id => ({
         usuario_id,
         tipo_refeicao_id,
-        data_expiracao: new Date(data + 'T23:59:59-03:00').toISOString(),
+        autorizado_por: 'Sistema',
         codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
+        valido_ate: new Date(data + 'T23:59:59-03:00').toISOString(),
         observacao: observacao || 'Voucher extra gerado via sistema',
         usado: false,
-        data_criacao: new Date().toISOString()
+        criado_em: new Date().toISOString()
       }))
     );
 
@@ -58,10 +94,7 @@ router.post('/', async (req, res) => {
 
     if (insertError) {
       logger.error('Erro ao inserir vouchers:', insertError);
-      return res.status(500).json({
-        success: false,
-        error: 'Erro ao gerar vouchers extras'
-      });
+      throw new Error('Erro ao gerar vouchers extras');
     }
 
     logger.info(`${vouchersInseridos.length} vouchers extras gerados com sucesso`);
