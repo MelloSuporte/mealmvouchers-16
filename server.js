@@ -28,7 +28,7 @@ configureExpress(app);
 
 // Adiciona todas as rotas da API
 app.use('/api', routes);
-app.use('/api/vouchers-extra', vouchersExtraRouter);
+app.use('/routes/vouchers-extra', vouchersExtraRouter);
 
 // Inicia o servidor
 startServer(app);
