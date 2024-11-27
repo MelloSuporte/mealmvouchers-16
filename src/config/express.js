@@ -24,6 +24,6 @@ export const configureExpress = (app) => {
     res.json({ status: 'OK', message: 'Servidor funcionando normalmente' });
   });
   
-  // Montagem das rotas da API
+  // Montagem das rotas da API com prefixo /api
   app.use('/api', routes);
 };
