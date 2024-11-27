@@ -37,7 +37,8 @@ export const useDisposableVoucherForm = () => {
     try {
       const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
       
-      const response = await api.post('/vouchers-extra/generate', {
+      // Removido o /api do início da URL pois já está configurado no baseURL do axios
+      const response = await api.post('vouchers-extra/generate', {
         tipos_refeicao_ids: selectedMealTypes,
         datas: formattedDates,
         observacao: 'Voucher extra gerado via sistema'
