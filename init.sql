@@ -4,6 +4,8 @@ CREATE DATABASE sis_voucher;
 
 SET timezone = 'America/Sao_Paulo';
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE IF NOT EXISTS empresas (
   id SERIAL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
@@ -36,7 +38,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 );
 
 CREATE TABLE IF NOT EXISTS tipos_refeicao (
-  id SERIAL PRIMARY KEY,
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
   horario_inicio TIME,
   horario_fim TIME,
@@ -50,14 +52,14 @@ CREATE TABLE IF NOT EXISTS tipos_refeicao (
 CREATE TABLE IF NOT EXISTS uso_voucher (
   id SERIAL PRIMARY KEY,
   usuario_id UUID REFERENCES usuarios(id),
-  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
+  tipo_refeicao_id UUID REFERENCES tipos_refeicao(id),
   usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS vouchers_extras (
   id SERIAL PRIMARY KEY,
   usuario_id UUID REFERENCES usuarios(id),
-  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id) NOT NULL,
+  tipo_refeicao_id UUID REFERENCES tipos_refeicao(id) NOT NULL,
   autorizado_por VARCHAR(255) NOT NULL,
   codigo VARCHAR(8) NOT NULL UNIQUE,
   valido_ate DATE NOT NULL,

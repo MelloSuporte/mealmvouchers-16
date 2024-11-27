@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS vouchers_extras (
   id SERIAL PRIMARY KEY,
   usuario_id UUID REFERENCES usuarios(id),
-  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id) NOT NULL,
+  tipo_refeicao_id UUID REFERENCES tipos_refeicao(id) NOT NULL,
   autorizado_por VARCHAR(255) NOT NULL,
   codigo VARCHAR(8) NOT NULL UNIQUE,
   valido_ate DATE NOT NULL,
