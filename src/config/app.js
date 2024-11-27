@@ -26,6 +26,8 @@ const createApp = () => {
   
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+  
+  // Adicionar middlewares antes das rotas
   app.use(securityMiddleware);
   app.use(withDatabase);
 
@@ -38,6 +40,9 @@ const createApp = () => {
     });
     next();
   });
+
+  // Mount all routes with /api prefix
+  app.use('/api', routes);
 
   // Health check endpoint with database verification
   app.get('/health', async (req, res) => {
@@ -70,9 +75,6 @@ const createApp = () => {
       });
     }
   });
-
-  // Mount all routes with /api prefix
-  app.use('/api', routes);
 
   // Global error handler - must be last
   app.use(errorHandler);

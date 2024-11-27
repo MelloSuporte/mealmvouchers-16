@@ -7,10 +7,16 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   const { usuario_id, datas, tipos_refeicao_ids, observacao } = req.body;
   
-  logger.info('Recebida requisição para gerar vouchers extras:', { usuario_id, datas, tipos_refeicao_ids });
+  logger.info('Recebida requisição para gerar vouchers extras:', { 
+    usuario_id, 
+    datas, 
+    tipos_refeicao_ids,
+    path: req.path,
+    method: req.method 
+  });
 
   try {
-    if (!usuario_id || !datas || !Array.isArray(datas) || datas.length === 0) {
+    if (!datas || !Array.isArray(datas) || datas.length === 0) {
       return res.status(400).json({
         success: false,
         error: 'Dados inválidos para geração de vouchers'
@@ -35,7 +41,6 @@ router.post('/', async (req, res) => {
 
     const vouchersParaInserir = datas.flatMap(data => 
       tiposRefeicao.map(tipo_refeicao_id => ({
-        usuario_id,
         tipo_refeicao_id,
         data_expiracao: new Date(data + 'T23:59:59-03:00').toISOString(),
         codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
