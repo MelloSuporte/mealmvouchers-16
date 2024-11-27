@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = createApp();
 
-// Configura CORS
+// Configura CORS primeiro
 app.use(cors());
 
 // Configura body parser
@@ -18,7 +18,7 @@ app.use(express.json());
 
 // Adiciona log para debug da rota
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
