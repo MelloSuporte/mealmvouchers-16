@@ -84,8 +84,8 @@ const RLSForm = () => {
       }
     } catch (error) {
       console.error('Erro ao gerar vouchers:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Erro ao gerar vouchers';
-      toast.error(`Erro ao gerar vouchers: ${errorMessage}`);
+      const errorMessage = error.response?.data?.error || error.message || 'Erro ao gerar vouchers extras';
+      toast.error(`Erro ao gerar vouchers extras: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
