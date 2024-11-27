@@ -35,7 +35,12 @@ router.post('/', async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const hasInvalidDate = datas.some(date => new Date(date) < today);
+    const hasInvalidDate = datas.some(date => {
+      const dataVoucher = new Date(date);
+      dataVoucher.setHours(0, 0, 0, 0);
+      return dataVoucher < today;
+    });
+
     if (hasInvalidDate) {
       return res.status(400).json({
         success: false,
@@ -56,13 +61,20 @@ router.post('/', async (req, res) => {
         throw new Error('Erro ao buscar tipos de refeição');
       }
 
+      if (!tiposAtivos || tiposAtivos.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Não há tipos de refeição ativos disponíveis'
+        });
+      }
+
       tiposRefeicao = tiposAtivos.map(tipo => tipo.id);
     }
 
     // Verificar se o usuário existe
     const { data: userExists, error: userError } = await supabase
       .from('usuarios')
-      .select('id')
+      .select('id, nome')
       .eq('id', usuario_id)
       .single();
 
@@ -74,6 +86,27 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Verificar se já existem vouchers para as datas selecionadas
+    const { data: vouchersExistentes, error: vouchersError } = await supabase
+      .from('vouchers_extras')
+      .select('data')
+      .eq('usuario_id', usuario_id)
+      .in('data', datas)
+      .eq('usado', false);
+
+    if (vouchersError) {
+      logger.error('Erro ao verificar vouchers existentes:', vouchersError);
+      throw new Error('Erro ao verificar vouchers existentes');
+    }
+
+    if (vouchersExistentes && vouchersExistentes.length > 0) {
+      const datasComVoucher = vouchersExistentes.map(v => v.data);
+      return res.status(400).json({
+        success: false,
+        error: `Já existem vouchers não utilizados para as datas: ${datasComVoucher.join(', ')}`
+      });
+    }
+
     const vouchersParaInserir = datas.flatMap(data => 
       tiposRefeicao.map(tipo_refeicao_id => ({
         usuario_id,
@@ -81,7 +114,7 @@ router.post('/', async (req, res) => {
         autorizado_por: 'Sistema',
         codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
         valido_ate: new Date(data + 'T23:59:59-03:00').toISOString(),
-        observacao: observacao || 'Voucher extra gerado via sistema',
+        observacao: observacao?.trim() || 'Voucher extra gerado via sistema',
         usado: false,
         criado_em: new Date().toISOString()
       }))
@@ -97,7 +130,7 @@ router.post('/', async (req, res) => {
       throw new Error('Erro ao gerar vouchers extras');
     }
 
-    logger.info(`${vouchersInseridos.length} vouchers extras gerados com sucesso`);
+    logger.info(`${vouchersInseridos.length} vouchers extras gerados com sucesso para o usuário ${userExists.nome}`);
 
     return res.status(201).json({
       success: true,

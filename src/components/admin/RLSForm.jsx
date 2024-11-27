@@ -26,7 +26,12 @@ const RLSForm = () => {
         const cleanCPF = searchTerm.replace(/\D/g, '');
         const response = await api.get(`/api/usuarios/search?term=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
         
-        if (response.data && Array.isArray(response.data)) {
+        if (!response.data) {
+          toast.error("Nenhum usuário encontrado");
+          return [];
+        }
+
+        if (Array.isArray(response.data)) {
           return response.data.map(user => ({
             id: user.id,
             nome: user.nome,
@@ -46,9 +51,14 @@ const RLSForm = () => {
   const handleSearchTermChange = (e) => {
     const formattedCPF = formatCPF(e);
     setSearchTerm(formattedCPF);
+    if (selectedUser) {
+      setSelectedUser(""); // Limpa o usuário selecionado quando mudar a busca
+    }
   };
 
   const validateDates = (dates) => {
+    if (!dates || !Array.isArray(dates) || dates.length === 0) return false;
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return !dates.some(date => date < today);
@@ -79,7 +89,7 @@ const RLSForm = () => {
       const response = await api.post('/api/vouchers-extra', {
         usuario_id: selectedUser,
         datas: formattedDates,
-        observacao: observacao || 'Voucher extra gerado via sistema'
+        observacao: observacao.trim() || 'Voucher extra gerado via sistema'
       });
 
       if (response.data && response.data.success) {
@@ -121,6 +131,7 @@ const RLSForm = () => {
           value={observacao}
           onChange={(e) => setObservacao(e.target.value)}
           placeholder="Digite uma observação para o voucher extra"
+          maxLength={255}
         />
       </div>
 
@@ -132,6 +143,11 @@ const RLSForm = () => {
           onSelect={setSelectedDates}
           className="rounded-md border"
           locale={ptBR}
+          disabled={(date) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return date < today;
+          }}
         />
         <p className="text-sm text-gray-500">
           {selectedDates.length > 0 && `${selectedDates.length} data(s) selecionada(s)`}
@@ -141,6 +157,7 @@ const RLSForm = () => {
       <Button 
         type="submit" 
         disabled={isSubmitting || !selectedUser || selectedDates.length === 0}
+        className="w-full"
       >
         {isSubmitting ? 'Gerando...' : 'Gerar Vouchers Extras'}
       </Button>
