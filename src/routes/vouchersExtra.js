@@ -48,29 +48,6 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Se não foram especificados tipos de refeição, buscar todos os ativos
-    let tiposRefeicao = tipos_refeicao_ids;
-    if (!tiposRefeicao || !Array.isArray(tiposRefeicao) || tiposRefeicao.length === 0) {
-      const { data: tiposAtivos, error: tiposError } = await supabase
-        .from('tipos_refeicao')
-        .select('id')
-        .eq('ativo', true);
-
-      if (tiposError) {
-        logger.error('Erro ao buscar tipos de refeição:', tiposError);
-        throw new Error('Erro ao buscar tipos de refeição');
-      }
-
-      if (!tiposAtivos || tiposAtivos.length === 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'Não há tipos de refeição ativos disponíveis'
-        });
-      }
-
-      tiposRefeicao = tiposAtivos.map(tipo => tipo.id);
-    }
-
     // Verificar se o usuário existe
     const { data: userExists, error: userError } = await supabase
       .from('usuarios')
@@ -107,19 +84,18 @@ router.post('/', async (req, res) => {
       });
     }
 
-    const vouchersParaInserir = datas.flatMap(data => 
-      tiposRefeicao.map(tipo_refeicao_id => ({
-        usuario_id,
-        tipo_refeicao_id,
-        autorizado_por: 'Sistema',
-        codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
-        valido_ate: new Date(data + 'T23:59:59-03:00').toISOString(),
-        observacao: observacao?.trim() || 'Voucher extra gerado via sistema',
-        usado: false,
-        criado_em: new Date().toISOString()
-      }))
-    );
+    // Preparar os vouchers para inserção
+    const vouchersParaInserir = datas.map(data => ({
+      usuario_id,
+      autorizado_por: 'Sistema',
+      codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
+      valido_ate: new Date(data + 'T23:59:59-03:00').toISOString(),
+      observacao: observacao?.trim() || 'Voucher extra gerado via sistema',
+      usado: false,
+      criado_em: new Date().toISOString()
+    }));
 
+    // Inserir os vouchers
     const { data: vouchersInseridos, error: insertError } = await supabase
       .from('vouchers_extras')
       .insert(vouchersParaInserir)
