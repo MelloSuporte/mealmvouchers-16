@@ -37,7 +37,7 @@ export const useDisposableVoucherForm = () => {
     try {
       const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
       
-      const response = await api.post('/api/vouchers-extra/generate', {
+      const response = await api.post('/vouchers-extra/generate', {
         usuario_id: selectedMealTypes[0],
         datas: formattedDates,
         observacao: 'Voucher extra gerado via sistema'
@@ -55,7 +55,7 @@ export const useDisposableVoucherForm = () => {
         setSelectedMealTypes([]);
         setSelectedDates([]);
       } else {
-        throw new Error(response.data.error);
+        throw new Error(response.data.error || 'Erro ao gerar vouchers');
       }
     } catch (error) {
       console.error('Erro detalhado:', error);
@@ -64,11 +64,6 @@ export const useDisposableVoucherForm = () => {
       setIsGenerating(false);
     }
   };
-
-  useEffect(() => {
-    loadMealTypes();
-    loadAllVouchers();
-  }, []);
 
   const loadMealTypes = async () => {
     try {
@@ -100,7 +95,7 @@ export const useDisposableVoucherForm = () => {
   const loadAllVouchers = async () => {
     try {
       const { data, error } = await supabase
-        .from('vouchers_descartaveis')
+        .from('vouchers_extras')
         .select(`
           *,
           tipos_refeicao (
@@ -123,24 +118,17 @@ export const useDisposableVoucherForm = () => {
     }
   };
 
+  useEffect(() => {
+    loadMealTypes();
+    loadAllVouchers();
+  }, []);
+
   const handleMealTypeToggle = (typeId) => {
     setSelectedMealTypes(current => 
       current.includes(typeId) 
         ? current.filter(id => id !== typeId)
         : [...current, typeId]
     );
-  };
-
-  const generateSequentialCode = async () => {
-    const { data: lastVoucher } = await supabase
-      .from('vouchers_descartaveis')
-      .select('codigo')
-      .order('codigo', { ascending: false })
-      .limit(1)
-      .single();
-
-    const lastCode = lastVoucher ? parseInt(lastVoucher.codigo) : 0;
-    return String(lastCode + 1).padStart(4, '0');
   };
 
   return {

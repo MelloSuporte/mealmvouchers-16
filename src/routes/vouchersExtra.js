@@ -10,7 +10,6 @@ router.post('/generate', async (req, res) => {
   logger.info('Iniciando geração de vouchers extras:', { usuario_id, datas });
 
   try {
-    // Validação dos dados de entrada
     if (!usuario_id) {
       return res.status(400).json({
         success: false,
@@ -25,7 +24,6 @@ router.post('/generate', async (req, res) => {
       });
     }
 
-    // Buscar informações do usuário
     const { data: usuario, error: userError } = await supabase
       .from('usuarios')
       .select('id, empresa_id')
@@ -41,12 +39,10 @@ router.post('/generate', async (req, res) => {
     }
 
     const vouchersGerados = [];
-    const erros = [];
+    const warnings = [];
 
-    // Gerar vouchers para cada data
     for (const data of datas) {
       try {
-        // Verificar se já existe voucher para esta data
         const { data: existingVoucher } = await supabase
           .from('vouchers_extras')
           .select('id')
@@ -55,21 +51,20 @@ router.post('/generate', async (req, res) => {
           .single();
 
         if (existingVoucher) {
-          erros.push(`Já existe um voucher para a data ${data}`);
+          warnings.push(`Já existe um voucher para a data ${data}`);
           continue;
         }
 
-        // Inserir novo voucher
         const { data: novoVoucher, error: insertError } = await supabase
           .from('vouchers_extras')
-          .insert({
+          .insert([{
             usuario_id: usuario_id,
             empresa_id: usuario.empresa_id,
             valido_ate: data,
             observacao: observacao || 'Voucher extra gerado pelo sistema',
             autorizado_por: 'Sistema',
             usado: false
-          })
+          }])
           .select()
           .single();
 
@@ -81,15 +76,14 @@ router.post('/generate', async (req, res) => {
         logger.info(`Voucher gerado com sucesso para data ${data}`);
       } catch (error) {
         logger.error(`Erro ao gerar voucher para data ${data}:`, error);
-        erros.push(`Erro ao gerar voucher para data ${data}: ${error.message}`);
+        warnings.push(`Erro ao gerar voucher para data ${data}: ${error.message}`);
       }
     }
 
-    // Retornar resultado
-    if (vouchersGerados.length === 0) {
+    if (vouchersGerados.length === 0 && warnings.length > 0) {
       return res.status(400).json({
         success: false,
-        error: erros.length > 0 ? erros.join(', ') : 'Não foi possível gerar nenhum voucher'
+        error: warnings.join(', ')
       });
     }
 
@@ -97,7 +91,7 @@ router.post('/generate', async (req, res) => {
       success: true,
       message: `${vouchersGerados.length} voucher(s) gerado(s) com sucesso`,
       vouchers: vouchersGerados,
-      warnings: erros.length > 0 ? erros : undefined
+      warnings: warnings.length > 0 ? warnings : undefined
     });
 
   } catch (error) {
