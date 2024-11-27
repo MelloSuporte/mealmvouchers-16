@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
-import api from '../utils/api';
+import { supabase } from '../config/supabase';
 
 const BomApetite = () => {
   const { userName } = useParams();
@@ -11,40 +11,22 @@ const BomApetite = () => {
   const mealType = location.state?.mealType || 'Refeição';
   const [backgroundImage, setBackgroundImage] = useState('');
 
-  // Função auxiliar para validar URLs de imagem
-  const isValidImageUrl = (url) => {
-    if (url.startsWith('data:image/')) {
-      const [header, content] = url.split(',');
-      if (!header.includes('image/') || !content) {
-        return false;
-      }
-      return true;
-    }
-    return false;
-  };
-
   useEffect(() => {
-    // Função para buscar e validar a imagem de fundo
     const fetchBackgroundImage = async () => {
       try {
-        const response = await api.get('/imagens-fundo');
-        const images = response.data.data;
-        
-        // Busca especificamente a imagem para a página de bom apetite
-        const bomApetiteBackground = images.find(img => img.page === 'bomApetite')?.image_url;
-        
-        // Verifica se a URL da imagem é válida e segura
-        if (bomApetiteBackground && isValidImageUrl(bomApetiteBackground)) {
-          setBackgroundImage(bomApetiteBackground);
-          localStorage.setItem('bomApetiteBackground', bomApetiteBackground);
-        } else {
-          console.warn('Invalid or unsafe background image URL detected');
+        const { data, error } = await supabase
+          .from('background_images')
+          .select('image_url')
+          .eq('page', 'bomApetite')
+          .eq('is_active', true)
+          .single();
+
+        if (error) throw error;
+        if (data?.image_url) {
+          setBackgroundImage(data.image_url);
         }
       } catch (error) {
-        console.error('Error fetching background image:', error);
-        // Usa imagem em cache do localStorage como fallback
-        const cachedImage = localStorage.getItem('bomApetiteBackground');
-        if (cachedImage) setBackgroundImage(cachedImage);
+        console.error('Erro ao buscar imagem de fundo:', error);
       }
     };
 
@@ -70,10 +52,7 @@ const BomApetite = () => {
     <div 
       className="flex flex-col items-center justify-center min-h-screen bg-blue-600 p-4 bg-cover bg-center bg-no-repeat"
       style={{
-        // Aplica a imagem de fundo apenas se for válida
-        backgroundImage: backgroundImage && isValidImageUrl(backgroundImage) 
-          ? `url(${backgroundImage})` 
-          : undefined,
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined
       }}
     >
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">

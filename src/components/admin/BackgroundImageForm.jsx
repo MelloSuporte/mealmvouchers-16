@@ -57,12 +57,10 @@ const BackgroundImageForm = () => {
     mutationFn: async ({ page, file }) => {
       if (!file) return null;
 
-      // Converte a imagem para base64
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = async () => {
           try {
-            // Desativa imagens anteriores
             const { error: updateError } = await supabase
               .from('background_images')
               .update({ is_active: false })
@@ -70,7 +68,6 @@ const BackgroundImageForm = () => {
 
             if (updateError) throw updateError;
 
-            // Insere nova imagem
             const { data, error } = await supabase
               .from('background_images')
               .insert([{
@@ -105,20 +102,18 @@ const BackgroundImageForm = () => {
     if (!file) return;
 
     try {
-      // Validação básica do arquivo
       if (!file.type.startsWith('image/')) {
         toast.error('Por favor, selecione apenas arquivos de imagem');
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) { // 5MB
+      if (file.size > 5 * 1024 * 1024) {
         toast.error('O arquivo deve ter no máximo 5MB');
         return;
       }
 
       setBackgrounds(prev => ({ ...prev, [page]: file }));
       
-      // Preview local
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviews(prev => ({ ...prev, [page]: reader.result }));

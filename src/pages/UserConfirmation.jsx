@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import api from '../utils/api';
+import { supabase } from '../config/supabase';
 
 const UserConfirmation = () => {
   const location = useLocation();
@@ -10,40 +10,22 @@ const UserConfirmation = () => {
   const [backgroundImage, setBackgroundImage] = useState('');
   const { userName, userTurno, mealType } = location.state || {};
 
-  // Função auxiliar para validar URLs de imagem
-  const isValidImageUrl = (url) => {
-    if (url.startsWith('data:image/')) {
-      const [header, content] = url.split(',');
-      if (!header.includes('image/') || !content) {
-        return false;
-      }
-      return true;
-    }
-    return false;
-  };
-
   useEffect(() => {
-    // Função para buscar e validar a imagem de fundo
     const fetchBackgroundImage = async () => {
       try {
-        const response = await api.get('/background-images');
-        const images = response.data;
-        
-        // Busca especificamente a imagem para a página de confirmação
-        const userConfirmationBackground = images.find(img => img.page === 'userConfirmation')?.image_url;
-        
-        // Verifica se a URL da imagem é válida e segura
-        if (userConfirmationBackground && isValidImageUrl(userConfirmationBackground)) {
-          setBackgroundImage(userConfirmationBackground);
-          localStorage.setItem('userConfirmationBackground', userConfirmationBackground);
-        } else {
-          console.warn('Invalid or unsafe background image URL detected');
+        const { data, error } = await supabase
+          .from('background_images')
+          .select('image_url')
+          .eq('page', 'userConfirmation')
+          .eq('is_active', true)
+          .single();
+
+        if (error) throw error;
+        if (data?.image_url) {
+          setBackgroundImage(data.image_url);
         }
       } catch (error) {
-        console.error('Error fetching background image:', error);
-        // Usa imagem em cache do localStorage como fallback
-        const cachedImage = localStorage.getItem('userConfirmationBackground');
-        if (cachedImage) setBackgroundImage(cachedImage);
+        console.error('Erro ao buscar imagem de fundo:', error);
       }
     };
 
@@ -68,10 +50,7 @@ const UserConfirmation = () => {
     <div 
       className="min-h-screen flex items-center justify-center p-4 bg-blue-600 bg-cover bg-center bg-no-repeat"
       style={{
-        // Aplica a imagem de fundo apenas se for válida
-        backgroundImage: backgroundImage && isValidImageUrl(backgroundImage) 
-          ? `url(${backgroundImage})` 
-          : undefined,
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined
       }}
     >
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">

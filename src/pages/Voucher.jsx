@@ -5,7 +5,7 @@ import { Settings } from 'lucide-react';
 import { toast } from "sonner";
 import AdminLoginDialog from '../components/AdminLoginDialog';
 import VoucherForm from '../components/voucher/VoucherForm';
-import api from '../utils/api';
+import { supabase } from '../config/supabase';
 
 const Voucher = () => {
   const [voucherCode, setVoucherCode] = useState('');
@@ -16,18 +16,19 @@ const Voucher = () => {
   useEffect(() => {
     const fetchBackgroundImage = async () => {
       try {
-        const response = await api.get('/background-images');
-        const images = response.data;
-        const voucherBackground = images.find(img => img.page === 'voucher')?.image_url;
-        
-        if (voucherBackground) {
-          setBackgroundImage(voucherBackground);
-          localStorage.setItem('voucherBackground', voucherBackground);
+        const { data, error } = await supabase
+          .from('background_images')
+          .select('image_url')
+          .eq('page', 'voucher')
+          .eq('is_active', true)
+          .single();
+
+        if (error) throw error;
+        if (data?.image_url) {
+          setBackgroundImage(data.image_url);
         }
       } catch (error) {
-        console.error('Error fetching background image:', error);
-        const cachedImage = localStorage.getItem('voucherBackground');
-        if (cachedImage) setBackgroundImage(cachedImage);
+        console.error('Erro ao buscar imagem de fundo:', error);
       }
     };
 
@@ -38,43 +39,41 @@ const Voucher = () => {
     e.preventDefault();
     
     try {
-      // Primeiro, verifica se é um voucher descartável
-      const checkResponse = await api.post('/vouchers/check', { 
-        code: voucherCode
-      });
+      const checkResponse = await supabase
+        .from('vouchers_descartaveis')
+        .select('*')
+        .eq('codigo', voucherCode)
+        .single();
 
-      if (checkResponse.data.exists) {
-        const voucher = checkResponse.data.voucher;
-        
-        // Armazena informações do voucher descartável para uso posterior
+      if (checkResponse.data) {
         localStorage.setItem('disposableVoucher', JSON.stringify({
           code: voucherCode,
-          mealTypeId: voucher.meal_type_id
+          mealTypeId: checkResponse.data.tipo_refeicao_id
         }));
 
-        // Redireciona para a página de seleção de refeição
         navigate('/self-services');
         return;
       }
 
-      // Se não for descartável, tenta validar como voucher normal
-      const response = await api.post('/vouchers/validate', { 
-        voucherCode,
-        cpf: localStorage.getItem('userCPF') || '',
-        mealType: localStorage.getItem('selectedMealType')
-      });
+      const response = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('voucher', voucherCode)
+        .single();
 
-      if (response.data.success) {
+      if (response.data) {
         navigate('/user-confirmation', { 
           state: { 
-            userName: response.data.userName,
-            userTurno: response.data.turno,
+            userName: response.data.nome,
+            userTurno: response.data.turno_id,
             mealType: localStorage.getItem('selectedMealType')
           }
         });
+      } else {
+        toast.error("Voucher inválido");
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || "Erro ao validar o voucher. Tente novamente.");
+      toast.error("Erro ao validar o voucher. Tente novamente.");
     }
   };
 
@@ -95,7 +94,7 @@ const Voucher = () => {
     <div 
       className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4 relative bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: backgroundImage && `url(${backgroundImage})`
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined
       }}
     >
       <Button
