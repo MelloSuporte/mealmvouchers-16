@@ -80,12 +80,16 @@ const RLSForm = () => {
         setSearchTerm("");
         setObservacao("");
       } else {
-        throw new Error(response.data?.error || 'Erro ao gerar vouchers');
+        throw new Error(response.data?.error || 'Erro ao gerar vouchers extras');
       }
     } catch (error) {
-      console.error('Erro ao gerar vouchers:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Erro ao gerar vouchers extras';
-      toast.error(`Erro ao gerar vouchers extras: ${errorMessage}`);
+      console.error('Erro ao gerar vouchers extras:', error);
+      if (error.response?.status === 404) {
+        toast.error("Erro: Serviço de vouchers extras indisponível. Por favor, tente novamente mais tarde.");
+      } else {
+        const errorMessage = error.response?.data?.error || error.message || 'Erro ao gerar vouchers extras';
+        toast.error(`Erro ao gerar vouchers extras: ${errorMessage}`);
+      }
     } finally {
       setIsSubmitting(false);
     }

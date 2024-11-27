@@ -1,25 +1,28 @@
 import express from 'express';
-import vouchersRouter from './vouchers.js';
-import usuariosRouter from './usuarios.js';
-import empresasRouter from './empresas.js';
-import turnosRouter from './turnos.js';
-import refeicaoRouter from './refeicoes.js';
-import relatoriosRouter from './relatorios.js';
-import imagensFundoRouter from './imagensFundo.js';
-import adminRouter from './admin.js';
-import vouchersExtraRouter from './vouchersExtra.js';
+import adminRoutes from './admin.js';
+import empresasRoutes from './empresas.js';
+import usuariosRoutes from './usuarios.js';
+import usuariosAdminRoutes from './usuariosAdmin.js';
+import vouchersRoutes from './vouchers.js';
+import vouchersExtraRoutes from './vouchersExtra.js';
+import refeicoesRoutes from './refeicoes.js';
+import turnosRoutes from './turnos.js';
+import relatoriosRoutes from './relatorios.js';
+import imagensFundoRoutes from './imagensFundo.js';
+import healthRoutes from './health.js';
 
 const router = express.Router();
 
-// Rotas principais do sistema
-router.use('/vouchers', vouchersRouter);
-router.use('/usuarios', usuariosRouter);
-router.use('/empresas', empresasRouter);
-router.use('/turnos', turnosRouter);
-router.use('/refeicoes', refeicaoRouter);
-router.use('/relatorios', relatoriosRouter);
-router.use('/imagens-fundo', imagensFundoRouter);
-router.use('/admin', adminRouter);
-router.use('/vouchers-extra', vouchersExtraRouter);
+router.use('/admin', adminRoutes);
+router.use('/empresas', empresasRoutes);
+router.use('/usuarios', usuariosRoutes);
+router.use('/usuarios-admin', usuariosAdminRoutes);
+router.use('/vouchers', vouchersRoutes);
+router.use('/vouchers-extra', vouchersExtraRoutes);
+router.use('/refeicoes', refeicoesRoutes);
+router.use('/turnos', turnosRoutes);
+router.use('/relatorios', relatoriosRoutes);
+router.use('/imagens-fundo', imagensFundoRoutes);
+router.use('/health', healthRoutes);
 
 export default router;
