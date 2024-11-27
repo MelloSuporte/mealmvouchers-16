@@ -12,7 +12,6 @@ export const useDisposableVoucherForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [allVouchers, setAllVouchers] = useState([]);
-  const [extraMealType, setExtraMealType] = useState(null);
 
   const handleGenerateVouchers = async () => {
     if (!selectedDates.length) {
@@ -20,8 +19,8 @@ export const useDisposableVoucherForm = () => {
       return;
     }
 
-    if (!extraMealType) {
-      toast.error("Tipo de refeição extra não encontrado");
+    if (!selectedMealTypes.length) {
+      toast.error("Selecione pelo menos um tipo de refeição");
       return;
     }
 
@@ -39,7 +38,7 @@ export const useDisposableVoucherForm = () => {
       const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
       
       const response = await api.post('/vouchers-extra/generate', {
-        tipo_refeicao_id: extraMealType.id,
+        tipos_refeicao_ids: selectedMealTypes,
         datas: formattedDates,
         observacao: 'Voucher extra gerado via sistema'
       });
@@ -71,20 +70,22 @@ export const useDisposableVoucherForm = () => {
       const { data, error } = await supabase
         .from('tipos_refeicao')
         .select('id, nome, hora_inicio, hora_fim, ativo')
-        .eq('nome', 'Refeição Extra')
-        .maybeSingle();
+        .eq('ativo', true)
+        .order('nome');
 
       if (error) throw error;
 
       if (data) {
-        setExtraMealType(data);
-        setMealTypes([data]);
+        setMealTypes(data.map(type => ({
+          id: type.id,
+          name: type.nome
+        })));
       } else {
-        toast.error("Tipo de refeição 'Refeição Extra' não encontrado");
+        toast.error("Nenhum tipo de refeição encontrado");
       }
     } catch (error) {
       console.error('Error loading meal types:', error);
-      toast.error("Erro ao carregar tipo de refeição extra");
+      toast.error("Erro ao carregar tipos de refeição");
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +97,7 @@ export const useDisposableVoucherForm = () => {
         .from('vouchers_extras')
         .select(`
           *,
-          tipos_refeicao (
+          tipos_refeicao:tipo_refeicao_id (
             nome
           )
         `)
