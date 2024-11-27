@@ -24,7 +24,7 @@ const RLSForm = () => {
       if (!searchTerm || searchTerm.length < 3) return [];
       try {
         const cleanCPF = searchTerm.replace(/\D/g, '');
-        const response = await api.get(`/usuarios/search?term=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
+        const response = await api.get(`/api/usuarios/search?term=${cleanCPF}${selectedCompany !== "all" ? `&company_id=${selectedCompany}` : ''}`);
         
         if (response.data && Array.isArray(response.data)) {
           return response.data.map(user => ({
@@ -71,14 +71,16 @@ const RLSForm = () => {
         observacao: observacao || 'Voucher extra gerado via sistema'
       });
 
-      if (response.data.success) {
-        toast.success(`${formattedDates.length} voucher(s) extra(s) gerado(s) com sucesso!`);
+      if (response.data && response.data.success) {
+        toast.success(response.data.message || `${formattedDates.length} voucher(s) extra(s) gerado(s) com sucesso!`);
+        
+        // Limpa o formulário após sucesso
         setSelectedUser("");
         setSelectedDates([]);
         setSearchTerm("");
         setObservacao("");
       } else {
-        throw new Error(response.data.error || 'Erro ao gerar vouchers');
+        throw new Error(response.data?.error || 'Erro ao gerar vouchers');
       }
     } catch (error) {
       console.error('Erro ao gerar vouchers:', error);

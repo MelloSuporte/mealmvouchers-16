@@ -17,20 +17,26 @@ router.post('/', async (req, res) => {
       });
     }
 
-    if (usuario_id) {
-      const { data: user, error: userError } = await supabase
-        .from('usuarios')
-        .select('id')
-        .eq('id', usuario_id)
-        .single();
+    if (!usuario_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Usuário não selecionado'
+      });
+    }
 
-      if (userError || !user) {
-        logger.error('Erro ao verificar usuário:', userError);
-        return res.status(404).json({
-          success: false,
-          error: 'Usuário não encontrado'
-        });
-      }
+    // Verifica se o usuário existe
+    const { data: user, error: userError } = await supabase
+      .from('usuarios')
+      .select('id')
+      .eq('id', usuario_id)
+      .single();
+
+    if (userError || !user) {
+      logger.error('Erro ao verificar usuário:', userError);
+      return res.status(404).json({
+        success: false,
+        error: 'Usuário não encontrado'
+      });
     }
 
     const vouchersGerados = [];
@@ -38,39 +44,34 @@ router.post('/', async (req, res) => {
 
     for (const data of datas) {
       try {
-        if (usuario_id) {
-          const { data: existingVoucher, error: checkError } = await supabase
-            .from('vouchers_extras')
-            .select('id')
-            .eq('usuario_id', usuario_id)
-            .eq('valido_ate', data)
-            .maybeSingle();
+        // Verifica se já existe um voucher para esta data
+        const { data: existingVoucher, error: checkError } = await supabase
+          .from('vouchers_extras')
+          .select('id')
+          .eq('usuario_id', usuario_id)
+          .eq('valido_ate', data)
+          .maybeSingle();
 
-          if (checkError && checkError.code !== 'PGRST116') {
-            throw checkError;
-          }
-
-          if (existingVoucher) {
-            warnings.push(`Já existe um voucher para a data ${data}`);
-            continue;
-          }
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError;
         }
 
-        const voucherData = {
-          valido_ate: data,
-          observacao: observacao || 'Voucher extra gerado pelo sistema',
-          autorizado_por: 'Sistema',
-          usado: false,
-          criado_em: new Date().toISOString()
-        };
-
-        if (usuario_id) {
-          voucherData.usuario_id = usuario_id;
+        if (existingVoucher) {
+          warnings.push(`Já existe um voucher para a data ${data}`);
+          continue;
         }
 
+        // Insere o novo voucher
         const { data: novoVoucher, error: insertError } = await supabase
           .from('vouchers_extras')
-          .insert([voucherData])
+          .insert([{
+            usuario_id,
+            valido_ate: data,
+            observacao: observacao || 'Voucher extra gerado pelo sistema',
+            autorizado_por: 'Sistema',
+            usado: false,
+            criado_em: new Date().toISOString()
+          }])
           .select()
           .single();
 
