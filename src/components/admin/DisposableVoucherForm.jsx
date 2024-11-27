@@ -5,7 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { ptBR } from "date-fns/locale";
 import VoucherTypeSelector from './vouchers/VoucherTypeSelector';
 import VoucherTable from './vouchers/VoucherTable';
-import { useDisposableVoucherForm } from './vouchers/DisposableVoucherFormLogic';
+import { useDisposableVoucherFormLogic } from './vouchers/DisposableVoucherFormLogic';
 
 const DisposableVoucherForm = () => {
   const {
@@ -20,7 +20,7 @@ const DisposableVoucherForm = () => {
     allVouchers,
     handleMealTypeToggle,
     handleGenerateVouchers
-  } = useDisposableVoucherForm();
+  } = useDisposableVoucherFormLogic();
 
   if (isLoading) {
     return <div>Carregando tipos de refeição...</div>;
