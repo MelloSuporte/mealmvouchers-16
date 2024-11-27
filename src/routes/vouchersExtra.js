@@ -21,24 +21,31 @@ router.post('/', async (req, res) => {
     const { data: tiposRefeicao, error: tiposError } = await supabase
       .from('tipos_refeicao')
       .select('id')
-      .eq('ativo', true)
-      .single();
+      .eq('ativo', true);
 
     if (tiposError) {
       logger.error('Erro ao buscar tipos de refeição:', tiposError);
       throw new Error('Erro ao buscar tipos de refeição');
     }
 
-    const vouchersParaInserir = datas.map(data => ({
-      usuario_id,
-      tipo_refeicao_id: tiposRefeicao.id,
-      valido_ate: data,
-      autorizado_por: 'Sistema',
-      codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
-      observacao: observacao || 'Voucher extra gerado via sistema',
-      usado: false,
-      criado_em: new Date().toISOString()
-    }));
+    if (!tiposRefeicao || tiposRefeicao.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Nenhum tipo de refeição ativo encontrado'
+      });
+    }
+
+    const vouchersParaInserir = datas.flatMap(data => 
+      tiposRefeicao.map(tipo => ({
+        usuario_id,
+        tipo_refeicao_id: tipo.id,
+        data_expiracao: new Date(data + 'T23:59:59-03:00').toISOString(),
+        codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
+        observacao: observacao || 'Voucher extra gerado via sistema',
+        usado: false,
+        data_criacao: new Date().toISOString()
+      }))
+    );
 
     const { data: vouchersInseridos, error: insertError } = await supabase
       .from('vouchers_extras')
