@@ -1,5 +1,4 @@
 import express from 'express';
-import vouchersExtraRouter from './route/vouchers-extra/index.js';
 import vouchersRouter from './vouchers.js';
 import usuariosRouter from './usuarios.js';
 import empresasRouter from './empresas.js';
@@ -12,7 +11,6 @@ import adminRouter from './admin.js';
 const router = express.Router();
 
 // Rotas principais do sistema
-router.use('/route/vouchers-extra', vouchersExtraRouter);
 router.use('/vouchers', vouchersRouter);
 router.use('/usuarios', usuariosRouter);
 router.use('/empresas', empresasRouter);
