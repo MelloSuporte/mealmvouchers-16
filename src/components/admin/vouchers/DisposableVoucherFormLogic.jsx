@@ -70,9 +70,9 @@ export const useDisposableVoucherForm = () => {
     try {
       const { data, error } = await supabase
         .from('tipos_refeicao')
-        .select('id, nome, hora_inicio, hora_fim, ativo')
+        .select('id, nome, horario_inicio, horario_fim, ativo')
         .eq('nome', 'Refeição Extra')
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -96,7 +96,7 @@ export const useDisposableVoucherForm = () => {
         .from('vouchers_extras')
         .select(`
           *,
-          tipos_refeicao (
+          tipos_refeicao:tipo_refeicao_id (
             nome
           )
         `)

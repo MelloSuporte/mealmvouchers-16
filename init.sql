@@ -54,44 +54,15 @@ CREATE TABLE IF NOT EXISTS uso_voucher (
   usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS vouchers_extra (
+CREATE TABLE IF NOT EXISTS vouchers_extras (
   id SERIAL PRIMARY KEY,
   usuario_id INTEGER REFERENCES usuarios(id),
+  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
   autorizado_por VARCHAR(255) NOT NULL,
   valido_ate DATE,
   usado BOOLEAN DEFAULT FALSE,
   usado_em TIMESTAMP WITH TIME ZONE,
   observacao TEXT,
-  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS imagens_fundo (
-  id SERIAL PRIMARY KEY,
-  pagina VARCHAR(50) NOT NULL,
-  url_imagem TEXT NOT NULL,
-  ativo BOOLEAN DEFAULT TRUE,
-  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS vouchers_descartaveis (
-  id SERIAL PRIMARY KEY,
-  codigo VARCHAR(8) NOT NULL UNIQUE,
-  usuario_id INTEGER REFERENCES usuarios(id),
-  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
-  criado_por INTEGER REFERENCES usuarios(id),
-  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  usado_em TIMESTAMP WITH TIME ZONE,
-  expira_em TIMESTAMP WITH TIME ZONE,
-  usado BOOLEAN DEFAULT FALSE
-);
-
-CREATE TABLE IF NOT EXISTS usuarios_admin (
-  id SERIAL PRIMARY KEY,
-  nome VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  senha VARCHAR(255) NOT NULL,
-  empresa_id INTEGER REFERENCES empresas(id),
-  permissoes JSONB,
   criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
