@@ -4,7 +4,8 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/generate_vouchersExtra', async (req, res) => {
+// Rota para gerar vouchers extras
+router.post('/generate', async (req, res) => {
   const { usuario_id, datas, observacao } = req.body;
 
   logger.info('Iniciando geração de vouchers extras:', { usuario_id, datas });
@@ -27,8 +28,20 @@ router.post('/generate_vouchersExtra', async (req, res) => {
     const vouchersGerados = [];
     const warnings = [];
 
+    // Buscar tipo de refeição padrão para voucher extra
+    const { data: tipoRefeicao, error: tipoRefeicaoError } = await supabase
+      .from('tipos_refeicao')
+      .select('id')
+      .eq('nome', 'Refeição Extra')
+      .single();
+
+    if (tipoRefeicaoError) {
+      throw new Error('Erro ao buscar tipo de refeição padrão');
+    }
+
     for (const data of datas) {
       try {
+        // Verificar se já existe voucher para esta data
         const { data: existingVoucher, error: checkError } = await supabase
           .from('vouchers_extras')
           .select('id')
@@ -45,10 +58,12 @@ router.post('/generate_vouchersExtra', async (req, res) => {
           continue;
         }
 
+        // Gerar novo voucher
         const { data: novoVoucher, error: insertError } = await supabase
           .from('vouchers_extras')
           .insert([{
             usuario_id: usuario_id,
+            tipo_refeicao_id: tipoRefeicao.id,
             valido_ate: data,
             observacao: observacao || 'Voucher extra gerado pelo sistema',
             autorizado_por: 'Sistema',
