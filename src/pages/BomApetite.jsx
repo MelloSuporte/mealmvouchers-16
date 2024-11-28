@@ -34,6 +34,11 @@ const BomApetite = () => {
   }, []);
 
   useEffect(() => {
+    if (!userName || !location.state) {
+      navigate('/voucher');
+      return;
+    }
+
     // Limpa todos os vouchers do localStorage
     localStorage.removeItem('disposableVoucher');
     localStorage.removeItem('commonVoucher');
@@ -45,7 +50,7 @@ const BomApetite = () => {
         if (prevCount <= 1) {
           clearInterval(timer);
           toast.success("Redirecionando para a página de voucher...");
-          navigate('/voucher', { replace: true });
+          navigate('/voucher');
           return 0;
         }
         return prevCount - 1;
@@ -60,7 +65,7 @@ const BomApetite = () => {
       localStorage.removeItem('usedCommonVouchers');
       localStorage.removeItem('usedDisposableVouchers');
     };
-  }, [navigate]);
+  }, [navigate, userName, location.state]);
 
   return (
     <div 
