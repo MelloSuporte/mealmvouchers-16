@@ -39,26 +39,26 @@ const Voucher = () => {
     e.preventDefault();
     
     try {
-      // Primeiro verifica se é um voucher extra
-      const { data: extraVouchers, error: extraError } = await supabase
-        .from('vouchers_extras')
+      // Primeiro verifica se é um voucher descartável
+      const { data: descartaveis, error: descartavelError } = await supabase
+        .from('vouchers_descartaveis')
         .select('*')
         .eq('codigo', voucherCode)
         .eq('usado', false);
 
-      if (extraError) throw extraError;
+      if (descartavelError) throw descartavelError;
 
-      if (extraVouchers && extraVouchers.length > 0) {
-        const extraVoucher = extraVouchers[0];
-        localStorage.setItem('extraVoucher', JSON.stringify({
+      if (descartaveis && descartaveis.length > 0) {
+        const descartavel = descartaveis[0];
+        localStorage.setItem('disposableVoucher', JSON.stringify({
           code: voucherCode,
-          cpf: extraVoucher.cpf
+          mealTypeId: descartavel.tipo_refeicao_id
         }));
         navigate('/self-services');
         return;
       }
 
-      // Se não for extra, verifica se é um voucher comum
+      // Se não for descartável, verifica se é um voucher comum
       const { data: users, error: userError } = await supabase
         .from('usuarios')
         .select('*')
@@ -77,11 +77,29 @@ const Voucher = () => {
         }));
         navigate('/self-services');
       } else {
-        toast.error("Voucher inválido ou já utilizado");
+        // Verifica se é um voucher extra
+        const { data: extraVouchers, error: extraError } = await supabase
+          .from('vouchers_extras')
+          .select('*')
+          .eq('codigo', voucherCode)
+          .eq('usado', false);
+
+        if (extraError) throw extraError;
+
+        if (extraVouchers && extraVouchers.length > 0) {
+          const extraVoucher = extraVouchers[0];
+          localStorage.setItem('extraVoucher', JSON.stringify({
+            code: voucherCode,
+            cpf: extraVoucher.cpf
+          }));
+          navigate('/self-services');
+        } else {
+          toast.error("Voucher inválido ou já utilizado");
+        }
       }
     } catch (error) {
       console.error('Erro ao validar voucher:', error);
-      toast.error("Erro ao validar o voucher. Tente novamente.");
+      toast.error("Erro ao validar o voucher: " + error.message);
     }
   };
 
