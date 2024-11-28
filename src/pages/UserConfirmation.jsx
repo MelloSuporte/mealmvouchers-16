@@ -44,13 +44,17 @@ const UserConfirmation = () => {
         // Move o voucher atual para o histórico
         localStorage.removeItem('commonVoucher');
         
-        navigate('/bom-apetite/' + response.data.userName, {
-          state: { userName: response.data.userName }
+        // Redireciona para a página BomApetite com o nome do usuário
+        navigate(`/bom-apetite/${userName}`, {
+          state: { 
+            userName: userName,
+            mealType: location.state.mealType 
+          }
         });
       }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Erro ao validar voucher');
-      navigate('/');
+      navigate('/voucher');
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +99,7 @@ const UserConfirmation = () => {
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/voucher')}
           >
             Cancelar
           </Button>
