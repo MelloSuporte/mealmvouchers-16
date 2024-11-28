@@ -34,6 +34,10 @@ const BomApetite = () => {
   }, []);
 
   useEffect(() => {
+    // Limpa quaisquer vouchers armazenados no localStorage
+    localStorage.removeItem('disposableVoucher');
+    localStorage.removeItem('commonVoucher');
+
     const timer = setInterval(() => {
       setCountdown((prevCount) => {
         if (prevCount <= 1) {
