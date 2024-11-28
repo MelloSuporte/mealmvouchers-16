@@ -30,9 +30,7 @@ const BomApetite = () => {
     };
 
     fetchBackgroundImage();
-  }, []);
 
-  useEffect(() => {
     if (!userName || !location.state?.mealType) {
       navigate('/voucher');
       return;

@@ -3,16 +3,32 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { Coffee, Utensils, Moon, Plus, Sandwich } from 'lucide-react';
 import { toast } from "sonner";
+import { supabase } from '../config/supabase';
 
 const SelfServices = () => {
   const navigate = useNavigate();
   const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
-    const savedBackground = localStorage.getItem('userConfirmationBackground');
-    if (savedBackground) {
-      setBackgroundImage(savedBackground);
-    }
+    const fetchBackgroundImage = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('background_images')
+          .select('image_url')
+          .eq('page', 'userConfirmation')
+          .eq('is_active', true)
+          .single();
+
+        if (error) throw error;
+        if (data?.image_url) {
+          setBackgroundImage(data.image_url);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar imagem de fundo:', error);
+      }
+    };
+
+    fetchBackgroundImage();
 
     // Verifica se existe um voucher no localStorage
     const disposableVoucher = localStorage.getItem('disposableVoucher');

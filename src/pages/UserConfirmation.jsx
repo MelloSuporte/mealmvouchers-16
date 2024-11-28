@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, AlertCircle } from "lucide-react";
+import { supabase } from '../config/supabase';
 import api from '../utils/api';
 
 const UserConfirmation = () => {
@@ -11,8 +12,29 @@ const UserConfirmation = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
+    const fetchBackgroundImage = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('background_images')
+          .select('image_url')
+          .eq('page', 'userConfirmation')
+          .eq('is_active', true)
+          .single();
+
+        if (error) throw error;
+        if (data?.image_url) {
+          setBackgroundImage(data.image_url);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar imagem de fundo:', error);
+      }
+    };
+
+    fetchBackgroundImage();
+    
     const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
     const extraVoucher = JSON.parse(localStorage.getItem('extraVoucher') || '{}');
 
@@ -60,7 +82,10 @@ const UserConfirmation = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background bg-cover bg-center bg-no-repeat"
+         style={{
+           backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined
+         }}>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Confirmar Refeição</CardTitle>
