@@ -43,6 +43,10 @@ export const generateUniqueCode = async () => {
 };
 
 export const generateUniqueVoucherFromCPF = async (cpf) => {
+  if (!cpf) {
+    throw new Error('CPF é obrigatório para gerar voucher');
+  }
+
   const cleanCPF = cpf.replace(/\D/g, '');
   const lastFourDigits = cleanCPF.slice(-4);
   let voucher = lastFourDigits;
@@ -54,9 +58,21 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
     .eq('voucher', voucher)
     .limit(1);
 
-  // Se o voucher já existir, gera um número aleatório entre 1000-9999
+  // Se o voucher já existir, adiciona um número sequencial
   if (existingVoucher && existingVoucher.length > 0) {
-    voucher = Math.floor(1000 + Math.random() * 9000).toString();
+    const { data: maxVoucher } = await supabase
+      .from('usuarios')
+      .select('voucher')
+      .ilike('voucher', `${lastFourDigits}%`)
+      .order('voucher', { ascending: false })
+      .limit(1);
+
+    if (maxVoucher && maxVoucher.length > 0) {
+      const currentNumber = parseInt(maxVoucher[0].voucher.slice(4)) || 0;
+      voucher = `${lastFourDigits}${(currentNumber + 1).toString().padStart(2, '0')}`;
+    } else {
+      voucher = `${lastFourDigits}01`;
+    }
   }
 
   return voucher;

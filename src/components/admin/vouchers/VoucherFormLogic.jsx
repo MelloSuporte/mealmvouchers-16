@@ -1,5 +1,5 @@
 import { supabase } from '../../../config/supabase';
-import { generateUniqueCode } from '../../../utils/voucherGenerationUtils';
+import { generateUniqueVoucherFromCPF } from '../../../utils/voucherGenerationUtils';
 import { toast } from "sonner";
 
 export const useVoucherFormLogic = (
@@ -20,22 +20,32 @@ export const useVoucherFormLogic = (
 
       if (tipoRefeicaoError) throw new Error('Erro ao buscar tipo de refeição');
 
+      // Buscar o CPF do usuário selecionado
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('cpf')
+        .eq('id', selectedUser)
+        .single();
+
+      if (userError) throw new Error('Erro ao buscar dados do usuário');
+
       const formattedDates = selectedDates.map(date => {
         const localDate = new Date(date);
         return localDate.toISOString().split('T')[0];
       });
 
+      // Gerar voucher baseado no CPF
+      const voucher = await generateUniqueVoucherFromCPF(userData.cpf);
+
       // Criar vouchers extras no Supabase
       for (const data of formattedDates) {
-        const codigo = await generateUniqueCode();
-        
         const { error: voucherError } = await supabase
           .from('vouchers_extras')
           .insert([{
             usuario_id: selectedUser,
             tipo_refeicao_id: tipoRefeicao.id,
             autorizado_por: 'Sistema',
-            codigo,
+            codigo: voucher,
             valido_ate: data,
             observacao: observacao.trim() || 'Voucher extra gerado via sistema'
           }]);
