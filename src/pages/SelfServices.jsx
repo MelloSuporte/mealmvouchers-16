@@ -10,9 +10,9 @@ const SelfServices = () => {
   const navigate = useNavigate();
   const [backgroundImage, setBackgroundImage] = useState('');
 
-  // Busca as refeições cadastradas da tabela tipos_refeicoes
+  // Busca as refeições cadastradas da tabela tipos_refeicao
   const { data: meals, isLoading, error } = useQuery({
-    queryKey: ['tipos_refeicoes'],
+    queryKey: ['tipos_refeicao'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tipos_refeicao')
