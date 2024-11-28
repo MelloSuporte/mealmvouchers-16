@@ -5,6 +5,7 @@ import { generateUniqueVoucherFromCPF } from '../utils/voucherGenerationUtils.js
 
 const router = express.Router();
 
+// Rota para criar vouchers extras
 router.post('/vouchers-extra', async (req, res) => {
   const { usuario_id, datas, tipos_refeicao_ids, observacao, quantidade = 1 } = req.body;
   
@@ -44,7 +45,22 @@ router.post('/vouchers-extra', async (req, res) => {
       });
     }
 
-    // Buscar usuário e CPF
+    // Buscar tipo de refeição padrão se não especificado
+    if (!tipos_refeicao_ids || tipos_refeicao_ids.length === 0) {
+      const { data: defaultMealType, error: mealTypeError } = await supabase
+        .from('tipos_refeicao')
+        .select('id')
+        .eq('nome', 'Refeição Extra')
+        .single();
+
+      if (mealTypeError) {
+        throw new Error('Erro ao buscar tipo de refeição padrão');
+      }
+
+      tipos_refeicao_ids = [defaultMealType.id];
+    }
+
+    // Buscar usuário
     const { data: usuario, error: userError } = await supabase
       .from('usuarios')
       .select('id, cpf, nome')
@@ -66,10 +82,8 @@ router.post('/vouchers-extra', async (req, res) => {
       const refeicoes = tipos_refeicao_ids || [null];
       for (let i = 0; i < quantidade; i++) {
         for (const tipo_refeicao_id of refeicoes) {
-          // Gera voucher baseado no CPF do usuário usando a nova regra
           const codigo = await generateUniqueVoucherFromCPF(usuario.cpf);
           
-          // Define a data de validade como 23:59:59 do mesmo dia
           const dataValidade = new Date(data);
           dataValidade.setHours(23, 59, 59, 0);
           
