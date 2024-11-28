@@ -65,28 +65,6 @@ router.post('/vouchers-extra', async (req, res) => {
       }
     }
 
-    // Verificar tipos de refeição se fornecidos
-    if (tipos_refeicao_ids && tipos_refeicao_ids.length > 0) {
-      const { data: mealTypes, error: mealTypesError } = await supabase
-        .from('tipos_refeicao')
-        .select('id')
-        .in('id', tipos_refeicao_ids)
-        .eq('ativo', true);
-
-      if (mealTypesError) {
-        logger.error('Erro ao verificar tipos de refeição:', mealTypesError);
-        throw mealTypesError;
-      }
-
-      if (!mealTypes || mealTypes.length !== tipos_refeicao_ids.length) {
-        logger.error('Tipos de refeição inválidos ou inativos');
-        return res.status(400).json({
-          success: false,
-          error: 'Um ou mais tipos de refeição são inválidos ou estão inativos'
-        });
-      }
-    }
-
     // Gerar vouchers
     const vouchersParaInserir = [];
     
