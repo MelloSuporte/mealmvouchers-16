@@ -9,11 +9,11 @@ const generateVoucherFromCPF = (cpf) => {
     throw new Error('CPF inválido: deve ter 11 dígitos');
   }
 
-  // Pega os 4 últimos dígitos do CPF
-  const lastFourDigits = cleanCPF.slice(-4);
+  // Pega os dígitos da posição 2 até 11 do CPF
+  const relevantDigits = cleanCPF.slice(1);
   
   // Soma os dígitos
-  const sum = lastFourDigits.split('').reduce((acc, digit) => acc + parseInt(digit), 0);
+  const sum = relevantDigits.split('').reduce((acc, digit) => acc + parseInt(digit), 0);
   
   // Gera código de 4 dígitos baseado na soma
   const code = (sum % 9000 + 1000).toString();
