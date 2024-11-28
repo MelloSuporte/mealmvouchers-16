@@ -35,18 +35,19 @@ const BomApetite = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCountdown((prevCount) => prevCount - 1);
+      setCountdown((prevCount) => {
+        if (prevCount <= 1) {
+          clearInterval(timer);
+          toast.success("Redirecionando para a página de voucher...");
+          navigate('/voucher');
+          return 0;
+        }
+        return prevCount - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (countdown === 0) {
-      toast.success("Redirecionando para a página de voucher...");
-      navigate('/voucher');
-    }
-  }, [countdown, navigate]);
+  }, [navigate]);
 
   return (
     <div 

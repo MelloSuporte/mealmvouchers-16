@@ -41,7 +41,7 @@ const UserConfirmation = () => {
         });
         localStorage.setItem('usedCommonVouchers', JSON.stringify(usedVouchers));
         
-        // Move o voucher atual para o histórico
+        // Remove o voucher atual do localStorage
         localStorage.removeItem('commonVoucher');
         
         // Redireciona para a página BomApetite com o nome do usuário e tipo de refeição
