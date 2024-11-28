@@ -39,40 +39,42 @@ const Voucher = () => {
     e.preventDefault();
     
     try {
-      const checkResponse = await supabase
-        .from('vouchers_descartaveis')
+      // Primeiro verifica se é um voucher descartável
+      const { data: disposableVoucher, error: disposableError } = await supabase
+        .from('disposable_vouchers')
         .select('*')
-        .eq('codigo', voucherCode)
+        .eq('code', voucherCode)
         .single();
 
-      if (checkResponse.data) {
+      if (disposableVoucher) {
         localStorage.setItem('disposableVoucher', JSON.stringify({
           code: voucherCode,
-          mealTypeId: checkResponse.data.tipo_refeicao_id
+          mealTypeId: disposableVoucher.meal_type_id
         }));
-
         navigate('/self-services');
         return;
       }
 
-      const response = await supabase
-        .from('usuarios')
+      // Se não for descartável, verifica se é um voucher comum
+      const { data: user, error: userError } = await supabase
+        .from('users')
         .select('*')
         .eq('voucher', voucherCode)
         .single();
 
-      if (response.data) {
-        navigate('/user-confirmation', { 
-          state: { 
-            userName: response.data.nome,
-            userTurno: response.data.turno_id,
-            mealType: localStorage.getItem('selectedMealType')
-          }
-        });
+      if (user) {
+        localStorage.setItem('commonVoucher', JSON.stringify({
+          code: voucherCode,
+          userName: user.name,
+          turno: user.shift,
+          cpf: user.cpf
+        }));
+        navigate('/self-services');
       } else {
         toast.error("Voucher inválido");
       }
     } catch (error) {
+      console.error('Erro ao validar voucher:', error);
       toast.error("Erro ao validar o voucher. Tente novamente.");
     }
   };
