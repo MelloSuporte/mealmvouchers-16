@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { toast } from 'sonner';
+import api from '@/utils/api';
 
 export const useDisposableVoucherFormLogic = () => {
   const [quantity, setQuantity] = useState(1);
@@ -57,24 +58,16 @@ export const useDisposableVoucherFormLogic = () => {
 
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/vouchers-descartaveis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tipos_refeicao_ids: selectedMealTypes,
-          datas: selectedDates,
-          quantidade: quantity
-        }),
+      const response = await api.post('/vouchers-descartaveis', {
+        tipos_refeicao_ids: selectedMealTypes,
+        datas: selectedDates,
+        quantidade: quantity
       });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        toast.success(data.message);
+      if (response.data.success) {
+        toast.success(response.data.message);
       } else {
-        throw new Error(data.error);
+        throw new Error(response.data.error);
       }
     } catch (error) {
       toast.error('Erro ao gerar vouchers: ' + error.message);
