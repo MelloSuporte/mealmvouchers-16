@@ -19,7 +19,7 @@ router.use('/usuarios', usuariosRoutes);
 router.use('/empresas', empresasRoutes);
 router.use('/turnos', turnosRoutes);
 router.use('/vouchers', vouchersRoutes);
-router.use('/', vouchersExtraRoutes); // Registrando a rota de vouchers extras
+router.use('/vouchers-extra', vouchersExtraRoutes);
 router.use('/imagens-fundo', imagensFundoRoutes);
 router.use('/refeicoes', refeicaoRoutes);
 router.use('/relatorios', relatoriosRoutes);
