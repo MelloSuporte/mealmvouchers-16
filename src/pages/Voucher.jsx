@@ -40,13 +40,15 @@ const Voucher = () => {
     
     try {
       // Primeiro verifica se é um voucher descartável
-      const { data: disposableVoucher, error: disposableError } = await supabase
+      const { data: disposableVouchers, error: disposableError } = await supabase
         .from('vouchers_descartaveis')
         .select('*')
-        .eq('codigo', voucherCode)
-        .single();
+        .eq('codigo', voucherCode);
 
-      if (disposableVoucher) {
+      if (disposableError) throw disposableError;
+
+      if (disposableVouchers && disposableVouchers.length > 0) {
+        const disposableVoucher = disposableVouchers[0];
         localStorage.setItem('disposableVoucher', JSON.stringify({
           code: voucherCode,
           mealTypeId: disposableVoucher.tipo_refeicao_id
@@ -56,13 +58,15 @@ const Voucher = () => {
       }
 
       // Se não for descartável, verifica se é um voucher comum
-      const { data: user, error: userError } = await supabase
+      const { data: users, error: userError } = await supabase
         .from('usuarios')
         .select('*')
-        .eq('voucher', voucherCode)
-        .single();
+        .eq('voucher', voucherCode);
 
-      if (user) {
+      if (userError) throw userError;
+
+      if (users && users.length > 0) {
+        const user = users[0];
         localStorage.setItem('commonVoucher', JSON.stringify({
           code: voucherCode,
           userName: user.nome,
