@@ -2,11 +2,11 @@
 CREATE TABLE IF NOT EXISTS vouchers_descartaveis (
   id SERIAL PRIMARY KEY,
   codigo VARCHAR(4) NOT NULL,
-  tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
-  data_expiracao TIMESTAMP WITH TIME ZONE NOT NULL,
+  tipo_refeicao_id UUID REFERENCES tipos_refeicao(id),
+  valido_ate TIMESTAMP WITH TIME ZONE NOT NULL,
   usado BOOLEAN DEFAULT FALSE,
-  data_uso TIMESTAMP WITH TIME ZONE,
-  data_criacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  usado_em TIMESTAMP WITH TIME ZONE,
+  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(codigo)
 );
 

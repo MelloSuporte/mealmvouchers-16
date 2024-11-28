@@ -33,7 +33,7 @@ export const useDisposableVoucherFormLogic = () => {
             nome
           )
         `)
-        .order('criado_em', { ascending: false });
+        .order('valido_ate', { ascending: false });
 
       if (error) throw error;
       
