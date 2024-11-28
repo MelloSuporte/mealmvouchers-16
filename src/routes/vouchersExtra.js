@@ -66,7 +66,7 @@ router.post('/vouchers-extra', async (req, res) => {
       const refeicoes = tipos_refeicao_ids || [null];
       for (let i = 0; i < quantidade; i++) {
         for (const tipo_refeicao_id of refeicoes) {
-          // Gera voucher baseado no CPF do usuário
+          // Gera voucher baseado no CPF do usuário usando a nova regra
           const codigo = await generateUniqueVoucherFromCPF(usuario.cpf);
           
           // Define a data de validade como 23:59:59 do mesmo dia
