@@ -15,7 +15,7 @@ export const useDisposableVoucherFormLogic = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tipos_refeicao')
-        .select('*')
+        .select('id, nome, valor, ativo')
         .eq('ativo', true);
 
       if (error) throw error;
@@ -29,9 +29,17 @@ export const useDisposableVoucherFormLogic = () => {
       const { data, error } = await supabase
         .from('vouchers_descartaveis')
         .select(`
-          *,
+          id,
+          codigo,
+          tipo_refeicao_id,
+          data_expiracao,
+          usado,
+          data_uso,
+          data_criacao,
           tipos_refeicao (
-            nome
+            id,
+            nome,
+            valor
           )
         `)
         .order('data_expiracao', { ascending: false });
