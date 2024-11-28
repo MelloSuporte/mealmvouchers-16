@@ -21,7 +21,7 @@ const SelfServices = () => {
     
     if (!disposableVoucher && !commonVoucher) {
       toast.error('Nenhum voucher válido encontrado');
-      navigate('/');
+      navigate('/voucher');
     }
   }, [navigate]);
 
@@ -65,7 +65,7 @@ const SelfServices = () => {
       }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Erro ao validar voucher');
-      navigate('/');
+      navigate('/voucher');
     }
   };
 
