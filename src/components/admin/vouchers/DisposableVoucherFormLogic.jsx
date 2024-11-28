@@ -37,15 +37,16 @@ export const useDisposableVoucherFormLogic = () => {
     try {
       const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
       
-      const response = await api.post('/api/vouchers-extra', {
+      const response = await api.post('/vouchers-extra', {
         tipos_refeicao_ids: selectedMealTypes,
         datas: formattedDates,
-        observacao: 'Voucher extra gerado via sistema'
+        quantidade: quantity,
+        observacao: 'Voucher descartável gerado via sistema'
       });
 
       if (response.data.success) {
         setAllVouchers(prev => [...response.data.vouchers, ...prev]);
-        toast.success(`${response.data.vouchers.length} voucher(s) extra(s) gerado(s) com sucesso!`);
+        toast.success(`${response.data.vouchers.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
         
         if (response.data.warnings) {
           response.data.warnings.forEach(warning => toast.warning(warning));
@@ -59,7 +60,7 @@ export const useDisposableVoucherFormLogic = () => {
       }
     } catch (error) {
       console.error('Erro detalhado:', error);
-      toast.error("Erro ao gerar vouchers extras. Por favor, tente novamente mais tarde.");
+      toast.error("Erro ao gerar vouchers descartáveis: " + (error.response?.data?.error || error.message));
     } finally {
       setIsGenerating(false);
     }
