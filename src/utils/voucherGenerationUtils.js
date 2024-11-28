@@ -1,79 +1,77 @@
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 
-export const generateUniqueCode = async () => {
-  const length = 8;
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code;
-  let isUnique = false;
-  let attempts = 0;
-  const maxAttempts = 10;
-
-  while (!isUnique && attempts < maxAttempts) {
-    code = '';
-    for (let i = 0; i < length; i++) {
-      code += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-
-    // Verificar se o código já existe
-    const { data: existingVoucher, error } = await supabase
-      .from('vouchers_extras')
-      .select('id')
-      .eq('codigo', code)
-      .limit(1);
-
-    if (error) {
-      logger.error('Erro ao verificar código:', error);
-      throw new Error('Erro ao gerar código único');
-    }
-
-    if (!existingVoucher || existingVoucher.length === 0) {
-      isUnique = true;
-    } else {
-      attempts++;
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-  }
-
-  if (!isUnique) {
-    throw new Error('Não foi possível gerar um código único após várias tentativas');
-  }
-
-  return code;
-};
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const generateUniqueVoucherFromCPF = async (cpf) => {
   if (!cpf) {
     throw new Error('CPF é obrigatório para gerar voucher');
   }
 
+  // Remove caracteres não numéricos do CPF
   const cleanCPF = cpf.replace(/\D/g, '');
-  const lastFourDigits = cleanCPF.slice(-4);
-  let voucher = lastFourDigits;
   
-  // Verifica se o voucher já existe
-  const { data: existingVoucher } = await supabase
-    .from('usuarios')
-    .select('voucher')
-    .eq('voucher', voucher)
-    .limit(1);
+  // Valida se o CPF tem 11 dígitos
+  if (cleanCPF.length !== 11) {
+    throw new Error('CPF inválido: deve conter 11 dígitos');
+  }
 
-  // Se o voucher já existir, adiciona um número sequencial
-  if (existingVoucher && existingVoucher.length > 0) {
-    const { data: maxVoucher } = await supabase
-      .from('usuarios')
-      .select('voucher')
-      .ilike('voucher', `${lastFourDigits}%`)
-      .order('voucher', { ascending: false })
-      .limit(1);
+  // Pega os dígitos da posição 2 até 11 (10 dígitos)
+  const digits = cleanCPF.slice(1);
+  
+  // Soma todos os dígitos
+  const digitSum = digits.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
 
-    if (maxVoucher && maxVoucher.length > 0) {
-      const currentNumber = parseInt(maxVoucher[0].voucher.slice(4)) || 0;
-      voucher = `${lastFourDigits}${(currentNumber + 1).toString().padStart(2, '0')}`;
-    } else {
-      voucher = `${lastFourDigits}01`;
+  let attempts = 0;
+  const maxAttempts = 10;
+
+  while (attempts < maxAttempts) {
+    try {
+      // Pega timestamp atual e seus últimos 2 dígitos
+      const timestamp = Date.now();
+      const lastTwoDigits = timestamp % 100;
+
+      // Soma o resultado da soma dos dígitos com os últimos 2 dígitos do timestamp
+      const total = digitSum + lastTwoDigits;
+
+      // Gera um número entre 1000 e 9999
+      const voucher = ((total % 9000) + 1000).toString();
+
+      // Verifica se o voucher já existe
+      const { data: existingVoucher, error } = await supabase
+        .from('usuarios')
+        .select('voucher')
+        .eq('voucher', voucher)
+        .limit(1);
+
+      if (error) {
+        logger.error('Erro ao verificar voucher existente:', error);
+        throw error;
+      }
+
+      // Se o voucher não existir, retorna
+      if (!existingVoucher || existingVoucher.length === 0) {
+        logger.info(`Voucher gerado com sucesso: ${voucher}`);
+        return voucher;
+      }
+
+      // Se existir, adiciona delay e tenta novamente
+      attempts++;
+      await delay(100); // 100ms de delay entre tentativas
+      
+    } catch (error) {
+      logger.error('Erro ao gerar voucher:', error);
+      throw error;
     }
   }
 
-  return voucher;
+  throw new Error('Não foi possível gerar um voucher único após várias tentativas');
+};
+
+// Função auxiliar para validar voucher
+export const validateVoucher = (voucher) => {
+  if (!voucher) return false;
+  
+  // Verifica se tem exatamente 4 dígitos e são todos números
+  return /^\d{4}$/.test(voucher);
 };
