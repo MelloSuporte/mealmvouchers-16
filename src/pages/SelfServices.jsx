@@ -4,10 +4,26 @@ import { useNavigate } from 'react-router-dom';
 import { Coffee, Utensils, Moon, Plus, Sandwich } from 'lucide-react';
 import { toast } from "sonner";
 import { supabase } from '../config/supabase';
+import { useQuery } from '@tanstack/react-query';
 
 const SelfServices = () => {
   const navigate = useNavigate();
   const [backgroundImage, setBackgroundImage] = useState('');
+
+  // Busca as refeições cadastradas
+  const { data: meals, isLoading, error } = useQuery({
+    queryKey: ['meals'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('meal_types')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   useEffect(() => {
     const fetchBackgroundImage = async () => {
@@ -75,6 +91,23 @@ const SelfServices = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    toast.error('Erro ao carregar refeições');
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-600">Erro ao carregar refeições. Por favor, tente novamente.</p>
+      </div>
+    );
+  }
+
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-start p-4 relative bg-blue-600 bg-cover bg-center bg-no-repeat"
@@ -88,48 +121,21 @@ const SelfServices = () => {
       
       <div className="z-10 w-full max-w-md space-y-8 mt-32 flex flex-col items-center">
         <div className="grid grid-cols-2 gap-8 bg-white/90 p-8 rounded-lg shadow-lg backdrop-blur-sm">
-          <Button
-            onClick={() => handleMealSelection('Almoço')}
-            className="w-full h-32 bg-transparent hover:bg-gray-100 text-gray-800 font-semibold py-6 px-4 border border-gray-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
-          >
-            <Utensils className="h-12 w-12 mb-2" />
-            Almoço
-          </Button>
-          <Button
-            onClick={() => handleMealSelection('Café')}
-            className="w-full h-32 bg-transparent hover:bg-gray-100 text-gray-800 font-semibold py-6 px-4 border border-gray-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
-          >
-            <Coffee className="h-12 w-12 mb-2" />
-            Café
-          </Button>
-          <Button
-            onClick={() => handleMealSelection('Lanche')}
-            className="w-full h-32 bg-transparent hover:bg-gray-100 text-gray-800 font-semibold py-6 px-4 border border-gray-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
-          >
-            <Sandwich className="h-12 w-12 mb-2" />
-            Lanche
-          </Button>
-          <Button
-            onClick={() => handleMealSelection('Jantar')}
-            className="w-full h-32 bg-transparent hover:bg-gray-100 text-gray-800 font-semibold py-6 px-4 border border-gray-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
-          >
-            <Moon className="h-12 w-12 mb-2" />
-            Jantar
-          </Button>
-          <Button
-            onClick={() => handleMealSelection('Ceia')}
-            className="w-full h-32 bg-transparent hover:bg-gray-100 text-gray-800 font-semibold py-6 px-4 border border-gray-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
-          >
-            <Moon className="h-12 w-12 mb-2" />
-            Ceia
-          </Button>
-          <Button
-            onClick={() => handleMealSelection('Extra')}
-            className="w-full h-32 bg-transparent hover:bg-gray-100 text-gray-800 font-semibold py-6 px-4 border border-gray-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
-          >
-            <Plus className="h-12 w-12 mb-2" />
-            Extra
-          </Button>
+          {meals && meals.map((meal) => (
+            <Button
+              key={meal.id}
+              onClick={() => handleMealSelection(meal.name)}
+              className="w-full h-32 bg-transparent hover:bg-gray-100 text-gray-800 font-semibold py-6 px-4 border border-gray-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
+            >
+              {meal.name === 'Almoço' && <Utensils className="h-12 w-12 mb-2" />}
+              {meal.name === 'Café' && <Coffee className="h-12 w-12 mb-2" />}
+              {meal.name === 'Lanche' && <Sandwich className="h-12 w-12 mb-2" />}
+              {meal.name === 'Jantar' && <Moon className="h-12 w-12 mb-2" />}
+              {meal.name === 'Ceia' && <Moon className="h-12 w-12 mb-2" />}
+              {meal.name === 'Extra' && <Plus className="h-12 w-12 mb-2" />}
+              {meal.name}
+            </Button>
+          ))}
         </div>
       </div>
     </div>
