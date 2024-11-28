@@ -39,31 +39,31 @@ const Voucher = () => {
     e.preventDefault();
     
     try {
-      // Primeiro verifica se é um voucher descartável
-      const { data: disposableVouchers, error: disposableError } = await supabase
-        .from('disposable_vouchers')
+      // Primeiro verifica se é um voucher extra
+      const { data: extraVouchers, error: extraError } = await supabase
+        .from('vouchers_extras')
         .select('*')
-        .eq('code', voucherCode)
-        .eq('is_used', false);
+        .eq('codigo', voucherCode)
+        .eq('usado', false);
 
-      if (disposableError) throw disposableError;
+      if (extraError) throw extraError;
 
-      if (disposableVouchers && disposableVouchers.length > 0) {
-        const disposableVoucher = disposableVouchers[0];
-        localStorage.setItem('disposableVoucher', JSON.stringify({
+      if (extraVouchers && extraVouchers.length > 0) {
+        const extraVoucher = extraVouchers[0];
+        localStorage.setItem('extraVoucher', JSON.stringify({
           code: voucherCode,
-          mealTypeId: disposableVoucher.meal_type_id
+          cpf: extraVoucher.cpf
         }));
         navigate('/self-services');
         return;
       }
 
-      // Se não for descartável, verifica se é um voucher comum ou extra
+      // Se não for extra, verifica se é um voucher comum
       const { data: users, error: userError } = await supabase
-        .from('users')
+        .from('usuarios')
         .select('*')
         .eq('voucher', voucherCode)
-        .eq('is_suspended', false);
+        .eq('suspenso', false);
 
       if (userError) throw userError;
 
@@ -71,31 +71,13 @@ const Voucher = () => {
         const user = users[0];
         localStorage.setItem('commonVoucher', JSON.stringify({
           code: voucherCode,
-          userName: user.name,
-          turno: user.shift,
+          userName: user.nome,
+          turno: user.turno_id,
           cpf: user.cpf
         }));
         navigate('/self-services');
       } else {
-        // Verifica se é um voucher extra
-        const { data: extraVouchers, error: extraError } = await supabase
-          .from('extra_vouchers')
-          .select('*')
-          .eq('code', voucherCode)
-          .eq('is_used', false);
-
-        if (extraError) throw extraError;
-
-        if (extraVouchers && extraVouchers.length > 0) {
-          const extraVoucher = extraVouchers[0];
-          localStorage.setItem('extraVoucher', JSON.stringify({
-            code: voucherCode,
-            cpf: extraVoucher.cpf
-          }));
-          navigate('/self-services');
-        } else {
-          toast.error("Voucher inválido ou já utilizado");
-        }
+        toast.error("Voucher inválido ou já utilizado");
       }
     } catch (error) {
       console.error('Erro ao validar voucher:', error);
