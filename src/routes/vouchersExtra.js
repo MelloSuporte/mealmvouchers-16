@@ -4,26 +4,18 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/vouchers-extra', async (req, res) => {
-  const { usuario_id, datas, tipos_refeicao_ids, observacao } = req.body;
+router.post('/', async (req, res) => {
+  const { usuario_id, datas, tipos_refeicao_ids, observacao, quantidade = 1 } = req.body;
   
-  logger.info('Recebida requisição para gerar vouchers extras:', { 
-    usuario_id, 
-    datas, 
+  logger.info('Recebida requisição para gerar vouchers extras:', {
+    usuario_id,
+    datas,
     tipos_refeicao_ids,
-    path: req.path,
-    method: req.method 
+    quantidade
   });
 
   try {
-    // Validação dos dados de entrada
-    if (!usuario_id && !tipos_refeicao_ids) {
-      return res.status(400).json({
-        success: false,
-        error: 'ID do usuário ou tipos de refeição são obrigatórios'
-      });
-    }
-
+    // Validações básicas
     if (!datas || !Array.isArray(datas) || datas.length === 0) {
       return res.status(400).json({
         success: false,
@@ -31,12 +23,19 @@ router.post('/vouchers-extra', async (req, res) => {
       });
     }
 
-    // Validação de datas passadas com timezone correto
+    if (!usuario_id && (!tipos_refeicao_ids || !Array.isArray(tipos_refeicao_ids))) {
+      return res.status(400).json({
+        success: false,
+        error: 'É necessário fornecer um usuário ou tipos de refeição válidos'
+      });
+    }
+
+    // Verificar datas passadas
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     const hasInvalidDate = datas.some(date => {
-      const dataVoucher = new Date(date + 'T00:00:00-03:00');
+      const dataVoucher = new Date(date);
       return dataVoucher < today;
     });
 
@@ -55,13 +54,7 @@ router.post('/vouchers-extra', async (req, res) => {
         .eq('id', usuario_id)
         .single();
 
-      if (userError) {
-        logger.error('Erro ao buscar usuário:', userError);
-        return res.status(500).json({
-          success: false,
-          error: 'Erro ao verificar usuário'
-        });
-      }
+      if (userError) throw userError;
 
       if (!userExists) {
         return res.status(404).json({
@@ -69,62 +62,36 @@ router.post('/vouchers-extra', async (req, res) => {
           error: 'Usuário não encontrado'
         });
       }
+    }
 
-      // Verificar se já existem vouchers para as datas selecionadas
-      const { data: vouchersExistentes, error: vouchersError } = await supabase
-        .from('vouchers_extras')
-        .select('valido_ate')
-        .eq('usuario_id', usuario_id)
-        .in('valido_ate', datas.map(data => data + 'T23:59:59-03:00'))
-        .eq('usado', false);
-
-      if (vouchersError) {
-        logger.error('Erro ao verificar vouchers existentes:', vouchersError);
-        return res.status(500).json({
-          success: false,
-          error: 'Erro ao verificar vouchers existentes'
-        });
-      }
-
-      if (vouchersExistentes?.length > 0) {
-        const datasComVoucher = vouchersExistentes.map(v => 
-          new Date(v.valido_ate).toISOString().split('T')[0]
-        );
-        return res.status(400).json({
-          success: false,
-          error: `Já existem vouchers não utilizados para as datas: ${datasComVoucher.join(', ')}`
-        });
+    // Gerar vouchers
+    const vouchersParaInserir = [];
+    
+    for (const data of datas) {
+      const refeicoes = tipos_refeicao_ids || [null];
+      for (let i = 0; i < quantidade; i++) {
+        for (const tipo_refeicao_id of refeicoes) {
+          vouchersParaInserir.push({
+            usuario_id: usuario_id || null,
+            tipo_refeicao_id,
+            autorizado_por: 'Sistema',
+            codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
+            valido_ate: new Date(data + 'T23:59:59-03:00').toISOString(),
+            observacao: observacao?.trim() || 'Voucher extra gerado via sistema',
+            usado: false,
+            criado_em: new Date().toISOString()
+          });
+        }
       }
     }
 
-    // Preparar os vouchers para inserção
-    const vouchersParaInserir = datas.flatMap(data => {
-      const refeicoes = tipos_refeicao_ids || [];
-      return refeicoes.map(() => ({
-        usuario_id: usuario_id || null,
-        tipo_refeicao_id: tipos_refeicao_ids ? tipos_refeicao_ids[0] : null,
-        autorizado_por: 'Sistema',
-        codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
-        valido_ate: new Date(data + 'T23:59:59-03:00').toISOString(),
-        observacao: observacao?.trim() || 'Voucher extra gerado via sistema',
-        usado: false,
-        criado_em: new Date().toISOString()
-      }));
-    });
-
-    // Inserir os vouchers
+    // Inserir os vouchers no banco
     const { data: vouchersInseridos, error: insertError } = await supabase
       .from('vouchers_extras')
       .insert(vouchersParaInserir)
       .select();
 
-    if (insertError) {
-      logger.error('Erro ao inserir vouchers:', insertError);
-      return res.status(500).json({
-        success: false,
-        error: 'Erro ao gerar vouchers extras'
-      });
-    }
+    if (insertError) throw insertError;
 
     logger.info(`${vouchersInseridos.length} vouchers extras gerados com sucesso`);
 
@@ -135,10 +102,10 @@ router.post('/vouchers-extra', async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Erro ao processar requisição de vouchers extras:', error);
+    logger.error('Erro ao gerar vouchers extras:', error);
     return res.status(500).json({
       success: false,
-      error: 'Erro interno ao gerar vouchers extras'
+      error: 'Erro ao gerar vouchers extras: ' + (error.message || error)
     });
   }
 });
