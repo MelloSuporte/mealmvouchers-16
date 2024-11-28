@@ -4,7 +4,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post('/vouchers-extra', async (req, res) => {
   const { usuario_id, datas, tipos_refeicao_ids, observacao } = req.body;
   
   logger.info('Recebida requisição para gerar vouchers extras:', { 
