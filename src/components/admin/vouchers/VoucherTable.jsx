@@ -33,9 +33,9 @@ const VoucherTable = ({ vouchers = [] }) => {
       
       const tableData = vouchers.map(voucher => [
         voucher.codigo,
-        voucher.tipo_refeicao_nome || 'Não especificado',
+        voucher.tipos_refeicao?.nome || 'Não especificado',
         formatDate(voucher.data_criacao),
-        voucher.data_uso ? formatDate(voucher.data_uso) : '-',
+        formatDate(voucher.data_uso),
         formatDate(voucher.data_expiracao),
         voucher.usado ? 'Sim' : 'Não'
       ]);
@@ -57,14 +57,12 @@ const VoucherTable = ({ vouchers = [] }) => {
     }
   };
 
-  const voucherArray = Array.isArray(vouchers) ? vouchers : [];
-
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="flex justify-between items-center mb-4">
           <Label className="text-lg font-bold">Vouchers Descartáveis</Label>
-          {voucherArray.length > 0 && (
+          {vouchers.length > 0 && (
             <Button onClick={downloadPDF} variant="outline" size="sm">
               <Download className="mr-2 h-4 w-4" />
               Baixar PDF
@@ -84,10 +82,10 @@ const VoucherTable = ({ vouchers = [] }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {voucherArray.map((voucher) => (
+              {vouchers.map((voucher) => (
                 <TableRow key={voucher.id}>
                   <TableCell>{voucher.codigo}</TableCell>
-                  <TableCell>{voucher.tipo_refeicao_nome || 'Não especificado'}</TableCell>
+                  <TableCell>{voucher.tipos_refeicao?.nome || 'Não especificado'}</TableCell>
                   <TableCell>{formatDate(voucher.data_criacao)}</TableCell>
                   <TableCell>{voucher.data_uso ? formatDate(voucher.data_uso) : '-'}</TableCell>
                   <TableCell>{formatDate(voucher.data_expiracao)}</TableCell>

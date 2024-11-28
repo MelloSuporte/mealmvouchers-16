@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../../config/supabase';
+import { supabase } from '@/config/supabase';
 import { toast } from 'sonner';
 
 export const useDisposableVoucherFormLogic = () => {
@@ -22,7 +22,7 @@ export const useDisposableVoucherFormLogic = () => {
     }
   });
 
-  const { data: allVouchers = [], refetch: refetchVouchers } = useQuery({
+  const { data: allVouchers = [] } = useQuery({
     queryKey: ['disposableVouchers'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -33,28 +33,20 @@ export const useDisposableVoucherFormLogic = () => {
             nome
           )
         `)
-        .order('valido_ate', { ascending: false });
+        .order('data_expiracao', { ascending: false });
 
       if (error) throw error;
-      
-      return data.map(voucher => ({
-        id: voucher.id,
-        codigo: voucher.codigo,
-        tipo_refeicao_nome: voucher.tipos_refeicao?.nome,
-        data_criacao: voucher.criado_em,
-        data_uso: voucher.usado_em,
-        data_expiracao: voucher.valido_ate,
-        usado: voucher.usado
-      }));
+      return data;
     }
   });
 
   const handleMealTypeToggle = (mealTypeId) => {
-    setSelectedMealTypes(prev => 
-      prev.includes(mealTypeId)
-        ? prev.filter(id => id !== mealTypeId)
-        : [...prev, mealTypeId]
-    );
+    setSelectedMealTypes(prev => {
+      if (prev.includes(mealTypeId)) {
+        return prev.filter(id => id !== mealTypeId);
+      }
+      return [...prev, mealTypeId];
+    });
   };
 
   const handleGenerateVouchers = async () => {
@@ -73,7 +65,7 @@ export const useDisposableVoucherFormLogic = () => {
         body: JSON.stringify({
           tipos_refeicao_ids: selectedMealTypes,
           datas: selectedDates,
-          quantidade: quantity,
+          quantidade: quantity
         }),
       });
 
@@ -81,7 +73,6 @@ export const useDisposableVoucherFormLogic = () => {
       
       if (data.success) {
         toast.success(data.message);
-        refetchVouchers();
       } else {
         throw new Error(data.error);
       }

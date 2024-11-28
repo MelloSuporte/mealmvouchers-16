@@ -18,9 +18,9 @@ export const generateDisposableVouchers = async (req, res) => {
             .insert({
               codigo: code,
               tipo_refeicao_id: tipo_refeicao_id,
-              valido_ate: data,
+              data_expiracao: data,
               usado: false,
-              criado_em: new Date().toISOString()
+              data_criacao: new Date().toISOString()
             })
             .select(`
               *,
