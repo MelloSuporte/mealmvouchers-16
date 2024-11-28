@@ -1,70 +1,170 @@
-# Welcome to your GPT Engineer project
+# Sistema de Vouchers para Refeitório
 
-## Project info
+## Visão Geral
+Sistema desenvolvido para gerenciamento de vouchers de refeição, permitindo controle de acesso ao refeitório através de diferentes tipos de vouchers: comuns, extras e descartáveis.
 
-**URL**: https://run.gptengineer.app/projects/8b975c55-f200-41ce-ae70-33294b62ced9/improve
+## Tecnologias Utilizadas
+- React + Vite
+- Tailwind CSS
+- Shadcn/ui
+- Supabase (Banco de dados e autenticação)
+- React Query
+- React Router DOM
 
-## How can I edit this code?
+## Regras de Negócio
 
-There are several ways of editing your application.
+### 1. Tipos de Voucher
 
-**Use GPT Engineer**
+#### 1.1 Voucher Comum
+- Gerado automaticamente para cada usuário
+- Composto por 4 dígitos numéricos
+- Nunca expira
+- Único na base de dados
+- Vinculado ao CPF do usuário
+- Geração baseada em:
+  - Dígitos do CPF (posições 2-11)
+  - Soma dos dígitos
+  - Timestamp para aleatoriedade
+  - Verificação de unicidade
 
-Simply visit the GPT Engineer project at [GPT Engineer](https://gptengineer.app/projects/8b975c55-f200-41ce-ae70-33294b62ced9/improve) and start prompting.
+#### 1.2 Voucher Extra
+- Gerado para situações específicas
+- Válido por tempo determinado
+- Requer autorização
+- Vinculado ao usuário específico
+- Pode ter observações
 
-Changes made via gptengineer.app will be committed automatically to this repo.
+#### 1.3 Voucher Descartável
+- Uso único
+- Não vinculado a usuário específico
+- Válido para data específica
+- Pode ser gerado em lote
 
-**Use your preferred IDE**
+### 2. Fluxos de Utilização
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in the GPT Engineer UI.
+#### 2.1 Voucher Comum e Extra
+1. Entrada do código (Voucher.jsx)
+2. Seleção de refeição (SelfServices.jsx)
+3. Confirmação de dados (UserConfirmation.jsx)
+4. Tela de finalização (BomApetite.jsx)
+5. Retorno à tela inicial
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+#### 2.2 Voucher Descartável
+1. Entrada do código (Voucher.jsx)
+2. Seleção de refeição (SelfServices.jsx)
+3. Tela de finalização (BomApetite.jsx)
 
-Follow these steps:
+### 3. Turnos e Horários
+- Central: 08:00 às 17:00
+- Primeiro: 06:00 às 14:00
+- Segundo: 14:00 às 22:00
+- Terceiro: 22:00 às 06:00
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 4. Refeições
+- Tipos configuráveis
+- Horários específicos
+- Valores individuais
+- Tolerância configurável
+- Limite de usuários por dia (opcional)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Interface do Usuário
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 1. Princípios de UI/UX
+- Design responsivo para todos os dispositivos
+- Feedback visual através de toasts
+- Cores consistentes do sistema
+- Ícones intuitivos
+- Formulários validados
+- Mensagens de erro claras
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 2. Componentes Principais
+- Teclado numérico para entrada de voucher
+- Seleção de refeições com cards
+- Confirmação com dados do usuário
+- Tela de sucesso personalizada
+
+### 3. Área Administrativa
+- Gestão de empresas
+- Cadastro de usuários
+- Configuração de turnos
+- Geração de vouchers
+- Relatórios e logs
+- Configurações do sistema
+
+## Banco de Dados
+
+### 1. Tabelas Principais
+- empresas
+- usuarios
+- turnos
+- tipos_refeicao
+- uso_voucher
+- vouchers_extras
+- vouchers_descartaveis
+
+### 2. Relacionamentos
+- Usuários vinculados a empresas
+- Vouchers vinculados a usuários
+- Uso vinculado a tipos de refeição
+
+## Configuração do Ambiente
+
+### Desenvolvimento
+```bash
+# Instalação de dependências
+npm install
+
+# Iniciar ambiente de desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Produção
+```bash
+# Build do projeto
+npm run build
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+# Iniciar em produção
+npm start
+```
 
-**Use GitHub Codespaces**
+## Boas Práticas
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 1. Código
+- Componentes pequenos e focados
+- Hooks personalizados para lógica
+- Context API para estado global
+- Validações consistentes
+- Tratamento de erros
 
-## What technologies are used for this project?
+### 2. Performance
+- Queries otimizadas
+- Caching apropriado
+- Lazy loading de componentes
+- Otimização de imagens
 
-This project is built with .
+### 3. Segurança
+- Validação de inputs
+- Proteção contra XSS
+- Rate limiting
+- Autenticação robusta
 
-- Vite
-- React
-- shadcn-ui
-- Tailwind CSS
+## Manutenção
 
-## How can I deploy this project?
+### 1. Backups
+- Backup diário do banco
+- Versionamento do código
+- Logs de sistema
 
-All GPT Engineer projects can be deployed directly via the GPT Engineer app.
+### 2. Monitoramento
+- Logs de uso
+- Métricas de performance
+- Alertas de erro
 
-Simply visit your project at [GPT Engineer](https://gptengineer.app/projects/8b975c55-f200-41ce-ae70-33294b62ced9/improve) and click on Share -> Publish.
+## Suporte
 
-## I want to use a custom domain - is that possible?
+Para suporte técnico ou dúvidas sobre o sistema, entre em contato através dos canais:
+- Email: suporte@sistema.com
+- Telefone: (XX) XXXX-XXXX
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.gptengineer.app/tips-tricks/custom-domain/)
+## Licença
+Este projeto está sob a licença [Nome da Licença].
