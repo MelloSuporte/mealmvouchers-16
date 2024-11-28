@@ -14,7 +14,7 @@ const UserConfirmation = () => {
 
   useEffect(() => {
     if (!location.state) {
-      navigate('/');
+      navigate('/voucher');
     } else {
       setUserName(location.state.userName);
     }
@@ -44,7 +44,7 @@ const UserConfirmation = () => {
         // Move o voucher atual para o histórico
         localStorage.removeItem('commonVoucher');
         
-        // Redireciona para a página BomApetite com o nome do usuário
+        // Redireciona para a página BomApetite com o nome do usuário e tipo de refeição
         navigate(`/bom-apetite/${userName}`, {
           state: { 
             userName: userName,
