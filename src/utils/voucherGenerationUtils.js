@@ -61,6 +61,7 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
       throw new Error('Não foi possível gerar um voucher único após várias tentativas');
     }
 
+    // O voucher comum nunca expira, então não há necessidade de adicionar data de expiração
     return voucherCode;
   } catch (error) {
     logger.error('Erro ao gerar voucher único:', error);
