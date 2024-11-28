@@ -14,10 +14,16 @@ import { Download } from "lucide-react";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const VoucherTable = ({ vouchers = [] }) => {
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = parseISO(dateString);
+    return isValid(date) ? format(date, "dd/MM/yyyy HH:mm", { locale: ptBR }) : '-';
+  };
+
   const downloadPDF = () => {
     try {
       const doc = new jsPDF();
@@ -28,9 +34,9 @@ const VoucherTable = ({ vouchers = [] }) => {
       const tableData = vouchers.map(voucher => [
         voucher.codigo,
         voucher.tipo_refeicao_nome || 'Não especificado',
-        format(new Date(voucher.data_criacao), "dd/MM/yyyy HH:mm", { locale: ptBR }),
-        voucher.data_uso ? format(new Date(voucher.data_uso), "dd/MM/yyyy HH:mm", { locale: ptBR }) : '-',
-        format(new Date(voucher.data_expiracao), "dd/MM/yyyy HH:mm", { locale: ptBR }),
+        formatDate(voucher.data_criacao),
+        voucher.data_uso ? formatDate(voucher.data_uso) : '-',
+        formatDate(voucher.data_expiracao),
         voucher.usado ? 'Sim' : 'Não'
       ]);
 
@@ -82,17 +88,9 @@ const VoucherTable = ({ vouchers = [] }) => {
                 <TableRow key={voucher.id}>
                   <TableCell>{voucher.codigo}</TableCell>
                   <TableCell>{voucher.tipo_refeicao_nome || 'Não especificado'}</TableCell>
-                  <TableCell>
-                    {format(new Date(voucher.data_criacao), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                  </TableCell>
-                  <TableCell>
-                    {voucher.data_uso 
-                      ? format(new Date(voucher.data_uso), "dd/MM/yyyy HH:mm", { locale: ptBR })
-                      : '-'}
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(voucher.data_expiracao), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                  </TableCell>
+                  <TableCell>{formatDate(voucher.data_criacao)}</TableCell>
+                  <TableCell>{voucher.data_uso ? formatDate(voucher.data_uso) : '-'}</TableCell>
+                  <TableCell>{formatDate(voucher.data_expiracao)}</TableCell>
                   <TableCell>{voucher.usado ? 'Sim' : 'Não'}</TableCell>
                 </TableRow>
               ))}
