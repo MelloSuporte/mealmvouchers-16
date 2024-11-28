@@ -10,15 +10,15 @@ const SelfServices = () => {
   const navigate = useNavigate();
   const [backgroundImage, setBackgroundImage] = useState('');
 
-  // Busca as refeições cadastradas
+  // Busca as refeições cadastradas da tabela tipos_refeicoes
   const { data: meals, isLoading, error } = useQuery({
-    queryKey: ['meals'],
+    queryKey: ['tipos_refeicoes'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('meal_types')
+        .from('tipos_refeicao')
         .select('*')
-        .eq('is_active', true)
-        .order('name');
+        .eq('ativo', true)
+        .order('nome');
       
       if (error) throw error;
       return data;
@@ -124,16 +124,16 @@ const SelfServices = () => {
           {meals && meals.map((meal) => (
             <Button
               key={meal.id}
-              onClick={() => handleMealSelection(meal.name)}
+              onClick={() => handleMealSelection(meal.nome)}
               className="w-full h-32 bg-transparent hover:bg-gray-100 text-gray-800 font-semibold py-6 px-4 border border-gray-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
             >
-              {meal.name === 'Almoço' && <Utensils className="h-12 w-12 mb-2" />}
-              {meal.name === 'Café' && <Coffee className="h-12 w-12 mb-2" />}
-              {meal.name === 'Lanche' && <Sandwich className="h-12 w-12 mb-2" />}
-              {meal.name === 'Jantar' && <Moon className="h-12 w-12 mb-2" />}
-              {meal.name === 'Ceia' && <Moon className="h-12 w-12 mb-2" />}
-              {meal.name === 'Extra' && <Plus className="h-12 w-12 mb-2" />}
-              {meal.name}
+              {meal.nome.toLowerCase().includes('almoço') && <Utensils className="h-12 w-12 mb-2" />}
+              {meal.nome.toLowerCase().includes('café') && <Coffee className="h-12 w-12 mb-2" />}
+              {meal.nome.toLowerCase().includes('lanche') && <Sandwich className="h-12 w-12 mb-2" />}
+              {meal.nome.toLowerCase().includes('jantar') && <Moon className="h-12 w-12 mb-2" />}
+              {meal.nome.toLowerCase().includes('ceia') && <Moon className="h-12 w-12 mb-2" />}
+              {meal.nome.toLowerCase().includes('extra') && <Plus className="h-12 w-12 mb-2" />}
+              {meal.nome}
             </Button>
           ))}
         </div>
