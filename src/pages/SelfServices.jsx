@@ -38,9 +38,19 @@ const SelfServices = () => {
         });
 
         if (response.data.success) {
+          // Armazena o voucher usado com timestamp
+          const usedVouchers = JSON.parse(localStorage.getItem('usedDisposableVouchers') || '[]');
+          usedVouchers.push({
+            ...disposableVoucher,
+            usedAt: new Date().toISOString(),
+            mealType
+          });
+          localStorage.setItem('usedDisposableVouchers', JSON.stringify(usedVouchers));
+          
+          // Move o voucher atual para o histórico
+          localStorage.removeItem('disposableVoucher');
           navigate(`/bom-apetite/Usuario`, { state: { mealType } });
         }
-        localStorage.removeItem('disposableVoucher');
       } 
       // Se for voucher comum ou extra
       else if (commonVoucher.code) {
@@ -52,7 +62,6 @@ const SelfServices = () => {
             voucherCode: commonVoucher.code
           }
         });
-        localStorage.removeItem('commonVoucher');
       }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Erro ao validar voucher');
