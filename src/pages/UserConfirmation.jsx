@@ -42,15 +42,20 @@ const UserConfirmation = () => {
         localStorage.setItem('usedCommonVouchers', JSON.stringify(usedVouchers));
         
         // Redireciona para a página BomApetite com o nome do usuário e tipo de refeição
-        navigate(`/bom-apetite/${encodeURIComponent(userName)}`, {
+        const encodedUserName = encodeURIComponent(userName);
+        navigate(`/bom-apetite/${encodedUserName}`, {
           state: { 
             userName: userName,
             mealType: location.state.mealType 
           },
           replace: true
         });
+      } else {
+        toast.error('Erro ao validar voucher');
+        navigate('/voucher');
       }
     } catch (error) {
+      console.error('Erro na validação:', error);
       toast.error(error.response?.data?.error || 'Erro ao validar voucher');
       navigate('/voucher');
     } finally {
