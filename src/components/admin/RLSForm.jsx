@@ -49,22 +49,6 @@ const RLSForm = () => {
     enabled: searchTerm.length >= 3
   });
 
-  const handleSearchTermChange = (e) => {
-    const formattedCPF = formatCPF(e);
-    setSearchTerm(formattedCPF);
-    if (selectedUser) {
-      setSelectedUser("");
-    }
-  };
-
-  const validateDates = (dates) => {
-    if (!dates || !Array.isArray(dates) || dates.length === 0) return false;
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return !dates.some(date => date < today);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -90,7 +74,7 @@ const RLSForm = () => {
         return localDate.toISOString().split('T')[0];
       });
       
-      const response = await api.post('/vouchers-extra', {
+      const response = await api.post('/vouchers-extras', {
         usuario_id: selectedUser,
         datas: formattedDates,
         observacao: observacao.trim() || 'Voucher extra gerado via sistema'
@@ -113,6 +97,22 @@ const RLSForm = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSearchTermChange = (e) => {
+    const formattedCPF = formatCPF(e);
+    setSearchTerm(formattedCPF);
+    if (selectedUser) {
+      setSelectedUser("");
+    }
+  };
+
+  const validateDates = (dates) => {
+    if (!dates || !Array.isArray(dates) || dates.length === 0) return false;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return !dates.some(date => date < today);
   };
 
   return (
