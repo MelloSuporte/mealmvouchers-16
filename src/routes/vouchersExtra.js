@@ -3,6 +3,6 @@ import { createVoucherExtra } from '../controllers/vouchersExtraController.js';
 
 const router = express.Router();
 
-router.post('/vouchers-extra', createVoucherExtra);
+router.post('/', createVoucherExtra);
 
 export default router;
