@@ -37,17 +37,20 @@ export const useDisposableVoucherFormLogic = () => {
     try {
       const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
       
-      // Ajustado para seguir o mesmo padrão do RLSForm
-      const response = await api.post('/vouchers-extra', {
+      const payload = {
         tipos_refeicao_ids: selectedMealTypes,
         datas: formattedDates,
         quantidade: quantity,
         observacao: 'Voucher descartável gerado via sistema'
-      });
+      };
+
+      console.log('Enviando requisição para /vouchers-extra/disposable:', payload);
+      
+      const response = await api.post('/vouchers-extra/disposable', payload);
 
       if (response.data && response.data.success) {
         setAllVouchers(prev => [...response.data.vouchers, ...prev]);
-        toast.success(`${response.data.vouchers.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
+        toast.success(response.data.message);
         
         if (response.data.warnings) {
           response.data.warnings.forEach(warning => toast.warning(warning));

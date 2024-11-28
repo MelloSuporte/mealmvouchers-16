@@ -1,98 +1,91 @@
 import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
-import { generateUniqueVoucherFromCPF } from '../utils/voucherGenerationUtils.js';
+import { generateUniqueCode } from '../utils/voucherGenerationUtils.js';
 
 export const createVoucherExtra = async (req, res) => {
-  const { usuario_id, datas, tipos_refeicao_ids, observacao, quantidade = 1 } = req.body;
+  const { usuario_id, datas, observacao } = req.body;
 
   try {
-    if (!datas || !Array.isArray(datas) || datas.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'É necessário fornecer pelo menos uma data válida'
-      });
-    }
-
-    // Verificar datas passadas
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const vouchers = [];
     
-    const hasInvalidDate = datas.some(date => {
-      const dataVoucher = new Date(date);
-      dataVoucher.setHours(0, 0, 0, 0);
-      return dataVoucher < today;
-    });
-
-    if (hasInvalidDate) {
-      return res.status(400).json({
-        success: false,
-        error: 'Não é possível gerar vouchers para datas passadas'
-      });
-    }
-
-    // Buscar usuário para validação
-    const { data: usuario, error: userError } = await supabase
-      .from('usuarios')
-      .select('id, cpf, nome')
-      .eq('id', usuario_id)
-      .single();
-
-    if (userError || !usuario) {
-      logger.error('Erro ao verificar usuário:', userError);
-      return res.status(404).json({
-        success: false,
-        error: 'Usuário não encontrado'
-      });
-    }
-
-    // Preparar vouchers para inserção
-    const vouchersParaInserir = [];
-    const refeicoes = tipos_refeicao_ids || [null];
-
     for (const data of datas) {
-      for (let i = 0; i < quantidade; i++) {
-        for (const tipo_refeicao_id of refeicoes) {
-          const codigo = await generateUniqueVoucherFromCPF(usuario.cpf);
+      const code = await generateUniqueCode();
+      
+      const { data: voucher, error } = await supabase
+        .from('vouchers_extras')
+        .insert({
+          codigo: code,
+          usuario_id: usuario_id,
+          data_expiracao: data,
+          observacao: observacao
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      vouchers.push(voucher);
+    }
+
+    logger.info(`Vouchers extras gerados com sucesso para usuário ${usuario_id}`);
+    return res.json({
+      success: true,
+      message: `${vouchers.length} voucher(s) extra(s) gerado(s) com sucesso!`,
+      vouchers
+    });
+  } catch (error) {
+    logger.error('Erro ao gerar vouchers extras:', error);
+    return res.status(400).json({
+      success: false,
+      error: error.message || 'Erro ao gerar vouchers extras'
+    });
+  }
+};
+
+export const generateDisposableVouchers = async (req, res) => {
+  const { tipos_refeicao_ids, datas, quantidade, observacao } = req.body;
+
+  try {
+    const vouchers = [];
+    
+    for (const data of datas) {
+      for (const tipo_refeicao_id of tipos_refeicao_ids) {
+        for (let i = 0; i < quantidade; i++) {
+          const code = await generateUniqueCode();
           
-          const dataValidade = new Date(data);
-          dataValidade.setHours(23, 59, 59, 0);
-          
-          vouchersParaInserir.push({
-            usuario_id: usuario.id,
-            tipo_refeicao_id,
-            autorizado_por: 'Sistema',
-            codigo,
-            valido_ate: dataValidade.toISOString(),
-            observacao: observacao?.trim() || 'Voucher extra gerado via sistema',
-            usado: false,
-            criado_em: new Date().toISOString()
-          });
+          const { data: voucher, error } = await supabase
+            .from('vouchers_extras')
+            .insert({
+              codigo: code,
+              tipo_refeicao_id: tipo_refeicao_id,
+              data_expiracao: data,
+              observacao: observacao,
+              tipo: 'DESCARTAVEL'
+            })
+            .select(`
+              *,
+              tipos_refeicao (
+                nome
+              )
+            `)
+            .single();
+
+          if (error) throw error;
+          vouchers.push(voucher);
         }
       }
     }
 
-    // Inserir vouchers no banco
-    const { data: vouchersInseridos, error: insertError } = await supabase
-      .from('vouchers_extras')
-      .insert(vouchersParaInserir)
-      .select();
-
-    if (insertError) {
-      logger.error('Erro ao inserir vouchers:', insertError);
-      throw insertError;
-    }
-
-    return res.status(201).json({
+    logger.info(`${vouchers.length} vouchers descartáveis gerados com sucesso`);
+    return res.json({
       success: true,
-      message: `${vouchersInseridos.length} voucher(s) extra(s) gerado(s) com sucesso!`,
-      vouchers: vouchersInseridos
+      message: `${vouchers.length} voucher(s) descartável(is) gerado(s) com sucesso!`,
+      vouchers
     });
-
   } catch (error) {
-    logger.error('Erro ao gerar vouchers extras:', error);
-    return res.status(500).json({
+    logger.error('Erro ao gerar vouchers descartáveis:', error);
+    return res.status(400).json({
       success: false,
-      error: 'Erro ao gerar vouchers extras: ' + (error.message || error)
+      error: error.message || 'Erro ao gerar vouchers descartáveis'
     });
   }
 };
