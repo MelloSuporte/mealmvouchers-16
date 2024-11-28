@@ -1,26 +1,32 @@
 import React from 'react';
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 const VoucherTypeSelector = ({ mealTypes, selectedMealTypes, onMealTypeToggle }) => {
+  if (!mealTypes || mealTypes.length === 0) {
+    return <div>Nenhum tipo de refeição disponível</div>;
+  }
+
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">Tipos de Refeição</label>
-      <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-        <div className="space-y-2">
-          {mealTypes.map((type) => (
-            <div key={type.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`meal-type-${type.id}`}
-                checked={selectedMealTypes.includes(type.id)}
-                onCheckedChange={() => onMealTypeToggle(type.id)}
-              />
-              <Label htmlFor={`meal-type-${type.id}`}>{type.name}</Label>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
+      <Label className="text-sm font-medium">Tipos de Refeição</Label>
+      <div className="grid gap-4">
+        {mealTypes.map((mealType) => (
+          <div key={mealType.id} className="flex items-center space-x-2">
+            <Checkbox
+              id={`meal-type-${mealType.id}`}
+              checked={selectedMealTypes.includes(mealType.id)}
+              onCheckedChange={() => onMealTypeToggle(mealType.id)}
+            />
+            <Label
+              htmlFor={`meal-type-${mealType.id}`}
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              {mealType.nome} - R$ {mealType.valor.toFixed(2)}
+            </Label>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
