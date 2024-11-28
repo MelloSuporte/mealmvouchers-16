@@ -7,6 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ptBR } from 'date-fns/locale';
 import { formatCPF } from '../../utils/formatters';
 
@@ -115,65 +116,76 @@ const RLSForm = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="border-b pb-4">
-        <h2 className="text-2xl font-semibold tracking-tight">RLSE - Regra de Liberação de Serviço Extra</h2>
-        <p className="text-sm text-muted-foreground">
-          Sistema para geração de vouchers extras para usuários específicos
-        </p>
-      </div>
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>RLSE - Regra de Liberação de Serviço Extra</CardTitle>
+        <CardDescription>
+          Sistema para geração de vouchers extras para usuários específicos.
+          Selecione o usuário, as datas desejadas e adicione uma observação opcional.
+        </CardDescription>
+      </CardHeader>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <CompanyUserSelector
-          selectedCompany={selectedCompany}
-          setSelectedCompany={setSelectedCompany}
-          searchTerm={searchTerm}
-          setSearchTerm={handleSearchTermChange}
-          selectedUser={selectedUser}
-          setSelectedUser={setSelectedUser}
-          users={users}
-          isLoadingUsers={isLoadingUsers}
-        />
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <CompanyUserSelector
+              selectedCompany={selectedCompany}
+              setSelectedCompany={setSelectedCompany}
+              searchTerm={searchTerm}
+              setSearchTerm={handleSearchTermChange}
+              selectedUser={selectedUser}
+              setSelectedUser={setSelectedUser}
+              users={users}
+              isLoadingUsers={isLoadingUsers}
+            />
 
-        <div className="space-y-2">
-          <Label htmlFor="observacao">Observação</Label>
-          <Input
-            id="observacao"
-            value={observacao}
-            onChange={(e) => setObservacao(e.target.value)}
-            placeholder="Digite uma observação para o voucher extra"
-            maxLength={255}
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="observacao">Observação</Label>
+              <Input
+                id="observacao"
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
+                placeholder="Digite uma observação para o voucher extra"
+                maxLength={255}
+              />
+              <p className="text-sm text-muted-foreground">
+                A observação é opcional e será registrada junto ao voucher
+              </p>
+            </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Datas para Voucher Extra</label>
-          <Calendar
-            mode="multiple"
-            selected={selectedDates}
-            onSelect={setSelectedDates}
-            className="rounded-md border"
-            locale={ptBR}
-            disabled={(date) => {
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              return date < today;
-            }}
-          />
-          <p className="text-sm text-gray-500">
-            {selectedDates.length > 0 && `${selectedDates.length} data(s) selecionada(s)`}
-          </p>
-        </div>
+            <div className="space-y-2">
+              <Label>Datas para Voucher Extra</Label>
+              <Calendar
+                mode="multiple"
+                selected={selectedDates}
+                onSelect={setSelectedDates}
+                className="rounded-md border"
+                locale={ptBR}
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return date < today;
+                }}
+              />
+              <p className="text-sm text-muted-foreground">
+                {selectedDates.length === 0 
+                  ? "Selecione as datas para gerar os vouchers extras" 
+                  : `${selectedDates.length} data(s) selecionada(s)`
+                }
+              </p>
+            </div>
+          </div>
 
-        <Button 
-          type="submit" 
-          disabled={isSubmitting || !selectedUser || selectedDates.length === 0}
-          className="w-full"
-        >
-          {isSubmitting ? 'Gerando...' : 'Gerar Vouchers Extras'}
-        </Button>
-      </form>
-    </div>
+          <Button 
+            type="submit" 
+            disabled={isSubmitting || !selectedUser || selectedDates.length === 0}
+            className="w-full"
+          >
+            {isSubmitting ? 'Gerando...' : 'Gerar Vouchers Extras'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
