@@ -115,56 +115,65 @@ const RLSForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <CompanyUserSelector
-        selectedCompany={selectedCompany}
-        setSelectedCompany={setSelectedCompany}
-        searchTerm={searchTerm}
-        setSearchTerm={handleSearchTermChange}
-        selectedUser={selectedUser}
-        setSelectedUser={setSelectedUser}
-        users={users}
-        isLoadingUsers={isLoadingUsers}
-      />
-
-      <div className="space-y-2">
-        <Label htmlFor="observacao">Observação</Label>
-        <Input
-          id="observacao"
-          value={observacao}
-          onChange={(e) => setObservacao(e.target.value)}
-          placeholder="Digite uma observação para o voucher extra"
-          maxLength={255}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm font-medium">Datas para Voucher Extra</label>
-        <Calendar
-          mode="multiple"
-          selected={selectedDates}
-          onSelect={setSelectedDates}
-          className="rounded-md border"
-          locale={ptBR}
-          disabled={(date) => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            return date < today;
-          }}
-        />
-        <p className="text-sm text-gray-500">
-          {selectedDates.length > 0 && `${selectedDates.length} data(s) selecionada(s)`}
+    <div className="space-y-6">
+      <div className="border-b pb-4">
+        <h2 className="text-2xl font-semibold tracking-tight">RLS - Regra de Liberação de Serviço</h2>
+        <p className="text-sm text-muted-foreground">
+          Sistema para geração de vouchers extras para usuários específicos
         </p>
       </div>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <CompanyUserSelector
+          selectedCompany={selectedCompany}
+          setSelectedCompany={setSelectedCompany}
+          searchTerm={searchTerm}
+          setSearchTerm={handleSearchTermChange}
+          selectedUser={selectedUser}
+          setSelectedUser={setSelectedUser}
+          users={users}
+          isLoadingUsers={isLoadingUsers}
+        />
 
-      <Button 
-        type="submit" 
-        disabled={isSubmitting || !selectedUser || selectedDates.length === 0}
-        className="w-full"
-      >
-        {isSubmitting ? 'Gerando...' : 'Gerar Vouchers Extras'}
-      </Button>
-    </form>
+        <div className="space-y-2">
+          <Label htmlFor="observacao">Observação</Label>
+          <Input
+            id="observacao"
+            value={observacao}
+            onChange={(e) => setObservacao(e.target.value)}
+            placeholder="Digite uma observação para o voucher extra"
+            maxLength={255}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">Datas para Voucher Extra</label>
+          <Calendar
+            mode="multiple"
+            selected={selectedDates}
+            onSelect={setSelectedDates}
+            className="rounded-md border"
+            locale={ptBR}
+            disabled={(date) => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              return date < today;
+            }}
+          />
+          <p className="text-sm text-gray-500">
+            {selectedDates.length > 0 && `${selectedDates.length} data(s) selecionada(s)`}
+          </p>
+        </div>
+
+        <Button 
+          type="submit" 
+          disabled={isSubmitting || !selectedUser || selectedDates.length === 0}
+          className="w-full"
+        >
+          {isSubmitting ? 'Gerando...' : 'Gerar Vouchers Extras'}
+        </Button>
+      </form>
+    </div>
   );
 };
 
