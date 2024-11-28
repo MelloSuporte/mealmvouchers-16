@@ -34,23 +34,32 @@ const BomApetite = () => {
   }, []);
 
   useEffect(() => {
-    // Limpa quaisquer vouchers armazenados no localStorage
+    // Limpa todos os vouchers do localStorage
     localStorage.removeItem('disposableVoucher');
     localStorage.removeItem('commonVoucher');
+    localStorage.removeItem('usedCommonVouchers');
+    localStorage.removeItem('usedDisposableVouchers');
 
     const timer = setInterval(() => {
       setCountdown((prevCount) => {
         if (prevCount <= 1) {
           clearInterval(timer);
           toast.success("Redirecionando para a página de voucher...");
-          navigate('/voucher');
+          navigate('/voucher', { replace: true });
           return 0;
         }
         return prevCount - 1;
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      // Garante que o localStorage está limpo mesmo se o componente for desmontado
+      localStorage.removeItem('disposableVoucher');
+      localStorage.removeItem('commonVoucher');
+      localStorage.removeItem('usedCommonVouchers');
+      localStorage.removeItem('usedDisposableVouchers');
+    };
   }, [navigate]);
 
   return (

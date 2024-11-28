@@ -41,15 +41,13 @@ const UserConfirmation = () => {
         });
         localStorage.setItem('usedCommonVouchers', JSON.stringify(usedVouchers));
         
-        // Remove o voucher atual do localStorage
-        localStorage.removeItem('commonVoucher');
-        
         // Redireciona para a página BomApetite com o nome do usuário e tipo de refeição
         navigate(`/bom-apetite/${userName}`, {
           state: { 
             userName: userName,
             mealType: location.state.mealType 
-          }
+          },
+          replace: true
         });
       }
     } catch (error) {
