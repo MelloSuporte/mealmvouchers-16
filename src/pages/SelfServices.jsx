@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { Coffee, Utensils, Moon, Plus, Sandwich } from 'lucide-react';
 import { toast } from "sonner";
-import api from '../utils/api';
 
 const SelfServices = () => {
   const navigate = useNavigate();
@@ -32,25 +31,12 @@ const SelfServices = () => {
       
       // Se for voucher descartável
       if (disposableVoucher.code) {
-        const response = await api.post('/vouchers/validate-disposable', {
-          code: disposableVoucher.code,
-          meal_type_id: disposableVoucher.mealTypeId
+        navigate(`/bom-apetite/Usuario`, { 
+          state: { 
+            mealType,
+            userName: 'Usuario'
+          }
         });
-
-        if (response.data.success) {
-          // Armazena o voucher usado com timestamp
-          const usedVouchers = JSON.parse(localStorage.getItem('usedDisposableVouchers') || '[]');
-          usedVouchers.push({
-            ...disposableVoucher,
-            usedAt: new Date().toISOString(),
-            mealType
-          });
-          localStorage.setItem('usedDisposableVouchers', JSON.stringify(usedVouchers));
-          
-          // Move o voucher atual para o histórico
-          localStorage.removeItem('disposableVoucher');
-          navigate(`/bom-apetite/Usuario`, { state: { mealType } });
-        }
       } 
       // Se for voucher comum ou extra
       else if (commonVoucher.code) {
@@ -59,12 +45,16 @@ const SelfServices = () => {
             userName: commonVoucher.userName,
             userTurno: commonVoucher.turno,
             mealType,
-            voucherCode: commonVoucher.code
+            voucherCode: commonVoucher.code,
+            cpf: commonVoucher.cpf
           }
         });
+      } else {
+        toast.error('Tipo de voucher inválido');
+        navigate('/voucher');
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Erro ao validar voucher');
+      toast.error('Erro ao processar voucher');
       navigate('/voucher');
     }
   };

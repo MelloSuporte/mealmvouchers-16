@@ -8,7 +8,6 @@ const BomApetite = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [countdown, setCountdown] = useState(5);
-  const mealType = location.state?.mealType || 'Refeição';
   const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
@@ -34,7 +33,7 @@ const BomApetite = () => {
   }, []);
 
   useEffect(() => {
-    if (!userName || !location.state) {
+    if (!userName || !location.state?.mealType) {
       navigate('/voucher');
       return;
     }
@@ -42,8 +41,6 @@ const BomApetite = () => {
     // Limpa todos os vouchers do localStorage
     localStorage.removeItem('disposableVoucher');
     localStorage.removeItem('commonVoucher');
-    localStorage.removeItem('usedCommonVouchers');
-    localStorage.removeItem('usedDisposableVouchers');
 
     const timer = setInterval(() => {
       setCountdown((prevCount) => {
@@ -62,8 +59,6 @@ const BomApetite = () => {
       // Garante que o localStorage está limpo mesmo se o componente for desmontado
       localStorage.removeItem('disposableVoucher');
       localStorage.removeItem('commonVoucher');
-      localStorage.removeItem('usedCommonVouchers');
-      localStorage.removeItem('usedDisposableVouchers');
     };
   }, [navigate, userName, location.state]);
 
@@ -77,7 +72,7 @@ const BomApetite = () => {
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
         <h1 className="text-4xl font-bold text-green-600 mb-4">Bom Apetite!</h1>
         <p className="text-xl mb-4">Olá, {decodeURIComponent(userName)}!</p>
-        <p className="text-lg mb-6">Aproveite seu(sua) {mealType}.</p>
+        <p className="text-lg mb-6">Aproveite seu(sua) {location.state?.mealType || 'refeição'}.</p>
         <p className="text-md">Retornando à página de voucher em {countdown} segundos...</p>
       </div>
     </div>

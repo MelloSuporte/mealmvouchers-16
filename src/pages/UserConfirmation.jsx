@@ -13,7 +13,8 @@ const UserConfirmation = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!location.state) {
+    if (!location.state?.userName || !location.state?.mealType) {
+      toast.error('Informações incompletas');
       navigate('/voucher');
     } else {
       setUserName(location.state.userName);
@@ -23,11 +24,9 @@ const UserConfirmation = () => {
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
-      const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
-      
       const response = await api.post('/vouchers/validate', {
-        cpf: commonVoucher.cpf,
-        voucherCode: commonVoucher.code,
+        cpf: location.state.cpf,
+        voucherCode: location.state.voucherCode,
         mealType: location.state.mealType
       });
 
@@ -35,14 +34,15 @@ const UserConfirmation = () => {
         // Armazena o voucher usado com timestamp
         const usedVouchers = JSON.parse(localStorage.getItem('usedCommonVouchers') || '[]');
         usedVouchers.push({
-          ...commonVoucher,
+          code: location.state.voucherCode,
+          userName: location.state.userName,
           usedAt: new Date().toISOString(),
           mealType: location.state.mealType
         });
         localStorage.setItem('usedCommonVouchers', JSON.stringify(usedVouchers));
         
         // Redireciona para a página BomApetite
-        navigate('/bom-apetite/' + encodeURIComponent(userName), {
+        navigate(`/bom-apetite/${encodeURIComponent(userName)}`, {
           state: { 
             userName: userName,
             mealType: location.state.mealType 
