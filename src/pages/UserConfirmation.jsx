@@ -13,35 +13,33 @@ const UserConfirmation = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!location.state?.userName || !location.state?.mealType) {
+    const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
+    const extraVoucher = JSON.parse(localStorage.getItem('extraVoucher') || '{}');
+
+    if (!location.state?.mealType || (!commonVoucher.code && !extraVoucher.code)) {
       toast.error('Informações incompletas');
       navigate('/voucher');
-    } else {
-      setUserName(location.state.userName);
+      return;
     }
+
+    setUserName(commonVoucher.userName || 'Usuário');
   }, [location.state, navigate]);
 
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
-      const response = await api.post('/vouchers/validate', {
-        cpf: location.state.cpf,
-        voucherCode: location.state.voucherCode,
+      const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
+      const extraVoucher = JSON.parse(localStorage.getItem('extraVoucher') || '{}');
+      
+      const voucherData = {
+        cpf: commonVoucher.cpf || extraVoucher.cpf,
+        voucherCode: commonVoucher.code || extraVoucher.code,
         mealType: location.state.mealType
-      });
+      };
+
+      const response = await api.post('/vouchers/validate', voucherData);
 
       if (response.data.success) {
-        // Armazena o voucher usado com timestamp
-        const usedVouchers = JSON.parse(localStorage.getItem('usedCommonVouchers') || '[]');
-        usedVouchers.push({
-          code: location.state.voucherCode,
-          userName: location.state.userName,
-          usedAt: new Date().toISOString(),
-          mealType: location.state.mealType
-        });
-        localStorage.setItem('usedCommonVouchers', JSON.stringify(usedVouchers));
-        
-        // Redireciona para a página BomApetite
         navigate(`/bom-apetite/${encodeURIComponent(userName)}`, {
           state: { 
             userName: userName,

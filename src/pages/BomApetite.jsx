@@ -41,6 +41,7 @@ const BomApetite = () => {
     // Limpa todos os vouchers do localStorage
     localStorage.removeItem('disposableVoucher');
     localStorage.removeItem('commonVoucher');
+    localStorage.removeItem('extraVoucher');
 
     const timer = setInterval(() => {
       setCountdown((prevCount) => {
@@ -59,6 +60,7 @@ const BomApetite = () => {
       // Garante que o localStorage está limpo mesmo se o componente for desmontado
       localStorage.removeItem('disposableVoucher');
       localStorage.removeItem('commonVoucher');
+      localStorage.removeItem('extraVoucher');
     };
   }, [navigate, userName, location.state]);
 

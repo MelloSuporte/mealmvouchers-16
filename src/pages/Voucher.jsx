@@ -41,9 +41,10 @@ const Voucher = () => {
     try {
       // Primeiro verifica se é um voucher descartável
       const { data: disposableVouchers, error: disposableError } = await supabase
-        .from('vouchers_descartaveis')
+        .from('disposable_vouchers')
         .select('*')
-        .eq('codigo', voucherCode);
+        .eq('code', voucherCode)
+        .eq('is_used', false);
 
       if (disposableError) throw disposableError;
 
@@ -51,17 +52,18 @@ const Voucher = () => {
         const disposableVoucher = disposableVouchers[0];
         localStorage.setItem('disposableVoucher', JSON.stringify({
           code: voucherCode,
-          mealTypeId: disposableVoucher.tipo_refeicao_id
+          mealTypeId: disposableVoucher.meal_type_id
         }));
         navigate('/self-services');
         return;
       }
 
-      // Se não for descartável, verifica se é um voucher comum
+      // Se não for descartável, verifica se é um voucher comum ou extra
       const { data: users, error: userError } = await supabase
-        .from('usuarios')
+        .from('users')
         .select('*')
-        .eq('voucher', voucherCode);
+        .eq('voucher', voucherCode)
+        .eq('is_suspended', false);
 
       if (userError) throw userError;
 
@@ -69,31 +71,36 @@ const Voucher = () => {
         const user = users[0];
         localStorage.setItem('commonVoucher', JSON.stringify({
           code: voucherCode,
-          userName: user.nome,
-          turno: user.turno_id,
+          userName: user.name,
+          turno: user.shift,
           cpf: user.cpf
         }));
         navigate('/self-services');
       } else {
-        toast.error("Voucher inválido");
+        // Verifica se é um voucher extra
+        const { data: extraVouchers, error: extraError } = await supabase
+          .from('extra_vouchers')
+          .select('*')
+          .eq('code', voucherCode)
+          .eq('is_used', false);
+
+        if (extraError) throw extraError;
+
+        if (extraVouchers && extraVouchers.length > 0) {
+          const extraVoucher = extraVouchers[0];
+          localStorage.setItem('extraVoucher', JSON.stringify({
+            code: voucherCode,
+            cpf: extraVoucher.cpf
+          }));
+          navigate('/self-services');
+        } else {
+          toast.error("Voucher inválido ou já utilizado");
+        }
       }
     } catch (error) {
       console.error('Erro ao validar voucher:', error);
       toast.error("Erro ao validar o voucher. Tente novamente.");
     }
-  };
-
-  const handleNumpadClick = (num) => {
-    setVoucherCode(prevCode => {
-      if (prevCode.length < 4) {
-        return prevCode + num;
-      }
-      return prevCode;
-    });
-  };
-
-  const handleBackspace = () => {
-    setVoucherCode(prevCode => prevCode.slice(0, -1));
   };
 
   return (
@@ -117,8 +124,8 @@ const Voucher = () => {
         <VoucherForm
           voucherCode={voucherCode}
           onSubmit={handleSubmit}
-          onNumpadClick={handleNumpadClick}
-          onBackspace={handleBackspace}
+          onNumpadClick={(num) => setVoucherCode(prev => prev.length < 4 ? prev + num : prev)}
+          onBackspace={() => setVoucherCode(prev => prev.slice(0, -1))}
         />
       </div>
       <AdminLoginDialog 
