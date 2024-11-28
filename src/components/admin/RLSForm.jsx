@@ -117,7 +117,7 @@ const RLSForm = () => {
   return (
     <div className="space-y-6">
       <div className="border-b pb-4">
-        <h2 className="text-2xl font-semibold tracking-tight">RLS - Regra de Liberação de Serviço</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">RLSE - Regra de Liberação de Serviço Extra</h2>
         <p className="text-sm text-muted-foreground">
           Sistema para geração de vouchers extras para usuários específicos
         </p>
