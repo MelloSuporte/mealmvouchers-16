@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import api from '../../utils/api';
-import { supabase } from '../../config/supabase';
 import CompanyUserSelector from './rls/CompanyUserSelector';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { ptBR } from 'date-fns/locale';
 import { formatCPF } from '../../utils/formatters';
+import { useVoucherFormLogic } from './vouchers/VoucherFormLogic';
 
 const RLSForm = () => {
   const [selectedCompany, setSelectedCompany] = useState("all");
@@ -19,6 +19,20 @@ const RLSForm = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [observacao, setObservacao] = useState("");
+
+  const resetForm = () => {
+    setSelectedUser("");
+    setSelectedDates([]);
+    setSearchTerm("");
+    setObservacao("");
+  };
+
+  const { handleVoucherSubmission } = useVoucherFormLogic(
+    selectedUser,
+    selectedDates,
+    observacao,
+    resetForm
+  );
 
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['users', searchTerm, selectedCompany],
@@ -69,50 +83,8 @@ const RLSForm = () => {
     }
 
     setIsSubmitting(true);
-    try {
-      // Buscar o primeiro tipo de refeição ativo
-      const { data: tipoRefeicao, error: tipoRefeicaoError } = await supabase
-        .from('tipos_refeicao')
-        .select('id')
-        .eq('ativo', true)
-        .limit(1)
-        .single();
-
-      if (tipoRefeicaoError) throw new Error('Erro ao buscar tipo de refeição');
-
-      const formattedDates = selectedDates.map(date => {
-        const localDate = new Date(date);
-        return localDate.toISOString().split('T')[0];
-      });
-
-      // Criar vouchers extras no Supabase
-      for (const data of formattedDates) {
-        const { error: voucherError } = await supabase
-          .from('vouchers_extras')
-          .insert([{
-            usuario_id: selectedUser,
-            tipo_refeicao_id: tipoRefeicao.id,
-            autorizado_por: 'Sistema',
-            valido_ate: data,
-            observacao: observacao.trim() || 'Voucher extra gerado via sistema'
-          }]);
-
-        if (voucherError) throw voucherError;
-      }
-
-      toast.success(`${formattedDates.length} voucher(s) extra(s) gerado(s) com sucesso!`);
-      
-      // Limpa o formulário após sucesso
-      setSelectedUser("");
-      setSelectedDates([]);
-      setSearchTerm("");
-      setObservacao("");
-    } catch (error) {
-      console.error('Erro detalhado:', error);
-      toast.error("Erro ao gerar vouchers extras: " + (error.message || 'Erro desconhecido'));
-    } finally {
-      setIsSubmitting(false);
-    }
+    await handleVoucherSubmission();
+    setIsSubmitting(false);
   };
 
   const handleSearchTermChange = (e) => {
