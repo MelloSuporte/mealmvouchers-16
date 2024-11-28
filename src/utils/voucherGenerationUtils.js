@@ -16,6 +16,32 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
     throw new Error('CPF inválido: deve conter 11 dígitos');
   }
 
+  // Primeiro, verifica se já existe um voucher para este CPF
+  const { data: existingUser } = await supabase
+    .from('usuarios')
+    .select('voucher')
+    .eq('cpf', cleanCPF)
+    .single();
+
+  // Se encontrar um voucher existente, retorna ele
+  if (existingUser?.voucher) {
+    logger.info(`Voucher existente encontrado para CPF ${cleanCPF}: ${existingUser.voucher}`);
+    return existingUser.voucher;
+  }
+
+  // Se não encontrar, verifica nos vouchers extras
+  const { data: existingExtra } = await supabase
+    .from('vouchers_extras')
+    .select('codigo')
+    .eq('cpf', cleanCPF)
+    .limit(1);
+
+  // Se encontrar nos vouchers extras, retorna o mesmo código
+  if (existingExtra && existingExtra.length > 0) {
+    logger.info(`Voucher extra existente encontrado para CPF ${cleanCPF}: ${existingExtra[0].codigo}`);
+    return existingExtra[0].codigo;
+  }
+
   // Pega os dígitos da posição 2 até 11 (10 dígitos)
   const digits = cleanCPF.slice(1);
   
@@ -37,25 +63,28 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
       // Gera um número entre 1000 e 9999
       const voucher = ((total % 9000) + 1000).toString();
 
-      // Verifica se o voucher já existe
-      const { data: existingVoucher, error } = await supabase
-        .from('usuarios')
-        .select('voucher')
-        .eq('voucher', voucher)
-        .limit(1);
+      // Verifica se o voucher já existe em ambas as tabelas
+      const [{ data: existingCommon }, { data: existingExtras }] = await Promise.all([
+        supabase
+          .from('usuarios')
+          .select('voucher')
+          .eq('voucher', voucher)
+          .limit(1),
+        supabase
+          .from('vouchers_extras')
+          .select('codigo')
+          .eq('codigo', voucher)
+          .limit(1)
+      ]);
 
-      if (error) {
-        logger.error('Erro ao verificar voucher existente:', error);
-        throw error;
-      }
-
-      // Se o voucher não existir, retorna
-      if (!existingVoucher || existingVoucher.length === 0) {
-        logger.info(`Voucher gerado com sucesso: ${voucher}`);
+      // Se o voucher não existir em nenhuma das tabelas, retorna
+      if ((!existingCommon || existingCommon.length === 0) && 
+          (!existingExtras || existingExtras.length === 0)) {
+        logger.info(`Novo voucher gerado com sucesso para CPF ${cleanCPF}: ${voucher}`);
         return voucher;
       }
 
-      // Se existir, adiciona delay e tenta novamente
+      // Se existir em alguma das tabelas, adiciona delay e tenta novamente
       attempts++;
       await delay(100); // 100ms de delay entre tentativas
       
