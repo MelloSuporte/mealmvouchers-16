@@ -15,9 +15,11 @@ const SelfServices = () => {
       setBackgroundImage(savedBackground);
     }
 
-    // Check if there's a disposable voucher in localStorage
+    // Verifica se existe um voucher no localStorage
     const disposableVoucher = localStorage.getItem('disposableVoucher');
-    if (!disposableVoucher) {
+    const commonVoucher = localStorage.getItem('commonVoucher');
+    
+    if (!disposableVoucher && !commonVoucher) {
       toast.error('Nenhum voucher válido encontrado');
       navigate('/');
     }
@@ -26,21 +28,35 @@ const SelfServices = () => {
   const handleMealSelection = async (mealType) => {
     try {
       const disposableVoucher = JSON.parse(localStorage.getItem('disposableVoucher') || '{}');
+      const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
       
-      const response = await api.post('/vouchers/validate-disposable', {
-        code: disposableVoucher.code,
-        meal_type_id: disposableVoucher.mealTypeId
-      });
+      // Se for voucher descartável
+      if (disposableVoucher.code) {
+        const response = await api.post('/vouchers/validate-disposable', {
+          code: disposableVoucher.code,
+          meal_type_id: disposableVoucher.mealTypeId
+        });
 
-      if (response.data.success) {
-        navigate(`/bom-apetite/Usuario`, { state: { mealType } });
+        if (response.data.success) {
+          navigate(`/bom-apetite/Usuario`, { state: { mealType } });
+        }
+        localStorage.removeItem('disposableVoucher');
+      } 
+      // Se for voucher comum ou extra
+      else if (commonVoucher.code) {
+        navigate('/user-confirmation', { 
+          state: { 
+            userName: commonVoucher.userName,
+            userTurno: commonVoucher.turno,
+            mealType,
+            voucherCode: commonVoucher.code
+          }
+        });
+        localStorage.removeItem('commonVoucher');
       }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Erro ao validar voucher');
       navigate('/');
-    } finally {
-      // Clear disposable voucher from localStorage
-      localStorage.removeItem('disposableVoucher');
     }
   };
 
