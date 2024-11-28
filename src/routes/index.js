@@ -20,7 +20,7 @@ router.use('/usuarios', usuariosRoutes);
 router.use('/empresas', empresasRoutes);
 router.use('/turnos', turnosRoutes);
 router.use('/vouchers', vouchersRoutes);
-router.use('/vouchers-extra', vouchersExtraRoutes);
+router.use('/api/vouchers-extra', vouchersExtraRoutes); // Corrigido o path da rota
 router.use('/vouchers-descartaveis', vouchersDescartaveisRoutes);
 router.use('/imagens-fundo', imagensFundoRoutes);
 router.use('/refeicoes', refeicaoRoutes);
