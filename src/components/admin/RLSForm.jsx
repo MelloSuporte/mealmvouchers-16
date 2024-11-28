@@ -7,7 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { ptBR } from 'date-fns/locale';
 import { formatCPF } from '../../utils/formatters';
 
@@ -118,7 +118,6 @@ const RLSForm = () => {
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>Vouchers Extras</CardTitle>
         <CardDescription>
           Sistema para geração de vouchers extras para usuários específicos.
           Selecione o usuário, as datas desejadas e adicione uma observação opcional.
