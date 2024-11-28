@@ -4,29 +4,24 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post('/vouchers-extra', async (req, res) => {
   const { usuario_id, datas, tipos_refeicao_ids, observacao, quantidade = 1 } = req.body;
   
   logger.info('Recebida requisição para gerar vouchers extras:', {
     usuario_id,
     datas,
     tipos_refeicao_ids,
-    quantidade
+    quantidade,
+    observacao
   });
 
   try {
     // Validações básicas
     if (!datas || !Array.isArray(datas) || datas.length === 0) {
+      logger.error('Datas inválidas na requisição');
       return res.status(400).json({
         success: false,
         error: 'É necessário fornecer pelo menos uma data válida'
-      });
-    }
-
-    if (!usuario_id && (!tipos_refeicao_ids || !Array.isArray(tipos_refeicao_ids))) {
-      return res.status(400).json({
-        success: false,
-        error: 'É necessário fornecer um usuário ou tipos de refeição válidos'
       });
     }
 
@@ -36,10 +31,12 @@ router.post('/', async (req, res) => {
     
     const hasInvalidDate = datas.some(date => {
       const dataVoucher = new Date(date);
+      dataVoucher.setHours(0, 0, 0, 0);
       return dataVoucher < today;
     });
 
     if (hasInvalidDate) {
+      logger.error('Tentativa de gerar voucher para data passada');
       return res.status(400).json({
         success: false,
         error: 'Não é possível gerar vouchers para datas passadas'
@@ -54,12 +51,38 @@ router.post('/', async (req, res) => {
         .eq('id', usuario_id)
         .single();
 
-      if (userError) throw userError;
+      if (userError) {
+        logger.error('Erro ao verificar usuário:', userError);
+        throw userError;
+      }
 
       if (!userExists) {
+        logger.error('Usuário não encontrado:', usuario_id);
         return res.status(404).json({
           success: false,
           error: 'Usuário não encontrado'
+        });
+      }
+    }
+
+    // Verificar tipos de refeição se fornecidos
+    if (tipos_refeicao_ids && tipos_refeicao_ids.length > 0) {
+      const { data: mealTypes, error: mealTypesError } = await supabase
+        .from('tipos_refeicao')
+        .select('id')
+        .in('id', tipos_refeicao_ids)
+        .eq('ativo', true);
+
+      if (mealTypesError) {
+        logger.error('Erro ao verificar tipos de refeição:', mealTypesError);
+        throw mealTypesError;
+      }
+
+      if (!mealTypes || mealTypes.length !== tipos_refeicao_ids.length) {
+        logger.error('Tipos de refeição inválidos ou inativos');
+        return res.status(400).json({
+          success: false,
+          error: 'Um ou mais tipos de refeição são inválidos ou estão inativos'
         });
       }
     }
@@ -91,7 +114,10 @@ router.post('/', async (req, res) => {
       .insert(vouchersParaInserir)
       .select();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      logger.error('Erro ao inserir vouchers:', insertError);
+      throw insertError;
+    }
 
     logger.info(`${vouchersInseridos.length} vouchers extras gerados com sucesso`);
 
