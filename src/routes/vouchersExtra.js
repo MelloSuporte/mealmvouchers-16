@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
+import { generateUniqueVoucherFromCPF } from '../utils/voucherGenerationUtils.js';
 
 const router = express.Router();
 
@@ -43,26 +44,19 @@ router.post('/vouchers-extra', async (req, res) => {
       });
     }
 
-    // Se tiver ID do usuário, verifica se ele existe
-    if (usuario_id) {
-      const { data: userExists, error: userError } = await supabase
-        .from('usuarios')
-        .select('id, nome')
-        .eq('id', usuario_id)
-        .single();
+    // Buscar usuário e CPF
+    const { data: usuario, error: userError } = await supabase
+      .from('usuarios')
+      .select('id, cpf, nome')
+      .eq('id', usuario_id)
+      .single();
 
-      if (userError) {
-        logger.error('Erro ao verificar usuário:', userError);
-        throw userError;
-      }
-
-      if (!userExists) {
-        logger.error('Usuário não encontrado:', usuario_id);
-        return res.status(404).json({
-          success: false,
-          error: 'Usuário não encontrado'
-        });
-      }
+    if (userError || !usuario) {
+      logger.error('Erro ao verificar usuário:', userError);
+      return res.status(404).json({
+        success: false,
+        error: 'Usuário não encontrado'
+      });
     }
 
     // Gerar vouchers
@@ -72,15 +66,15 @@ router.post('/vouchers-extra', async (req, res) => {
       const refeicoes = tipos_refeicao_ids || [null];
       for (let i = 0; i < quantidade; i++) {
         for (const tipo_refeicao_id of refeicoes) {
-          // Gera um código único de 8 caracteres alfanuméricos
-          const codigo = Math.random().toString(36).substr(2, 8).toUpperCase();
+          // Gera voucher baseado no CPF do usuário
+          const codigo = await generateUniqueVoucherFromCPF(usuario.cpf);
           
           // Define a data de validade como 23:59:59 do mesmo dia
           const dataValidade = new Date(data);
           dataValidade.setHours(23, 59, 59, 0);
           
           vouchersParaInserir.push({
-            usuario_id: usuario_id || null,
+            usuario_id: usuario.id,
             tipo_refeicao_id,
             autorizado_por: 'Sistema',
             codigo,
