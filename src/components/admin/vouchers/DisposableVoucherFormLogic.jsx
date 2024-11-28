@@ -1,138 +1,95 @@
-import { useState, useEffect } from 'react';
-import { toast } from "sonner";
-import { format } from 'date-fns';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../../config/supabase';
-import api from '../../../utils/api';
+import { toast } from 'sonner';
 
 export const useDisposableVoucherFormLogic = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
-  const [mealTypes, setMealTypes] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [allVouchers, setAllVouchers] = useState([]);
 
-  const handleGenerateVouchers = async () => {
-    if (!selectedDates.length) {
-      toast.error("Selecione pelo menos uma data");
-      return;
-    }
-
-    if (!selectedMealTypes.length) {
-      toast.error("Selecione pelo menos um tipo de refeição");
-      return;
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (selectedDates.some(date => date < today)) {
-      toast.error("Não é possível gerar vouchers para datas passadas");
-      return;
-    }
-
-    setIsGenerating(true);
-
-    try {
-      const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
-      
-      const payload = {
-        tipos_refeicao_ids: selectedMealTypes,
-        datas: formattedDates,
-        quantidade: quantity,
-        observacao: 'Voucher descartável gerado via sistema'
-      };
-
-      console.log('Enviando requisição para /vouchers-descartaveis:', payload);
-      
-      const response = await api.post('/vouchers-descartaveis', payload);
-
-      if (response.data && response.data.success) {
-        setAllVouchers(prev => [...response.data.vouchers, ...prev]);
-        toast.success(response.data.message);
-        
-        if (response.data.warnings) {
-          response.data.warnings.forEach(warning => toast.warning(warning));
-        }
-        
-        setQuantity(1);
-        setSelectedMealTypes([]);
-        setSelectedDates([]);
-      } else {
-        throw new Error(response.data?.error || 'Erro ao gerar vouchers');
-      }
-    } catch (error) {
-      console.error('Erro detalhado:', error);
-      toast.error("Erro ao gerar vouchers descartáveis: " + (error.response?.data?.error || error.message));
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const loadMealTypes = async () => {
-    try {
+  const { data: mealTypes, isLoading } = useQuery({
+    queryKey: ['mealTypes'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('tipos_refeicao')
-        .select('id, nome, hora_inicio, hora_fim, ativo')
-        .eq('ativo', true)
-        .order('nome');
+        .select('*')
+        .eq('ativo', true);
 
       if (error) throw error;
-
-      if (data) {
-        setMealTypes(data.map(type => ({
-          id: type.id,
-          name: type.nome
-        })));
-      } else {
-        toast.error("Nenhum tipo de refeição encontrado");
-      }
-    } catch (error) {
-      console.error('Error loading meal types:', error);
-      toast.error("Erro ao carregar tipos de refeição");
-    } finally {
-      setIsLoading(false);
+      return data;
     }
-  };
+  });
 
-  const loadAllVouchers = async () => {
-    try {
+  const { data: allVouchers = [], refetch: refetchVouchers } = useQuery({
+    queryKey: ['disposableVouchers'],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from('vouchers_extras')
+        .from('vouchers_descartaveis')
         .select(`
           *,
-          tipos_refeicao:tipo_refeicao_id (
+          tipos_refeicao (
             nome
           )
         `)
         .order('criado_em', { ascending: false });
 
       if (error) throw error;
-
-      const formattedVouchers = data?.map(voucher => ({
-        ...voucher,
-        tipo_refeicao_nome: voucher.tipos_refeicao?.nome || 'Não especificado'
-      })) || [];
-
-      setAllVouchers(formattedVouchers);
-    } catch (error) {
-      console.error('Error loading vouchers:', error);
-      toast.error("Erro ao carregar vouchers existentes");
+      
+      return data.map(voucher => ({
+        id: voucher.id,
+        codigo: voucher.codigo,
+        tipo_refeicao_nome: voucher.tipos_refeicao?.nome,
+        data_criacao: voucher.criado_em,
+        data_uso: voucher.usado_em,
+        data_expiracao: voucher.valido_ate,
+        usado: voucher.usado
+      }));
     }
+  });
+
+  const handleMealTypeToggle = (mealTypeId) => {
+    setSelectedMealTypes(prev => 
+      prev.includes(mealTypeId)
+        ? prev.filter(id => id !== mealTypeId)
+        : [...prev, mealTypeId]
+    );
   };
 
-  useEffect(() => {
-    loadMealTypes();
-    loadAllVouchers();
-  }, []);
+  const handleGenerateVouchers = async () => {
+    if (!selectedMealTypes.length || !selectedDates.length) {
+      toast.error('Selecione pelo menos um tipo de refeição e uma data');
+      return;
+    }
 
-  const handleMealTypeToggle = (typeId) => {
-    setSelectedMealTypes(current => 
-      current.includes(typeId) 
-        ? current.filter(id => id !== typeId)
-        : [...current, typeId]
-    );
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/vouchers-descartaveis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tipos_refeicao_ids: selectedMealTypes,
+          datas: selectedDates,
+          quantidade: quantity,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success(data.message);
+        refetchVouchers();
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      toast.error('Erro ao gerar vouchers: ' + error.message);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return {

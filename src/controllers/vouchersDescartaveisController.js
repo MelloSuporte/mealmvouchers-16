@@ -3,7 +3,7 @@ import logger from '../config/logger.js';
 import { generateUniqueCode } from '../utils/voucherGenerationUtils.js';
 
 export const generateDisposableVouchers = async (req, res) => {
-  const { tipos_refeicao_ids, datas, quantidade, observacao } = req.body;
+  const { tipos_refeicao_ids, datas, quantidade } = req.body;
 
   try {
     const vouchers = [];
@@ -14,13 +14,13 @@ export const generateDisposableVouchers = async (req, res) => {
           const code = await generateUniqueCode();
           
           const { data: voucher, error } = await supabase
-            .from('vouchers_extras')
+            .from('vouchers_descartaveis')
             .insert({
               codigo: code,
               tipo_refeicao_id: tipo_refeicao_id,
-              data_expiracao: data,
-              observacao: observacao,
-              tipo: 'DESCARTAVEL'
+              valido_ate: data,
+              usado: false,
+              criado_em: new Date().toISOString()
             })
             .select(`
               *,
