@@ -118,7 +118,7 @@ const RLSForm = () => {
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>RLSE - Regra de Liberação de Serviço Extra</CardTitle>
+        <CardTitle>Vouchers Extras</CardTitle>
         <CardDescription>
           Sistema para geração de vouchers extras para usuários específicos.
           Selecione o usuário, as datas desejadas e adicione uma observação opcional.
