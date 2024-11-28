@@ -49,7 +49,7 @@ const UserConfirmation = () => {
           }
         });
       } else {
-        toast.error('Erro ao validar voucher');
+        toast.error(response.data.error || 'Erro ao validar voucher');
         navigate('/voucher');
       }
     } catch (error) {

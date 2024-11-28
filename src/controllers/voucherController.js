@@ -2,7 +2,6 @@ import { supabase } from '../config/database.js';
 import logger from '../config/logger.js';
 import { validateVoucherTime } from '../utils/voucherValidations.js';
 import { isWithinShiftHours, getAllowedMealsByShift } from '../utils/shiftUtils.js';
-import { VOUCHER_TYPES } from '../utils/voucherTypes.js';
 
 const handleDisposableVoucher = async (code, mealType) => {
   const { data: disposableVoucher, error } = await supabase
@@ -40,7 +39,8 @@ const handleDisposableVoucher = async (code, mealType) => {
   return { success: true, message: 'Voucher descartável validado com sucesso' };
 };
 
-const handleNormalVoucher = async (cpf, code, mealType, user) => {
+const handleCommonVoucher = async (cpf, code, mealType, user) => {
+  // Validar turno e tipo de refeição
   const { data: allowedMeals } = await supabase
     .from('shift_meal_types')
     .select('meal_type_id')
@@ -50,7 +50,48 @@ const handleNormalVoucher = async (cpf, code, mealType, user) => {
     throw new Error(`${mealType} não está disponível para o turno ${user.shift}`);
   }
 
+  // Verificar uso diário
+  const today = new Date().toISOString().split('T')[0];
+  const { data: usedMeals } = await supabase
+    .from('voucher_usage')
+    .select('*')
+    .eq('user_id', user.id)
+    .gte('used_at', today);
+
+  if (usedMeals && usedMeals.length >= 2) {
+    throw new Error('Limite diário de refeições atingido');
+  }
+
   return { success: true };
+};
+
+const handleExtraVoucher = async (cpf, code, mealType) => {
+  const { data: extraVoucher, error } = await supabase
+    .from('extra_vouchers')
+    .select('*')
+    .eq('code', code)
+    .eq('cpf', cpf)
+    .single();
+
+  if (error || !extraVoucher) {
+    throw new Error('Voucher extra não encontrado ou inválido');
+  }
+
+  if (extraVoucher.is_used) {
+    throw new Error('Voucher extra já foi utilizado');
+  }
+
+  const { error: updateError } = await supabase
+    .from('extra_vouchers')
+    .update({ 
+      is_used: true, 
+      used_at: new Date().toISOString() 
+    })
+    .eq('id', extraVoucher.id);
+
+  if (updateError) throw updateError;
+
+  return { success: true, message: 'Voucher extra validado com sucesso' };
 };
 
 export const validateVoucher = async (req, res) => {
@@ -83,28 +124,24 @@ export const validateVoucher = async (req, res) => {
       .eq('is_suspended', false);
 
     if (userError || users.length === 0) {
-      logger.warn(`Usuário não encontrado - CPF: ${cleanCpf}, Voucher: ${cleanCode}`);
-      return res.status(401).json({ 
-        error: 'Usuário não encontrado ou voucher inválido',
-        userName: null,
-        turno: null 
-      });
+      // Tentar validar como voucher extra
+      try {
+        const extraResult = await handleExtraVoucher(cleanCpf, cleanCode, mealType);
+        return res.json(extraResult);
+      } catch (extraError) {
+        logger.warn(`Usuário não encontrado - CPF: ${cleanCpf}, Voucher: ${cleanCode}`);
+        return res.status(401).json({ 
+          error: 'Usuário não encontrado ou voucher inválido',
+          userName: null,
+          turno: null 
+        });
+      }
     }
 
     const user = users[0];
 
-    // Verifica uso diário
-    const { data: usedMeals } = await supabase
-      .from('voucher_usage')
-      .select('meal_types(name), used_at')
-      .eq('user_id', user.id)
-      .gte('used_at', new Date().toISOString().split('T')[0]);
-
-    if (usedMeals.length >= 2) {
-      throw new Error('Limite diário de refeições atingido');
-    }
-
-    const result = await handleNormalVoucher(cleanCpf, cleanCode, mealType, user);
+    // Validar voucher comum
+    const result = await handleCommonVoucher(cleanCpf, cleanCode, mealType, user);
 
     // Registra o uso do voucher
     const { error: usageError } = await supabase
