@@ -41,3 +41,23 @@ export const generateUniqueCode = async () => {
 
   return code;
 };
+
+export const generateUniqueVoucherFromCPF = async (cpf) => {
+  const cleanCPF = cpf.replace(/\D/g, '');
+  const lastFourDigits = cleanCPF.slice(-4);
+  let voucher = lastFourDigits;
+  
+  // Verifica se o voucher já existe
+  const { data: existingVoucher } = await supabase
+    .from('usuarios')
+    .select('voucher')
+    .eq('voucher', voucher)
+    .limit(1);
+
+  // Se o voucher já existir, gera um número aleatório entre 1000-9999
+  if (existingVoucher && existingVoucher.length > 0) {
+    voucher = Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  return voucher;
+};
