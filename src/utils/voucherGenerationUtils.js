@@ -15,8 +15,13 @@ const generateVoucherFromCPF = (cpf) => {
   // Soma os dígitos
   const sum = relevantDigits.split('').reduce((acc, digit) => acc + parseInt(digit), 0);
   
-  // Gera código de 4 dígitos baseado na soma
-  const code = (sum % 9000 + 1000).toString();
+  // Adiciona um elemento de aleatoriedade usando timestamp
+  const timestamp = Date.now();
+  const randomFactor = timestamp % 100; // Pega os últimos 2 dígitos do timestamp
+  
+  // Gera código de 4 dígitos baseado na soma + aleatoriedade
+  const baseNumber = (sum + randomFactor) % 9000 + 1000;
+  const code = baseNumber.toString();
   
   return code;
 };
@@ -47,8 +52,8 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
         isUnique = true;
       } else {
         attempts++;
-        // Se houver duplicidade, modifica o CPF ligeiramente para gerar um novo código
-        cpf = (parseInt(cpf) + 1).toString().padStart(11, '0');
+        // Se houver duplicidade, tenta novamente com um novo timestamp
+        await new Promise(resolve => setTimeout(resolve, 10)); // Pequeno delay para garantir timestamp diferente
       }
     }
 
