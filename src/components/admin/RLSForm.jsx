@@ -74,11 +74,15 @@ const RLSForm = () => {
         return localDate.toISOString().split('T')[0];
       });
       
-      const response = await api.post('/vouchers-extra', {
+      const payload = {
         usuario_id: selectedUser,
         datas: formattedDates,
         observacao: observacao.trim() || 'Voucher extra gerado via sistema'
-      });
+      };
+
+      console.log('Enviando requisição para /vouchers-extra:', payload);
+      
+      const response = await api.post('/vouchers-extra', payload);
 
       if (response.data && response.data.success) {
         toast.success(response.data.message || `${formattedDates.length} voucher(s) extra(s) gerado(s) com sucesso!`);
@@ -92,7 +96,7 @@ const RLSForm = () => {
         throw new Error(response.data?.error || 'Erro ao gerar vouchers extras');
       }
     } catch (error) {
-      console.error('Erro ao gerar vouchers extras:', error);
+      console.error('Erro detalhado:', error);
       toast.error("Erro ao gerar vouchers extras: " + (error.response?.data?.error || error.message));
     } finally {
       setIsSubmitting(false);
