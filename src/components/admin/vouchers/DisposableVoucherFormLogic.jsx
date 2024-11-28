@@ -44,9 +44,9 @@ export const useDisposableVoucherFormLogic = () => {
         observacao: 'Voucher descartável gerado via sistema'
       };
 
-      console.log('Enviando requisição para /vouchers-extra/disposable:', payload);
+      console.log('Enviando requisição para /vouchers-descartaveis:', payload);
       
-      const response = await api.post('/vouchers-extra/disposable', payload);
+      const response = await api.post('/vouchers-descartaveis', payload);
 
       if (response.data && response.data.success) {
         setAllVouchers(prev => [...response.data.vouchers, ...prev]);
