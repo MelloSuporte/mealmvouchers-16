@@ -42,7 +42,7 @@ const UserConfirmation = () => {
         localStorage.setItem('usedCommonVouchers', JSON.stringify(usedVouchers));
         
         // Redireciona para a página BomApetite com o nome do usuário e tipo de refeição
-        navigate(`/bom-apetite/${userName}`, {
+        navigate(`/bom-apetite/${encodeURIComponent(userName)}`, {
           state: { 
             userName: userName,
             mealType: location.state.mealType 
