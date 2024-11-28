@@ -6,6 +6,7 @@ export const createVoucherExtra = async (req, res) => {
   const { usuario_id, datas, observacao } = req.body;
 
   if (!usuario_id || !datas || !Array.isArray(datas) || datas.length === 0) {
+    logger.error('Dados inválidos recebidos:', { usuario_id, datas, observacao });
     return res.status(400).json({
       success: false,
       error: 'Dados inválidos para geração de voucher extra'
