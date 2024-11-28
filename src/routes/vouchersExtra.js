@@ -72,12 +72,19 @@ router.post('/vouchers-extra', async (req, res) => {
       const refeicoes = tipos_refeicao_ids || [null];
       for (let i = 0; i < quantidade; i++) {
         for (const tipo_refeicao_id of refeicoes) {
+          // Gera um código único de 8 caracteres alfanuméricos
+          const codigo = Math.random().toString(36).substr(2, 8).toUpperCase();
+          
+          // Define a data de validade como 23:59:59 do mesmo dia
+          const dataValidade = new Date(data);
+          dataValidade.setHours(23, 59, 59, 0);
+          
           vouchersParaInserir.push({
             usuario_id: usuario_id || null,
             tipo_refeicao_id,
             autorizado_por: 'Sistema',
-            codigo: Math.random().toString(36).substr(2, 8).toUpperCase(),
-            valido_ate: new Date(data + 'T23:59:59-03:00').toISOString(),
+            codigo,
+            valido_ate: dataValidade.toISOString(),
             observacao: observacao?.trim() || 'Voucher extra gerado via sistema',
             usado: false,
             criado_em: new Date().toISOString()
