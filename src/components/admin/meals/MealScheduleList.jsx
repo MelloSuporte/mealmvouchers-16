@@ -9,6 +9,7 @@ import { Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteMeals, toggleMealActive } from './mealMutations';
 import { MealListTable } from './MealListTable';
+import { supabase } from '../../../config/supabase';
 
 const MealScheduleList = () => {
   const [selectedMeals, setSelectedMeals] = useState([]);
