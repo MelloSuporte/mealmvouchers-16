@@ -16,13 +16,20 @@ const ChartTabs = () => {
       const startDate = startOfWeek(new Date(), { locale: ptBR });
       const endDate = endOfWeek(new Date(), { locale: ptBR });
 
+      console.log('Consultando dados de:', startDate, 'até:', endDate);
+
       const { data, error } = await supabase
         .from('vw_uso_voucher_detalhado')
-        .select('usado_em, tipo_refeicao')
+        .select('*')
         .gte('usado_em', startDate.toISOString())
         .lte('usado_em', endDate.toISOString());
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar dados:', error);
+        throw error;
+      }
+
+      console.log('Dados retornados:', data);
 
       // Inicializa os dias da semana
       const diasDaSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
@@ -43,7 +50,14 @@ const ChartTabs = () => {
       if (data && data.length > 0) {
         data.forEach(registro => {
           if (registro.usado_em && registro.tipo_refeicao) {
-            const dia = format(parseISO(registro.usado_em), 'EEEE', { locale: ptBR });
+            const dataUso = new Date(registro.usado_em);
+            const dia = format(dataUso, 'EEEE', { locale: ptBR });
+            console.log('Processando registro:', {
+              data: dataUso,
+              dia,
+              tipo: registro.tipo_refeicao
+            });
+            
             if (dadosPorDia[dia]) {
               dadosPorDia[dia][registro.tipo_refeicao] += 1;
             }
@@ -52,7 +66,10 @@ const ChartTabs = () => {
       }
 
       // Converte o objeto em array mantendo a ordem dos dias da semana
-      return diasDaSemana.map(dia => dadosPorDia[dia]);
+      const dadosFinais = diasDaSemana.map(dia => dadosPorDia[dia]);
+      console.log('Dados processados:', dadosFinais);
+      
+      return dadosFinais;
     },
     refetchInterval: 30000 // Atualiza a cada 30 segundos
   });
