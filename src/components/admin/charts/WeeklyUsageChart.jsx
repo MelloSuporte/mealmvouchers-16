@@ -1,7 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { COLORS } from './ChartColors';
 
-const WeeklyUsageChart = ({ data }) => {
+const WeeklyUsageChart = ({ data, tiposRefeicao }) => {
   // Ensure data is always an array and has a default value
   const chartData = Array.isArray(data) ? data : [];
 
@@ -31,6 +31,12 @@ const WeeklyUsageChart = ({ data }) => {
     );
   };
 
+  // Cores para cada tipo de refeição
+  const getColorForMeal = (index) => {
+    const colors = Object.values(COLORS);
+    return colors[index % colors.length];
+  };
+
   return (
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={chartData} barSize={100}>
@@ -39,21 +45,16 @@ const WeeklyUsageChart = ({ data }) => {
         <YAxis />
         <Tooltip />
         <Legend />
-        <Bar dataKey="Café da Manhã" name="Café da Manhã" fill={COLORS.CAFE}>
-          <LabelList content={renderCustomLabel} />
-        </Bar>
-        <Bar dataKey="Almoço" name="Almoço" fill={COLORS.ALMOCO}>
-          <LabelList content={renderCustomLabel} />
-        </Bar>
-        <Bar dataKey="Lanche" name="Lanche" fill={COLORS.LANCHE}>
-          <LabelList content={renderCustomLabel} />
-        </Bar>
-        <Bar dataKey="Jantar" name="Jantar" fill={COLORS.JANTAR}>
-          <LabelList content={renderCustomLabel} />
-        </Bar>
-        <Bar dataKey="Ceia" name="Ceia" fill={COLORS.CEIA}>
-          <LabelList content={renderCustomLabel} />
-        </Bar>
+        {tiposRefeicao.map((tipo, index) => (
+          <Bar 
+            key={tipo} 
+            dataKey={tipo} 
+            name={tipo} 
+            fill={getColorForMeal(index)}
+          >
+            <LabelList content={renderCustomLabel} />
+          </Bar>
+        ))}
       </BarChart>
     </ResponsiveContainer>
   );

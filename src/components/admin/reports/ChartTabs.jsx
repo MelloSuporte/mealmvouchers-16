@@ -10,6 +10,20 @@ import { startOfWeek, endOfWeek, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const ChartTabs = () => {
+  // Primeiro, vamos buscar os tipos de refeição disponíveis
+  const { data: tiposRefeicao } = useQuery({
+    queryKey: ['tipos-refeicao'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tipos_refeicao')
+        .select('nome')
+        .eq('ativo', true);
+
+      if (error) throw error;
+      return data.map(tipo => tipo.nome);
+    }
+  });
+
   const { data: weeklyData } = useQuery({
     queryKey: ['weekly-data'],
     queryFn: async () => {
@@ -34,20 +48,17 @@ const ChartTabs = () => {
       // Inicializa os dias da semana
       const diasDaSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
       
-      // Lista de todos os tipos de refeição possíveis
-      const tiposRefeicao = ['Café da Manhã', 'Almoço', 'Lanche', 'Jantar', 'Ceia'];
-      
       // Cria objeto inicial com contadores zerados para cada dia
       const dadosPorDia = {};
       diasDaSemana.forEach(dia => {
-        dadosPorDia[dia] = {
-          dia,
-          'Café da Manhã': 0,
-          'Almoço': 0,
-          'Lanche': 0,
-          'Jantar': 0,
-          'Ceia': 0
-        };
+        const diaObj = { dia };
+        // Inicializa contadores para cada tipo de refeição
+        if (tiposRefeicao) {
+          tiposRefeicao.forEach(tipo => {
+            diaObj[tipo] = 0;
+          });
+        }
+        dadosPorDia[dia] = diaObj;
       });
 
       // Processa os dados retornados da query
@@ -62,8 +73,8 @@ const ChartTabs = () => {
               tipo: registro.tipo_refeicao
             });
             
-            if (dadosPorDia[dia] && tiposRefeicao.includes(registro.tipo_refeicao)) {
-              dadosPorDia[dia][registro.tipo_refeicao] += 1;
+            if (dadosPorDia[dia]) {
+              dadosPorDia[dia][registro.tipo_refeicao] = (dadosPorDia[dia][registro.tipo_refeicao] || 0) + 1;
             }
           }
         });
@@ -75,6 +86,7 @@ const ChartTabs = () => {
       
       return dadosFinais;
     },
+    enabled: !!tiposRefeicao,
     refetchInterval: 30000 // Atualiza a cada 30 segundos
   });
 
@@ -134,7 +146,7 @@ const ChartTabs = () => {
       </TabsList>
 
       <TabsContent value="usage" className="mt-4">
-        <WeeklyUsageChart data={weeklyData || []} />
+        <WeeklyUsageChart data={weeklyData || []} tiposRefeicao={tiposRefeicao || []} />
       </TabsContent>
 
       <TabsContent value="distribution" className="mt-4">
