@@ -29,11 +29,6 @@ const WeeklyUsageChart = ({ data, tiposRefeicao }) => {
     );
   };
 
-  const getColorForMeal = (tipo) => {
-    const normalizedName = normalizeMealName(tipo);
-    return COLORS[normalizedName] || COLORS.PRIMARY;
-  };
-
   return (
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={chartData} barSize={100}>
@@ -42,16 +37,19 @@ const WeeklyUsageChart = ({ data, tiposRefeicao }) => {
         <YAxis />
         <Tooltip />
         <Legend />
-        {tiposRefeicao.map((tipo) => (
-          <Bar 
-            key={tipo} 
-            dataKey={tipo} 
-            name={tipo} 
-            fill={getColorForMeal(tipo)}
-          >
-            <LabelList content={renderCustomLabel} />
-          </Bar>
-        ))}
+        {tiposRefeicao.map((tipo) => {
+          const normalizedName = normalizeMealName(tipo);
+          return (
+            <Bar 
+              key={tipo} 
+              dataKey={tipo} 
+              name={tipo} 
+              fill={COLORS[normalizedName]}
+            >
+              <LabelList content={renderCustomLabel} />
+            </Bar>
+          );
+        })}
       </BarChart>
     </ResponsiveContainer>
   );

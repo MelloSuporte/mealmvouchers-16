@@ -12,11 +12,6 @@ const MealDistributionChart = ({ data }) => {
     );
   }
 
-  const getColorForMeal = (nome) => {
-    const normalizedName = normalizeMealName(nome);
-    return COLORS[normalizedName] || COLORS.PRIMARY;
-  };
-
   return (
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
@@ -29,9 +24,15 @@ const MealDistributionChart = ({ data }) => {
           outerRadius={100}
           label={(entry) => entry.nome}
         >
-          {chartData.map((entry) => (
-            <Cell key={`cell-${entry.nome}`} fill={getColorForMeal(entry.nome)} />
-          ))}
+          {chartData.map((entry) => {
+            const normalizedName = normalizeMealName(entry.nome);
+            return (
+              <Cell 
+                key={`cell-${entry.nome}`} 
+                fill={COLORS[normalizedName]} 
+              />
+            );
+          })}
         </Pie>
         <Tooltip />
         <Legend />
