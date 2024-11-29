@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from '../../../config/supabase';
-import { format } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReportFilters from './ReportFilters';
 import MetricsCards from './MetricsCards';
@@ -10,7 +10,8 @@ import MetricsCards from './MetricsCards';
 const ReportMetrics = () => {
   const [filters, setFilters] = useState({
     company: 'all',
-    day: 'all',
+    startDate: startOfDay(new Date()),
+    endDate: endOfDay(new Date()),
     shift: 'all',
     mealType: 'all'
   });
@@ -26,8 +27,10 @@ const ReportMetrics = () => {
 
       // Filtra os dados baseado nos filtros selecionados
       const filteredData = usageData.filter(item => {
+        const itemDate = new Date(item.usado_em);
         if (filters.company !== 'all' && item.empresa !== filters.company) return false;
-        if (filters.day !== 'all' && format(new Date(item.usado_em), 'dd/MM/yyyy', { locale: ptBR }) !== filters.day) return false;
+        if (filters.startDate && itemDate < filters.startDate) return false;
+        if (filters.endDate && itemDate > filters.endDate) return false;
         if (filters.shift !== 'all' && item.turno !== filters.shift) return false;
         if (filters.mealType !== 'all' && item.tipo_refeicao !== filters.mealType) return false;
         return true;
@@ -43,13 +46,6 @@ const ReportMetrics = () => {
       const byCompany = usageData.reduce((acc, item) => {
         const company = item.empresa || 'Não especificada';
         acc[company] = (acc[company] || 0) + 1;
-        return acc;
-      }, {});
-
-      // Segmentação por Dia
-      const byDay = usageData.reduce((acc, item) => {
-        const day = format(new Date(item.usado_em), 'dd/MM/yyyy', { locale: ptBR });
-        acc[day] = (acc[day] || 0) + 1;
         return acc;
       }, {});
 
@@ -73,7 +69,6 @@ const ReportMetrics = () => {
         regularVouchers,
         disposableVouchers,
         byCompany,
-        byDay,
         byShift,
         byMealType
       };
@@ -99,7 +94,12 @@ const ReportMetrics = () => {
 
   return (
     <div className="space-y-6">
-      <ReportFilters metrics={metrics} onFilterChange={handleFilterChange} />
+      <ReportFilters 
+        metrics={metrics} 
+        onFilterChange={handleFilterChange}
+        startDate={filters.startDate}
+        endDate={filters.endDate}
+      />
       <MetricsCards metrics={metrics} />
     </div>
   );

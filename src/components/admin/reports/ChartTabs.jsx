@@ -33,22 +33,22 @@ const ChartTabs = () => {
   });
 
   return (
-    <Tabs defaultValue="usage">
-      <TabsList>
-        <TabsTrigger value="usage">Uso por Dia</TabsTrigger>
-        <TabsTrigger value="distribution">Distribuição</TabsTrigger>
-        <TabsTrigger value="trend">Tendência</TabsTrigger>
+    <Tabs defaultValue="usage" className="w-full">
+      <TabsList className="w-full justify-start">
+        <TabsTrigger value="usage">Uso por Dia (Barras)</TabsTrigger>
+        <TabsTrigger value="distribution">Distribuição (Pizza)</TabsTrigger>
+        <TabsTrigger value="trend">Tendência (Barras)</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="usage">
+      <TabsContent value="usage" className="mt-4">
         <WeeklyUsageChart data={weeklyData || []} />
       </TabsContent>
 
-      <TabsContent value="distribution">
+      <TabsContent value="distribution" className="mt-4">
         <MealDistributionChart data={distributionData || []} />
       </TabsContent>
 
-      <TabsContent value="trend">
+      <TabsContent value="trend" className="mt-4">
         <div className="w-full overflow-x-auto">
           {Array.isArray(trendData) && trendData.length > 0 ? (
             <LineChart width={800} height={300} data={trendData}>

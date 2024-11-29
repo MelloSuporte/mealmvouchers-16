@@ -6,14 +6,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { DatePicker } from "@/components/ui/date-picker";
 
-const ReportFilters = ({ metrics, onFilterChange }) => {
+const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
   if (!metrics) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
       <div>
         <label className="text-sm font-medium mb-2 block">Empresa</label>
         <Select onValueChange={(value) => onFilterChange('company', value)}>
@@ -32,20 +31,19 @@ const ReportFilters = ({ metrics, onFilterChange }) => {
       </div>
 
       <div>
-        <label className="text-sm font-medium mb-2 block">Dia</label>
-        <Select onValueChange={(value) => onFilterChange('day', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o dia" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            {Object.keys(metrics.byDay || {}).map((day) => (
-              <SelectItem key={day} value={day}>
-                {day}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <label className="text-sm font-medium mb-2 block">Data Inicial</label>
+        <DatePicker
+          date={startDate}
+          onDateChange={(date) => onFilterChange('startDate', date)}
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium mb-2 block">Data Final</label>
+        <DatePicker
+          date={endDate}
+          onDateChange={(date) => onFilterChange('endDate', date)}
+        />
       </div>
 
       <div>
