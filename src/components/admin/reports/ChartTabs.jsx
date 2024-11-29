@@ -17,8 +17,12 @@ const ChartTabs = () => {
       const endDate = endOfWeek(new Date(), { locale: ptBR });
 
       const { data, error } = await supabase
-        .from('vw_uso_voucher_detalhado')
-        .select('*')
+        .from('uso_voucher')
+        .select(`
+          id,
+          usado_em,
+          tipo_refeicao
+        `)
         .gte('usado_em', startDate.toISOString())
         .lte('usado_em', endDate.toISOString())
         .order('usado_em', { ascending: true });
@@ -28,7 +32,9 @@ const ChartTabs = () => {
       // Processar dados para o gráfico semanal
       const processedData = data.reduce((acc, curr) => {
         const dia = format(parseISO(curr.usado_em), 'EEEE', { locale: ptBR });
-        const tipo = curr.tipo_refeicao?.toLowerCase();
+        const tipo = curr.tipo_refeicao;
+
+        if (!tipo) return acc;
 
         // Procura o dia existente ou cria um novo
         let diaExistente = acc.find(item => item.dia === dia);
