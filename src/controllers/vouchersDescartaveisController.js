@@ -19,18 +19,22 @@ export const generateDisposableVouchers = async (req, res) => {
               codigo: code,
               tipo_refeicao_id: tipo_refeicao_id,
               data_expiracao: data,
-              usado: false,
-              data_criacao: new Date().toISOString()
+              usado: false
             })
             .select(`
               *,
               tipos_refeicao (
-                nome
+                nome,
+                valor
               )
             `)
             .single();
 
-          if (error) throw error;
+          if (error) {
+            logger.error('Erro ao inserir voucher descartável:', error);
+            throw error;
+          }
+
           vouchers.push(voucher);
         }
       }

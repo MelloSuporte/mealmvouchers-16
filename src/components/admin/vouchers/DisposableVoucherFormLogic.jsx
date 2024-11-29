@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { toast } from 'sonner';
 import api from '@/utils/api';
@@ -9,6 +9,7 @@ export const useDisposableVoucherFormLogic = () => {
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: mealTypes, isLoading } = useQuery({
     queryKey: ['mealTypes'],
@@ -29,15 +30,8 @@ export const useDisposableVoucherFormLogic = () => {
       const { data, error } = await supabase
         .from('vouchers_descartaveis')
         .select(`
-          id,
-          codigo,
-          tipo_refeicao_id,
-          data_expiracao,
-          usado,
-          data_uso,
-          data_criacao,
+          *,
           tipos_refeicao (
-            id,
             nome,
             valor
           )
@@ -74,6 +68,8 @@ export const useDisposableVoucherFormLogic = () => {
 
       if (response.data.success) {
         toast.success(response.data.message);
+        // Atualiza a lista de vouchers após a geração
+        queryClient.invalidateQueries({ queryKey: ['disposableVouchers'] });
       } else {
         throw new Error(response.data.error);
       }
