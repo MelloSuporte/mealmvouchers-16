@@ -28,49 +28,22 @@ const ChartTabs = () => {
       // Processar dados para o gráfico semanal
       const processedData = data.reduce((acc, curr) => {
         const dia = format(parseISO(curr.usado_em), 'EEEE', { locale: ptBR });
-        const tipo = curr.tipo_refeicao?.toLowerCase() || 'outros';
+        const tipo = curr.tipo_refeicao?.toLowerCase();
 
-        // Função para normalizar os tipos de refeição
-        const getTipoNormalizado = (tipo) => {
-          if (!tipo) return 'outros';
-          
-          const tiposRefeicao = {
-            'almoco': ['almoço', 'almoco', 'almoço extra', 'almoco extra'],
-            'jantar': ['jantar', 'jantar extra'],
-            'cafe': ['café', 'cafe', 'café da manhã', 'cafe da manha', 'café extra', 'cafe extra'],
-            'ceia': ['ceia', 'ceia extra'],
-          };
-
-          for (const [key, valores] of Object.entries(tiposRefeicao)) {
-            if (valores.some(valor => tipo.includes(valor))) {
-              return key;
-            }
-          }
-          return 'outros';
-        };
-
-        const tipoNormalizado = getTipoNormalizado(tipo);
-        
         // Procura o dia existente ou cria um novo
         let diaExistente = acc.find(item => item.dia === dia);
         
         if (diaExistente) {
           // Atualiza o contador para o tipo de refeição
-          diaExistente[tipoNormalizado] = (diaExistente[tipoNormalizado] || 0) + 1;
-          // Atualiza o total
+          diaExistente[tipo] = (diaExistente[tipo] || 0) + 1;
           diaExistente.total += 1;
         } else {
           // Cria um novo objeto para o dia
           const novoDia = {
             dia,
-            almoco: 0,
-            jantar: 0,
-            cafe: 0,
-            ceia: 0,
-            outros: 0,
             total: 1
           };
-          novoDia[tipoNormalizado] = 1;
+          novoDia[tipo] = 1;
           acc.push(novoDia);
         }
         

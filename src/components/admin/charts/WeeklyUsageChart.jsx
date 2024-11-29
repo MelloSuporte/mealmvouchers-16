@@ -39,19 +39,16 @@ const WeeklyUsageChart = ({ data }) => {
         <YAxis />
         <Tooltip />
         <Legend />
-        <Bar dataKey="almoco" name="Almoço" fill={COLORS.ALMOCO}>
+        <Bar dataKey="almoço" name="Almoço" fill={COLORS.ALMOCO}>
           <LabelList content={renderCustomLabel} />
         </Bar>
         <Bar dataKey="jantar" name="Jantar" fill={COLORS.JANTAR}>
           <LabelList content={renderCustomLabel} />
         </Bar>
-        <Bar dataKey="cafe" name="Café" fill={COLORS.CAFE}>
+        <Bar dataKey="café" name="Café" fill={COLORS.CAFE}>
           <LabelList content={renderCustomLabel} />
         </Bar>
         <Bar dataKey="ceia" name="Ceia" fill={COLORS.CEIA || "#8B4513"}>
-          <LabelList content={renderCustomLabel} />
-        </Bar>
-        <Bar dataKey="outros" name="Outros" fill={COLORS.OUTROS || "#808080"}>
           <LabelList content={renderCustomLabel} />
         </Bar>
       </BarChart>
