@@ -64,12 +64,23 @@ const UserConfirmation = () => {
         throw new Error('Voucher inválido ou não encontrado');
       }
 
-      // Registrar o uso do voucher na tabela correta 'uso_voucher'
+      // Buscar o ID do tipo de refeição
+      const { data: mealTypeData, error: mealTypeError } = await supabase
+        .from('tipos_refeicao')
+        .select('id')
+        .eq('nome', location.state.mealType)
+        .single();
+
+      if (mealTypeError || !mealTypeData) {
+        throw new Error('Tipo de refeição não encontrado');
+      }
+
+      // Registrar o uso do voucher na tabela uso_voucher
       const { error: usageError } = await supabase
         .from('uso_voucher')
         .insert([{
           usuario_id: voucherData.id,
-          tipo_refeicao_id: location.state.mealType,
+          tipo_refeicao_id: mealTypeData.id,
           usado_em: new Date().toISOString()
         }]);
 
