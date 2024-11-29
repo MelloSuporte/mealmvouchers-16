@@ -1,11 +1,9 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
-import { COLORS } from './ChartColors';
+import { COLORS, getBarColors } from './ChartColors';
 
 const WeeklyUsageChart = ({ data, tiposRefeicao }) => {
-  // Ensure data is always an array and has a default value
   const chartData = Array.isArray(data) ? data : [];
 
-  // If there's no data, show empty state
   if (chartData.length === 0) {
     return (
       <div className="w-full h-[200px] flex items-center justify-center text-gray-500">
@@ -31,10 +29,8 @@ const WeeklyUsageChart = ({ data, tiposRefeicao }) => {
     );
   };
 
-  // Cores para cada tipo de refeição
-  const getColorForMeal = (index) => {
-    const colors = Object.values(COLORS);
-    return colors[index % colors.length];
+  const getColorForMeal = (tipo) => {
+    return COLORS[tipo.toUpperCase()] || COLORS.PRIMARY;
   };
 
   return (
@@ -45,12 +41,12 @@ const WeeklyUsageChart = ({ data, tiposRefeicao }) => {
         <YAxis />
         <Tooltip />
         <Legend />
-        {tiposRefeicao.map((tipo, index) => (
+        {tiposRefeicao.map((tipo) => (
           <Bar 
             key={tipo} 
             dataKey={tipo} 
             name={tipo} 
-            fill={getColorForMeal(index)}
+            fill={getColorForMeal(tipo)}
           >
             <LabelList content={renderCustomLabel} />
           </Bar>
