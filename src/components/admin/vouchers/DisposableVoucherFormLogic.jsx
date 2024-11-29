@@ -68,7 +68,6 @@ export const useDisposableVoucherFormLogic = () => {
 
       if (response.data.success) {
         toast.success(response.data.message);
-        // Atualiza a lista de vouchers após a geração
         queryClient.invalidateQueries({ queryKey: ['disposableVouchers'] });
       } else {
         throw new Error(response.data.error);

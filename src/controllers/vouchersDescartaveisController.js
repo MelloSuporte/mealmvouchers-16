@@ -5,12 +5,20 @@ import { generateUniqueCode } from '../utils/voucherGenerationUtils.js';
 export const generateDisposableVouchers = async (req, res) => {
   const { tipos_refeicao_ids, datas, quantidade } = req.body;
 
+  if (!tipos_refeicao_ids?.length || !datas?.length || !quantidade) {
+    return res.status(400).json({
+      success: false,
+      error: 'Dados inválidos para geração de vouchers'
+    });
+  }
+
   try {
     const vouchers = [];
     
     for (const data of datas) {
       for (const tipo_refeicao_id of tipos_refeicao_ids) {
         for (let i = 0; i < quantidade; i++) {
+          // Gera um código único de 4 dígitos
           const code = await generateUniqueCode();
           
           const { data: voucher, error } = await supabase
@@ -19,7 +27,8 @@ export const generateDisposableVouchers = async (req, res) => {
               codigo: code,
               tipo_refeicao_id: tipo_refeicao_id,
               data_expiracao: data,
-              usado: false
+              usado: false,
+              data_criacao: new Date().toISOString()
             })
             .select(`
               *,
