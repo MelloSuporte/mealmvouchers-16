@@ -29,16 +29,16 @@ const ChartTabs = () => {
       const processedData = data.reduce((acc, curr) => {
         const dia = format(parseISO(curr.usado_em), 'EEEE', { locale: ptBR });
         const tipo = curr.tipo_refeicao?.toLowerCase() || 'outros';
-        
-        const existingDay = acc.find(item => item.dia === dia);
 
         // Função para normalizar os tipos de refeição
         const getTipoNormalizado = (tipo) => {
+          if (!tipo) return 'outros';
+          
           const tiposRefeicao = {
-            'almoco': ['almoço', 'almoco'],
-            'jantar': ['jantar'],
-            'cafe': ['café', 'cafe', 'café da manhã', 'cafe da manha'],
-            'ceia': ['ceia'],
+            'almoco': ['almoço', 'almoco', 'almoço extra', 'almoco extra'],
+            'jantar': ['jantar', 'jantar extra'],
+            'cafe': ['café', 'cafe', 'café da manhã', 'cafe da manha', 'café extra', 'cafe extra'],
+            'ceia': ['ceia', 'ceia extra'],
           };
 
           for (const [key, valores] of Object.entries(tiposRefeicao)) {
@@ -50,25 +50,28 @@ const ChartTabs = () => {
         };
 
         const tipoNormalizado = getTipoNormalizado(tipo);
-
-        if (existingDay) {
-          existingDay[tipoNormalizado] = (existingDay[tipoNormalizado] || 0) + 1;
-          existingDay.total = Object.values(existingDay)
-            .filter(value => typeof value === 'number')
-            .reduce((sum, value) => sum + value, 0) - existingDay.total;
+        
+        // Procura o dia existente ou cria um novo
+        let diaExistente = acc.find(item => item.dia === dia);
+        
+        if (diaExistente) {
+          // Atualiza o contador para o tipo de refeição
+          diaExistente[tipoNormalizado] = (diaExistente[tipoNormalizado] || 0) + 1;
+          // Atualiza o total
+          diaExistente.total += 1;
         } else {
-          const newDay = {
+          // Cria um novo objeto para o dia
+          const novoDia = {
             dia,
             almoco: 0,
             jantar: 0,
             cafe: 0,
             ceia: 0,
             outros: 0,
-            total: 0
+            total: 1
           };
-          newDay[tipoNormalizado] = 1;
-          newDay.total = 1;
-          acc.push(newDay);
+          novoDia[tipoNormalizado] = 1;
+          acc.push(novoDia);
         }
         
         return acc;
