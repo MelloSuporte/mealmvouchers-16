@@ -6,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { supabase } from '../../../config/supabase';
 
 const UsageTable = ({ searchTerm }) => {
-  const { data: usageData = [] } = useQuery({
+  const { data: usageData, isLoading, error } = useQuery({
     queryKey: ['usage-data', searchTerm],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -32,6 +32,35 @@ const UsageTable = ({ searchTerm }) => {
     }).format(value);
   };
 
+  // Garante que sempre temos um array válido para o map
+  const safeUsageData = Array.isArray(usageData) ? usageData : [];
+
+  if (isLoading) {
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead colSpan={8} className="text-center">Carregando dados...</TableHead>
+          </TableRow>
+        </TableHeader>
+      </Table>
+    );
+  }
+
+  if (error) {
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead colSpan={8} className="text-center text-red-500">
+              Erro ao carregar dados. Por favor, tente novamente.
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+      </Table>
+    );
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -47,7 +76,7 @@ const UsageTable = ({ searchTerm }) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {usageData.map((item) => (
+        {safeUsageData.map((item) => (
           <TableRow key={item.id}>
             <TableCell>{formatDateTime(item.usado_em)}</TableCell>
             <TableCell>{item.nome_usuario}</TableCell>
