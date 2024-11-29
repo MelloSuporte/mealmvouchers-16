@@ -48,6 +48,12 @@ const WeeklyUsageChart = ({ data }) => {
         <Bar dataKey="cafe" name="Café" fill={COLORS.CAFE}>
           <LabelList content={renderCustomLabel} />
         </Bar>
+        <Bar dataKey="ceia" name="Ceia" fill={COLORS.CEIA || "#8B4513"}>
+          <LabelList content={renderCustomLabel} />
+        </Bar>
+        <Bar dataKey="outros" name="Outros" fill={COLORS.OUTROS || "#808080"}>
+          <LabelList content={renderCustomLabel} />
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
