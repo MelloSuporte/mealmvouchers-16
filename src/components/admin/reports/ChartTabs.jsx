@@ -31,13 +31,21 @@ const ChartTabs = () => {
         const tipo = curr.tipo_refeicao?.toLowerCase() || 'outros';
         
         const existingDay = acc.find(item => item.dia === dia);
-        
-        // Normalizar os tipos de refeição
+
+        // Função para normalizar os tipos de refeição
         const getTipoNormalizado = (tipo) => {
-          if (tipo.includes('almoço') || tipo.includes('almoco')) return 'almoco';
-          if (tipo.includes('jantar')) return 'jantar';
-          if (tipo.includes('café') || tipo.includes('cafe')) return 'cafe';
-          if (tipo.includes('ceia')) return 'ceia';
+          const tiposRefeicao = {
+            'almoco': ['almoço', 'almoco'],
+            'jantar': ['jantar'],
+            'cafe': ['café', 'cafe', 'café da manhã', 'cafe da manha'],
+            'ceia': ['ceia'],
+          };
+
+          for (const [key, valores] of Object.entries(tiposRefeicao)) {
+            if (valores.some(valor => tipo.includes(valor))) {
+              return key;
+            }
+          }
           return 'outros';
         };
 
@@ -45,6 +53,9 @@ const ChartTabs = () => {
 
         if (existingDay) {
           existingDay[tipoNormalizado] = (existingDay[tipoNormalizado] || 0) + 1;
+          existingDay.total = Object.values(existingDay)
+            .filter(value => typeof value === 'number')
+            .reduce((sum, value) => sum + value, 0) - existingDay.total;
         } else {
           const newDay = {
             dia,
@@ -52,9 +63,11 @@ const ChartTabs = () => {
             jantar: 0,
             cafe: 0,
             ceia: 0,
-            outros: 0
+            outros: 0,
+            total: 0
           };
           newDay[tipoNormalizado] = 1;
+          newDay.total = 1;
           acc.push(newDay);
         }
         
@@ -66,7 +79,8 @@ const ChartTabs = () => {
       return processedData.sort((a, b) => {
         return diasDaSemana.indexOf(a.dia.toLowerCase()) - diasDaSemana.indexOf(b.dia.toLowerCase());
       });
-    }
+    },
+    refetchInterval: 30000 // Atualiza a cada 30 segundos
   });
 
   const { data: distributionData } = useQuery({
