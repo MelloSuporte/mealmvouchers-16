@@ -20,33 +20,36 @@ const ChartTabs = () => {
         .from('vw_uso_voucher_detalhado')
         .select('usado_em, tipo_refeicao')
         .gte('usado_em', startDate.toISOString())
-        .lte('usado_em', endDate.toISOString())
-        .order('usado_em', { ascending: true });
+        .lte('usado_em', endDate.toISOString());
 
       if (error) throw error;
 
-      // Inicializa um objeto para armazenar os dados por dia
+      // Inicializa os dias da semana
       const diasDaSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
-      const dadosPorDia = diasDaSemana.reduce((acc, dia) => {
-        acc[dia] = {
+      
+      // Cria objeto inicial com contadores zerados para cada dia
+      const dadosPorDia = {};
+      diasDaSemana.forEach(dia => {
+        dadosPorDia[dia] = {
           dia,
           'Almoço': 0,
           'Jantar': 0,
           'Café': 0,
           'Ceia': 0
         };
-        return acc;
-      }, {});
-
-      // Processa os dados
-      data.forEach(registro => {
-        const dia = format(parseISO(registro.usado_em), 'EEEE', { locale: ptBR });
-        const tipo = registro.tipo_refeicao;
-        
-        if (dadosPorDia[dia] && tipo) {
-          dadosPorDia[dia][tipo] = (dadosPorDia[dia][tipo] || 0) + 1;
-        }
       });
+
+      // Processa os dados retornados da query
+      if (data && data.length > 0) {
+        data.forEach(registro => {
+          if (registro.usado_em && registro.tipo_refeicao) {
+            const dia = format(parseISO(registro.usado_em), 'EEEE', { locale: ptBR });
+            if (dadosPorDia[dia]) {
+              dadosPorDia[dia][registro.tipo_refeicao] += 1;
+            }
+          }
+        });
+      }
 
       // Converte o objeto em array mantendo a ordem dos dias da semana
       return diasDaSemana.map(dia => dadosPorDia[dia]);
