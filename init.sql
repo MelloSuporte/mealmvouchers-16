@@ -79,3 +79,26 @@ INSERT INTO turnos (tipo_turno, horario_inicio, horario_fim, ativo) VALUES
 -- Inserir tipo de refeição extra padrão
 INSERT INTO tipos_refeicao (nome, valor, ativo, minutos_tolerancia) VALUES
   ('Refeição Extra', 15.00, true, 15);
+
+-- Criar view para visualização detalhada do uso de vouchers
+CREATE OR REPLACE VIEW vw_uso_voucher_detalhado AS
+SELECT 
+    uv.id,
+    u.nome as nome_usuario,
+    u.cpf,
+    u.voucher,
+    tr.nome as tipo_refeicao,
+    tr.valor as valor_refeicao,
+    e.nome as empresa,
+    uv.usado_em,
+    t.tipo_turno as turno
+FROM uso_voucher uv
+JOIN usuarios u ON uv.usuario_id = u.id
+JOIN tipos_refeicao tr ON uv.tipo_refeicao_id = tr.id
+JOIN empresas e ON u.empresa_id = e.id
+LEFT JOIN turnos t ON u.turno_id = t.id
+ORDER BY uv.usado_em DESC;
+
+-- Conceder permissões para a view
+GRANT SELECT ON vw_uso_voucher_detalhado TO authenticated;
+GRANT SELECT ON vw_uso_voucher_detalhado TO service_role;
