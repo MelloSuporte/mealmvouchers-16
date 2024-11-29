@@ -17,12 +17,8 @@ const ChartTabs = () => {
       const endDate = endOfWeek(new Date(), { locale: ptBR });
 
       const { data, error } = await supabase
-        .from('uso_voucher')
-        .select(`
-          id,
-          usado_em,
-          tipo_refeicao
-        `)
+        .from('vw_uso_voucher_detalhado')
+        .select('usado_em, tipo_refeicao')
         .gte('usado_em', startDate.toISOString())
         .lte('usado_em', endDate.toISOString())
         .order('usado_em', { ascending: true });
@@ -34,22 +30,18 @@ const ChartTabs = () => {
         const dia = format(parseISO(curr.usado_em), 'EEEE', { locale: ptBR });
         const tipo = curr.tipo_refeicao;
 
-        if (!tipo) return acc;
-
         // Procura o dia existente ou cria um novo
         let diaExistente = acc.find(item => item.dia === dia);
         
         if (diaExistente) {
           // Atualiza o contador para o tipo de refeição
           diaExistente[tipo] = (diaExistente[tipo] || 0) + 1;
-          diaExistente.total += 1;
         } else {
           // Cria um novo objeto para o dia
           const novoDia = {
             dia,
-            total: 1
+            [tipo]: 1
           };
-          novoDia[tipo] = 1;
           acc.push(novoDia);
         }
         
