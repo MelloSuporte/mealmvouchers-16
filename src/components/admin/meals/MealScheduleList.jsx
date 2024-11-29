@@ -51,14 +51,33 @@ const MealScheduleList = () => {
     }
   });
 
+  const checkUsage = async (ids) => {
+    const { data, error } = await supabase
+      .from('uso_voucher')
+      .select('tipo_refeicao_id')
+      .in('tipo_refeicao_id', ids);
+
+    if (error) throw error;
+    return data.length > 0;
+  };
+
   const deleteMealsMutation = useMutation({
     mutationFn: async (ids) => {
-      const { error } = await supabase
-        .from('tipos_refeicao')
-        .delete()
-        .in('id', ids);
-      
-      if (error) throw error;
+      try {
+        const hasUsage = await checkUsage(ids);
+        if (hasUsage) {
+          throw new Error('Não é possível excluir tipos de refeição que já foram utilizados.');
+        }
+
+        const { error } = await supabase
+          .from('tipos_refeicao')
+          .delete()
+          .in('id', ids);
+        
+        if (error) throw error;
+      } catch (error) {
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['meals']);
@@ -66,7 +85,7 @@ const MealScheduleList = () => {
       toast.success("Refeições selecionadas excluídas com sucesso!");
     },
     onError: (error) => {
-      toast.error("Erro ao excluir refeições: " + error.message);
+      toast.error(error.message);
     }
   });
 
