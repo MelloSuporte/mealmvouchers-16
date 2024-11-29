@@ -31,26 +31,41 @@ const ChartTabs = () => {
         const tipo = curr.tipo_refeicao?.toLowerCase() || 'outros';
         
         const existingDay = acc.find(item => item.dia === dia);
+        
+        // Normalizar os tipos de refeição
+        const getTipoNormalizado = (tipo) => {
+          if (tipo.includes('almoço') || tipo.includes('almoco')) return 'almoco';
+          if (tipo.includes('jantar')) return 'jantar';
+          if (tipo.includes('café') || tipo.includes('cafe')) return 'cafe';
+          if (tipo.includes('ceia')) return 'ceia';
+          return 'outros';
+        };
+
+        const tipoNormalizado = getTipoNormalizado(tipo);
+
         if (existingDay) {
-          if (tipo === 'almoço' || tipo === 'almoco') {
-            existingDay.almoco = (existingDay.almoco || 0) + 1;
-          } else if (tipo === 'jantar') {
-            existingDay.jantar = (existingDay.jantar || 0) + 1;
-          } else if (tipo === 'café' || tipo === 'cafe') {
-            existingDay.cafe = (existingDay.cafe || 0) + 1;
-          }
+          existingDay[tipoNormalizado] = (existingDay[tipoNormalizado] || 0) + 1;
         } else {
-          acc.push({
+          const newDay = {
             dia,
-            almoco: tipo === 'almoço' || tipo === 'almoco' ? 1 : 0,
-            jantar: tipo === 'jantar' ? 1 : 0,
-            cafe: tipo === 'café' || tipo === 'cafe' ? 1 : 0
-          });
+            almoco: 0,
+            jantar: 0,
+            cafe: 0,
+            ceia: 0,
+            outros: 0
+          };
+          newDay[tipoNormalizado] = 1;
+          acc.push(newDay);
         }
+        
         return acc;
       }, []);
 
-      return processedData;
+      // Ordenar os dias da semana
+      const diasDaSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+      return processedData.sort((a, b) => {
+        return diasDaSemana.indexOf(a.dia.toLowerCase()) - diasDaSemana.indexOf(b.dia.toLowerCase());
+      });
     }
   });
 
