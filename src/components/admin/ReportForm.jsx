@@ -7,7 +7,7 @@ import autoTable from 'jspdf-autotable';
 import ReportMetrics from './reports/ReportMetrics';
 import UsageTable from './reports/UsageTable';
 import ChartTabs from './reports/ChartTabs';
-import api from '../../utils/api';
+import { supabase } from '../../config/supabase';
 import { toast } from "sonner";
 
 const ReportForm = () => {
@@ -15,7 +15,13 @@ const ReportForm = () => {
 
   const exportToPDF = async () => {
     try {
-      const response = await api.get('/reports/export');
+      const { data, error } = await supabase
+        .from('vw_uso_voucher_detalhado')
+        .select('*')
+        .order('usado_em', { ascending: false });
+
+      if (error) throw error;
+
       const doc = new jsPDF();
       
       // Adiciona título
@@ -23,18 +29,20 @@ const ReportForm = () => {
       doc.text('Relatório de Uso de Vouchers', 14, 15);
       
       // Configura os dados para a tabela
-      const tableData = response.data.map(item => [
-        item.code,
-        item.user_name || 'N/A',
-        item.company_name || 'N/A',
-        new Date(item.created_at).toLocaleString(),
-        item.used_at ? new Date(item.used_at).toLocaleString() : 'N/A',
-        item.used ? 'Sim' : 'Não'
+      const tableData = data.map(item => [
+        new Date(item.usado_em).toLocaleString('pt-BR'),
+        item.nome_usuario || 'N/A',
+        item.cpf || 'N/A',
+        item.voucher || 'N/A',
+        item.empresa || 'N/A',
+        item.tipo_refeicao || 'N/A',
+        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor_refeicao),
+        item.turno || 'N/A'
       ]);
 
       // Adiciona a tabela ao PDF
       autoTable(doc, {
-        head: [['Código', 'Usuário', 'Empresa', 'Data Criação', 'Data Uso', 'Utilizado']],
+        head: [['Data/Hora', 'Usuário', 'CPF', 'Voucher', 'Empresa', 'Refeição', 'Valor', 'Turno']],
         body: tableData,
         startY: 25,
         theme: 'grid',
@@ -61,7 +69,7 @@ const ReportForm = () => {
         <div className="relative w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Pesquisar..."
+            placeholder="Pesquisar por nome..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
