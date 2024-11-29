@@ -4,9 +4,9 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/config/supabase";
 import { Loader2, Plus } from "lucide-react";
-import TurnoCard from "@/components/admin/turnos/TurnoCard";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NovoTurnoDialog from "@/components/admin/turnos/NovoTurnoDialog";
+import EditarTurnoDialog from "@/components/admin/turnos/EditarTurnoDialog";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -20,6 +20,8 @@ import {
 const TurnosForm = () => {
   const navigate = useNavigate();
   const [dialogoAberto, setDialogoAberto] = React.useState(false);
+  const [dialogoEdicaoAberto, setDialogoEdicaoAberto] = React.useState(false);
+  const [turnoSelecionado, setTurnoSelecionado] = React.useState(null);
   const [novoTurno, setNovoTurno] = React.useState({
     tipo_turno: '',
     horario_inicio: '',
@@ -62,6 +64,19 @@ const TurnosForm = () => {
       ativo: true
     });
     recarregar();
+  };
+
+  const handleEditarTurno = (turno) => {
+    setTurnoSelecionado(turno);
+    setDialogoEdicaoAberto(true);
+  };
+
+  const handleSalvarEdicao = async (turnoEditado) => {
+    await handleTurnoChange(turnoEditado.id, 'horario_inicio', turnoEditado.horario_inicio);
+    await handleTurnoChange(turnoEditado.id, 'horario_fim', turnoEditado.horario_fim);
+    await handleTurnoChange(turnoEditado.id, 'ativo', turnoEditado.ativo);
+    recarregar();
+    toast.success('Turno atualizado com sucesso!');
   };
 
   const getTurnoLabel = (tipoTurno) => {
@@ -113,6 +128,12 @@ const TurnosForm = () => {
           setNovoTurno={setNovoTurno}
           onCreateTurno={handleNovoTurno}
         />
+        <EditarTurnoDialog
+          isOpen={dialogoEdicaoAberto}
+          onOpenChange={setDialogoEdicaoAberto}
+          turno={turnoSelecionado}
+          onSave={handleSalvarEdicao}
+        />
       </div>
 
       <div className="rounded-md border">
@@ -127,7 +148,11 @@ const TurnosForm = () => {
           </TableHeader>
           <TableBody>
             {turnos.map((turno) => (
-              <TableRow key={turno.id}>
+              <TableRow 
+                key={turno.id}
+                className="cursor-pointer hover:bg-gray-50"
+                onClick={() => handleEditarTurno(turno)}
+              >
                 <TableCell>{getTurnoLabel(turno.tipo_turno)}</TableCell>
                 <TableCell>{turno.horario_inicio}</TableCell>
                 <TableCell>{turno.horario_fim}</TableCell>
