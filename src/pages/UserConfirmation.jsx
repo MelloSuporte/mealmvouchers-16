@@ -64,14 +64,15 @@ const UserConfirmation = () => {
         throw new Error('Voucher inválido ou não encontrado');
       }
 
-      // Buscar o ID do tipo de refeição
+      // Buscar o ID do tipo de refeição (primeiro resultado ativo)
       const { data: mealTypeData, error: mealTypeError } = await supabase
         .from('tipos_refeicao')
         .select('id')
         .eq('nome', location.state.mealType)
-        .single();
+        .eq('ativo', true)
+        .limit(1);
 
-      if (mealTypeError || !mealTypeData) {
+      if (mealTypeError || !mealTypeData || mealTypeData.length === 0) {
         throw new Error('Tipo de refeição não encontrado');
       }
 
@@ -80,7 +81,7 @@ const UserConfirmation = () => {
         .from('uso_voucher')
         .insert([{
           usuario_id: voucherData.id,
-          tipo_refeicao_id: mealTypeData.id,
+          tipo_refeicao_id: mealTypeData[0].id,
           usado_em: new Date().toISOString()
         }]);
 
