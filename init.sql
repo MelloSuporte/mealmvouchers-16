@@ -81,7 +81,9 @@ INSERT INTO tipos_refeicao (nome, valor, ativo, minutos_tolerancia) VALUES
   ('Refeição Extra', 15.00, true, 15);
 
 -- Criar view para visualização detalhada do uso de vouchers
-CREATE OR REPLACE VIEW vw_uso_voucher_detalhado AS
+DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
+
+CREATE VIEW vw_uso_voucher_detalhado AS
 SELECT 
     uv.id,
     u.nome as nome_usuario,
