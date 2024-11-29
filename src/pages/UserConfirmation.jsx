@@ -64,13 +64,13 @@ const UserConfirmation = () => {
         throw new Error('Voucher inválido ou não encontrado');
       }
 
-      // Registrar o uso do voucher
+      // Registrar o uso do voucher na tabela correta 'uso_voucher'
       const { error: usageError } = await supabase
-        .from('voucher_usage')
+        .from('uso_voucher')
         .insert([{
-          user_id: voucherData.id,
-          meal_type_id: location.state.mealType,
-          used_at: new Date().toISOString()
+          usuario_id: voucherData.id,
+          tipo_refeicao_id: location.state.mealType,
+          usado_em: new Date().toISOString()
         }]);
 
       if (usageError) throw usageError;
