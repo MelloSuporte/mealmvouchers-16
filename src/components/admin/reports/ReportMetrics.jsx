@@ -6,8 +6,10 @@ import { format, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReportFilters from './ReportFilters';
 import MetricsCards from './MetricsCards';
+import { Button } from "@/components/ui/button";
+import { FileDown } from 'lucide-react';
 
-const ReportMetrics = () => {
+const ReportMetrics = ({ onExportPDF }) => {
   const [filters, setFilters] = useState({
     company: 'all',
     startDate: startOfDay(new Date()),
@@ -94,12 +96,23 @@ const ReportMetrics = () => {
 
   return (
     <div className="space-y-6">
-      <ReportFilters 
-        metrics={metrics} 
-        onFilterChange={handleFilterChange}
-        startDate={filters.startDate}
-        endDate={filters.endDate}
-      />
+      <div className="flex justify-between items-start">
+        <div className="flex-1">
+          <ReportFilters 
+            metrics={metrics} 
+            onFilterChange={handleFilterChange}
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+          />
+        </div>
+        <Button 
+          onClick={() => onExportPDF(filters)}
+          className="ml-4"
+        >
+          <FileDown className="mr-2 h-4 w-4" />
+          Exportar Filtrado
+        </Button>
+      </div>
       <MetricsCards metrics={metrics} />
     </div>
   );

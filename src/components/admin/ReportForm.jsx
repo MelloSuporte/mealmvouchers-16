@@ -13,12 +13,31 @@ import { toast } from "sonner";
 const ReportForm = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const exportToPDF = async () => {
+  const exportToPDF = async (filters) => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('vw_uso_voucher_detalhado')
         .select('*')
         .order('usado_em', { ascending: false });
+
+      // Aplicar filtros
+      if (filters.company !== 'all') {
+        query = query.eq('empresa', filters.company);
+      }
+      if (filters.startDate) {
+        query = query.gte('usado_em', filters.startDate.toISOString());
+      }
+      if (filters.endDate) {
+        query = query.lte('usado_em', filters.endDate.toISOString());
+      }
+      if (filters.shift !== 'all') {
+        query = query.eq('turno', filters.shift);
+      }
+      if (filters.mealType !== 'all') {
+        query = query.eq('tipo_refeicao', filters.mealType);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -28,6 +47,18 @@ const ReportForm = () => {
       doc.setFontSize(16);
       doc.text('Relatório de Uso de Vouchers', 14, 15);
       
+      // Adiciona filtros aplicados
+      doc.setFontSize(10);
+      let yPos = 25;
+      doc.text(`Empresa: ${filters.company === 'all' ? 'Todas' : filters.company}`, 14, yPos);
+      yPos += 5;
+      doc.text(`Período: ${filters.startDate?.toLocaleDateString('pt-BR')} até ${filters.endDate?.toLocaleDateString('pt-BR')}`, 14, yPos);
+      yPos += 5;
+      doc.text(`Turno: ${filters.shift === 'all' ? 'Todos' : filters.shift}`, 14, yPos);
+      yPos += 5;
+      doc.text(`Tipo de Refeição: ${filters.mealType === 'all' ? 'Todos' : filters.mealType}`, 14, yPos);
+      yPos += 10;
+
       // Configura os dados para a tabela
       const tableData = data.map(item => [
         new Date(item.usado_em).toLocaleString('pt-BR'),
@@ -44,7 +75,7 @@ const ReportForm = () => {
       autoTable(doc, {
         head: [['Data/Hora', 'Usuário', 'CPF', 'Voucher', 'Empresa', 'Refeição', 'Valor', 'Turno']],
         body: tableData,
-        startY: 25,
+        startY: yPos,
         theme: 'grid',
         styles: { fontSize: 8, cellPadding: 2 },
         headStyles: { fillColor: [41, 128, 185] }
@@ -61,7 +92,9 @@ const ReportForm = () => {
 
   return (
     <div className="space-y-6">
-      <ReportMetrics />
+      <ReportMetrics 
+        onExportPDF={exportToPDF}
+      />
       
       <ChartTabs />
 
@@ -75,7 +108,13 @@ const ReportForm = () => {
             className="pl-8"
           />
         </div>
-        <Button onClick={exportToPDF}>
+        <Button onClick={() => exportToPDF({
+          company: 'all',
+          startDate: new Date(),
+          endDate: new Date(),
+          shift: 'all',
+          mealType: 'all'
+        })}>
           <FileDown className="mr-2 h-4 w-4" />
           Exportar PDF
         </Button>
