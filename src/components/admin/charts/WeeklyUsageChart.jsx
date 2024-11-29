@@ -33,7 +33,7 @@ const WeeklyUsageChart = ({ data }) => {
 
   return (
     <ResponsiveContainer width="100%" height={200}>
-      <BarChart data={chartData}>
+      <BarChart data={chartData} barSize={100}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="dia" />
         <YAxis />
