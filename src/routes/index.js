@@ -13,16 +13,16 @@ import adminRouter from './admin.js';
 
 const router = express.Router();
 
-router.use('/api', vouchersRouter);
-router.use('/api', vouchersExtraRouter);
-router.use('/api', vouchersDescartaveisRouter);
-router.use('/api', empresasRouter);
-router.use('/api', usuariosRouter);
-router.use('/api', usuariosAdminRouter);
-router.use('/api', turnosRouter);
-router.use('/api', imagensFundoRouter);
-router.use('/api', relatoriosRouter);
-router.use('/api', healthRouter);
-router.use('/api', adminRouter);
+router.use(vouchersRouter);
+router.use(vouchersExtraRouter);
+router.use(vouchersDescartaveisRouter);
+router.use(empresasRouter);
+router.use(usuariosRouter);
+router.use(usuariosAdminRouter);
+router.use(turnosRouter);
+router.use(imagensFundoRouter);
+router.use(relatoriosRouter);
+router.use(healthRouter);
+router.use(adminRouter);
 
 export default router;
