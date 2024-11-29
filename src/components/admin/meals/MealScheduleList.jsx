@@ -4,10 +4,11 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { supabase } from '../../../config/supabase';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { deleteMeals, toggleMealActive } from './mealMutations';
+import { MealListTable } from './MealListTable';
 
 const MealScheduleList = () => {
   const [selectedMeals, setSelectedMeals] = useState([]);
@@ -16,32 +17,18 @@ const MealScheduleList = () => {
   const { data: meals = [], isLoading, error } = useQuery({
     queryKey: ['meals'],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('tipos_refeicao')
-          .select('*')
-          .order('nome');
+      const { data, error } = await supabase
+        .from('tipos_refeicao')
+        .select('*')
+        .order('nome');
 
-        if (error) throw error;
-
-        return Array.isArray(data) ? data : [];
-      } catch (error) {
-        console.error('Error fetching meals:', error);
-        toast.error('Erro ao carregar refeições: ' + error.message);
-        return [];
-      }
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
     }
   });
 
   const toggleActiveMutation = useMutation({
-    mutationFn: async ({ id, currentStatus }) => {
-      const { error } = await supabase
-        .from('tipos_refeicao')
-        .update({ ativo: !currentStatus })
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
+    mutationFn: toggleMealActive,
     onSuccess: () => {
       queryClient.invalidateQueries(['meals']);
       toast.success("Status atualizado com sucesso!");
@@ -51,41 +38,15 @@ const MealScheduleList = () => {
     }
   });
 
-  const checkUsage = async (ids) => {
-    const { data, error } = await supabase
-      .from('uso_voucher')
-      .select('tipo_refeicao_id')
-      .in('tipo_refeicao_id', ids);
-
-    if (error) throw error;
-    return data.length > 0;
-  };
-
   const deleteMealsMutation = useMutation({
-    mutationFn: async (ids) => {
-      try {
-        const hasUsage = await checkUsage(ids);
-        if (hasUsage) {
-          throw new Error('Não é possível excluir tipos de refeição que já foram utilizados.');
-        }
-
-        const { error } = await supabase
-          .from('tipos_refeicao')
-          .delete()
-          .in('id', ids);
-        
-        if (error) throw error;
-      } catch (error) {
-        throw error;
-      }
-    },
+    mutationFn: deleteMeals,
     onSuccess: () => {
       queryClient.invalidateQueries(['meals']);
       setSelectedMeals([]);
       toast.success("Refeições selecionadas excluídas com sucesso!");
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error("Erro ao excluir refeições: " + error.message);
     }
   });
 
@@ -162,55 +123,13 @@ const MealScheduleList = () => {
           </Button>
         </div>
       )}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selectedMeals.length === meals.length}
-                  onCheckedChange={handleSelectAll}
-                />
-              </TableHead>
-              <TableHead>Refeição</TableHead>
-              <TableHead>Horário</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Limite/Dia</TableHead>
-              <TableHead>Tolerância</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {meals.map((meal) => (
-              <TableRow key={meal.id}>
-                <TableCell>
-                  <Checkbox
-                    checked={selectedMeals.includes(meal.id)}
-                    onCheckedChange={() => handleSelectMeal(meal.id)}
-                  />
-                </TableCell>
-                <TableCell>{meal.nome}</TableCell>
-                <TableCell>{meal.hora_inicio} - {meal.hora_fim}</TableCell>
-                <TableCell>
-                  {parseFloat(meal.valor).toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL'
-                  })}
-                </TableCell>
-                <TableCell>{meal.max_usuarios_por_dia || 'Sem limite'}</TableCell>
-                <TableCell>{meal.minutos_tolerancia} min</TableCell>
-                <TableCell>
-                  <Switch
-                    checked={meal.ativo}
-                    onCheckedChange={() => handleToggleActive(meal.id, meal.ativo)}
-                    disabled={toggleActiveMutation.isLoading}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <MealListTable 
+        meals={meals}
+        selectedMeals={selectedMeals}
+        onSelectMeal={handleSelectMeal}
+        onSelectAll={handleSelectAll}
+        onToggleActive={handleToggleActive}
+      />
     </div>
   );
 };
