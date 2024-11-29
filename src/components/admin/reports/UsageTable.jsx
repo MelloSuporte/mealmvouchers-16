@@ -9,12 +9,16 @@ const UsageTable = ({ searchTerm }) => {
   const { data: usageData, isLoading, error } = useQuery({
     queryKey: ['usage-data', searchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('vw_uso_voucher_detalhado')
         .select('*')
-        .ilike('nome_usuario', `%${searchTerm}%`)
         .order('usado_em', { ascending: false });
+      
+      if (searchTerm) {
+        query = query.ilike('nome_usuario', `%${searchTerm}%`);
+      }
 
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     }
