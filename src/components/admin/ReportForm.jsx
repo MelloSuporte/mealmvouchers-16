@@ -57,6 +57,14 @@ const ReportForm = () => {
       doc.text(`Turno: ${filters.shift === 'all' ? 'Todos' : filters.shift}`, 14, yPos);
       yPos += 5;
       doc.text(`Tipo de Refeição: ${filters.mealType === 'all' ? 'Todos' : filters.mealType}`, 14, yPos);
+      yPos += 5;
+
+      // Adiciona totais
+      const totalVouchers = data.length;
+      const totalValue = data.reduce((sum, item) => sum + (item.valor_refeicao || 0), 0);
+      doc.text(`Total de Vouchers: ${totalVouchers}`, 14, yPos);
+      yPos += 5;
+      doc.text(`Valor Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValue)}`, 14, yPos);
       yPos += 10;
 
       // Configura os dados para a tabela
