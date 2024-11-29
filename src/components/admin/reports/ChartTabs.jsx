@@ -6,7 +6,7 @@ import MealDistributionChart from '../charts/MealDistributionChart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { COLORS } from '../charts/ChartColors';
 import { supabase } from '../../../config/supabase';
-import { startOfWeek, endOfWeek, format, parseISO } from 'date-fns';
+import { startOfWeek, endOfWeek, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const ChartTabs = () => {
@@ -34,14 +34,18 @@ const ChartTabs = () => {
       // Inicializa os dias da semana
       const diasDaSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
       
+      // Lista de todos os tipos de refeição possíveis
+      const tiposRefeicao = ['Café da Manhã', 'Almoço', 'Lanche', 'Jantar', 'Ceia'];
+      
       // Cria objeto inicial com contadores zerados para cada dia
       const dadosPorDia = {};
       diasDaSemana.forEach(dia => {
         dadosPorDia[dia] = {
           dia,
+          'Café da Manhã': 0,
           'Almoço': 0,
+          'Lanche': 0,
           'Jantar': 0,
-          'Café': 0,
           'Ceia': 0
         };
       });
@@ -58,7 +62,7 @@ const ChartTabs = () => {
               tipo: registro.tipo_refeicao
             });
             
-            if (dadosPorDia[dia]) {
+            if (dadosPorDia[dia] && tiposRefeicao.includes(registro.tipo_refeicao)) {
               dadosPorDia[dia][registro.tipo_refeicao] += 1;
             }
           }
