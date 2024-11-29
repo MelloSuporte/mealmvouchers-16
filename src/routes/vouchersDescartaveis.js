@@ -3,6 +3,6 @@ import { generateDisposableVouchers } from '../controllers/vouchersDescartaveisC
 
 const router = express.Router();
 
-router.post('/api/vouchers-descartaveis', generateDisposableVouchers);
+router.post('/vouchers-descartaveis', generateDisposableVouchers);
 
 export default router;
