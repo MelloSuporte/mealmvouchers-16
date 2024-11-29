@@ -6,32 +6,45 @@ import MealDistributionChart from '../charts/MealDistributionChart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { COLORS } from '../charts/ChartColors';
 import { supabase } from '../../../config/supabase';
+import { startOfWeek, endOfWeek, format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const ChartTabs = () => {
   const { data: weeklyData } = useQuery({
     queryKey: ['weekly-data'],
     queryFn: async () => {
+      const startDate = startOfWeek(new Date(), { locale: ptBR });
+      const endDate = endOfWeek(new Date(), { locale: ptBR });
+
       const { data, error } = await supabase
         .from('vw_uso_voucher_detalhado')
         .select('*')
+        .gte('usado_em', startDate.toISOString())
+        .lte('usado_em', endDate.toISOString())
         .order('usado_em', { ascending: true });
 
       if (error) throw error;
 
       // Processar dados para o gráfico semanal
       const processedData = data.reduce((acc, curr) => {
-        const dia = new Date(curr.usado_em).toLocaleDateString('pt-BR');
+        const dia = format(parseISO(curr.usado_em), 'EEEE', { locale: ptBR });
         const tipo = curr.tipo_refeicao?.toLowerCase() || 'outros';
         
         const existingDay = acc.find(item => item.dia === dia);
         if (existingDay) {
-          existingDay[tipo] = (existingDay[tipo] || 0) + 1;
+          if (tipo === 'almoço' || tipo === 'almoco') {
+            existingDay.almoco = (existingDay.almoco || 0) + 1;
+          } else if (tipo === 'jantar') {
+            existingDay.jantar = (existingDay.jantar || 0) + 1;
+          } else if (tipo === 'café' || tipo === 'cafe') {
+            existingDay.cafe = (existingDay.cafe || 0) + 1;
+          }
         } else {
           acc.push({
             dia,
-            almoco: tipo === 'almoco' ? 1 : 0,
+            almoco: tipo === 'almoço' || tipo === 'almoco' ? 1 : 0,
             jantar: tipo === 'jantar' ? 1 : 0,
-            cafe: tipo === 'cafe' ? 1 : 0
+            cafe: tipo === 'café' || tipo === 'cafe' ? 1 : 0
           });
         }
         return acc;
