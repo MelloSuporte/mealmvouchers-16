@@ -25,34 +25,31 @@ const ChartTabs = () => {
 
       if (error) throw error;
 
-      // Processar dados para o gráfico semanal
-      const processedData = data.reduce((acc, curr) => {
-        const dia = format(parseISO(curr.usado_em), 'EEEE', { locale: ptBR });
-        const tipo = curr.tipo_refeicao;
-
-        // Procura o dia existente ou cria um novo
-        let diaExistente = acc.find(item => item.dia === dia);
-        
-        if (diaExistente) {
-          // Atualiza o contador para o tipo de refeição
-          diaExistente[tipo] = (diaExistente[tipo] || 0) + 1;
-        } else {
-          // Cria um novo objeto para o dia
-          const novoDia = {
-            dia,
-            [tipo]: 1
-          };
-          acc.push(novoDia);
-        }
-        
-        return acc;
-      }, []);
-
-      // Ordenar os dias da semana
+      // Inicializa um objeto para armazenar os dados por dia
       const diasDaSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
-      return processedData.sort((a, b) => {
-        return diasDaSemana.indexOf(a.dia.toLowerCase()) - diasDaSemana.indexOf(b.dia.toLowerCase());
+      const dadosPorDia = diasDaSemana.reduce((acc, dia) => {
+        acc[dia] = {
+          dia,
+          'Almoço': 0,
+          'Jantar': 0,
+          'Café': 0,
+          'Ceia': 0
+        };
+        return acc;
+      }, {});
+
+      // Processa os dados
+      data.forEach(registro => {
+        const dia = format(parseISO(registro.usado_em), 'EEEE', { locale: ptBR });
+        const tipo = registro.tipo_refeicao;
+        
+        if (dadosPorDia[dia] && tipo) {
+          dadosPorDia[dia][tipo] = (dadosPorDia[dia][tipo] || 0) + 1;
+        }
       });
+
+      // Converte o objeto em array mantendo a ordem dos dias da semana
+      return diasDaSemana.map(dia => dadosPorDia[dia]);
     },
     refetchInterval: 30000 // Atualiza a cada 30 segundos
   });
