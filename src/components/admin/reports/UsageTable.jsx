@@ -19,6 +19,9 @@ const UsageTable = ({ searchTerm }) => {
     return format(new Date(dateString), "dd/MM/yyyy HH:mm", { locale: ptBR });
   };
 
+  // Garante que usageData seja sempre um array
+  const dataArray = Array.isArray(usageData) ? usageData : [];
+
   return (
     <Table>
       <TableHeader>
@@ -34,7 +37,7 @@ const UsageTable = ({ searchTerm }) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {usageData.map((item) => (
+        {dataArray.map((item) => (
           <TableRow key={item.id}>
             <TableCell>{formatDateTime(item.usado_em)}</TableCell>
             <TableCell>{item.nome_usuario}</TableCell>
