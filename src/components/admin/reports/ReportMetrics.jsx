@@ -2,14 +2,30 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from "@/components/ui/skeleton";
-import api from '../../../utils/api';
+import { supabase } from '../../../config/supabase';
 
 const ReportMetrics = () => {
   const { data: metrics, isLoading } = useQuery({
     queryKey: ['report-metrics'],
     queryFn: async () => {
-      const response = await api.get('/reports/metrics');
-      return response.data;
+      const { data: usageData, error } = await supabase
+        .from('vw_uso_voucher_detalhado')
+        .select('*');
+
+      if (error) throw error;
+
+      const totalCost = usageData.reduce((sum, item) => sum + (item.valor_refeicao || 0), 0);
+      const averageCost = totalCost / (usageData.length || 1);
+      
+      const regularVouchers = usageData.filter(item => !item.voucher?.startsWith('TEMP')).length;
+      const disposableVouchers = usageData.filter(item => item.voucher?.startsWith('TEMP')).length;
+
+      return {
+        totalCost,
+        averageCost,
+        regularVouchers,
+        disposableVouchers
+      };
     }
   });
 
