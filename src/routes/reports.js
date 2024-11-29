@@ -24,23 +24,16 @@ router.get('/metrics', async (req, res) => {
 
 // Get usage history
 router.get('/usage', async (req, res) => {
+  const { search = '' } = req.query;
   try {
-    const [history] = await pool.execute(`
-      SELECT 
-        v.id,
-        v.code,
-        v.created_at,
-        v.used_at,
-        u.name as user_name,
-        c.name as company_name
-      FROM vouchers v
-      LEFT JOIN users u ON v.user_id = u.id
-      LEFT JOIN companies c ON v.company_id = c.id
-      ORDER BY v.created_at DESC
-      LIMIT 100
-    `);
-    
-    res.json(history);
+    const { data, error } = await supabase
+      .from('vw_uso_voucher_detalhado')
+      .select('*')
+      .or(`nome_usuario.ilike.%${search}%,cpf.ilike.%${search}%,empresa.ilike.%${search}%`)
+      .order('usado_em', { ascending: false });
+
+    if (error) throw error;
+    res.json(data);
   } catch (error) {
     logger.error('Error fetching usage history:', error);
     res.status(500).json({ error: 'Failed to fetch usage history' });
@@ -50,20 +43,12 @@ router.get('/usage', async (req, res) => {
 // Export data
 router.get('/export', async (req, res) => {
   try {
-    const [data] = await pool.execute(`
-      SELECT 
-        v.code,
-        v.created_at,
-        v.used_at,
-        u.name as user_name,
-        c.name as company_name,
-        CASE WHEN v.used = 1 THEN 'Sim' ELSE 'Não' END as used
-      FROM vouchers v
-      LEFT JOIN users u ON v.user_id = u.id
-      LEFT JOIN companies c ON v.company_id = c.id
-      ORDER BY v.created_at DESC
-    `);
-    
+    const { data, error } = await supabase
+      .from('vw_uso_voucher_detalhado')
+      .select('*')
+      .order('usado_em', { ascending: false });
+
+    if (error) throw error;
     res.json(data);
   } catch (error) {
     logger.error('Error exporting report data:', error);
