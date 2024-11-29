@@ -1,5 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
-import { COLORS, getBarColors } from './ChartColors';
+import { COLORS, normalizeMealName } from './ChartColors';
 
 const WeeklyUsageChart = ({ data, tiposRefeicao }) => {
   const chartData = Array.isArray(data) ? data : [];
@@ -30,7 +30,8 @@ const WeeklyUsageChart = ({ data, tiposRefeicao }) => {
   };
 
   const getColorForMeal = (tipo) => {
-    return COLORS[tipo.toUpperCase()] || COLORS.PRIMARY;
+    const normalizedName = normalizeMealName(tipo);
+    return COLORS[normalizedName] || COLORS.PRIMARY;
   };
 
   return (
