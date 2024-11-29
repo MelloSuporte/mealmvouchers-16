@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { COLORS } from './ChartColors';
 
 const WeeklyUsageChart = ({ data }) => {
@@ -15,18 +15,18 @@ const WeeklyUsageChart = ({ data }) => {
   }
 
   return (
-    <div className="w-full overflow-x-auto">
-      <BarChart width={800} height={300} data={chartData}>
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
+        <XAxis dataKey="dia" />
         <YAxis />
         <Tooltip />
         <Legend />
-        <Bar dataKey="Almoço" fill={COLORS.ALMOCO} />
-        <Bar dataKey="Jantar" fill={COLORS.JANTAR} />
-        <Bar dataKey="Café" fill={COLORS.CAFE} />
+        <Bar dataKey="almoco" name="Almoço" fill={COLORS.ALMOCO} />
+        <Bar dataKey="jantar" name="Jantar" fill={COLORS.JANTAR} />
+        <Bar dataKey="cafe" name="Café" fill={COLORS.CAFE} />
       </BarChart>
-    </div>
+    </ResponsiveContainer>
   );
 };
 
