@@ -5,7 +5,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Check, AlertCircle } from "lucide-react";
 import { supabase } from '../config/supabase';
-import api from '../utils/api';
 
 const UserConfirmation = () => {
   const location = useLocation();
@@ -44,7 +43,7 @@ const UserConfirmation = () => {
       return;
     }
 
-    setUserName(commonVoucher.userName || 'Usuário');
+    setUserName(commonVoucher.userName || extraVoucher.userName || 'Usuário');
   }, [location.state, navigate]);
 
   const handleConfirm = async () => {
@@ -53,28 +52,43 @@ const UserConfirmation = () => {
       const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
       const extraVoucher = JSON.parse(localStorage.getItem('extraVoucher') || '{}');
       
-      const voucherData = {
-        cpf: commonVoucher.cpf || extraVoucher.cpf,
-        voucherCode: commonVoucher.code || extraVoucher.code,
-        mealType: location.state.mealType
-      };
+      // Validar o voucher diretamente no Supabase
+      const { data: voucherData, error: voucherError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('voucher', commonVoucher.code || extraVoucher.code)
+        .eq('cpf', commonVoucher.cpf || extraVoucher.cpf)
+        .single();
 
-      const response = await api.post('/vouchers/validate', voucherData);
-
-      if (response.data.success) {
-        navigate(`/bom-apetite/${encodeURIComponent(userName)}`, {
-          state: { 
-            userName: userName,
-            mealType: location.state.mealType 
-          }
-        });
-      } else {
-        toast.error(response.data.error || 'Erro ao validar voucher');
-        navigate('/voucher');
+      if (voucherError) {
+        throw new Error('Voucher inválido ou não encontrado');
       }
+
+      // Registrar o uso do voucher
+      const { error: usageError } = await supabase
+        .from('voucher_usage')
+        .insert([{
+          user_id: voucherData.id,
+          meal_type_id: location.state.mealType,
+          used_at: new Date().toISOString()
+        }]);
+
+      if (usageError) throw usageError;
+
+      // Navegação para a página de sucesso
+      navigate(`/bom-apetite/${encodeURIComponent(userName)}`, {
+        state: { 
+          userName: userName,
+          mealType: location.state.mealType 
+        }
+      });
+
+      // Limpar vouchers do localStorage após uso bem-sucedido
+      localStorage.removeItem('commonVoucher');
+      localStorage.removeItem('extraVoucher');
     } catch (error) {
       console.error('Erro na validação:', error);
-      toast.error(error.response?.data?.error || 'Erro ao validar voucher');
+      toast.error(error.message || 'Erro ao validar voucher');
       navigate('/voucher');
     } finally {
       setIsLoading(false);
