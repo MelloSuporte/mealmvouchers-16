@@ -14,22 +14,25 @@ services:
       - NODE_ENV=production
       - TZ=America/Sao_Paulo
     depends_on:
-      - db
+      - supabase
 
-  db:
-    image: postgres:15-alpine
-    platform: linux/x86_64
-    environment:
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_DB=${DB_NAME}
-      - TZ=America/Sao_Paulo
+  supabase:
+    image: supabase/cli:latest
     ports:
-      - "5432:5432"
+      - "6543:5432"  # PostgreSQL
+      - "54323:54323"  # Kong
+      - "54324:54324"  # Auth
+      - "54325:54325"  # REST
+      - "54326:54326"  # Realtime
+    environment:
+      POSTGRES_HOST: postgresql
+      POSTGRES_DB: postgresql
+      POSTGRES_USER: postgres.bh
+      POSTGRES_PASSWORD: Voucher#2024@
+      POSTGRES_PORT: 6543
+      TZ: America/Sao_Paulo
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    command: postgres -c 'timezone=America/Sao_Paulo'
+      - supabase_data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
+  supabase_data:
