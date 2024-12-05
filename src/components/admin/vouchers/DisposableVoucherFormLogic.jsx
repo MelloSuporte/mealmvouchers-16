@@ -66,7 +66,7 @@ export const useDisposableVoucherFormLogic = () => {
         quantidade: quantity
       });
 
-      const response = await api.post('/api/vouchers-descartaveis', {
+      const response = await api.post('/vouchers-descartaveis', {
         tipos_refeicao_ids: selectedMealTypes,
         datas: selectedDates,
         quantidade: quantity
