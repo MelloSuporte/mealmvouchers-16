@@ -49,13 +49,10 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
   }
 
   // Verificar tipo de refeição
-  const mealTypeId = voucher.tipo_refeicao_id;
-  console.log('Verificando tipo de refeição:', mealTypeId);
-
   const { data: mealType, error: mealTypeError } = await supabase
     .from('tipos_refeicao')
     .select('*')
-    .eq('id', mealTypeId)
+    .eq('id', voucher.tipo_refeicao_id)
     .single();
 
   if (mealTypeError || !mealType) {
@@ -68,11 +65,12 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
   }
 
   // Verificar se o tipo de refeição do voucher corresponde ao tipo selecionado
-  if (voucher.tipos_refeicao.id !== mealType.id) {
-    console.log('Tipo de refeição não corresponde:', {
-      voucherType: voucher.tipos_refeicao.nome,
-      selectedType: mealType.nome
-    });
+  console.log('Comparando tipos de refeição:', {
+    voucherType: voucher.tipos_refeicao.nome,
+    mealType: mealType.nome
+  });
+
+  if (voucher.tipos_refeicao.nome.toLowerCase() !== mealType.nome.toLowerCase()) {
     throw new Error(`Este voucher é válido apenas para ${voucher.tipos_refeicao.nome}`);
   }
 
