@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { toast } from 'sonner';
-import api from '@/utils/api';
 
 export const useDisposableVoucherFormLogic = () => {
   const [quantity, setQuantity] = useState(1);
@@ -52,6 +51,21 @@ export const useDisposableVoucherFormLogic = () => {
     });
   };
 
+  const generateUniqueCode = async () => {
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    const { data } = await supabase
+      .from('vouchers_descartaveis')
+      .select('codigo')
+      .eq('codigo', code);
+
+    if (data && data.length > 0) {
+      return generateUniqueCode();
+    }
+
+    return code;
+  };
+
   const handleGenerateVouchers = async () => {
     if (!selectedMealTypes.length || !selectedDates.length) {
       toast.error('Selecione pelo menos um tipo de refeição e uma data');
@@ -60,31 +74,49 @@ export const useDisposableVoucherFormLogic = () => {
 
     setIsGenerating(true);
     try {
-      const formattedDates = selectedDates.map(date => date.toISOString());
+      const vouchers = [];
+      
+      for (const data of selectedDates) {
+        for (const tipo_refeicao_id of selectedMealTypes) {
+          for (let i = 0; i < quantity; i++) {
+            const code = await generateUniqueCode();
+            
+            console.log(`Gerando voucher com código ${code} para data ${data}`);
+            
+            const { data: voucher, error } = await supabase
+              .from('vouchers_descartaveis')
+              .insert({
+                codigo: code,
+                tipo_refeicao_id: tipo_refeicao_id,
+                data_expiracao: data.toISOString(),
+                usado: false,
+                data_criacao: new Date().toISOString()
+              })
+              .select(`
+                *,
+                tipos_refeicao (
+                  nome,
+                  valor
+                )
+              `)
+              .single();
 
-      console.log('Enviando requisição para gerar vouchers:', {
-        tipos_refeicao_ids: selectedMealTypes,
-        datas: formattedDates,
-        quantidade: quantity
-      });
+            if (error) {
+              console.error('Erro ao inserir voucher:', error);
+              throw error;
+            }
 
-      const response = await api.post('/vouchers-descartaveis', {
-        tipos_refeicao_ids: selectedMealTypes,
-        datas: formattedDates,
-        quantidade: quantity
-      });
-
-      console.log('Resposta da API:', response.data);
-
-      if (response.data.success) {
-        toast.success(response.data.message);
-        queryClient.invalidateQueries({ queryKey: ['disposableVouchers'] });
-      } else {
-        throw new Error(response.data.error || 'Erro ao gerar vouchers');
+            vouchers.push(voucher);
+          }
+        }
       }
+
+      console.log(`${vouchers.length} vouchers gerados com sucesso`);
+      toast.success(`${vouchers.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
+      queryClient.invalidateQueries({ queryKey: ['disposableVouchers'] });
     } catch (error) {
-      console.error('Erro completo:', error);
-      toast.error('Erro ao gerar vouchers: ' + (error.response?.data?.error || error.message));
+      console.error('Erro ao gerar vouchers:', error);
+      toast.error('Erro ao gerar vouchers: ' + error.message);
     } finally {
       setIsGenerating(false);
     }
