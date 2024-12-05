@@ -11,8 +11,15 @@ import imagensFundoRoutes from './imagensFundo.js';
 import relatoriosRoutes from './relatorios.js';
 import reportsRoutes from './reports.js';
 import healthRoutes from './health.js';
+import logger from '../config/logger.js';
 
 const router = express.Router();
+
+// Middleware de logging para todas as rotas
+router.use((req, res, next) => {
+  logger.info(`Rota acessada: ${req.method} ${req.baseUrl}${req.path}`);
+  next();
+});
 
 // Montagem das rotas
 router.use('/empresas', empresasRoutes);

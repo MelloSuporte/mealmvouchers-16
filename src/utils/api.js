@@ -11,7 +11,7 @@ const api = axios.create({
 // Interceptor para logging
 api.interceptors.request.use(
   (config) => {
-    console.log('URL da requisição:', config.url);
+    console.log(`Enviando requisição ${config.method.toUpperCase()} para:`, config.url);
     console.log('Dados da requisição:', config.data);
     return config;
   },
