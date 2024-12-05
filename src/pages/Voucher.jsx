@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import AdminLoginDialog from '../components/AdminLoginDialog';
 import VoucherForm from '../components/voucher/VoucherForm';
 import { supabase } from '../config/supabase';
+import { validateDisposableVoucherRules } from '../utils/voucherValidations';
 
 const Voucher = () => {
   const [voucherCode, setVoucherCode] = useState('');
@@ -39,21 +40,44 @@ const Voucher = () => {
     e.preventDefault();
     
     try {
+      console.log('Verificando voucher:', voucherCode);
+      
       // Primeiro verifica se é um voucher descartável
       const { data: descartaveis, error: descartavelError } = await supabase
         .from('vouchers_descartaveis')
-        .select('*')
+        .select(`
+          *,
+          tipos_refeicao (
+            id,
+            nome,
+            hora_inicio,
+            hora_fim,
+            minutos_tolerancia,
+            ativo
+          )
+        `)
         .eq('codigo', voucherCode)
-        .eq('usado', false);
+        .eq('usado', false)
+        .single();
 
-      if (descartavelError) throw descartavelError;
+      if (descartavelError) {
+        console.log('Erro ou voucher não encontrado:', descartavelError);
+        throw new Error('Voucher inválido ou já utilizado');
+      }
 
-      if (descartaveis && descartaveis.length > 0) {
-        const descartavel = descartaveis[0];
+      if (descartaveis) {
+        console.log('Voucher descartável encontrado:', descartaveis);
+        
+        // Validar regras do voucher
+        await validateDisposableVoucherRules(descartaveis, supabase);
+
+        // Se passou pelas validações, salva no localStorage e navega
         localStorage.setItem('disposableVoucher', JSON.stringify({
           code: voucherCode,
-          mealTypeId: descartavel.tipo_refeicao_id
+          mealTypeId: descartaveis.tipo_refeicao_id,
+          mealType: descartaveis.tipos_refeicao.nome
         }));
+
         navigate('/self-services');
         return;
       }
@@ -99,7 +123,7 @@ const Voucher = () => {
       }
     } catch (error) {
       console.error('Erro ao validar voucher:', error);
-      toast.error("Erro ao validar o voucher: " + error.message);
+      toast.error(error.message || "Erro ao validar o voucher");
     }
   };
 
