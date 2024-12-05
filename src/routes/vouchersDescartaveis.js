@@ -4,7 +4,7 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Adiciona logging para debug
+// Middleware de logging para debug
 router.use((req, res, next) => {
   logger.info('Requisição para vouchers descartáveis:', {
     method: req.method,
@@ -14,6 +14,10 @@ router.use((req, res, next) => {
   next();
 });
 
-router.post('/', generateDisposableVouchers);
+// Rota POST para gerar vouchers descartáveis
+router.post('/', (req, res) => {
+  logger.info('Recebida requisição POST para gerar vouchers:', req.body);
+  generateDisposableVouchers(req, res);
+});
 
 export default router;

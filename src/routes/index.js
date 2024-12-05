@@ -35,4 +35,6 @@ router.use('/relatorios', relatoriosRoutes);
 router.use('/reports', reportsRoutes);
 router.use('/health', healthRoutes);
 
+logger.info('Todas as rotas foram montadas com sucesso');
+
 export default router;

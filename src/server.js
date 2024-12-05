@@ -1,13 +1,13 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import createApp from './config/app.js';
+import { configureExpress } from './config/express.js';
 import logger from './config/logger.js';
 
 dotenv.config();
 
-const app = createApp();
+const app = express();
+configureExpress(app);
 
-// Iniciar o servidor
 const port = process.env.PORT || 5000;
 const server = app.listen(port, '0.0.0.0', () => {
   logger.info(`Server running on port ${port}`);
@@ -21,3 +21,5 @@ process.on('SIGTERM', () => {
     process.exit(0);
   });
 });
+
+export default app;
