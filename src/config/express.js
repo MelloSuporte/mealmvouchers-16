@@ -13,7 +13,7 @@ export const configureExpress = (app) => {
 
   // Configuração do CORS
   app.use(cors({
-    origin: process.env.FRONTEND_URL || true,
+    origin: process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
