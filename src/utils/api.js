@@ -1,47 +1,31 @@
 import axios from 'axios';
-import { toast } from "sonner";
 
 const api = axios.create({
   baseURL: '/api',
+  timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 30000,
-});
-
-// Interceptor para adicionar token de autenticação
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('adminToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    'Content-Type': 'application/json'
   }
-  return config;
-}, (error) => {
-  console.error('[API Request Error]', error);
-  return Promise.reject(error);
 });
 
-// Interceptor para tratar erros globalmente
+// Interceptor para logging
+api.interceptors.request.use(
+  (config) => {
+    console.log('URL da requisição:', config.url);
+    return config;
+  },
+  (error) => {
+    console.error('Erro na requisição:', error);
+    return Promise.reject(error);
+  }
+);
+
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    if (error.response?.status === 401) {
-      toast.error('Sessão expirada. Por favor, faça login novamente.');
-      localStorage.removeItem('adminToken');
-      window.location.href = '/login';
-    } else if (error.response?.status === 404) {
-      console.error('URL da requisição:', error.config?.url);
-      const errorMessage = error.response?.data?.error || 'Recurso não encontrado';
-      toast.error(`Erro: ${errorMessage}`);
-    } else if (error.code === 'ECONNABORTED') {
-      toast.error('A requisição demorou muito para responder. Tente novamente.');
-    } else {
-      const errorMessage = error.response?.data?.error || error.message;
-      toast.error(`Erro na requisição: ${errorMessage}`);
-    }
-    
+    console.error('Erro na resposta:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );

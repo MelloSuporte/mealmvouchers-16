@@ -1,83 +1,36 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import { securityMiddleware } from '../middleware/security.js';
+import helmet from 'helmet';
+import compression from 'compression';
 import routes from '../routes/index.js';
-import logger from './logger.js';
-import { errorHandler } from '../middleware/errorHandler.js';
-import { withDatabase } from '../middleware/database.js';
-import { supabase } from './supabase.js';
-
-dotenv.config();
 
 const createApp = () => {
   const app = express();
 
-  // Enable trust proxy - required when running behind nginx
-  app.enable('trust proxy');
+  // Middlewares
+  app.use(cors());
+  app.use(helmet());
+  app.use(compression());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
-  // Configure middleware
-  app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS || '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-  }));
-  
-  app.use(express.json({ limit: '50mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-  
-  // Adicionar middlewares antes das rotas
-  app.use(securityMiddleware);
-  app.use(withDatabase);
-
-  // Add detailed request logging
+  // Adiciona um middleware para logging de requisições
   app.use((req, res, next) => {
-    logger.info(`[${new Date().toISOString()}] ${req.method} ${req.path}`, {
-      headers: req.headers,
-      query: req.query,
-      body: req.body
-    });
+    console.log(`${req.method} ${req.path}`);
     next();
   });
 
-  // Mount all routes with /api prefix
+  // Mount routes - usando /api como prefixo
   app.use('/api', routes);
 
-  // Health check endpoint with database verification
-  app.get('/health', async (req, res) => {
-    try {
-      // Teste de conexão com Supabase
-      const { data, error } = await supabase
-        .from('empresas')
-        .select('count', { count: 'exact', head: true });
-
-      if (error) {
-        logger.error('Erro na conexão com Supabase:', error);
-        return res.status(500).json({ 
-          status: 'ERROR', 
-          message: 'Erro na conexão com banco de dados',
-          error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-      }
-
-      res.json({ 
-        status: 'OK', 
-        message: 'Servidor e banco de dados funcionando',
-        timestamp: new Date().toISOString(),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      });
-    } catch (error) {
-      logger.error('Erro no health check:', error);
-      res.status(500).json({ 
-        status: 'ERROR',
-        message: 'Erro ao verificar status do servidor'
-      });
-    }
+  // Error handling
+  app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno do servidor'
+    });
   });
-
-  // Global error handler - must be last
-  app.use(errorHandler);
 
   return app;
 };
