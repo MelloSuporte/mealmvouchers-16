@@ -34,7 +34,7 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
   }
 
   if (expirationDate > today) {
-    const formattedDate = expirationDate.toISOString().split('T')[0];
+    const formattedDate = expirationDate.toLocaleDateString('pt-BR');
     console.log('Voucher válido apenas para:', formattedDate);
     throw new Error(`Voucher Descartável válido apenas para ${formattedDate}`);
   }
