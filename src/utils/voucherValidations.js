@@ -67,6 +67,15 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
     throw new Error('Este tipo de refeição não está mais ativo');
   }
 
+  // Verificar se o tipo de refeição do voucher corresponde ao tipo selecionado
+  if (voucher.tipos_refeicao.id !== mealType.id) {
+    console.log('Tipo de refeição não corresponde:', {
+      voucherType: voucher.tipos_refeicao.nome,
+      selectedType: mealType.nome
+    });
+    throw new Error(`Este voucher é válido apenas para ${voucher.tipos_refeicao.nome}`);
+  }
+
   // Verificar horário da refeição
   const currentTime = new Date().toTimeString().slice(0, 5);
   console.log('Verificando horário:', currentTime);
