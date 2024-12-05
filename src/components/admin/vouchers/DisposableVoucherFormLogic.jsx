@@ -26,6 +26,8 @@ export const useDisposableVoucherFormLogic = () => {
   const { data: allVouchers = [] } = useQuery({
     queryKey: ['disposableVouchers'],
     queryFn: async () => {
+      const now = new Date().toISOString();
+      
       const { data, error } = await supabase
         .from('vouchers_descartaveis')
         .select(`
@@ -35,6 +37,8 @@ export const useDisposableVoucherFormLogic = () => {
             valor
           )
         `)
+        .gte('data_expiracao', now) // Filtra vouchers não expirados
+        .eq('usado', false) // Filtra apenas vouchers não usados
         .order('data_expiracao', { ascending: false });
 
       if (error) throw error;
