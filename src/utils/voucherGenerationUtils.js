@@ -3,10 +3,6 @@ import logger from '../config/logger';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-const generateRandomCode = () => {
-  return Math.floor(1000 + Math.random() * 9000).toString();
-};
-
 export const generateUniqueVoucherFromCPF = async (cpf) => {
   if (!cpf) {
     throw new Error('CPF é obrigatório para gerar voucher');
@@ -20,14 +16,33 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
     throw new Error('CPF inválido: deve conter 11 dígitos');
   }
 
+  // Primeiro, busca o voucher existente do usuário
+  const { data: existingUser, error: userError } = await supabase
+    .from('usuarios')
+    .select('voucher')
+    .eq('cpf', cleanCPF)
+    .single();
+
+  if (userError) {
+    logger.error(`Erro ao buscar usuário com CPF ${cleanCPF}:`, userError);
+    throw new Error('Erro ao buscar usuário');
+  }
+
+  // Se encontrar um voucher existente, retorna ele
+  if (existingUser?.voucher) {
+    logger.info(`Voucher existente encontrado para CPF ${cleanCPF}: ${existingUser.voucher}`);
+    return existingUser.voucher;
+  }
+
+  // Se não encontrar um voucher existente (caso improvável), gera um novo
   let attempts = 0;
   const maxAttempts = 10;
 
   while (attempts < maxAttempts) {
     try {
-      const voucher = generateRandomCode();
+      const voucher = Math.floor(1000 + Math.random() * 9000).toString();
       
-      // Verifica se o voucher já existe em ambas as tabelas
+      // Verifica se o voucher já existe
       const [{ data: existingCommon }, { data: existingExtras }] = await Promise.all([
         supabase
           .from('usuarios')
@@ -41,16 +56,14 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
           .limit(1)
       ]);
 
-      // Se o voucher não existir em nenhuma das tabelas, retorna
       if ((!existingCommon || existingCommon.length === 0) && 
           (!existingExtras || existingExtras.length === 0)) {
         logger.info(`Novo voucher gerado com sucesso para CPF ${cleanCPF}: ${voucher}`);
         return voucher;
       }
 
-      // Se existir em alguma das tabelas, adiciona delay e tenta novamente
       attempts++;
-      await delay(100); // 100ms de delay entre tentativas
+      await delay(100);
       
     } catch (error) {
       logger.error('Erro ao gerar voucher:', error);
@@ -64,7 +77,5 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
 // Função auxiliar para validar voucher
 export const validateVoucher = (voucher) => {
   if (!voucher) return false;
-  
-  // Verifica se tem exatamente 4 dígitos e são todos números
   return /^\d{4}$/.test(voucher);
 };
