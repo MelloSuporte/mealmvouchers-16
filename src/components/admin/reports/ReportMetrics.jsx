@@ -9,7 +9,7 @@ import MetricsCards from './MetricsCards';
 import { Button } from "@/components/ui/button";
 import { FileDown } from 'lucide-react';
 
-const ReportMetrics = ({ onExportPDF }) => {
+const ReportMetrics = ({ onExportPDF = () => {} }) => {
   const [filters, setFilters] = useState({
     company: 'all',
     startDate: startOfDay(new Date()),
@@ -84,6 +84,12 @@ const ReportMetrics = ({ onExportPDF }) => {
     }));
   };
 
+  const handleExportClick = () => {
+    if (typeof onExportPDF === 'function') {
+      onExportPDF(filters);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -106,7 +112,7 @@ const ReportMetrics = ({ onExportPDF }) => {
           />
         </div>
         <Button 
-          onClick={() => onExportPDF(filters)}
+          onClick={handleExportClick}
           className="ml-4"
         >
           <FileDown className="mr-2 h-4 w-4" />
