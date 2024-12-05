@@ -11,6 +11,7 @@ import { formatCPF } from '../../../utils/formatters';
 const AdminForm = ({ onClose, adminToEdit = null }) => {
   const [formData, setFormData] = useState({
     nome: adminToEdit?.nome || '',
+    email: adminToEdit?.email || '',
     cpf: formatCPF(adminToEdit?.cpf) || '',
     empresa_id: adminToEdit?.empresa_id || '',
     senha: '',
@@ -41,8 +42,16 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
         return;
       }
 
+      // Validate email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        toast.error('Por favor, insira um email válido');
+        return;
+      }
+
       const adminData = {
         nome: formData.nome,
+        email: formData.email,
         cpf: formData.cpf.replace(/\D/g, ''),
         empresa_id: formData.empresa_id,
         senha: formData.senha,
@@ -79,6 +88,13 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
         placeholder="Nome completo"
         value={formData.nome}
         onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+        required
+      />
+      <Input
+        placeholder="Email"
+        type="email"
+        value={formData.email}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         required
       />
       <Input
