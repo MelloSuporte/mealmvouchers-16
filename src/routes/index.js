@@ -35,6 +35,23 @@ router.use('/relatorios', relatoriosRoutes);
 router.use('/reports', reportsRoutes);
 router.use('/health', healthRoutes);
 
-logger.info('Todas as rotas foram montadas com sucesso');
+// Adicionar middleware para tratar rotas não encontradas
+router.use((req, res) => {
+  logger.warn(`Rota não encontrada: ${req.method} ${req.baseUrl}${req.path}`);
+  res.status(404).json({
+    error: 'Rota não encontrada',
+    path: `${req.baseUrl}${req.path}`,
+    method: req.method
+  });
+});
+
+// Middleware de tratamento de erros
+router.use((err, req, res, next) => {
+  logger.error('Erro na aplicação:', err);
+  res.status(500).json({
+    error: 'Erro interno do servidor',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Um erro inesperado ocorreu'
+  });
+});
 
 export default router;

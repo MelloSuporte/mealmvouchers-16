@@ -38,14 +38,6 @@ export const configureExpress = (app) => {
     });
   });
 
-  // Log todas as rotas disponíveis
-  logger.info('Rotas disponíveis:');
-  app._router && app._router.stack.forEach((middleware) => {
-    if (middleware.route) {
-      logger.info(`${Object.keys(middleware.route.methods)} ${middleware.route.path}`);
-    }
-  });
-
   // Montagem das rotas da API
   app.use('/api', routes);
   logger.info('Rotas da API montadas em /api');
@@ -54,8 +46,9 @@ export const configureExpress = (app) => {
   app.use((req, res) => {
     logger.warn(`Rota não encontrada: ${req.method} ${req.url}`);
     res.status(404).json({ 
-      success: false, 
-      error: 'Rota não encontrada' 
+      error: 'Rota não encontrada',
+      path: req.url,
+      method: req.method
     });
   });
 
@@ -63,8 +56,8 @@ export const configureExpress = (app) => {
   app.use((err, req, res, next) => {
     logger.error('Erro na aplicação:', err);
     res.status(500).json({ 
-      success: false, 
-      error: 'Erro interno do servidor' 
+      error: 'Erro interno do servidor',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Um erro inesperado ocorreu'
     });
   });
 };
