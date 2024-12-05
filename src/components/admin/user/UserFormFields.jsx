@@ -41,6 +41,13 @@ const UserFormFields = ({
     }
   });
 
+  const handleSaveClick = (e) => {
+    e.preventDefault();
+    if (typeof onSave === 'function') {
+      onSave();
+    }
+  };
+
   return (
     <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
       <div className="space-y-2">
@@ -127,7 +134,7 @@ const UserFormFields = ({
           </Button>
           <Button 
             type="button" 
-            onClick={onSave}
+            onClick={handleSaveClick}
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Processando...' : 'Salvar Usuário'}
