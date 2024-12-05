@@ -49,7 +49,8 @@ export const useDisposableVoucherFormLogic = () => {
 
       console.log('Vouchers filtrados:', data); // Log para debug
       return data || [];
-    }
+    },
+    refetchInterval: 5000 // Atualiza a lista a cada 5 segundos
   });
 
   const handleMealTypeToggle = (mealTypeId) => {
