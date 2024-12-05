@@ -13,15 +13,15 @@ export const validateVoucherTime = (currentTime, mealType, toleranceMinutes) => 
   }
 };
 
-export const validateDisposableVoucherRules = (voucher) => {
+export const validateDisposableVoucherRules = async (voucher, supabase) => {
   // Verificar se o voucher já foi usado
   if (voucher.is_used) {
     throw new Error('Voucher Descartável já foi utilizado');
   }
 
   // Verificar se o voucher está expirado
-  if (voucher.expired_at) {
-    const expirationDate = new Date(voucher.expired_at);
+  if (voucher.data_expiracao) {
+    const expirationDate = new Date(voucher.data_expiracao);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     expirationDate.setHours(0, 0, 0, 0);
@@ -36,9 +36,28 @@ export const validateDisposableVoucherRules = (voucher) => {
     }
   }
 
+  // Verificar se já foi usado hoje para o mesmo tipo de refeição
+  const today = new Date().toISOString().split('T')[0];
+  const { data: usedToday, error } = await supabase
+    .from('vouchers_descartaveis')
+    .select('*')
+    .eq('tipo_refeicao_id', voucher.tipo_refeicao_id)
+    .eq('usado', true)
+    .gte('data_uso', today)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 é o código para "não encontrado"
+    logger.error('Erro ao verificar uso do voucher:', error);
+    throw new Error('Erro ao validar voucher');
+  }
+
+  if (usedToday) {
+    throw new Error('Já foi utilizado um voucher para este tipo de refeição hoje');
+  }
+
   // Verificar horário da refeição
   const currentTime = new Date().toTimeString().slice(0, 5);
-  validateVoucherTime(currentTime, voucher, voucher.tolerance_minutes || 15);
+  validateVoucherTime(currentTime, voucher, voucher.minutos_tolerancia || 15);
 };
 
 export const validateVoucherByType = (voucherType, { code, cpf, mealType, user }) => {

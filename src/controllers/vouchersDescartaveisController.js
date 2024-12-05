@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
+import { validateDisposableVoucherRules } from '../utils/voucherValidations.js';
 
 const generateUniqueCode = async () => {
   const code = Math.floor(1000 + Math.random() * 9000).toString();
@@ -35,6 +36,18 @@ export const generateDisposableVouchers = async (req, res) => {
     
     for (const data of datas) {
       for (const tipo_refeicao_id of tipos_refeicao_ids) {
+        // Verificar se o tipo de refeição é válido
+        const { data: tipoRefeicao, error: tipoRefeicaoError } = await supabase
+          .from('tipos_refeicao')
+          .select('*')
+          .eq('id', tipo_refeicao_id)
+          .single();
+
+        if (tipoRefeicaoError || !tipoRefeicao) {
+          logger.error('Tipo de refeição inválido:', tipo_refeicao_id);
+          continue;
+        }
+
         for (let i = 0; i < quantidade; i++) {
           const code = await generateUniqueCode();
           
@@ -79,6 +92,56 @@ export const generateDisposableVouchers = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: 'Erro ao gerar vouchers descartáveis'
+    });
+  }
+};
+
+export const validateDisposableVoucher = async (req, res) => {
+  const { codigo, tipo_refeicao_id } = req.body;
+  
+  try {
+    // Buscar o voucher
+    const { data: voucher, error } = await supabase
+      .from('vouchers_descartaveis')
+      .select(`
+        *,
+        tipos_refeicao (*)
+      `)
+      .eq('codigo', codigo)
+      .single();
+
+    if (error || !voucher) {
+      return res.status(404).json({
+        success: false,
+        error: 'Voucher não encontrado'
+      });
+    }
+
+    // Validar o voucher
+    await validateDisposableVoucherRules(voucher, supabase);
+
+    // Marcar voucher como usado
+    const { error: updateError } = await supabase
+      .from('vouchers_descartaveis')
+      .update({
+        usado: true,
+        data_uso: new Date().toISOString()
+      })
+      .eq('id', voucher.id);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return res.json({
+      success: true,
+      message: 'Voucher validado com sucesso'
+    });
+  } catch (error) {
+    logger.error('Erro ao validar voucher:', error);
+    return res.status(400).json({
+      success: false,
+      error: error.message || 'Erro ao validar voucher'
     });
   }
 };
