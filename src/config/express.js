@@ -15,9 +15,9 @@ export const configureExpress = (app) => {
   const corsOptions = {
     origin: process.env.NODE_ENV === 'development' 
       ? ['http://localhost:5173', 'http://127.0.0.1:5173']
-      : true,
+      : process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
   };
   
@@ -32,7 +32,12 @@ export const configureExpress = (app) => {
   
   // Rota de verificação de saúde
   app.get('/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Servidor funcionando normalmente' });
+    res.json({ 
+      status: 'OK', 
+      message: 'Servidor funcionando normalmente',
+      environment: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    });
   });
 
   // Log todas as rotas disponíveis

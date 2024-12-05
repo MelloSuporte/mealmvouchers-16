@@ -1,8 +1,16 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 
+const getBaseURL = () => {
+  if (import.meta.env.DEV) {
+    return 'http://localhost:5000/api';
+  }
+  // Em produção, use a URL do seu servidor
+  return import.meta.env.VITE_API_URL || '/api';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.DEV ? 'http://localhost:5000/api' : '/api',
+  baseURL: getBaseURL(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
