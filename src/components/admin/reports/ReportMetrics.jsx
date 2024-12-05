@@ -8,8 +8,11 @@ import ReportFilters from './ReportFilters';
 import MetricsCards from './MetricsCards';
 import { Button } from "@/components/ui/button";
 import { FileDown } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { toast } from "sonner";
 
-const ReportMetrics = ({ onExportPDF = () => {} }) => {
+const ReportMetrics = () => {
   const [filters, setFilters] = useState({
     company: 'all',
     startDate: startOfDay(new Date()),
@@ -72,7 +75,8 @@ const ReportMetrics = ({ onExportPDF = () => {} }) => {
         disposableVouchers,
         byCompany,
         byShift,
-        byMealType
+        byMealType,
+        filteredData // Adicionando os dados filtrados ao retorno
       };
     }
   });
@@ -84,9 +88,64 @@ const ReportMetrics = ({ onExportPDF = () => {} }) => {
     }));
   };
 
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
   const handleExportClick = () => {
-    if (typeof onExportPDF === 'function') {
-      onExportPDF(filters);
+    try {
+      if (!metrics?.filteredData) {
+        toast.error("Não há dados para exportar");
+        return;
+      }
+
+      const doc = new jsPDF();
+      
+      // Título do relatório
+      doc.setFontSize(16);
+      doc.text("Relatório de Uso de Vouchers", 14, 15);
+      
+      // Informações do filtro
+      doc.setFontSize(10);
+      doc.text(`Período: ${format(filters.startDate, 'dd/MM/yyyy')} a ${format(filters.endDate, 'dd/MM/yyyy')}`, 14, 25);
+      doc.text(`Empresa: ${filters.company === 'all' ? 'Todas' : filters.company}`, 14, 30);
+      doc.text(`Turno: ${filters.shift === 'all' ? 'Todos' : filters.shift}`, 14, 35);
+      doc.text(`Tipo de Refeição: ${filters.mealType === 'all' ? 'Todos' : filters.mealType}`, 14, 40);
+
+      // Resumo
+      doc.text("Resumo:", 14, 50);
+      doc.text(`Total de Vouchers: ${metrics.regularVouchers + metrics.disposableVouchers}`, 14, 55);
+      doc.text(`Custo Total: ${formatCurrency(metrics.totalCost)}`, 14, 60);
+      doc.text(`Custo Médio: ${formatCurrency(metrics.averageCost)}`, 14, 65);
+
+      // Tabela de dados
+      const tableData = metrics.filteredData.map(item => [
+        format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm'),
+        item.nome_usuario,
+        item.voucher,
+        item.tipo_refeicao,
+        formatCurrency(item.valor_refeicao),
+        item.turno
+      ]);
+
+      doc.autoTable({
+        startY: 75,
+        head: [['Data/Hora', 'Usuário', 'Voucher', 'Refeição', 'Valor', 'Turno']],
+        body: tableData,
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [66, 66, 66] }
+      });
+
+      // Download do PDF
+      doc.save(`relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy')}.pdf`);
+      toast.success("PDF exportado com sucesso!");
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error("Erro ao gerar PDF. Por favor, tente novamente.");
     }
   };
 
