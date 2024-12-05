@@ -13,26 +13,7 @@ services:
     environment:
       - NODE_ENV=production
       - TZ=America/Sao_Paulo
-    depends_on:
-      - supabase
-
-  supabase:
-    image: supabase/cli:latest
-    ports:
-      - "6543:5432"  # PostgreSQL
-      - "54323:54323"  # Kong
-      - "54324:54324"  # Auth
-      - "54325:54325"  # REST
-      - "54326:54326"  # Realtime
-    environment:
-      POSTGRES_HOST: postgresql
-      POSTGRES_DB: postgresql
-      POSTGRES_USER: postgres.bh
-      POSTGRES_PASSWORD: Voucher#2024@
-      POSTGRES_PORT: 6543
-      TZ: America/Sao_Paulo
-    volumes:
-      - supabase_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
 volumes:
-  supabase_data:
+  app_data:
