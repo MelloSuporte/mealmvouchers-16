@@ -60,11 +60,19 @@ export const useDisposableVoucherFormLogic = () => {
 
     setIsGenerating(true);
     try {
-      const response = await api.post('/vouchers-descartaveis', {
+      console.log('Enviando requisição para gerar vouchers:', {
         tipos_refeicao_ids: selectedMealTypes,
         datas: selectedDates,
         quantidade: quantity
       });
+
+      const response = await api.post('/api/vouchers-descartaveis', {
+        tipos_refeicao_ids: selectedMealTypes,
+        datas: selectedDates,
+        quantidade: quantity
+      });
+
+      console.log('Resposta da API:', response.data);
 
       if (response.data.success) {
         toast.success(response.data.message);
@@ -73,7 +81,8 @@ export const useDisposableVoucherFormLogic = () => {
         throw new Error(response.data.error);
       }
     } catch (error) {
-      toast.error('Erro ao gerar vouchers: ' + error.message);
+      console.error('Erro completo:', error);
+      toast.error('Erro ao gerar vouchers: ' + (error.response?.data?.error || error.message));
     } finally {
       setIsGenerating(false);
     }
