@@ -2,6 +2,7 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { EditMealDialog } from './EditMealDialog';
 
 export const MealListTable = ({ 
   meals, 
@@ -27,6 +28,7 @@ export const MealListTable = ({
             <TableHead>Limite/Dia</TableHead>
             <TableHead>Tolerância</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -53,6 +55,9 @@ export const MealListTable = ({
                   checked={meal.ativo}
                   onCheckedChange={() => onToggleActive(meal.id, meal.ativo)}
                 />
+              </TableCell>
+              <TableCell>
+                <EditMealDialog meal={meal} />
               </TableCell>
             </TableRow>
           ))}
