@@ -2,7 +2,6 @@ import { toast } from "sonner";
 import logger from '../config/logger';
 import { validateUserData } from './user/useUserValidation';
 import { saveUserToDatabase, findUserByCPF } from './user/useUserDatabase';
-import { generateUniqueVoucherFromCPF } from '../utils/voucherGenerationUtils';
 import { supabase } from '../config/supabase';
 
 export const useUserFormHandlers = (
@@ -17,19 +16,12 @@ export const useUserFormHandlers = (
     
     if (field === 'userCPF') {
       processedValue = value.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-      try {
-        if (processedValue.length === 14) {
-          const voucher = await generateUniqueVoucherFromCPF(processedValue);
-          setFormData(prev => ({
-            ...prev,
-            [field]: processedValue,
-            voucher
-          }));
-          return;
-        }
-      } catch (error) {
-        logger.error('Erro ao gerar voucher:', error);
-        toast.error('Erro ao gerar voucher automático');
+      if (processedValue.length === 14) {
+        setFormData(prev => ({
+          ...prev,
+          [field]: processedValue,
+        }));
+        return;
       }
     }
     

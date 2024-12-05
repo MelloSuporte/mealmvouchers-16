@@ -1,6 +1,22 @@
 import { supabase } from '../config/supabase.js';
 import logger from '../config/logger.js';
-import { generateUniqueCode } from '../utils/voucherGenerationUtils.js';
+
+const generateUniqueCode = async () => {
+  const code = Math.floor(1000 + Math.random() * 9000).toString();
+  
+  // Verifica se o código já existe
+  const { data } = await supabase
+    .from('vouchers_descartaveis')
+    .select('codigo')
+    .eq('codigo', code);
+
+  if (data && data.length > 0) {
+    // Se o código já existe, gera outro
+    return generateUniqueCode();
+  }
+
+  return code;
+};
 
 export const generateDisposableVouchers = async (req, res) => {
   const { tipos_refeicao_ids, datas, quantidade } = req.body;
