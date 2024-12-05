@@ -74,7 +74,7 @@ const DisposableVoucherForm = () => {
         </Button>
       </div>
 
-      <VoucherTable vouchers={allVouchers} />
+      <VoucherTable vouchers={allVouchers.filter(v => !v.usado)} />
     </div>
   );
 };

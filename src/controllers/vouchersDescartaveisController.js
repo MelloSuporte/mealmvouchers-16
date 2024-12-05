@@ -102,7 +102,7 @@ export const validateDisposableVoucher = async (req, res) => {
   try {
     console.log('Iniciando validação do voucher:', codigo);
 
-    // Buscar o voucher
+    // Verificar se o voucher existe e não foi usado
     const { data: voucher, error } = await supabase
       .from('vouchers_descartaveis')
       .select(`
@@ -110,7 +110,7 @@ export const validateDisposableVoucher = async (req, res) => {
         tipos_refeicao (*)
       `)
       .eq('codigo', codigo)
-      .eq('usado', false)  // Adiciona verificação explícita
+      .eq('usado', false)
       .single();
 
     if (error || !voucher) {
@@ -127,25 +127,33 @@ export const validateDisposableVoucher = async (req, res) => {
         voucher: voucher.tipo_refeicao_id,
         requested: tipo_refeicao_id
       });
-      throw new Error('Este voucher não é válido para este tipo de refeição');
+      return res.status(400).json({
+        success: false,
+        error: 'Este voucher não é válido para este tipo de refeição'
+      });
     }
 
-    // Validar o voucher
+    // Validar regras do voucher (data de expiração, horário, etc)
     await validateDisposableVoucherRules(voucher, supabase);
 
-    // Marcar voucher como usado
-    const { error: updateError } = await supabase
+    // Marcar voucher como usado usando uma transação para evitar condições de corrida
+    const { data: updatedVoucher, error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({
         usado: true,
         data_uso: new Date().toISOString()
       })
       .eq('id', voucher.id)
-      .eq('usado', false); // Garantir que não foi usado entre a validação e a atualização
+      .eq('usado', false) // Garantir que não foi usado entre a validação e a atualização
+      .select()
+      .single();
 
-    if (updateError) {
+    if (updateError || !updatedVoucher) {
       console.log('Erro ao atualizar voucher:', updateError);
-      throw new Error('Erro ao processar o voucher');
+      return res.status(400).json({
+        success: false,
+        error: 'Este voucher já foi utilizado'
+      });
     }
 
     logger.info(`Voucher ${codigo} validado com sucesso`);
@@ -153,6 +161,7 @@ export const validateDisposableVoucher = async (req, res) => {
       success: true,
       message: 'Voucher validado com sucesso'
     });
+
   } catch (error) {
     logger.error('Erro ao validar voucher:', error);
     return res.status(400).json({
