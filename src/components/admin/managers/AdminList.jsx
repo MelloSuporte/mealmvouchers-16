@@ -12,7 +12,7 @@ const AdminList = () => {
   const [searchCPF, setSearchCPF] = useState('');
   const [showForm, setShowForm] = useState(false);
 
-  const { data: admins, isLoading } = useQuery({
+  const { data: admins, isLoading, refetch } = useQuery({
     queryKey: ['admins', searchCPF],
     queryFn: async () => {
       try {
@@ -57,6 +57,7 @@ const AdminList = () => {
       toast.error('Por favor, informe um CPF para buscar');
       return;
     }
+    refetch();
   };
 
   return (
@@ -75,11 +76,18 @@ const AdminList = () => {
 
       {showForm && (
         <AdminForm
-          onClose={() => setShowForm(false)}
+          onClose={() => {
+            setShowForm(false);
+            refetch();
+          }}
         />
       )}
 
-      <AdminTable admins={admins || []} isLoading={isLoading} />
+      <AdminTable 
+        admins={admins || []} 
+        isLoading={isLoading} 
+        refetchAdmins={refetch}
+      />
     </div>
   );
 };
