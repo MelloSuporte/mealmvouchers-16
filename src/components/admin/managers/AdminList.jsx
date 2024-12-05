@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import AdminForm from './AdminForm';
 import AdminTable from './AdminTable';
-import api from '../../../utils/api';
+import { supabase } from '../../../config/supabase';
 import { useState } from 'react';
+import logger from '../../../config/logger';
 
 const AdminList = () => {
   const [searchCPF, setSearchCPF] = useState('');
@@ -14,11 +15,41 @@ const AdminList = () => {
   const { data: admins, isLoading } = useQuery({
     queryKey: ['admins', searchCPF],
     queryFn: async () => {
-      const response = await api.get('api/admin-users', {
-        params: { cpf: searchCPF }
-      });
-      return response.data;
-    }
+      try {
+        logger.info('Buscando gerentes...');
+        let query = supabase
+          .from('admin_users')
+          .select(`
+            *,
+            empresas (
+              id,
+              nome
+            )
+          `)
+          .order('nome');
+
+        if (searchCPF) {
+          const cleanCPF = searchCPF.replace(/\D/g, '');
+          query = query.eq('cpf', cleanCPF);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          logger.error('Erro ao buscar gerentes:', error);
+          toast.error('Erro ao buscar gerentes: ' + error.message);
+          throw error;
+        }
+
+        logger.info(`${data?.length || 0} gerentes encontrados`);
+        return data || [];
+      } catch (error) {
+        logger.error('Erro na busca de gerentes:', error);
+        toast.error('Erro ao buscar gerentes');
+        throw error;
+      }
+    },
+    enabled: true
   });
 
   const handleSearch = () => {
