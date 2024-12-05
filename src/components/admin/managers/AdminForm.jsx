@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import api from '../../../utils/api';
+import { supabase } from '../../../config/supabase';
 import CompanySelect from '../user/CompanySelect';
 import { formatCPF } from '../../../utils/formatters';
 
@@ -41,17 +41,35 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
         return;
       }
 
+      const adminData = {
+        nome: formData.nome,
+        cpf: formData.cpf.replace(/\D/g, ''),
+        empresa_id: formData.empresa_id,
+        senha: formData.senha,
+        permissoes: formData.permissoes
+      };
+
       if (adminToEdit) {
-        await api.put(`/usuarios-admin/${adminToEdit.id}`, formData);
+        const { error } = await supabase
+          .from('admin_users')
+          .update(adminData)
+          .eq('id', adminToEdit.id);
+
+        if (error) throw error;
         toast.success('Gestor atualizado com sucesso!');
       } else {
-        await api.post('/usuarios-admin', formData);
+        const { error } = await supabase
+          .from('admin_users')
+          .insert([adminData]);
+
+        if (error) throw error;
         toast.success('Gestor cadastrado com sucesso!');
       }
+      
       onClose();
     } catch (error) {
       console.error('Erro ao salvar gestor:', error);
-      toast.error('Erro ao salvar gestor: ' + (error.response?.data?.error || error.message));
+      toast.error('Erro ao salvar gestor: ' + (error.message || 'Erro desconhecido'));
     }
   };
 
@@ -61,18 +79,21 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
         placeholder="Nome completo"
         value={formData.nome}
         onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+        required
       />
       <Input
         placeholder="CPF (000.000.000-00)"
         value={formData.cpf}
         onChange={handleCPFChange}
         maxLength={14}
+        required
       />
       <Input
         placeholder="Senha"
         type="password"
         value={formData.senha}
         onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+        required={!adminToEdit}
       />
 
       <div className="space-y-2">
