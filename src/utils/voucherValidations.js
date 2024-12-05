@@ -48,36 +48,52 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
     throw new Error(`Este voucher é válido apenas para ${formattedDate}`);
   }
 
-  // Verificar tipo de refeição
-  const { data: mealType, error: mealTypeError } = await supabase
+  // Buscar tipo de refeição do voucher
+  const { data: voucherMealType, error: voucherMealTypeError } = await supabase
     .from('tipos_refeicao')
     .select('*')
     .eq('id', voucher.tipo_refeicao_id)
     .single();
 
-  if (mealTypeError || !mealType) {
-    console.log('Erro ao verificar tipo de refeição:', mealTypeError);
-    throw new Error('Tipo de refeição inválido ou não encontrado');
+  if (voucherMealTypeError || !voucherMealType) {
+    console.log('Erro ao buscar tipo de refeição do voucher:', voucherMealTypeError);
+    throw new Error('Tipo de refeição do voucher não encontrado');
   }
 
-  if (!mealType.ativo) {
+  // Verificar se o tipo de refeição está ativo
+  if (!voucherMealType.ativo) {
     throw new Error('Este tipo de refeição não está mais ativo');
   }
 
   // Verificar se o tipo de refeição do voucher corresponde ao tipo selecionado
   console.log('Comparando tipos de refeição:', {
-    voucherType: voucher.tipos_refeicao.nome,
-    mealType: mealType.nome
+    voucherType: voucherMealType.nome,
+    selectedType: voucher.tipos_refeicao.nome
   });
 
-  if (voucher.tipos_refeicao.nome.toLowerCase() !== mealType.nome.toLowerCase()) {
-    throw new Error(`Este voucher é válido apenas para ${voucher.tipos_refeicao.nome}`);
+  if (voucherMealType.nome.toLowerCase() !== voucher.tipos_refeicao.nome.toLowerCase()) {
+    throw new Error(`Este voucher é válido apenas para ${voucherMealType.nome}`);
   }
 
-  // Verificar horário da refeição
+  // Verificar horário específico do tipo de refeição
   const currentTime = new Date().toTimeString().slice(0, 5);
-  console.log('Verificando horário:', currentTime);
-  validateVoucherTime(currentTime, mealType);
+  console.log('Verificando horário específico da refeição:', currentTime);
+  
+  if (voucherMealType.hora_inicio && voucherMealType.hora_fim) {
+    const now = new Date();
+    const [startHours, startMinutes] = voucherMealType.hora_inicio.split(':');
+    const [endHours, endMinutes] = voucherMealType.hora_fim.split(':');
+    
+    const startTime = new Date(now.setHours(parseInt(startHours), parseInt(startMinutes), 0));
+    const endTime = new Date(now.setHours(parseInt(endHours), parseInt(endMinutes) + (voucherMealType.minutos_tolerancia || 15), 0));
+    
+    const currentDateTime = new Date();
+    currentDateTime.setHours(parseInt(currentTime.split(':')[0]), parseInt(currentTime.split(':')[1]), 0);
+
+    if (currentDateTime < startTime || currentDateTime > endTime) {
+      throw new Error(`${voucherMealType.nome} só pode ser utilizado entre ${voucherMealType.hora_inicio} e ${voucherMealType.hora_fim} (tolerância de ${voucherMealType.minutos_tolerancia || 15} minutos)`);
+    }
+  }
 
   return true;
 };
