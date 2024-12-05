@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
   cpf VARCHAR(14) NOT NULL UNIQUE,
   empresa_id INTEGER REFERENCES empresas(id),
   senha TEXT NOT NULL,
+  suspenso BOOLEAN DEFAULT FALSE,
   permissoes JSONB NOT NULL DEFAULT '{
     "gerenciar_vouchers_extra": false,
     "gerenciar_vouchers_descartaveis": false,

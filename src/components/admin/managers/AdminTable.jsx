@@ -55,10 +55,13 @@ const AdminTable = ({ admins = [], isLoading, refetchAdmins }) => {
 
   const handleSuspend = async (admin) => {
     try {
+      console.log('Suspending admin:', admin.id, 'Current status:', admin.suspenso);
+      
       const { error } = await supabase
         .from('admin_users')
         .update({ suspenso: !admin.suspenso })
-        .eq('id', admin.id);
+        .eq('id', admin.id)
+        .select();
 
       if (error) throw error;
 
