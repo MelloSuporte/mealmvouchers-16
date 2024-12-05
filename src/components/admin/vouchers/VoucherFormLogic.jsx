@@ -48,13 +48,13 @@ export const useVoucherFormLogic = (
 
       console.log('Datas formatadas:', formattedDates);
 
-      // Gerar voucher baseado no CPF
-      const voucher = await generateUniqueVoucherFromCPF(userData.cpf);
-      console.log('Voucher gerado:', voucher);
-
       // Criar vouchers extras no Supabase
       for (const data of formattedDates) {
         console.log(`Tentando criar voucher para data ${data}...`);
+        
+        // Gerar um novo voucher para cada data
+        const voucher = await generateUniqueVoucherFromCPF(userData.cpf + data);
+        console.log(`Voucher gerado para data ${data}:`, voucher);
         
         const voucherData = {
           usuario_id: selectedUser,
