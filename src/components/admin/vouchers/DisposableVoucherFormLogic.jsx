@@ -26,7 +26,8 @@ export const useDisposableVoucherFormLogic = () => {
   const { data: allVouchers = [] } = useQuery({
     queryKey: ['disposableVouchers'],
     queryFn: async () => {
-      const now = new Date().toISOString();
+      const now = new Date();
+      now.setHours(0, 0, 0, 0); // Início do dia atual
       
       const { data, error } = await supabase
         .from('vouchers_descartaveis')
@@ -37,12 +38,17 @@ export const useDisposableVoucherFormLogic = () => {
             valor
           )
         `)
-        .gte('data_expiracao', now) // Filtra vouchers não expirados
+        .gte('data_expiracao', now.toISOString()) // Filtra vouchers não expirados
         .eq('usado', false) // Filtra apenas vouchers não usados
-        .order('data_expiracao', { ascending: false });
+        .order('data_expiracao', { ascending: true });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Erro ao buscar vouchers:', error);
+        throw error;
+      }
+
+      console.log('Vouchers filtrados:', data); // Log para debug
+      return data || [];
     }
   });
 
