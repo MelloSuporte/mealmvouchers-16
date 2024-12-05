@@ -1,11 +1,13 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const api = axios.create({
   baseURL: import.meta.env.DEV ? 'http://localhost:5000/api' : '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true
 });
 
 // Interceptor para logging
@@ -17,6 +19,7 @@ api.interceptors.request.use(
   },
   (error) => {
     console.error('Erro na requisição:', error);
+    toast.error('Erro ao enviar requisição');
     return Promise.reject(error);
   }
 );
@@ -28,6 +31,15 @@ api.interceptors.response.use(
   },
   (error) => {
     console.error('Erro na resposta:', error.response?.data || error.message);
+    
+    // Tratamento específico para erro de rede
+    if (error.message === 'Network Error') {
+      toast.error('Erro de conexão com o servidor. Verifique se o servidor está rodando.');
+      return Promise.reject(new Error('Erro de conexão com o servidor'));
+    }
+    
+    // Outros erros
+    toast.error(error.response?.data?.error || 'Erro ao processar requisição');
     return Promise.reject(error);
   }
 );

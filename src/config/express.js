@@ -12,12 +12,16 @@ export const configureExpress = (app) => {
   });
 
   // Configuração do CORS
-  app.use(cors({
-    origin: process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : true,
+  const corsOptions = {
+    origin: process.env.NODE_ENV === 'development' 
+      ? ['http://localhost:5173', 'http://127.0.0.1:5173']
+      : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
-  }));
+  };
+  
+  app.use(cors(corsOptions));
   
   // Configuração dos limites de payload
   app.use(express.json({ limit: '50mb' }));
