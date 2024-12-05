@@ -17,23 +17,23 @@ const router = express.Router();
 
 // Middleware de logging para todas as rotas
 router.use((req, res, next) => {
-  logger.info(`Rota acessada: ${req.method} ${req.baseUrl}${req.path}`);
+  logger.info(`Rota acessada: ${req.method} ${req.path}`);
   next();
 });
 
 // Montagem das rotas
-router.use('/empresas', empresasRoutes);
-router.use('/usuarios', usuariosRoutes);
-router.use('/turnos', turnosRoutes);
-router.use('/refeicoes', refeicaoRoutes);
-router.use('/usuarios-admin', usuariosAdminRoutes);
-router.use('/vouchers', vouchersRoutes);
-router.use('/vouchers-extra', vouchersExtraRoutes);
-router.use('/vouchers-descartaveis', vouchersDescartaveisRoutes);
-router.use('/imagens-fundo', imagensFundoRoutes);
-router.use('/relatorios', relatoriosRoutes);
-router.use('/reports', reportsRoutes);
-router.use('/health', healthRoutes);
+router.use('/api/empresas', empresasRoutes);
+router.use('/api/usuarios', usuariosRoutes);
+router.use('/api/turnos', turnosRoutes);
+router.use('/api/refeicoes', refeicaoRoutes);
+router.use('/api/usuarios-admin', usuariosAdminRoutes);
+router.use('/api/vouchers', vouchersRoutes);
+router.use('/api/vouchers-extra', vouchersExtraRoutes);
+router.use('/api/vouchers-descartaveis', vouchersDescartaveisRoutes);
+router.use('/api/imagens-fundo', imagensFundoRoutes);
+router.use('/api/relatorios', relatoriosRoutes);
+router.use('/api/reports', reportsRoutes);
+router.use('/api/health', healthRoutes);
 
 logger.info('Todas as rotas foram montadas com sucesso');
 
