@@ -31,9 +31,17 @@ export const configureExpress = (app) => {
     res.json({ status: 'OK', message: 'Servidor funcionando normalmente' });
   });
 
+  // Log todas as rotas disponíveis
+  logger.info('Rotas disponíveis:');
+  app._router && app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      logger.info(`${Object.keys(middleware.route.methods)} ${middleware.route.path}`);
+    }
+  });
+
   // Montagem das rotas da API
-  app.use('/', routes);
-  logger.info('Rotas da API montadas');
+  app.use('/api', routes);
+  logger.info('Rotas da API montadas em /api');
 
   // Middleware de erro 404
   app.use((req, res) => {
