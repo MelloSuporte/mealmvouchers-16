@@ -60,15 +60,17 @@ export const useDisposableVoucherFormLogic = () => {
 
     setIsGenerating(true);
     try {
+      const formattedDates = selectedDates.map(date => date.toISOString());
+
       console.log('Enviando requisição para gerar vouchers:', {
         tipos_refeicao_ids: selectedMealTypes,
-        datas: selectedDates,
+        datas: formattedDates,
         quantidade: quantity
       });
 
       const response = await api.post('/vouchers-descartaveis', {
         tipos_refeicao_ids: selectedMealTypes,
-        datas: selectedDates,
+        datas: formattedDates,
         quantidade: quantity
       });
 
@@ -78,7 +80,7 @@ export const useDisposableVoucherFormLogic = () => {
         toast.success(response.data.message);
         queryClient.invalidateQueries({ queryKey: ['disposableVouchers'] });
       } else {
-        throw new Error(response.data.error);
+        throw new Error(response.data.error || 'Erro ao gerar vouchers');
       }
     } catch (error) {
       console.error('Erro completo:', error);

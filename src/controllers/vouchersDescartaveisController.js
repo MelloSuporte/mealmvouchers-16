@@ -19,9 +19,9 @@ const generateUniqueCode = async () => {
 export const generateDisposableVouchers = async (req, res) => {
   try {
     logger.info('Iniciando geração de vouchers descartáveis');
-    logger.info('Dados recebidos:', req.body);
-
     const { tipos_refeicao_ids, datas, quantidade } = req.body;
+
+    logger.info('Dados recebidos:', { tipos_refeicao_ids, datas, quantidade });
 
     if (!tipos_refeicao_ids?.length || !datas?.length || !quantidade) {
       logger.error('Dados inválidos recebidos:', { tipos_refeicao_ids, datas, quantidade });
@@ -78,7 +78,7 @@ export const generateDisposableVouchers = async (req, res) => {
     logger.error('Erro ao gerar vouchers:', error);
     return res.status(500).json({
       success: false,
-      error: error.message || 'Erro ao gerar vouchers descartáveis'
+      error: 'Erro ao gerar vouchers descartáveis'
     });
   }
 };
