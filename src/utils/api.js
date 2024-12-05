@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/',
+  baseURL: '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
@@ -12,6 +12,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     console.log('URL da requisição:', config.url);
+    console.log('Dados da requisição:', config.data);
     return config;
   },
   (error) => {
@@ -22,6 +23,7 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
+    console.log('Resposta da API:', response.data);
     return response;
   },
   (error) => {

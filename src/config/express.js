@@ -31,8 +31,8 @@ export const configureExpress = (app) => {
     res.json({ status: 'OK', message: 'Servidor funcionando normalmente' });
   });
   
-  // Montagem das rotas da API - Agora sem o prefixo /api
-  app.use('/', routes);
+  // Montagem das rotas da API
+  app.use('/api', routes);
 
   // Middleware de erro 404
   app.use((req, res) => {
