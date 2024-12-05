@@ -41,7 +41,7 @@ const UserFormFields = ({
     }
   });
 
-  const handleSaveClick = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (typeof onSave === 'function') {
       onSave();
@@ -49,7 +49,7 @@ const UserFormFields = ({
   };
 
   return (
-    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+    <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
         <Label htmlFor="userName" className="required">Nome Completo</Label>
         <Input
@@ -133,8 +133,7 @@ const UserFormFields = ({
             Enviar Foto
           </Button>
           <Button 
-            type="button" 
-            onClick={handleSaveClick}
+            type="submit"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Processando...' : 'Salvar Usuário'}
