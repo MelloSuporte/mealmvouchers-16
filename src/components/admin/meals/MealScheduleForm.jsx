@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import api from '../../../utils/api';
+import { supabase } from '../../../config/supabase';
 
 const MealScheduleForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,25 +63,34 @@ const MealScheduleForm = () => {
       setIsSubmitting(true);
       const numericValue = parseFloat(mealSchedule.value.replace(/[^0-9,]/g, '').replace(',', '.'));
       
-      const response = await api.post('/api/refeicoes', {
-        ...mealSchedule,
-        value: numericValue
-      });
+      const { data, error } = await supabase
+        .from('tipos_refeicao')
+        .insert([{
+          nome: mealSchedule.name,
+          hora_inicio: mealSchedule.startTime,
+          hora_fim: mealSchedule.endTime,
+          valor: numericValue,
+          ativo: mealSchedule.isActive,
+          max_usuarios_dia: mealSchedule.maxUsersPerDay || null,
+          minutos_tolerancia: parseInt(mealSchedule.toleranceMinutes) || 15
+        }])
+        .select();
+
+      if (error) throw error;
       
-      if (response.data.success) {
-        toast.success("Refeição cadastrada com sucesso!");
-        setMealSchedule({
-          name: '',
-          startTime: '',
-          endTime: '',
-          value: '',
-          isActive: true,
-          maxUsersPerDay: '',
-          toleranceMinutes: '15'
-        });
-      }
+      toast.success("Refeição cadastrada com sucesso!");
+      setMealSchedule({
+        name: '',
+        startTime: '',
+        endTime: '',
+        value: '',
+        isActive: true,
+        maxUsersPerDay: '',
+        toleranceMinutes: '15'
+      });
     } catch (error) {
-      toast.error("Erro ao cadastrar refeição: " + (error.response?.data?.message || error.message));
+      console.error('Erro ao cadastrar refeição:', error);
+      toast.error("Erro ao cadastrar refeição: " + (error.message || 'Erro desconhecido'));
     } finally {
       setIsSubmitting(false);
     }
