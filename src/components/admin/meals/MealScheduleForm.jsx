@@ -71,7 +71,7 @@ const MealScheduleForm = () => {
           hora_fim: mealSchedule.endTime,
           valor: numericValue,
           ativo: mealSchedule.isActive,
-          max_usuarios_dia: mealSchedule.maxUsersPerDay || null,
+          max_usuarios_por_dia: mealSchedule.maxUsersPerDay || null,
           minutos_tolerancia: parseInt(mealSchedule.toleranceMinutes) || 15
         }])
         .select();
