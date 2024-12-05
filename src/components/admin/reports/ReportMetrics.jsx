@@ -106,7 +106,7 @@ const ReportMetrics = () => {
       
       // Título do relatório
       doc.setFontSize(16);
-      doc.text("Relatório de Uso de Vouchers", 14, 15);
+      doc.text("Relatório Custos de Refeições", 14, 15);
       
       // Informações do filtro
       doc.setFontSize(10);
