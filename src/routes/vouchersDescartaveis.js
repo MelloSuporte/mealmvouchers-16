@@ -3,7 +3,7 @@ import { generateDisposableVouchers } from '../controllers/vouchersDescartaveisC
 
 const router = express.Router();
 
-// Removendo o prefixo /api pois já está configurado no express.js
-router.post('/vouchers-descartaveis', generateDisposableVouchers);
+// Rota base já é /api/vouchers-descartaveis
+router.post('/', generateDisposableVouchers);
 
 export default router;

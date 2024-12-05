@@ -14,18 +14,18 @@ import healthRoutes from './health.js';
 
 const router = express.Router();
 
-// Mount routes
-router.use('/api', empresasRoutes);
-router.use('/api', usuariosRoutes);
-router.use('/api', turnosRoutes);
-router.use('/api', refeicaoRoutes);
-router.use('/api', usuariosAdminRoutes);
-router.use('/api', vouchersRoutes);
-router.use('/api', vouchersExtraRoutes);
-router.use('/api', vouchersDescartaveisRoutes);
-router.use('/api', imagensFundoRoutes);
-router.use('/api', relatoriosRoutes);
-router.use('/api', reportsRoutes);
-router.use('/api', healthRoutes);
+// Montagem das rotas
+router.use('/empresas', empresasRoutes);
+router.use('/usuarios', usuariosRoutes);
+router.use('/turnos', turnosRoutes);
+router.use('/refeicoes', refeicaoRoutes);
+router.use('/usuarios-admin', usuariosAdminRoutes);
+router.use('/vouchers', vouchersRoutes);
+router.use('/vouchers-extra', vouchersExtraRoutes);
+router.use('/vouchers-descartaveis', vouchersDescartaveisRoutes);
+router.use('/imagens-fundo', imagensFundoRoutes);
+router.use('/relatorios', relatoriosRoutes);
+router.use('/reports', reportsRoutes);
+router.use('/health', healthRoutes);
 
 export default router;
