@@ -2,16 +2,17 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 const getBaseURL = () => {
+  // Em desenvolvimento, use localhost
   if (import.meta.env.DEV) {
     return 'http://localhost:5000/api';
   }
-  // Em produção, use a URL do seu servidor
+  // Em produção, use a URL configurada ou fallback para /api
   return import.meta.env.VITE_API_URL || '/api';
 };
 
 const api = axios.create({
   baseURL: getBaseURL(),
-  timeout: 10000,
+  timeout: 30000, // Aumentado para 30 segundos
   headers: {
     'Content-Type': 'application/json'
   },
@@ -40,13 +41,11 @@ api.interceptors.response.use(
   (error) => {
     console.error('Erro na resposta:', error.response?.data || error.message);
     
-    // Tratamento específico para erro de rede
-    if (error.message === 'Network Error') {
-      toast.error('Erro de conexão com o servidor. Verifique se o servidor está rodando.');
+    if (!error.response) {
+      toast.error('Erro de conexão com o servidor. Verifique se o servidor está rodando na porta 5000.');
       return Promise.reject(new Error('Erro de conexão com o servidor'));
     }
     
-    // Outros erros
     toast.error(error.response?.data?.error || 'Erro ao processar requisição');
     return Promise.reject(error);
   }

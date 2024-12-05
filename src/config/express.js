@@ -13,9 +13,7 @@ export const configureExpress = (app) => {
 
   // Configuração do CORS
   const corsOptions = {
-    origin: process.env.NODE_ENV === 'development' 
-      ? ['http://localhost:5173', 'http://127.0.0.1:5173']
-      : process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+    origin: '*', // Permite todas as origens em desenvolvimento
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
