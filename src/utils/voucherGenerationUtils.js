@@ -3,7 +3,7 @@ import logger from '../config/logger';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const generateUniqueVoucherFromCPF = async (cpf) => {
+export const generateUniqueVoucherFromCPF = async (cpf, date = '') => {
   if (!cpf) {
     throw new Error('CPF é obrigatório para gerar voucher');
   }
@@ -16,32 +16,19 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
     throw new Error('CPF inválido: deve conter 11 dígitos');
   }
 
-  // Primeiro, busca o voucher existente do usuário
-  const { data: existingUser, error: userError } = await supabase
-    .from('usuarios')
-    .select('voucher')
-    .eq('cpf', cleanCPF)
-    .single();
-
-  if (userError) {
-    logger.error(`Erro ao buscar usuário com CPF ${cleanCPF}:`, userError);
-    throw new Error('Erro ao buscar usuário');
-  }
-
-  // Se encontrar um voucher existente, retorna ele
-  if (existingUser?.voucher) {
-    logger.info(`Voucher existente encontrado para CPF ${cleanCPF}: ${existingUser.voucher}`);
-    return existingUser.voucher;
-  }
-
-  // Se não encontrar um voucher existente (caso improvável), gera um novo
   let attempts = 0;
   const maxAttempts = 10;
 
   while (attempts < maxAttempts) {
     try {
-      const voucher = Math.floor(1000 + Math.random() * 9000).toString();
+      // Gera um código baseado nos últimos 4 dígitos do CPF + timestamp + data
+      const timestamp = Date.now().toString().slice(-4);
+      const cpfEnd = cleanCPF.slice(-4);
+      const dateStr = date ? date.replace(/\D/g, '').slice(-4) : '';
+      const voucher = (parseInt(cpfEnd + timestamp + dateStr) % 9000 + 1000).toString();
       
+      logger.info(`Tentando gerar voucher: ${voucher} para CPF ${cleanCPF} e data ${date}`);
+
       // Verifica se o voucher já existe
       const [{ data: existingCommon }, { data: existingExtras }] = await Promise.all([
         supabase
@@ -58,7 +45,7 @@ export const generateUniqueVoucherFromCPF = async (cpf) => {
 
       if ((!existingCommon || existingCommon.length === 0) && 
           (!existingExtras || existingExtras.length === 0)) {
-        logger.info(`Novo voucher gerado com sucesso para CPF ${cleanCPF}: ${voucher}`);
+        logger.info(`Voucher gerado com sucesso: ${voucher}`);
         return voucher;
       }
 

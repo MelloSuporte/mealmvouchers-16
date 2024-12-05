@@ -53,7 +53,7 @@ export const useVoucherFormLogic = (
         console.log(`Tentando criar voucher para data ${data}...`);
         
         // Gerar um novo voucher para cada data
-        const voucher = await generateUniqueVoucherFromCPF(userData.cpf + data);
+        const voucher = await generateUniqueVoucherFromCPF(userData.cpf, data);
         console.log(`Voucher gerado para data ${data}:`, voucher);
         
         const voucherData = {
