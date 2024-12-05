@@ -61,13 +61,15 @@ CREATE TABLE IF NOT EXISTS vouchers_extras (
   usuario_id UUID REFERENCES usuarios(id),
   tipo_refeicao_id UUID REFERENCES tipos_refeicao(id) NOT NULL,
   autorizado_por VARCHAR(255) NOT NULL,
-  codigo VARCHAR(8) NOT NULL UNIQUE,
+  codigo VARCHAR(8) NOT NULL,
   valido_ate DATE NOT NULL,
   usado BOOLEAN DEFAULT FALSE,
   usado_em TIMESTAMP WITH TIME ZONE,
   observacao TEXT,
   criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_vouchers_extras_codigo ON vouchers_extras(codigo);
 
 -- Inserir configurações padrão de turnos
 INSERT INTO turnos (tipo_turno, horario_inicio, horario_fim, ativo) VALUES
