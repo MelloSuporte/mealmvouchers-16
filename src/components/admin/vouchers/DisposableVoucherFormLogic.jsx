@@ -23,11 +23,12 @@ export const useDisposableVoucherFormLogic = () => {
     }
   });
 
+  // Atualizada a query para filtrar vouchers não usados e não expirados
   const { data: allVouchers = [] } = useQuery({
     queryKey: ['disposableVouchers'],
     queryFn: async () => {
       const now = new Date();
-      now.setHours(0, 0, 0, 0); // Início do dia atual
+      now.setHours(0, 0, 0, 0);
       
       const { data, error } = await supabase
         .from('vouchers_descartaveis')
@@ -35,11 +36,14 @@ export const useDisposableVoucherFormLogic = () => {
           *,
           tipos_refeicao (
             nome,
-            valor
+            valor,
+            hora_inicio,
+            hora_fim,
+            minutos_tolerancia
           )
         `)
-        .gte('data_expiracao', now.toISOString()) // Filtra vouchers não expirados
-        .eq('usado', false) // Filtra apenas vouchers não usados
+        .eq('usado', false)
+        .gte('data_expiracao', now.toISOString())
         .order('data_expiracao', { ascending: true });
 
       if (error) {
@@ -47,7 +51,7 @@ export const useDisposableVoucherFormLogic = () => {
         throw error;
       }
 
-      console.log('Vouchers filtrados:', data); // Log para debug
+      console.log('Vouchers ativos encontrados:', data?.length || 0);
       return data || [];
     },
     refetchInterval: 5000 // Atualiza a lista a cada 5 segundos
@@ -107,7 +111,10 @@ export const useDisposableVoucherFormLogic = () => {
                 *,
                 tipos_refeicao (
                   nome,
-                  valor
+                  valor,
+                  hora_inicio,
+                  hora_fim,
+                  minutos_tolerancia
                 )
               `)
               .single();

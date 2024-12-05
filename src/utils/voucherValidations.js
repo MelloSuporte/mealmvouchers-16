@@ -1,9 +1,9 @@
 import logger from '../config/logger';
 import { VOUCHER_TYPES } from './voucherTypes';
 
-export const validateVoucherTime = (currentTime, mealType, toleranceMinutes) => {
+export const validateVoucherTime = (currentTime, mealType) => {
   if (!mealType.hora_inicio || !mealType.hora_fim) {
-    return; // Se não houver horários definidos, não valida
+    throw new Error('Horários não definidos para este tipo de refeição');
   }
 
   const now = new Date();
@@ -11,14 +11,14 @@ export const validateVoucherTime = (currentTime, mealType, toleranceMinutes) => 
   const [endHours, endMinutes] = mealType.hora_fim.split(':');
   
   const startTime = new Date(now.setHours(parseInt(startHours), parseInt(startMinutes), 0));
-  const endTime = new Date(now.setHours(parseInt(endHours), parseInt(endMinutes) + toleranceMinutes, 0));
+  const endTime = new Date(now.setHours(parseInt(endHours), parseInt(endMinutes) + (mealType.minutos_tolerancia || 15), 0));
 
   const currentDate = new Date();
   currentDate.setHours(parseInt(currentTime.split(':')[0]), parseInt(currentTime.split(':')[1]), 0);
 
   if (currentDate < startTime || currentDate > endTime) {
     logger.warn(`Tentativa de uso fora do horário permitido: ${currentTime}`);
-    throw new Error(`Esta refeição só pode ser utilizada entre ${mealType.hora_inicio} e ${mealType.hora_fim} (tolerância de ${toleranceMinutes} minutos)`);
+    throw new Error(`Esta refeição só pode ser utilizada entre ${mealType.hora_inicio} e ${mealType.hora_fim} (tolerância de ${mealType.minutos_tolerancia || 15} minutos)`);
   }
 };
 
@@ -28,7 +28,7 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
   // Verificar se o voucher já foi usado
   if (voucher.usado) {
     console.log('Voucher já foi utilizado');
-    throw new Error('Voucher Descartável já foi utilizado');
+    throw new Error('Este voucher já foi utilizado');
   }
 
   // Verificar se o voucher está expirado
@@ -39,13 +39,13 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
   
   if (expirationDate < today) {
     console.log('Voucher expirado');
-    throw new Error('Voucher Expirado');
+    throw new Error('Este voucher está expirado');
   }
 
   if (expirationDate > today) {
     const formattedDate = expirationDate.toLocaleDateString('pt-BR');
     console.log('Voucher válido apenas para:', formattedDate);
-    throw new Error(`Voucher Descartável válido apenas para ${formattedDate}`);
+    throw new Error(`Este voucher é válido apenas para ${formattedDate}`);
   }
 
   // Verificar tipo de refeição
@@ -63,10 +63,16 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
     throw new Error('Tipo de refeição inválido ou não encontrado');
   }
 
+  if (!mealType.ativo) {
+    throw new Error('Este tipo de refeição não está mais ativo');
+  }
+
   // Verificar horário da refeição
   const currentTime = new Date().toTimeString().slice(0, 5);
   console.log('Verificando horário:', currentTime);
-  validateVoucherTime(currentTime, mealType, mealType.minutos_tolerancia || 15);
+  validateVoucherTime(currentTime, mealType);
+
+  return true;
 };
 
 export const validateVoucherByType = (voucherType, { code, cpf, mealType, user }) => {
