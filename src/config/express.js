@@ -2,8 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import { securityMiddleware } from '../middleware/security.js';
 import routes from '../routes/index.js';
+import logger from './logger.js';
 
 export const configureExpress = (app) => {
+  // Middleware de logging
+  app.use((req, res, next) => {
+    logger.info(`${req.method} ${req.url}`);
+    next();
+  });
+
   // Configuração do CORS
   app.use(cors({
     origin: process.env.FRONTEND_URL || true,
@@ -24,6 +31,24 @@ export const configureExpress = (app) => {
     res.json({ status: 'OK', message: 'Servidor funcionando normalmente' });
   });
   
-  // Montagem das rotas da API com prefixo /api
+  // Montagem das rotas da API
   app.use('/api', routes);
+
+  // Middleware de erro 404
+  app.use((req, res) => {
+    logger.warn(`Rota não encontrada: ${req.method} ${req.url}`);
+    res.status(404).json({ 
+      success: false, 
+      error: 'Rota não encontrada' 
+    });
+  });
+
+  // Middleware de tratamento de erros
+  app.use((err, req, res, next) => {
+    logger.error('Erro na aplicação:', err);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erro interno do servidor' 
+    });
+  });
 };
