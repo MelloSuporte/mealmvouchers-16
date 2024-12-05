@@ -14,50 +14,50 @@ export const validateVoucherTime = (currentTime, mealType, toleranceMinutes) => 
 };
 
 export const validateDisposableVoucherRules = async (voucher, supabase) => {
+  console.log('Validando voucher descartável:', voucher);
+
   // Verificar se o voucher já foi usado
-  if (voucher.is_used) {
+  if (voucher.usado || voucher.is_used) {
+    console.log('Voucher já foi utilizado');
     throw new Error('Voucher Descartável já foi utilizado');
   }
 
   // Verificar se o voucher está expirado
-  if (voucher.data_expiracao) {
-    const expirationDate = new Date(voucher.data_expiracao);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    expirationDate.setHours(0, 0, 0, 0);
-    
-    if (expirationDate < today) {
-      throw new Error('Voucher Expirado');
-    }
-
-    if (expirationDate > today) {
-      const formattedDate = expirationDate.toISOString().split('T')[0];
-      throw new Error(`Voucher Descartável válido para o ${formattedDate}`);
-    }
+  const expirationDate = new Date(voucher.data_expiracao || voucher.expired_at);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  expirationDate.setHours(0, 0, 0, 0);
+  
+  if (expirationDate < today) {
+    console.log('Voucher expirado');
+    throw new Error('Voucher Expirado');
   }
 
-  // Verificar se já foi usado hoje para o mesmo tipo de refeição
-  const today = new Date().toISOString().split('T')[0];
-  const { data: usedToday, error } = await supabase
-    .from('vouchers_descartaveis')
+  if (expirationDate > today) {
+    const formattedDate = expirationDate.toISOString().split('T')[0];
+    console.log('Voucher válido apenas para:', formattedDate);
+    throw new Error(`Voucher Descartável válido apenas para ${formattedDate}`);
+  }
+
+  // Verificar tipo de refeição
+  const mealTypeId = voucher.tipo_refeicao_id || voucher.meal_type_id;
+  console.log('Verificando tipo de refeição:', mealTypeId);
+
+  const { data: mealType, error: mealTypeError } = await supabase
+    .from('tipos_refeicao')
     .select('*')
-    .eq('tipo_refeicao_id', voucher.tipo_refeicao_id)
-    .eq('usado', true)
-    .gte('data_uso', today)
+    .eq('id', mealTypeId)
     .single();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 é o código para "não encontrado"
-    logger.error('Erro ao verificar uso do voucher:', error);
-    throw new Error('Erro ao validar voucher');
-  }
-
-  if (usedToday) {
-    throw new Error('Já foi utilizado um voucher para este tipo de refeição hoje');
+  if (mealTypeError || !mealType) {
+    console.log('Erro ao verificar tipo de refeição:', mealTypeError);
+    throw new Error('Tipo de refeição inválido ou não encontrado');
   }
 
   // Verificar horário da refeição
   const currentTime = new Date().toTimeString().slice(0, 5);
-  validateVoucherTime(currentTime, voucher, voucher.minutos_tolerancia || 15);
+  console.log('Verificando horário:', currentTime);
+  validateVoucherTime(currentTime, mealType, mealType.minutos_tolerancia || 15);
 };
 
 export const validateVoucherByType = (voucherType, { code, cpf, mealType, user }) => {

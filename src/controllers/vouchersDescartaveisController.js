@@ -100,6 +100,8 @@ export const validateDisposableVoucher = async (req, res) => {
   const { codigo, tipo_refeicao_id } = req.body;
   
   try {
+    console.log('Iniciando validação do voucher:', codigo);
+
     // Buscar o voucher
     const { data: voucher, error } = await supabase
       .from('vouchers_descartaveis')
@@ -108,13 +110,24 @@ export const validateDisposableVoucher = async (req, res) => {
         tipos_refeicao (*)
       `)
       .eq('codigo', codigo)
+      .eq('usado', false)  // Adiciona verificação explícita
       .single();
 
     if (error || !voucher) {
+      console.log('Voucher não encontrado ou já utilizado:', error);
       return res.status(404).json({
         success: false,
-        error: 'Voucher não encontrado'
+        error: 'Voucher não encontrado ou já utilizado'
       });
+    }
+
+    // Verificar se o tipo de refeição corresponde
+    if (voucher.tipo_refeicao_id !== parseInt(tipo_refeicao_id)) {
+      console.log('Tipo de refeição não corresponde:', {
+        voucher: voucher.tipo_refeicao_id,
+        requested: tipo_refeicao_id
+      });
+      throw new Error('Este voucher não é válido para este tipo de refeição');
     }
 
     // Validar o voucher
@@ -127,12 +140,15 @@ export const validateDisposableVoucher = async (req, res) => {
         usado: true,
         data_uso: new Date().toISOString()
       })
-      .eq('id', voucher.id);
+      .eq('id', voucher.id)
+      .eq('usado', false); // Garantir que não foi usado entre a validação e a atualização
 
     if (updateError) {
-      throw updateError;
+      console.log('Erro ao atualizar voucher:', updateError);
+      throw new Error('Erro ao processar o voucher');
     }
 
+    logger.info(`Voucher ${codigo} validado com sucesso`);
     return res.json({
       success: true,
       message: 'Voucher validado com sucesso'
