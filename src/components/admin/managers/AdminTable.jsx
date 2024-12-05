@@ -33,15 +33,23 @@ const AdminTable = ({ admins = [], isLoading }) => {
       <TableBody>
         {admins.map((admin) => (
           <TableRow key={admin.id}>
-            <TableCell>{admin.name}</TableCell>
+            <TableCell>{admin.nome}</TableCell>
             <TableCell>{admin.email}</TableCell>
             <TableCell>{admin.cpf}</TableCell>
             <TableCell>
               <ul className="list-disc list-inside">
-                {admin.permissions.manage_extra_vouchers && <li>Gerenciar Vouchers Extra</li>}
-                {admin.permissions.manage_disposable_vouchers && <li>Gerenciar Vouchers Descartáveis</li>}
-                {admin.permissions.manage_users && <li>Gerenciar Usuários</li>}
-                {admin.permissions.manage_reports && <li>Gerenciar Relatórios</li>}
+                {admin.permissoes?.gerenciar_vouchers_extra && (
+                  <li>Gerenciar Vouchers Extra</li>
+                )}
+                {admin.permissoes?.gerenciar_vouchers_descartaveis && (
+                  <li>Gerenciar Vouchers Descartáveis</li>
+                )}
+                {admin.permissoes?.gerenciar_usuarios && (
+                  <li>Gerenciar Usuários</li>
+                )}
+                {admin.permissoes?.gerenciar_relatorios && (
+                  <li>Gerenciar Relatórios</li>
+                )}
               </ul>
             </TableCell>
             <TableCell>
