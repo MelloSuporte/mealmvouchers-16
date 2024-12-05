@@ -1,5 +1,4 @@
 import { supabase } from '../../../config/supabase';
-import { generateUniqueVoucherFromCPF } from '../../../utils/voucherGenerationUtils';
 import { toast } from "sonner";
 
 export const useVoucherFormLogic = (
@@ -27,10 +26,10 @@ export const useVoucherFormLogic = (
 
       console.log('Tipo refeição encontrado:', tipoRefeicao);
 
-      // Buscar o CPF do usuário selecionado
+      // Buscar o usuário selecionado com seu voucher comum
       const { data: userData, error: userError } = await supabase
         .from('usuarios')
-        .select('cpf')
+        .select('cpf, voucher')
         .eq('id', selectedUser)
         .single();
 
@@ -41,6 +40,10 @@ export const useVoucherFormLogic = (
 
       console.log('Dados do usuário encontrados:', userData);
 
+      if (!userData.voucher) {
+        throw new Error('Usuário não possui voucher comum cadastrado');
+      }
+
       const formattedDates = selectedDates.map(date => {
         const localDate = new Date(date);
         return localDate.toISOString().split('T')[0];
@@ -48,19 +51,15 @@ export const useVoucherFormLogic = (
 
       console.log('Datas formatadas:', formattedDates);
 
-      // Criar vouchers extras no Supabase
+      // Criar vouchers extras no Supabase usando o mesmo código do voucher comum
       for (const data of formattedDates) {
         console.log(`Tentando criar voucher para data ${data}...`);
-        
-        // Gerar um novo voucher para cada data
-        const voucher = await generateUniqueVoucherFromCPF(userData.cpf, data);
-        console.log(`Voucher gerado para data ${data}:`, voucher);
         
         const voucherData = {
           usuario_id: selectedUser,
           tipo_refeicao_id: tipoRefeicao.id,
           autorizado_por: 'Sistema',
-          codigo: voucher,
+          codigo: userData.voucher, // Usando o mesmo código do voucher comum
           valido_ate: data,
           observacao: observacao.trim() || 'Voucher extra gerado via sistema'
         };
