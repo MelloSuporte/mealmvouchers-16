@@ -7,6 +7,7 @@ import UserSearchSection from './user/UserSearchSection';
 import { useVoucherVisibility } from '../../hooks/useVoucherVisibility';
 import logger from '../../config/logger';
 import { formatCPF } from '../../utils/formatters';
+import { generateCommonVoucher } from '../../utils/voucherGenerator';
 
 const UserFormMain = () => {
   const [formData, setFormData] = React.useState({
@@ -76,7 +77,14 @@ const UserFormMain = () => {
       if (error) {
         if (error.code === 'PGRST116') {
           logger.info('Usuário não encontrado para CPF:', cleanCPF);
-          toast.info('Usuário não encontrado');
+          // Gera voucher automático para novo usuário
+          const newVoucher = generateCommonVoucher(cleanCPF);
+          setFormData(prev => ({
+            ...prev,
+            userCPF: formatCPF(cleanCPF),
+            voucher: newVoucher
+          }));
+          toast.info('Usuário não encontrado. Voucher gerado automaticamente.');
         } else {
           logger.error('Erro na consulta:', error);
           toast.error('Erro ao buscar usuário');
@@ -108,6 +116,16 @@ const UserFormMain = () => {
   const handleInputChange = (field, value) => {
     if (field === 'userCPF') {
       value = formatCPF(value);
+      // Gera voucher automático quando CPF é alterado manualmente
+      if (value.length === 14) {
+        const newVoucher = generateCommonVoucher(value);
+        setFormData(prev => ({
+          ...prev,
+          [field]: value,
+          voucher: newVoucher
+        }));
+        return;
+      }
     }
     setFormData(prev => ({
       ...prev,
