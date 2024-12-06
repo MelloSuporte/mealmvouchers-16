@@ -30,7 +30,15 @@ RUN mkdir -p /var/log/nginx && \
     chmod -R 755 /usr/share/nginx/html && \
     chown -R nginx:nginx /usr/share/nginx/html && \
     chmod -R 755 /etc/nginx/conf.d && \
-    chown -R nginx:nginx /etc/nginx/conf.d
+    chown -R nginx:nginx /etc/nginx/conf.d && \
+    # Ensure nginx can write to all necessary directories
+    chmod -R 755 /var/cache/nginx && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chmod -R 755 /var/run && \
+    chown -R nginx:nginx /var/run
+
+# Use non-root user
+USER nginx
 
 # Expose port
 EXPOSE 80
