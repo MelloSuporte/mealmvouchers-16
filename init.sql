@@ -6,6 +6,7 @@ SET timezone = 'America/Sao_Paulo';
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Tabelas principais
 CREATE TABLE IF NOT EXISTS empresas (
   id SERIAL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
@@ -56,10 +57,6 @@ CREATE TABLE IF NOT EXISTS uso_voucher (
   usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Adicionar índice para otimizar consultas de uso por tipo de refeição
-CREATE INDEX IF NOT EXISTS idx_uso_voucher_usuario_tipo 
-ON uso_voucher(usuario_id, tipo_refeicao_id);
-
 CREATE TABLE IF NOT EXISTS vouchers_extras (
   id SERIAL PRIMARY KEY,
   usuario_id UUID REFERENCES usuarios(id),
@@ -73,23 +70,17 @@ CREATE TABLE IF NOT EXISTS vouchers_extras (
   criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_uso_voucher_usuario_tipo ON uso_voucher(usuario_id, tipo_refeicao_id);
 CREATE INDEX IF NOT EXISTS idx_vouchers_extras_codigo ON vouchers_extras(codigo);
+CREATE INDEX IF NOT EXISTS idx_uso_voucher_usuario_id ON uso_voucher(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_uso_voucher_tipo_refeicao_id ON uso_voucher(tipo_refeicao_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_empresa_id ON usuarios(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_turno_id ON usuarios(turno_id);
 
--- Inserir configurações padrão de turnos
-INSERT INTO turnos (tipo_turno, hora_inicio, hora_fim, ativo) VALUES
-  ('central', '08:00:00', '17:00:00', true),
-  ('primeiro', '06:00:00', '14:00:00', true),
-  ('segundo', '14:00:00', '22:00:00', true),
-  ('terceiro', '22:00:00', '06:00:00', true);
-
--- Inserir tipo de refeição extra padrão
-INSERT INTO tipos_refeicao (nome, valor, ativo, minutos_tolerancia) VALUES
-  ('Refeição Extra', 15.00, true, 15);
-
--- Remover a view existente se ela existir
+-- View para uso de voucher
 DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
 
--- Criar a view sem SECURITY DEFINER e com security_barrier
 CREATE VIEW vw_uso_voucher_detalhado AS
 SELECT 
     uv.id,
@@ -108,13 +99,17 @@ JOIN empresas e ON u.empresa_id = e.id
 LEFT JOIN turnos t ON u.turno_id = t.id
 ORDER BY uv.usado_em DESC;
 
--- Conceder permissões explícitas para a view
+-- Permissões da view
 GRANT SELECT ON vw_uso_voucher_detalhado TO authenticated;
 GRANT SELECT ON vw_uso_voucher_detalhado TO anon;
 GRANT SELECT ON vw_uso_voucher_detalhado TO service_role;
 
--- Create necessary indexes to improve view performance
-CREATE INDEX IF NOT EXISTS idx_uso_voucher_usuario_id ON uso_voucher(usuario_id);
-CREATE INDEX IF NOT EXISTS idx_uso_voucher_tipo_refeicao_id ON uso_voucher(tipo_refeicao_id);
-CREATE INDEX IF NOT EXISTS idx_usuarios_empresa_id ON usuarios(empresa_id);
-CREATE INDEX IF NOT EXISTS idx_usuarios_turno_id ON usuarios(turno_id);
+-- Dados iniciais
+INSERT INTO turnos (tipo_turno, hora_inicio, hora_fim, ativo) VALUES
+  ('central', '08:00:00', '17:00:00', true),
+  ('primeiro', '06:00:00', '14:00:00', true),
+  ('segundo', '14:00:00', '22:00:00', true),
+  ('terceiro', '22:00:00', '06:00:00', true);
+
+INSERT INTO tipos_refeicao (nome, valor, ativo, minutos_tolerancia) VALUES
+  ('Refeição Extra', 15.00, true, 15);
