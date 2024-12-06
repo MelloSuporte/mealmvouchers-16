@@ -3,7 +3,7 @@ FROM oven/bun:1-debian as builder
 
 WORKDIR /app
 
-# Copy configuration files first
+# Copy configuration files
 COPY package.json bun.lockb ./
 
 # Install dependencies
@@ -12,7 +12,7 @@ RUN bun install
 # Copy source code
 COPY . .
 
-# Build the application with production optimization
+# Build the application
 RUN bun run build
 
 # Production stage
@@ -24,14 +24,13 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Create directory for logs and adjust permissions
+# Create necessary directories and set permissions
 RUN mkdir -p /var/log/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
     chmod -R 755 /usr/share/nginx/html && \
     chown -R nginx:nginx /usr/share/nginx/html && \
     chmod -R 755 /etc/nginx/conf.d && \
     chown -R nginx:nginx /etc/nginx/conf.d && \
-    # Ensure nginx can write to all necessary directories
     chmod -R 755 /var/cache/nginx && \
     chown -R nginx:nginx /var/cache/nginx && \
     chmod -R 755 /var/run && \
@@ -43,5 +42,5 @@ USER nginx
 # Expose port
 EXPOSE 80
 
-# Start nginx with proper permissions
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
