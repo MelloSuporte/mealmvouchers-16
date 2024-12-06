@@ -102,7 +102,7 @@ const TurnosForm = () => {
   if (erro) {
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-        <p className="text-red-600">Erro ao buscar turnos. Por favor, tente novamente.</p>
+        <p className="text-red-600">Erro ao buscar turnos: {erro.message}</p>
         <Button 
           onClick={() => recarregar()} 
           variant="outline" 
