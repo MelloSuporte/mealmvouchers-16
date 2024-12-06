@@ -81,7 +81,7 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_turno_id ON usuarios(turno_id);
 -- View para uso de voucher
 DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
 
-CREATE VIEW vw_uso_voucher_detalhado AS
+CREATE OR REPLACE VIEW vw_uso_voucher_detalhado AS
 SELECT 
     uv.id,
     u.nome as nome_usuario,
@@ -96,8 +96,7 @@ FROM uso_voucher uv
 JOIN usuarios u ON uv.usuario_id = u.id
 JOIN tipos_refeicao tr ON uv.tipo_refeicao_id = tr.id
 JOIN empresas e ON u.empresa_id = e.id
-LEFT JOIN turnos t ON u.turno_id = t.id
-ORDER BY uv.usado_em DESC;
+LEFT JOIN turnos t ON u.turno_id = t.id;
 
 -- Permissões da view
 GRANT SELECT ON vw_uso_voucher_detalhado TO authenticated;
