@@ -46,16 +46,16 @@ const NovoTurnoDialog = ({ isOpen, onOpenChange, novoTurno, setNovoTurno, onCrea
             <Label>Horário de Entrada</Label>
             <Input
               type="time"
-              value={novoTurno.horario_inicio}
-              onChange={(e) => setNovoTurno({ ...novoTurno, horario_inicio: e.target.value })}
+              value={novoTurno.hora_inicio}
+              onChange={(e) => setNovoTurno({ ...novoTurno, hora_inicio: e.target.value })}
             />
           </div>
           <div className="space-y-2">
             <Label>Horário de Saída</Label>
             <Input
               type="time"
-              value={novoTurno.horario_fim}
-              onChange={(e) => setNovoTurno({ ...novoTurno, horario_fim: e.target.value })}
+              value={novoTurno.hora_fim}
+              onChange={(e) => setNovoTurno({ ...novoTurno, hora_fim: e.target.value })}
             />
           </div>
           <div className="flex items-center space-x-2">

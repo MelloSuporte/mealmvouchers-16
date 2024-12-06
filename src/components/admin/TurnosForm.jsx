@@ -24,8 +24,8 @@ const TurnosForm = () => {
   const [turnoSelecionado, setTurnoSelecionado] = React.useState(null);
   const [novoTurno, setNovoTurno] = React.useState({
     tipo_turno: '',
-    horario_inicio: '',
-    horario_fim: '',
+    hora_inicio: '',
+    hora_fim: '',
     ativo: true
   });
 
@@ -61,8 +61,8 @@ const TurnosForm = () => {
     setDialogoAberto(false);
     setNovoTurno({
       tipo_turno: '',
-      horario_inicio: '',
-      horario_fim: '',
+      hora_inicio: '',
+      hora_fim: '',
       ativo: true
     });
     recarregar();
@@ -74,8 +74,8 @@ const TurnosForm = () => {
   };
 
   const handleSalvarEdicao = async (turnoEditado) => {
-    await handleTurnoChange(turnoEditado.id, 'horario_inicio', turnoEditado.horario_inicio);
-    await handleTurnoChange(turnoEditado.id, 'horario_fim', turnoEditado.horario_fim);
+    await handleTurnoChange(turnoEditado.id, 'hora_inicio', turnoEditado.hora_inicio);
+    await handleTurnoChange(turnoEditado.id, 'hora_fim', turnoEditado.hora_fim);
     await handleTurnoChange(turnoEditado.id, 'ativo', turnoEditado.ativo);
     recarregar();
     toast.success('Turno atualizado com sucesso!');
@@ -156,8 +156,8 @@ const TurnosForm = () => {
                 onClick={() => handleEditarTurno(turno)}
               >
                 <TableCell>{getTurnoLabel(turno.tipo_turno)}</TableCell>
-                <TableCell>{turno.horario_inicio}</TableCell>
-                <TableCell>{turno.horario_fim}</TableCell>
+                <TableCell>{turno.hora_inicio}</TableCell>
+                <TableCell>{turno.hora_fim}</TableCell>
                 <TableCell>{turno.ativo ? 'Ativo' : 'Inativo'}</TableCell>
               </TableRow>
             ))}
