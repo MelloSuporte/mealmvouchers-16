@@ -162,8 +162,8 @@ const MealScheduleList = () => {
               </TableCell>
               <TableCell>{meal.nome}</TableCell>
               <TableCell>R$ {meal.valor.toFixed(2)}</TableCell>
-              <TableCell>{meal.horario_inicio || '-'}</TableCell>
-              <TableCell>{meal.horario_fim || '-'}</TableCell>
+              <TableCell>{meal.hora_inicio || '-'}</TableCell>
+              <TableCell>{meal.hora_fim || '-'}</TableCell>
               <TableCell className="text-right">
                 <Switch 
                   checked={meal.ativo}
