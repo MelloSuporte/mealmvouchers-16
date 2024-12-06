@@ -78,7 +78,7 @@ CREATE INDEX IF NOT EXISTS idx_uso_voucher_tipo_refeicao_id ON uso_voucher(tipo_
 CREATE INDEX IF NOT EXISTS idx_usuarios_empresa_id ON usuarios(empresa_id);
 CREATE INDEX IF NOT EXISTS idx_usuarios_turno_id ON usuarios(turno_id);
 
--- View para uso de voucher
+-- View para uso de voucher (sem SECURITY DEFINER)
 DO $$ 
 BEGIN
     DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
