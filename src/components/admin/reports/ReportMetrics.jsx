@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from '../../../config/supabase';
-import { format, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReportFilters from './ReportFilters';
 import MetricsCards from './MetricsCards';
@@ -33,6 +33,7 @@ const ReportMetrics = () => {
       // Filtra os dados baseado nos filtros selecionados
       const filteredData = usageData.filter(item => {
         const itemDate = new Date(item.usado_em);
+        if (!isValid(itemDate)) return false;
         if (filters.company !== 'all' && item.empresa !== filters.company) return false;
         if (filters.startDate && itemDate < filters.startDate) return false;
         if (filters.endDate && itemDate > filters.endDate) return false;
@@ -76,7 +77,7 @@ const ReportMetrics = () => {
         byCompany,
         byShift,
         byMealType,
-        filteredData // Adicionando os dados filtrados ao retorno
+        filteredData
       };
     }
   });
@@ -93,6 +94,12 @@ const ReportMetrics = () => {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = parseISO(dateString);
+    return isValid(date) ? format(date, 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-';
   };
 
   const handleExportClick = () => {
@@ -123,12 +130,12 @@ const ReportMetrics = () => {
 
       // Tabela de dados
       const tableData = metrics.filteredData.map(item => [
-        format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm'),
-        item.nome_usuario,
-        item.voucher,
-        item.tipo_refeicao,
-        formatCurrency(item.valor_refeicao),
-        item.turno
+        formatDate(item.usado_em),
+        item.nome_usuario || '-',
+        item.voucher || '-',
+        item.tipo_refeicao || '-',
+        formatCurrency(item.valor_refeicao || 0),
+        item.turno || '-'
       ]);
 
       doc.autoTable({
