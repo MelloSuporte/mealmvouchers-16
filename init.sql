@@ -112,3 +112,9 @@ ORDER BY uv.usado_em DESC;
 GRANT SELECT ON vw_uso_voucher_detalhado TO authenticated;
 GRANT SELECT ON vw_uso_voucher_detalhado TO anon;
 GRANT SELECT ON vw_uso_voucher_detalhado TO service_role;
+
+-- Create necessary indexes to improve view performance
+CREATE INDEX IF NOT EXISTS idx_uso_voucher_usuario_id ON uso_voucher(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_uso_voucher_tipo_refeicao_id ON uso_voucher(tipo_refeicao_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_empresa_id ON usuarios(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_turno_id ON usuarios(turno_id);
