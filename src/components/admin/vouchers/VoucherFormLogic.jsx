@@ -12,19 +12,25 @@ export const useVoucherFormLogic = (
       console.log('Starting voucher submission process...');
       
       // Buscar o primeiro tipo de refeição ativo
-      const { data: tipoRefeicao, error: tipoRefeicaoError } = await supabase
+      const { data: tiposRefeicao, error: tipoRefeicaoError } = await supabase
         .from('tipos_refeicao')
         .select('id')
         .eq('ativo', true)
-        .limit(1)
-        .single();
+        .limit(1);
+
+      console.log('Tipos de refeição encontrados:', tiposRefeicao);
 
       if (tipoRefeicaoError) {
         console.error('Erro ao buscar tipo de refeição:', tipoRefeicaoError);
         throw new Error('Erro ao buscar tipo de refeição');
       }
 
-      console.log('Tipo refeição encontrado:', tipoRefeicao);
+      if (!tiposRefeicao || tiposRefeicao.length === 0) {
+        throw new Error('Nenhum tipo de refeição ativo encontrado');
+      }
+
+      const tipoRefeicao = tiposRefeicao[0];
+      console.log('Tipo refeição selecionado:', tipoRefeicao);
 
       // Buscar o usuário selecionado com seu voucher comum
       const { data: userData, error: userError } = await supabase
