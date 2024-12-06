@@ -50,13 +50,25 @@ const handleCommonVoucher = async (cpf, code, mealType, user) => {
     throw new Error(`${mealType} não está disponível para o turno ${user.shift}`);
   }
 
+  // Verificar se já usou este tipo de refeição
+  const { data: usedMealType } = await supabase
+    .from('uso_voucher')
+    .select('*')
+    .eq('usuario_id', user.id)
+    .eq('tipo_refeicao_id', mealType)
+    .single();
+
+  if (usedMealType) {
+    throw new Error('Voucher já foi utilizado para este tipo de refeição');
+  }
+
   // Verificar uso diário
   const today = new Date().toISOString().split('T')[0];
   const { data: usedMeals } = await supabase
-    .from('voucher_usage')
+    .from('uso_voucher')
     .select('*')
-    .eq('user_id', user.id)
-    .gte('used_at', today);
+    .eq('usuario_id', user.id)
+    .gte('usado_em', today);
 
   if (usedMeals && usedMeals.length >= 2) {
     throw new Error('Limite diário de refeições atingido');

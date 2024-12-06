@@ -56,6 +56,10 @@ CREATE TABLE IF NOT EXISTS uso_voucher (
   usado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Adicionar índice para otimizar consultas de uso por tipo de refeição
+CREATE INDEX IF NOT EXISTS idx_uso_voucher_usuario_tipo 
+ON uso_voucher(usuario_id, tipo_refeicao_id);
+
 CREATE TABLE IF NOT EXISTS vouchers_extras (
   id SERIAL PRIMARY KEY,
   usuario_id UUID REFERENCES usuarios(id),
