@@ -39,16 +39,16 @@ const EditarTurnoDialog = ({ isOpen, onOpenChange, turno, onSave }) => {
             <Label>Horário de Entrada</Label>
             <Input
               type="time"
-              value={turnoEditado?.hora_inicio || ''}
-              onChange={(e) => setTurnoEditado({ ...turnoEditado, hora_inicio: e.target.value })}
+              value={turnoEditado?.horario_inicio || ''}
+              onChange={(e) => setTurnoEditado({ ...turnoEditado, horario_inicio: e.target.value })}
             />
           </div>
           <div className="space-y-2">
             <Label>Horário de Saída</Label>
             <Input
               type="time"
-              value={turnoEditado?.hora_fim || ''}
-              onChange={(e) => setTurnoEditado({ ...turnoEditado, hora_fim: e.target.value })}
+              value={turnoEditado?.horario_fim || ''}
+              onChange={(e) => setTurnoEditado({ ...turnoEditado, horario_fim: e.target.value })}
             />
           </div>
           <div className="flex items-center space-x-2">

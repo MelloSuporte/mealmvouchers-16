@@ -14,8 +14,8 @@ export const useTurnosActions = () => {
         .from('turnos')
         .insert([{
           tipo_turno: novoTurno.tipo_turno,
-          hora_inicio: novoTurno.hora_inicio,
-          hora_fim: novoTurno.hora_fim,
+          horario_inicio: novoTurno.horario_inicio,
+          horario_fim: novoTurno.horario_fim,
           ativo: novoTurno.ativo
         }])
         .select('*')
@@ -40,8 +40,8 @@ export const useTurnosActions = () => {
       const { data, error } = await supabase
         .from('turnos')
         .update({
-          hora_inicio: updatedTurno.hora_inicio,
-          hora_fim: updatedTurno.hora_fim,
+          horario_inicio: updatedTurno.horario_inicio,
+          horario_fim: updatedTurno.horario_fim,
           ativo: updatedTurno.ativo,
           updated_at: new Date().toISOString()
         })
