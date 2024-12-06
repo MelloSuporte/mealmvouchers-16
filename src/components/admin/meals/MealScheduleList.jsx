@@ -30,13 +30,8 @@ const MealScheduleList = () => {
           throw new Error(`Erro ao buscar refeições: ${error.message}`);
         }
         
-        if (!data || data.length === 0) {
-          console.log('Nenhuma refeição encontrada no banco de dados');
-          return [];
-        }
-        
         console.log('Refeições encontradas:', data);
-        return data;
+        return data || [];
       } catch (error) {
         console.error('Erro na consulta:', error);
         throw error;
@@ -150,13 +145,45 @@ const MealScheduleList = () => {
           </Button>
         </div>
       )}
-      <MealListTable 
-        meals={meals}
-        selectedMeals={selectedMeals}
-        onSelectMeal={handleSelectMeal}
-        onSelectAll={handleSelectAll}
-        onToggleActive={handleToggleActive}
-      />
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-12">
+              <Checkbox 
+                checked={selectedMeals.length === meals.length && meals.length > 0}
+                onCheckedChange={handleSelectAll}
+              />
+            </TableHead>
+            <TableHead>Nome</TableHead>
+            <TableHead>Valor</TableHead>
+            <TableHead>Horário Início</TableHead>
+            <TableHead>Horário Fim</TableHead>
+            <TableHead className="text-right">Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {meals.map((meal) => (
+            <TableRow key={meal.id}>
+              <TableCell>
+                <Checkbox 
+                  checked={selectedMeals.includes(meal.id)}
+                  onCheckedChange={() => handleSelectMeal(meal.id)}
+                />
+              </TableCell>
+              <TableCell>{meal.nome}</TableCell>
+              <TableCell>R$ {meal.valor.toFixed(2)}</TableCell>
+              <TableCell>{meal.horario_inicio || '-'}</TableCell>
+              <TableCell>{meal.horario_fim || '-'}</TableCell>
+              <TableCell className="text-right">
+                <Switch 
+                  checked={meal.ativo}
+                  onCheckedChange={() => handleToggleActive(meal.id, !meal.ativo)}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };
