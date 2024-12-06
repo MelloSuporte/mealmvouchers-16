@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteMeals, toggleMealActive } from './mealMutations';
-import { MealListTable } from './MealListTable';
 import { supabase } from '../../../config/supabase';
 
 const MealScheduleList = () => {
@@ -27,7 +26,7 @@ const MealScheduleList = () => {
 
         if (error) {
           console.error('Erro ao buscar refeições:', error);
-          throw new Error(`Erro ao buscar refeições: ${error.message}`);
+          throw error;
         }
         
         console.log('Refeições encontradas:', data);
@@ -172,8 +171,8 @@ const MealScheduleList = () => {
               </TableCell>
               <TableCell>{meal.nome}</TableCell>
               <TableCell>R$ {meal.valor.toFixed(2)}</TableCell>
-              <TableCell>{meal.horario_inicio || '-'}</TableCell>
-              <TableCell>{meal.horario_fim || '-'}</TableCell>
+              <TableCell>{meal.hora_inicio || '-'}</TableCell>
+              <TableCell>{meal.hora_fim || '-'}</TableCell>
               <TableCell className="text-right">
                 <Switch 
                   checked={meal.ativo}
