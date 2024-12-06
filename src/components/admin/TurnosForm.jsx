@@ -33,6 +33,7 @@ const TurnosForm = () => {
     queryKey: ['turnos'],
     queryFn: async () => {
       try {
+        console.log('Fetching turnos...');
         const { data, error } = await supabase
           .from('turnos')
           .select('*')
@@ -44,6 +45,7 @@ const TurnosForm = () => {
           toast.error(`Erro ao buscar turnos: ${error.message}`);
           throw error;
         }
+        console.log('Turnos fetched:', data);
         return data || [];
       } catch (erro) {
         console.error('Erro ao buscar turnos:', erro);
