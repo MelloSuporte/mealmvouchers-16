@@ -18,19 +18,25 @@ const MealScheduleList = () => {
   const { data: meals = [], isLoading, error } = useQuery({
     queryKey: ['meals'],
     queryFn: async () => {
-      console.log('Fetching meals...');
+      console.log('Iniciando busca de refeições...');
       const { data, error } = await supabase
         .from('tipos_refeicao')
         .select('*')
         .order('nome');
 
       if (error) {
-        console.error('Error fetching meals:', error);
-        throw error;
+        console.error('Erro ao buscar refeições:', error);
+        throw new Error(`Erro ao buscar refeições: ${error.message}`);
       }
       
-      console.log('Meals fetched:', data);
+      console.log('Refeições encontradas:', data);
       return data || [];
+    },
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    onError: (error) => {
+      console.error('Erro na query de refeições:', error);
+      toast.error(`Erro ao carregar refeições: ${error.message}`);
     }
   });
 
@@ -41,7 +47,7 @@ const MealScheduleList = () => {
       toast.success("Status atualizado com sucesso!");
     },
     onError: (error) => {
-      console.error('Error toggling meal status:', error);
+      console.error('Erro ao alterar status da refeição:', error);
       toast.error("Erro ao atualizar status: " + error.message);
     }
   });
@@ -54,12 +60,13 @@ const MealScheduleList = () => {
       toast.success("Refeições selecionadas excluídas com sucesso!");
     },
     onError: (error) => {
-      console.error('Error deleting meals:', error);
+      console.error('Erro ao excluir refeições:', error);
       toast.error("Erro ao excluir refeições: " + error.message);
     }
   });
 
   const handleToggleActive = (id, currentStatus) => {
+    console.log('Alterando status da refeição:', { id, currentStatus });
     toggleActiveMutation.mutate({ id, currentStatus });
   };
 
