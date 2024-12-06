@@ -13,8 +13,8 @@ export const EditMealDialog = ({ meal }) => {
   const [open, setOpen] = React.useState(false);
   const [formData, setFormData] = React.useState({
     nome: meal.nome,
-    hora_inicio: meal.hora_inicio,
-    hora_fim: meal.hora_fim,
+    horario_inicio: meal.horario_inicio,
+    horario_fim: meal.horario_fim,
     valor: meal.valor,
     max_usuarios_por_dia: meal.max_usuarios_por_dia || '',
     minutos_tolerancia: meal.minutos_tolerancia,
@@ -36,7 +36,7 @@ export const EditMealDialog = ({ meal }) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['meals']);
+      queryClient.invalidateQueries(['tipos_refeicao']);
       toast.success("Refeição atualizada com sucesso!");
       setOpen(false);
     },
@@ -94,22 +94,22 @@ export const EditMealDialog = ({ meal }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="hora_inicio">Horário Início</Label>
+              <Label htmlFor="horario_inicio">Horário Início</Label>
               <Input
-                id="hora_inicio"
+                id="horario_inicio"
                 type="time"
-                value={formData.hora_inicio}
-                onChange={(e) => handleInputChange('hora_inicio', e.target.value)}
+                value={formData.horario_inicio}
+                onChange={(e) => handleInputChange('horario_inicio', e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="hora_fim">Horário Fim</Label>
+              <Label htmlFor="horario_fim">Horário Fim</Label>
               <Input
-                id="hora_fim"
+                id="horario_fim"
                 type="time"
-                value={formData.hora_fim}
-                onChange={(e) => handleInputChange('hora_fim', e.target.value)}
+                value={formData.horario_fim}
+                onChange={(e) => handleInputChange('horario_fim', e.target.value)}
                 required
               />
             </div>

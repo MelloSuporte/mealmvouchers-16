@@ -9,6 +9,7 @@ import { Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteMeals, toggleMealActive } from './mealMutations';
 import { supabase } from '../../../config/supabase';
+import { EditMealDialog } from './EditMealDialog';
 
 const MealScheduleList = () => {
   const [selectedMeals, setSelectedMeals] = useState([]);
@@ -151,6 +152,7 @@ const MealScheduleList = () => {
             <TableHead>Max. Usuários/Dia</TableHead>
             <TableHead>Min. Tolerância</TableHead>
             <TableHead className="text-right">Status</TableHead>
+            <TableHead className="w-12">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -164,8 +166,8 @@ const MealScheduleList = () => {
               </TableCell>
               <TableCell>{meal.nome}</TableCell>
               <TableCell>R$ {meal.valor.toFixed(2)}</TableCell>
-              <TableCell>{meal.hora_inicio || '-'}</TableCell>
-              <TableCell>{meal.hora_fim || '-'}</TableCell>
+              <TableCell>{meal.horario_inicio || '-'}</TableCell>
+              <TableCell>{meal.horario_fim || '-'}</TableCell>
               <TableCell>{meal.max_usuarios_por_dia || '-'}</TableCell>
               <TableCell>{meal.minutos_tolerancia || '-'}</TableCell>
               <TableCell className="text-right">
@@ -173,6 +175,9 @@ const MealScheduleList = () => {
                   checked={meal.ativo}
                   onCheckedChange={() => handleToggleActive(meal.id, !meal.ativo)}
                 />
+              </TableCell>
+              <TableCell>
+                <EditMealDialog meal={meal} />
               </TableCell>
             </TableRow>
           ))}
