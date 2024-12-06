@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS empresas (
 CREATE TABLE IF NOT EXISTS turnos (
   id SERIAL PRIMARY KEY,
   tipo_turno VARCHAR(10) CHECK (tipo_turno IN ('central', 'primeiro', 'segundo', 'terceiro')),
-  horario_inicio TIME NOT NULL,
-  horario_fim TIME NOT NULL,
+  hora_inicio TIME NOT NULL,
+  hora_fim TIME NOT NULL,
   ativo BOOLEAN DEFAULT TRUE,
   criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -40,8 +40,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE TABLE IF NOT EXISTS tipos_refeicao (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
-  horario_inicio TIME,
-  horario_fim TIME,
+  hora_inicio TIME,
+  hora_fim TIME,
   valor DECIMAL(10,2) NOT NULL,
   ativo BOOLEAN DEFAULT TRUE,
   max_usuarios_por_dia INTEGER,
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS vouchers_extras (
 CREATE INDEX IF NOT EXISTS idx_vouchers_extras_codigo ON vouchers_extras(codigo);
 
 -- Inserir configurações padrão de turnos
-INSERT INTO turnos (tipo_turno, horario_inicio, horario_fim, ativo) VALUES
+INSERT INTO turnos (tipo_turno, hora_inicio, hora_fim, ativo) VALUES
   ('central', '08:00:00', '17:00:00', true),
   ('primeiro', '06:00:00', '14:00:00', true),
   ('segundo', '14:00:00', '22:00:00', true),
