@@ -21,7 +21,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true
   },
   global: {
-    headers: { 'x-my-custom-header': 'voucher-app' }
+    headers: { 
+      'x-my-custom-header': 'voucher-app',
+      'apikey': supabaseAnonKey,
+      'Authorization': `Bearer ${supabaseAnonKey}`
+    }
   }
 });
 
@@ -36,7 +40,8 @@ const checkConnection = async () => {
     logger.info('Conexão com Supabase verificada com sucesso');
     console.log('Conexão Supabase bem-sucedida:', {
       url: supabaseUrl,
-      authenticated: !!data.session
+      authenticated: !!data.session,
+      headers: supabase.rest.headers
     });
     return true;
   } catch (error) {
