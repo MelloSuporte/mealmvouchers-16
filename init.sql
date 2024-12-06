@@ -85,7 +85,7 @@ INSERT INTO tipos_refeicao (nome, valor, ativo, minutos_tolerancia) VALUES
 -- Criar view para visualização detalhada do uso de vouchers
 DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
 
-CREATE VIEW vw_uso_voucher_detalhado AS
+CREATE VIEW vw_uso_voucher_detalhado WITH (security_barrier) AS
 SELECT 
     uv.id,
     u.nome as nome_usuario,
@@ -103,6 +103,8 @@ JOIN empresas e ON u.empresa_id = e.id
 LEFT JOIN turnos t ON u.turno_id = t.id
 ORDER BY uv.usado_em DESC;
 
--- Conceder permissões para a view
+-- Conceder permissões explícitas para a view
+ALTER VIEW vw_uso_voucher_detalhado OWNER TO postgres;
 GRANT SELECT ON vw_uso_voucher_detalhado TO authenticated;
+GRANT SELECT ON vw_uso_voucher_detalhado TO anon;
 GRANT SELECT ON vw_uso_voucher_detalhado TO service_role;
