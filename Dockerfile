@@ -28,10 +28,12 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 RUN mkdir -p /var/log/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
     chmod -R 755 /usr/share/nginx/html && \
-    chown -R nginx:nginx /usr/share/nginx/html
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /etc/nginx/conf.d && \
+    chown -R nginx:nginx /etc/nginx/conf.d
 
 # Expose port
 EXPOSE 80
 
-# Start nginx
+# Start nginx with proper permissions
 CMD ["nginx", "-g", "daemon off;"]
