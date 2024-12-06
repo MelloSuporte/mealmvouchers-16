@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 export const useDisposableVoucherFormLogic = () => {
   const [quantity, setQuantity] = useState(1);
@@ -13,46 +13,57 @@ export const useDisposableVoucherFormLogic = () => {
   const { data: mealTypes, isLoading } = useQuery({
     queryKey: ['mealTypes'],
     queryFn: async () => {
+      console.log('Iniciando busca de tipos de refeição...');
       const { data, error } = await supabase
         .from('tipos_refeicao')
-        .select('id, nome, valor, ativo')
+        .select('*')
         .eq('ativo', true);
 
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  // Atualizada a query para filtrar vouchers não usados e não expirados
-  const { data: allVouchers = [] } = useQuery({
-    queryKey: ['disposableVouchers'],
-    queryFn: async () => {
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      
-      const { data, error } = await supabase
-        .from('vouchers_descartaveis')
-        .select(`
-          *,
-          tipos_refeicao (
-            nome,
-            valor,
-            hora_inicio,
-            hora_fim,
-            minutos_tolerancia
-          )
-        `)
-        .eq('usado', false)
-        .gte('data_expiracao', now.toISOString())
-        .order('data_expiracao', { ascending: true });
-
       if (error) {
-        console.error('Erro ao buscar vouchers:', error);
+        console.error('Erro ao buscar tipos de refeição:', error);
+        toast.error(`Erro ao buscar tipos de refeição: ${error.message}`);
         throw error;
       }
 
-      console.log('Vouchers ativos encontrados:', data?.length || 0);
+      console.log('Tipos de refeição encontrados:', data);
       return data || [];
+    }
+  });
+
+  const { data: allVouchers = [] } = useQuery({
+    queryKey: ['disposableVouchers'],
+    queryFn: async () => {
+      try {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        
+        const { data, error } = await supabase
+          .from('vouchers_descartaveis')
+          .select(`
+            *,
+            tipos_refeicao (
+              nome,
+              valor,
+              horario_inicio,
+              horario_fim,
+              minutos_tolerancia
+            )
+          `)
+          .eq('usado', false)
+          .gte('data_expiracao', now.toISOString())
+          .order('data_expiracao', { ascending: true });
+
+        if (error) {
+          console.error('Erro ao buscar vouchers:', error);
+          throw error;
+        }
+
+        return data || [];
+      } catch (error) {
+        console.error('Erro ao buscar vouchers:', error);
+        toast.error(`Erro ao buscar vouchers: ${error.message}`);
+        return [];
+      }
     },
     refetchInterval: 5000 // Atualiza a lista a cada 5 segundos
   });
@@ -112,8 +123,8 @@ export const useDisposableVoucherFormLogic = () => {
                 tipos_refeicao (
                   nome,
                   valor,
-                  hora_inicio,
-                  hora_fim,
+                  horario_inicio,
+                  horario_fim,
                   minutos_tolerancia
                 )
               `)
