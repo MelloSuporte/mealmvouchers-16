@@ -19,21 +19,32 @@ const MealScheduleList = () => {
     queryKey: ['meals'],
     queryFn: async () => {
       console.log('Iniciando busca de refeições...');
-      const { data, error } = await supabase
-        .from('tipos_refeicao')
-        .select('*')
-        .order('nome');
+      try {
+        const { data, error } = await supabase
+          .from('tipos_refeicao')
+          .select('*')
+          .order('nome');
 
-      if (error) {
-        console.error('Erro ao buscar refeições:', error);
-        throw new Error(`Erro ao buscar refeições: ${error.message}`);
+        if (error) {
+          console.error('Erro ao buscar refeições:', error);
+          throw new Error(`Erro ao buscar refeições: ${error.message}`);
+        }
+        
+        if (!data || data.length === 0) {
+          console.log('Nenhuma refeição encontrada no banco de dados');
+          return [];
+        }
+        
+        console.log('Refeições encontradas:', data);
+        return data;
+      } catch (error) {
+        console.error('Erro na consulta:', error);
+        throw error;
       }
-      
-      console.log('Refeições encontradas:', data);
-      return data || [];
     },
     retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnWindowFocus: true,
     onError: (error) => {
       console.error('Erro na query de refeições:', error);
       toast.error(`Erro ao carregar refeições: ${error.message}`);
