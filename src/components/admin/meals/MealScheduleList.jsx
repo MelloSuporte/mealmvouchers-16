@@ -15,20 +15,20 @@ const MealScheduleList = () => {
   const queryClient = useQueryClient();
 
   const { data: meals = [], isLoading, error } = useQuery({
-    queryKey: ['meals'],
+    queryKey: ['tipos_refeicao'],
     queryFn: async () => {
-      console.log('Iniciando busca de refeições...');
+      console.log('Iniciando busca de tipos de refeição...');
       const { data, error } = await supabase
         .from('tipos_refeicao')
         .select('*')
         .order('nome');
 
       if (error) {
-        console.error('Erro ao buscar refeições:', error);
+        console.error('Erro ao buscar tipos de refeição:', error);
         throw error;
       }
       
-      console.log('Refeições encontradas:', data);
+      console.log('Tipos de refeição encontrados:', data);
       return data || [];
     },
     retry: 3,
@@ -39,7 +39,7 @@ const MealScheduleList = () => {
   const toggleActiveMutation = useMutation({
     mutationFn: toggleMealActive,
     onSuccess: () => {
-      queryClient.invalidateQueries(['meals']);
+      queryClient.invalidateQueries(['tipos_refeicao']);
       toast.success("Status atualizado com sucesso!");
     },
     onError: (error) => {
@@ -51,7 +51,7 @@ const MealScheduleList = () => {
   const deleteMealsMutation = useMutation({
     mutationFn: deleteMeals,
     onSuccess: () => {
-      queryClient.invalidateQueries(['meals']);
+      queryClient.invalidateQueries(['tipos_refeicao']);
       setSelectedMeals([]);
       toast.success("Refeições selecionadas excluídas com sucesso!");
     },
@@ -148,6 +148,8 @@ const MealScheduleList = () => {
             <TableHead>Valor</TableHead>
             <TableHead>Horário Início</TableHead>
             <TableHead>Horário Fim</TableHead>
+            <TableHead>Max. Usuários/Dia</TableHead>
+            <TableHead>Min. Tolerância</TableHead>
             <TableHead className="text-right">Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -164,6 +166,8 @@ const MealScheduleList = () => {
               <TableCell>R$ {meal.valor.toFixed(2)}</TableCell>
               <TableCell>{meal.hora_inicio || '-'}</TableCell>
               <TableCell>{meal.hora_fim || '-'}</TableCell>
+              <TableCell>{meal.max_usuarios_por_dia || '-'}</TableCell>
+              <TableCell>{meal.minutos_tolerancia || '-'}</TableCell>
               <TableCell className="text-right">
                 <Switch 
                   checked={meal.ativo}
