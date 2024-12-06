@@ -33,7 +33,7 @@ const TurnosForm = () => {
     queryKey: ['turnos'],
     queryFn: async () => {
       try {
-        console.log('Fetching turnos...');
+        console.log('Buscando turnos...');
         const { data, error } = await supabase
           .from('turnos')
           .select('*')
@@ -45,7 +45,8 @@ const TurnosForm = () => {
           toast.error(`Erro ao buscar turnos: ${error.message}`);
           throw error;
         }
-        console.log('Turnos fetched:', data);
+
+        console.log('Turnos encontrados:', data);
         return data || [];
       } catch (erro) {
         console.error('Erro ao buscar turnos:', erro);
@@ -100,9 +101,13 @@ const TurnosForm = () => {
   }
 
   if (erro) {
+    console.error('Erro detalhado:', erro);
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
         <p className="text-red-600">Erro ao buscar turnos: {erro.message}</p>
+        <pre className="mt-2 text-sm text-red-500 overflow-auto">
+          {JSON.stringify(erro, null, 2)}
+        </pre>
         <Button 
           onClick={() => recarregar()} 
           variant="outline" 
@@ -115,6 +120,7 @@ const TurnosForm = () => {
   }
 
   const turnos = Array.isArray(dadosTurnos) ? dadosTurnos : [];
+  console.log('Renderizando turnos:', turnos);
 
   return (
     <div className="space-y-6">
