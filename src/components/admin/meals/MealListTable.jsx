@@ -2,7 +2,6 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EditMealDialog } from './EditMealDialog';
 
 export const MealListTable = ({ 
   meals, 
@@ -12,57 +11,44 @@ export const MealListTable = ({
   onToggleActive 
 }) => {
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">
-              <Checkbox
-                checked={selectedMeals.length === meals.length}
-                onCheckedChange={onSelectAll}
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-12">
+            <Checkbox 
+              checked={selectedMeals.length === meals.length && meals.length > 0}
+              onCheckedChange={onSelectAll}
+            />
+          </TableHead>
+          <TableHead>Nome</TableHead>
+          <TableHead>Valor</TableHead>
+          <TableHead>Horário Início</TableHead>
+          <TableHead>Horário Fim</TableHead>
+          <TableHead className="text-right">Status</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {meals.map((meal) => (
+          <TableRow key={meal.id}>
+            <TableCell>
+              <Checkbox 
+                checked={selectedMeals.includes(meal.id)}
+                onCheckedChange={() => onSelectMeal(meal.id)}
               />
-            </TableHead>
-            <TableHead>Refeição</TableHead>
-            <TableHead>Horário</TableHead>
-            <TableHead>Valor</TableHead>
-            <TableHead>Limite/Dia</TableHead>
-            <TableHead>Tolerância</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Ações</TableHead>
+            </TableCell>
+            <TableCell>{meal.nome}</TableCell>
+            <TableCell>R$ {meal.valor.toFixed(2)}</TableCell>
+            <TableCell>{meal.hora_inicio || '-'}</TableCell>
+            <TableCell>{meal.hora_fim || '-'}</TableCell>
+            <TableCell className="text-right">
+              <Switch 
+                checked={meal.ativo}
+                onCheckedChange={() => onToggleActive(meal.id, !meal.ativo)}
+              />
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {meals.map((meal) => (
-            <TableRow key={meal.id}>
-              <TableCell>
-                <Checkbox
-                  checked={selectedMeals.includes(meal.id)}
-                  onCheckedChange={() => onSelectMeal(meal.id)}
-                />
-              </TableCell>
-              <TableCell>{meal.nome}</TableCell>
-              <TableCell>{meal.hora_inicio} - {meal.hora_fim}</TableCell>
-              <TableCell>
-                {parseFloat(meal.valor).toLocaleString('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL'
-                })}
-              </TableCell>
-              <TableCell>{meal.max_usuarios_por_dia || 'Sem limite'}</TableCell>
-              <TableCell>{meal.minutos_tolerancia} min</TableCell>
-              <TableCell>
-                <Switch
-                  checked={meal.ativo}
-                  onCheckedChange={() => onToggleActive(meal.id, meal.ativo)}
-                />
-              </TableCell>
-              <TableCell>
-                <EditMealDialog meal={meal} />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+        ))}
+      </TableBody>
+    </Table>
   );
 };

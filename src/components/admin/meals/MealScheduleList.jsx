@@ -18,13 +18,19 @@ const MealScheduleList = () => {
   const { data: meals = [], isLoading, error } = useQuery({
     queryKey: ['meals'],
     queryFn: async () => {
+      console.log('Fetching meals...');
       const { data, error } = await supabase
         .from('tipos_refeicao')
         .select('*')
         .order('nome');
 
-      if (error) throw error;
-      return Array.isArray(data) ? data : [];
+      if (error) {
+        console.error('Error fetching meals:', error);
+        throw error;
+      }
+      
+      console.log('Meals fetched:', data);
+      return data || [];
     }
   });
 
@@ -35,6 +41,7 @@ const MealScheduleList = () => {
       toast.success("Status atualizado com sucesso!");
     },
     onError: (error) => {
+      console.error('Error toggling meal status:', error);
       toast.error("Erro ao atualizar status: " + error.message);
     }
   });
@@ -47,6 +54,7 @@ const MealScheduleList = () => {
       toast.success("Refeições selecionadas excluídas com sucesso!");
     },
     onError: (error) => {
+      console.error('Error deleting meals:', error);
       toast.error("Erro ao excluir refeições: " + error.message);
     }
   });
@@ -99,7 +107,7 @@ const MealScheduleList = () => {
     );
   }
 
-  if (!Array.isArray(meals) || meals.length === 0) {
+  if (!meals || meals.length === 0) {
     return (
       <div className="text-center py-4 text-gray-500">
         Nenhuma refeição cadastrada
