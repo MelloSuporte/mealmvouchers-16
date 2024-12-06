@@ -30,7 +30,10 @@ const MealScheduleList = () => {
       
       console.log('Refeições encontradas:', data);
       return data || [];
-    }
+    },
+    retry: 3,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnWindowFocus: true
   });
 
   const toggleActiveMutation = useMutation({
@@ -159,8 +162,8 @@ const MealScheduleList = () => {
               </TableCell>
               <TableCell>{meal.nome}</TableCell>
               <TableCell>R$ {meal.valor.toFixed(2)}</TableCell>
-              <TableCell>{meal.hora_inicio || '-'}</TableCell>
-              <TableCell>{meal.hora_fim || '-'}</TableCell>
+              <TableCell>{meal.horario_inicio || '-'}</TableCell>
+              <TableCell>{meal.horario_fim || '-'}</TableCell>
               <TableCell className="text-right">
                 <Switch 
                   checked={meal.ativo}
