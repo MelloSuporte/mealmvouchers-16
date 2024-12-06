@@ -82,12 +82,11 @@ INSERT INTO turnos (tipo_turno, horario_inicio, horario_fim, ativo) VALUES
 INSERT INTO tipos_refeicao (nome, valor, ativo, minutos_tolerancia) VALUES
   ('Refeição Extra', 15.00, true, 15);
 
--- Criar view para visualização detalhada do uso de vouchers
+-- Remover a view existente se ela existir
 DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
 
-CREATE OR REPLACE VIEW vw_uso_voucher_detalhado 
-WITH (security_barrier=true)
-AS
+-- Criar a view sem SECURITY DEFINER e com security_barrier
+CREATE VIEW vw_uso_voucher_detalhado AS
 SELECT 
     uv.id,
     u.nome as nome_usuario,
