@@ -15,6 +15,11 @@ echo Limpando ambiente anterior...
 docker compose down -v 2>nul
 docker system prune -f 2>nul
 
+REM Criar diretórios necessários
+echo Criando diretórios...
+if not exist "volumes" mkdir volumes
+if not exist "volumes\storage" mkdir volumes\storage
+
 REM Criar rede Docker se não existir
 echo Criando rede Docker...
 docker network create supabase-network 2>nul
@@ -24,6 +29,9 @@ echo.
 echo Baixando imagens do Docker Hub...
 docker compose pull
 
+REM Aguardar um pouco
+timeout /t 5 /nobreak > nul
+
 REM Iniciar os serviços com docker-compose
 echo.
 echo Iniciando serviços Supabase...
@@ -32,7 +40,7 @@ docker compose up -d
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo Aguardando serviços iniciarem...
-    ping -n 10 127.0.0.1 > nul
+    timeout /t 10 /nobreak > nul
     
     echo.
     echo Supabase iniciado com sucesso!
@@ -43,17 +51,17 @@ if %ERRORLEVEL% EQU 0 (
     echo Meta: http://localhost:8080
     echo.
     echo Credenciais padrão:
-    echo Database Host: postgresql
-    echo Database Port: 6543
-    echo Database User: postgres.bh
-    echo Database Password: Voucher#2024@
-    echo Database Name: postgresql
+    echo Database Host: db
+    echo Database Port: 5432
+    echo Database User: postgres
+    echo Database Password: postgres
+    echo Database Name: postgres
     
     REM Importar schema inicial
     echo.
     echo Importando schema inicial...
-    docker cp supabase/migrations/20231209000000_initial_schema.sql postgresql:/tmp/
-    docker exec postgresql psql -U postgres.bh -d postgresql -f /tmp/20231209000000_initial_schema.sql
+    docker cp migrations/20231209000000_initial_schema.sql supabase-db:/tmp/
+    docker exec supabase-db psql -U postgres -d postgres -f /tmp/20231209000000_initial_schema.sql
     
     if %ERRORLEVEL% EQU 0 (
         echo Schema importado com sucesso!
