@@ -2,25 +2,19 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.fixed2
-    container_name: meal-vouchers-app
+      dockerfile: Dockerfile.fixed
     ports:
       - "3000:80"
     volumes:
+      - ./nginx.fixed2.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./dist:/usr/share/nginx/html:ro
       - nginx_logs:/var/log/nginx
     environment:
       - NODE_ENV=production
       - TZ=America/Sao_Paulo
-      - LANG=pt_BR.UTF-8
-      - LANGUAGE=pt_BR:pt
-      - LC_ALL=pt_BR.UTF-8
       - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
       - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
       - VITE_SUPABASE_SERVICE_ROLE_KEY=${VITE_SUPABASE_SERVICE_ROLE_KEY}
-      - VITE_API_URL=${VITE_API_URL}
-      - VITE_APP_NAME=${VITE_APP_NAME}
-      - VITE_APP_DESCRIPTION=${VITE_APP_DESCRIPTION}
-      - VITE_APP_VERSION=${VITE_APP_VERSION}
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:80/ || exit 1"]
       interval: 30s
@@ -37,3 +31,4 @@ networks:
 
 volumes:
   nginx_logs:
+  app_data:

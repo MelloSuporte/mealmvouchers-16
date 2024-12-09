@@ -100,7 +100,7 @@ export const useDisposableVoucherFormLogic = () => {
 
     setIsGenerating(true);
     try {
-      const vouchers = [];
+      const voucherIds = [];
       
       for (const data of selectedDates) {
         for (const tipo_refeicao_id of selectedMealTypes) {
@@ -109,39 +109,25 @@ export const useDisposableVoucherFormLogic = () => {
             
             console.log(`Gerando voucher com código ${code} para data ${data}`);
             
-            const { data: voucher, error } = await supabase
-              .from('vouchers_descartaveis')
-              .insert({
-                codigo: code,
-                tipo_refeicao_id: tipo_refeicao_id,
-                data_expiracao: data.toISOString(),
-                usado: false,
-                data_criacao: new Date().toISOString()
-              })
-              .select(`
-                *,
-                tipos_refeicao (
-                  nome,
-                  valor,
-                  horario_inicio,
-                  horario_fim,
-                  minutos_tolerancia
-                )
-              `)
-              .single();
+            const { data: voucherId, error } = await supabase
+              .rpc('insert_voucher_descartavel', {
+                p_tipo_refeicao_id: tipo_refeicao_id,
+                p_data_expiracao: data.toISOString().split('T')[0],
+                p_codigo: code
+              });
 
             if (error) {
               console.error('Erro ao inserir voucher:', error);
               throw error;
             }
 
-            vouchers.push(voucher);
+            voucherIds.push(voucherId);
           }
         }
       }
 
-      console.log(`${vouchers.length} vouchers gerados com sucesso`);
-      toast.success(`${vouchers.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
+      console.log(`${voucherIds.length} vouchers gerados com sucesso`);
+      toast.success(`${voucherIds.length} voucher(s) descartável(is) gerado(s) com sucesso!`);
       queryClient.invalidateQueries({ queryKey: ['disposableVouchers'] });
     } catch (error) {
       console.error('Erro ao gerar vouchers:', error);

@@ -72,9 +72,15 @@ export const useVoucherFormLogic = (
 
         console.log('Dados do voucher a ser inserido:', voucherData);
 
-        const { error: voucherError } = await supabase
-          .from('vouchers_extras')
-          .insert([voucherData]);
+        const { data: insertedVoucher, error: voucherError } = await supabase
+          .rpc('insert_voucher_extra', {
+            p_usuario_id: selectedUser,
+            p_tipo_refeicao_id: tipoRefeicao.id,
+            p_autorizado_por: 'Sistema',
+            p_codigo: userData.voucher,
+            p_valido_ate: data,
+            p_observacao: observacao.trim() || 'Voucher extra gerado via sistema'
+          });
 
         if (voucherError) {
           console.error('Erro ao inserir voucher:', voucherError);

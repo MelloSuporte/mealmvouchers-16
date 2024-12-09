@@ -1,6 +1,12 @@
 # Build stage
 FROM oven/bun:1-debian as builder
 
+# Configurar localização
+ENV LANG=pt_BR.UTF-8
+ENV LANGUAGE=pt_BR:pt
+ENV LC_ALL=pt_BR.UTF-8
+ENV TZ=America/Sao_Paulo
+
 WORKDIR /app
 
 # Copy configuration files
@@ -9,14 +15,25 @@ COPY package.json ./
 # Install dependencies and generate lockfile
 RUN bun install
 
-# Copy source code
+# Copy source code and env file
 COPY . .
+COPY .env.production .env
+
+# Install terser
+RUN bun add -d terser
 
 # Build the application
 RUN bun run build
+RUN ls -la dist/
 
 # Production stage
 FROM nginx:alpine
+
+# Configurar localização no nginx
+ENV LANG=pt_BR.UTF-8
+ENV LANGUAGE=pt_BR:pt
+ENV LC_ALL=pt_BR.UTF-8
+ENV TZ=America/Sao_Paulo
 
 # Remove default nginx configuration
 RUN rm /etc/nginx/conf.d/default.conf
@@ -25,7 +42,10 @@ RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.fixed2.conf /etc/nginx/conf.d/default.conf
 
 # Copy built files from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html/
+
+# Verify files were copied
+RUN ls -la /usr/share/nginx/html/
 
 # Create necessary directories and set permissions
 RUN mkdir -p /var/log/nginx /var/cache/nginx /var/run && \
