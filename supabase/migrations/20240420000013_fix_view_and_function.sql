@@ -1,13 +1,13 @@
--- Drop existing view
+-- Remove view existente
 DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
 
--- Recreate view with correct column names
+-- Recria view com nomes de colunas corretos
 CREATE OR REPLACE VIEW vw_uso_voucher_detalhado
 WITH (security_barrier = true, security_invoker = true)
 AS
 SELECT 
     uv.id as uso_id,
-    uv.data_uso,  -- This was previously 'usado_em'
+    uv.data_uso,  -- Anteriormente era 'usado_em'
     COALESCE(u.voucher, vd.codigo) as codigo_voucher,
     CASE 
         WHEN u.voucher IS NOT NULL THEN 'comum'
@@ -36,10 +36,10 @@ FROM
     LEFT JOIN empresas e ON u.empresa_id = e.id
     LEFT JOIN turnos t ON u.turno_id = t.id;
 
--- Drop existing function
+-- Remove função existente
 DROP FUNCTION IF EXISTS insert_voucher_descartavel CASCADE;
 
--- Recreate function with correct field names
+-- Recria função com nomes de campos corretos
 CREATE OR REPLACE FUNCTION insert_voucher_descartavel(
     p_tipo_refeicao_id UUID,
     p_data_expiracao DATE,
@@ -103,12 +103,12 @@ EXCEPTION
 END;
 $$;
 
--- Set function permissions
+-- Define permissões da função
 REVOKE ALL ON FUNCTION insert_voucher_descartavel FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION insert_voucher_descartavel TO authenticated;
 
--- Add comment
+-- Adiciona comentário
 COMMENT ON FUNCTION insert_voucher_descartavel IS 'Insere um novo voucher descartável com validações de segurança';
 
--- Grant permissions on view
+-- Concede permissões na view
 GRANT SELECT ON vw_uso_voucher_detalhado TO authenticated;
