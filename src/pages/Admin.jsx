@@ -7,7 +7,7 @@ import ReportForm from '@/components/admin/ReportForm';
 import RLSForm from '@/components/admin/RLSForm';
 import DisposableVoucherForm from '@/components/admin/DisposableVoucherForm';
 import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
-import TurnosForm from '@/components/admin/TurnosForm';
+import TurnosManager from '@/components/admin/turnos/TurnosManager';
 
 const Admin = () => {
   return (
@@ -37,7 +37,7 @@ const Admin = () => {
         </TabsContent>
 
         <TabsContent value="turnos" className="space-y-4">
-          <TurnosForm />
+          <TurnosManager />
         </TabsContent>
 
         <TabsContent value="relatorios" className="space-y-4">
