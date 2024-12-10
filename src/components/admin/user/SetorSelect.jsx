@@ -33,23 +33,17 @@ const SetorSelect = ({ value, onValueChange }) => {
     }
   });
 
-  if (isLoading) {
-    return (
-      <Select disabled>
-        <SelectTrigger>
-          <SelectValue>Carregando setores...</SelectValue>
-        </SelectTrigger>
-      </Select>
-    );
-  }
-
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select 
+      value={value} 
+      onValueChange={onValueChange}
+      disabled={isLoading}
+    >
       <SelectTrigger>
-        <SelectValue placeholder="Selecione o setor" />
+        <SelectValue placeholder={isLoading ? "Carregando setores..." : "Selecione o setor"} />
       </SelectTrigger>
       <SelectContent>
-        {setores?.map((setor) => (
+        {!isLoading && setores?.map((setor) => (
           <SelectItem key={setor.id} value={setor.id.toString()}>
             {setor.nome}
           </SelectItem>
