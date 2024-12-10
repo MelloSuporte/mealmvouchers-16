@@ -25,6 +25,7 @@ CREATE TABLE usuarios (
     email VARCHAR(255) UNIQUE NOT NULL,
     empresa_id UUID REFERENCES empresas(id),
     turno_id UUID REFERENCES turnos(id),
+    setor_id INTEGER REFERENCES setores(id),
     ativo BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -94,6 +95,7 @@ CREATE TABLE uso_voucher (
 empresas 1 ----* usuarios
 usuarios 1 ----* vouchers
 turnos 1 ----* usuarios
+setores 1 ----* usuarios
 vouchers 1 ----* uso_voucher
 tipos_refeicao 1 ----* uso_voucher
 ```
@@ -227,3 +229,4 @@ SELECT relname, n_dead_tup
 FROM pg_stat_user_tables
 ORDER BY n_dead_tup DESC;
 ```
+
