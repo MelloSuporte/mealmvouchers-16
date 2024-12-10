@@ -18,21 +18,15 @@ export const AdminProvider = ({ children }) => {
 
   const checkAuth = useCallback(() => {
     try {
-      console.log('Verificando autenticação do admin...');
       const adminToken = localStorage.getItem('adminToken');
       const storedType = localStorage.getItem('adminType');
       
-      console.log('Token:', adminToken);
-      console.log('Tipo:', storedType);
-
       if (adminToken && storedType) {
         setIsAuthenticated(true);
         setAdminType(storedType);
-        console.log('Admin autenticado com sucesso como:', storedType);
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
-        console.log('Admin não autenticado - token ou tipo ausente');
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
@@ -44,12 +38,10 @@ export const AdminProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    console.log('AdminProvider montado - verificando autenticação');
     checkAuth();
   }, [checkAuth]);
 
   const logout = useCallback(() => {
-    console.log('Realizando logout...');
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminType');
     localStorage.removeItem('adminPermissions');
@@ -76,8 +68,6 @@ export const AdminProvider = ({ children }) => {
     logout,
     checkAuth
   };
-
-  console.log('Estado atual do AdminProvider:', value);
 
   return (
     <AdminContext.Provider value={value}>

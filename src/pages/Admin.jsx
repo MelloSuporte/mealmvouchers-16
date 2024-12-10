@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { toast } from "sonner";
 import { useAdmin } from '../contexts/AdminContext';
 import UserForm from '../components/admin/UserForm';
 import CompanyForm from '../components/admin/CompanyForm';
@@ -19,25 +18,20 @@ const Admin = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, logout } = useAdmin();
 
-  useEffect(() => {
-    console.log('Admin component montado');
-    console.log('Estado de autenticação:', { isAuthenticated, isLoading });
-
-    if (!isLoading && !isAuthenticated) {
-      console.log('Usuário não autenticado, redirecionando...');
-      navigate('/voucher');
+  React.useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      navigate('/admin-login');
       return;
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [navigate]);
 
   const handleLogout = () => {
-    console.log('Iniciando logout...');
     logout();
-    navigate('/voucher');
+    navigate('/admin-login');
   };
 
   if (isLoading) {
-    console.log('Exibindo estado de carregamento...');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -46,11 +40,10 @@ const Admin = () => {
   }
 
   if (!isAuthenticated) {
-    console.log('Não autenticado, retornando null');
+    navigate('/admin-login');
     return null;
   }
 
-  console.log('Renderizando interface do admin...');
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex justify-between items-center">
