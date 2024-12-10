@@ -33,7 +33,15 @@ const SetorSelect = ({ value, onValueChange }) => {
     }
   });
 
-  if (isLoading) return <SelectTrigger>Carregando setores...</SelectTrigger>;
+  if (isLoading) {
+    return (
+      <Select disabled>
+        <SelectTrigger>
+          <SelectValue>Carregando setores...</SelectValue>
+        </SelectTrigger>
+      </Select>
+    );
+  }
 
   return (
     <Select value={value} onValueChange={onValueChange}>
