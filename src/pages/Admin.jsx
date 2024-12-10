@@ -14,7 +14,6 @@ import ReportForm from '../components/admin/ReportForm';
 import TurnosForm from '../components/admin/TurnosForm';
 import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
 import AdminList from '../components/admin/managers/AdminList';
-import logger from '../config/logger';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -24,30 +23,32 @@ const Admin = () => {
     console.log('Admin component mounted');
     console.log('Authentication state:', { isAuthenticated, isMasterAdmin, isManager });
 
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      console.log('No admin token found, redirecting...');
-      toast.error("Sessão expirada. Por favor, faça login novamente.");
-      navigate('/voucher');
-      return;
-    }
+    if (!isLoading) {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        console.log('No admin token found, redirecting...');
+        toast.error("Sessão expirada. Por favor, faça login novamente.");
+        navigate('/voucher');
+        return;
+      }
 
-    if (!isAuthenticated) {
-      console.log('User not authenticated, redirecting...');
-      toast.error("Acesso não autorizado");
-      navigate('/voucher');
-      return;
-    }
+      if (!isAuthenticated) {
+        console.log('User not authenticated, redirecting...');
+        toast.error("Acesso não autorizado");
+        navigate('/voucher');
+        return;
+      }
 
-    if (!isMasterAdmin && !isManager) {
-      console.log('User does not have admin privileges');
-      toast.error("Acesso não autorizado");
-      navigate('/voucher');
-      return;
-    }
+      if (!isMasterAdmin && !isManager) {
+        console.log('User does not have admin privileges');
+        toast.error("Acesso não autorizado");
+        navigate('/voucher');
+        return;
+      }
 
-    console.log('Admin page loaded successfully');
-  }, [navigate, isMasterAdmin, isManager, isAuthenticated]);
+      console.log('Admin page loaded successfully');
+    }
+  }, [navigate, isMasterAdmin, isManager, isAuthenticated, isLoading]);
 
   const handleLogout = () => {
     console.log('Logout initiated');
@@ -57,6 +58,7 @@ const Admin = () => {
   };
 
   if (isLoading) {
+    console.log('Showing loading state...');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -64,10 +66,12 @@ const Admin = () => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !isMasterAdmin && !isManager) {
+    console.log('Not authenticated or not admin/manager, returning null');
     return null;
   }
 
+  console.log('Rendering admin interface...');
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex justify-between items-center">

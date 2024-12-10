@@ -25,14 +25,14 @@ export const AdminProvider = ({ children }) => {
       console.log('Admin token:', adminToken);
       console.log('Stored type:', storedType);
 
-      if (adminToken) {
+      if (adminToken && storedType) {
         setIsAuthenticated(true);
-        setAdminType(storedType || 'master');
-        console.log('Admin authenticated as:', storedType || 'master');
+        setAdminType(storedType);
+        console.log('Admin authenticated as:', storedType);
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
-        console.log('Admin not authenticated');
+        console.log('Admin not authenticated - missing token or type');
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
@@ -46,6 +46,7 @@ export const AdminProvider = ({ children }) => {
 
   useEffect(() => {
     console.log('AdminProvider mounted');
+    setIsLoading(true);
     checkAuth();
   }, [checkAuth]);
 
@@ -69,14 +70,6 @@ export const AdminProvider = ({ children }) => {
   };
 
   console.log('AdminProvider state:', value);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
 
   return (
     <AdminContext.Provider value={value}>
