@@ -1,14 +1,8 @@
--- Drop ALL existing policies
-DROP POLICY IF EXISTS "enable_read_for_all_users" ON vouchers_extras;
-DROP POLICY IF EXISTS "enable_insert_for_authenticated_users" ON vouchers_extras;
-DROP POLICY IF EXISTS "enable_update_for_authenticated_users" ON vouchers_extras;
+-- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Vouchers extras visíveis para todos os usuários autenticados" ON vouchers_extras;
 DROP POLICY IF EXISTS "Apenas usuários autenticados podem criar vouchers extras" ON vouchers_extras;
 DROP POLICY IF EXISTS "Apenas usuários autenticados podem atualizar vouchers extras" ON vouchers_extras;
 DROP POLICY IF EXISTS "Vouchers extras são visíveis para todos" ON vouchers_extras;
-DROP POLICY IF EXISTS "vouchers_extras_select_policy" ON vouchers_extras;
-DROP POLICY IF EXISTS "vouchers_extras_insert_policy" ON vouchers_extras;
-DROP POLICY IF EXISTS "vouchers_extras_update_policy" ON vouchers_extras;
 
 -- Disable RLS temporarily
 ALTER TABLE vouchers_extras DISABLE ROW LEVEL SECURITY;
@@ -38,7 +32,3 @@ GRANT ALL ON vouchers_extras TO authenticated;
 GRANT ALL ON vouchers_extras TO service_role;
 GRANT USAGE ON SEQUENCE vouchers_extras_id_seq TO authenticated;
 GRANT USAGE ON SEQUENCE vouchers_extras_id_seq TO service_role;
-
--- Ensure the RPC function has proper permissions
-GRANT EXECUTE ON FUNCTION insert_voucher_extra TO authenticated;
-GRANT EXECUTE ON FUNCTION insert_voucher_extra TO service_role;
