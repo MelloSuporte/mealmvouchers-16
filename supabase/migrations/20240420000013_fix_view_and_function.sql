@@ -22,7 +22,7 @@ SELECT
     tr.nome as tipo_refeicao,
     tr.valor as valor_refeicao,
     e.nome as empresa,
-    t.nome as turno
+    t.tipo_turno as turno
 FROM 
     uso_voucher uv
     LEFT JOIN usuarios u ON uv.usuario_id = u.id
