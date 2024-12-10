@@ -19,16 +19,20 @@ const Admin = () => {
   const { isAuthenticated, isLoading, logout } = useAdmin();
 
   React.useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      navigate('/admin-login');
-      return;
-    }
+    const checkAuth = () => {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        navigate('/voucher');
+        return;
+      }
+    };
+    
+    checkAuth();
   }, [navigate]);
 
   const handleLogout = () => {
     logout();
-    navigate('/admin-login');
+    navigate('/voucher');
   };
 
   if (isLoading) {
@@ -40,7 +44,6 @@ const Admin = () => {
   }
 
   if (!isAuthenticated) {
-    navigate('/admin-login');
     return null;
   }
 
