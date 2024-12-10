@@ -3,7 +3,8 @@ ALTER TABLE empresas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE turnos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE setores ENABLE ROW LEVEL SECURITY;
-ALTER TABLE vouchers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vouchers_extras ENABLE ROW LEVEL SECURITY;
 ALTER TABLE uso_voucher ENABLE ROW LEVEL SECURITY;
 
 -- Empresas policies
@@ -81,9 +82,33 @@ USING (
     )
 );
 
--- Vouchers policies
-CREATE POLICY "Usuários podem ver seus próprios vouchers"
-ON vouchers FOR SELECT
+-- Vouchers descartáveis policies
+CREATE POLICY "Usuários podem ver vouchers descartáveis disponíveis"
+ON vouchers_descartaveis FOR SELECT
+TO authenticated
+USING (
+    NOT usado OR
+    EXISTS (
+        SELECT 1 FROM auth.users
+        WHERE auth.uid() = id
+        AND raw_user_meta_data->>'role' IN ('admin', 'manager')
+    )
+);
+
+CREATE POLICY "Apenas admins e managers podem gerenciar vouchers descartáveis"
+ON vouchers_descartaveis FOR ALL
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM auth.users
+        WHERE auth.uid() = id
+        AND raw_user_meta_data->>'role' IN ('admin', 'manager')
+    )
+);
+
+-- Vouchers extras policies
+CREATE POLICY "Usuários podem ver seus vouchers extras"
+ON vouchers_extras FOR SELECT
 TO authenticated
 USING (
     usuario_id = auth.uid() OR
@@ -94,8 +119,8 @@ USING (
     )
 );
 
-CREATE POLICY "Apenas admins e managers podem gerenciar vouchers"
-ON vouchers FOR ALL
+CREATE POLICY "Apenas admins e managers podem gerenciar vouchers extras"
+ON vouchers_extras FOR ALL
 TO authenticated
 USING (
     EXISTS (
@@ -111,9 +136,9 @@ ON uso_voucher FOR SELECT
 TO authenticated
 USING (
     EXISTS (
-        SELECT 1 FROM vouchers v
-        WHERE v.id = voucher_id
-        AND v.usuario_id = auth.uid()
+        SELECT 1 FROM vouchers_extras ve
+        WHERE ve.id = voucher_id
+        AND ve.usuario_id = auth.uid()
     ) OR
     EXISTS (
         SELECT 1 FROM auth.users
