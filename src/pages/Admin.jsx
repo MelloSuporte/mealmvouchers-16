@@ -1,138 +1,59 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from 'react-router-dom';
-import { useAdmin } from '../contexts/AdminContext';
-import UserForm from '../components/admin/UserForm';
-import CompanyForm from '../components/admin/CompanyForm';
-import MealScheduleManager from '../components/admin/meals/MealScheduleManager';
-import RLSForm from '../components/admin/RLSForm';
-import BackgroundImageForm from '../components/admin/BackgroundImageForm';
-import ReportForm from '../components/admin/ReportForm';
-import TurnosForm from '../components/admin/TurnosForm';
-import DisposableVoucherForm from '../components/admin/DisposableVoucherForm';
-import AdminList from '../components/admin/managers/AdminList';
+import UserFormMain from '@/components/admin/UserFormMain';
+import CompanyForm from '@/components/admin/CompanyForm';
+import MealTypeForm from '@/components/admin/MealTypeForm';
+import ReportForm from '@/components/admin/ReportForm';
+import RLSForm from '@/components/admin/RLSForm';
+import DisposableVoucherForm from '@/components/admin/DisposableVoucherForm';
+import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
+import TurnosManager from '@/components/admin/turnos/TurnosManager';
 
 const Admin = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, isLoading, logout } = useAdmin();
-
-  React.useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      navigate('/admin-login');
-    }
-  }, [navigate]);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/admin-login');
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    navigate('/admin-login');
-    return null;
-  }
-
   return (
-    <div className="container mx-auto p-4 space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Painel de Administração</h1>
-        <Button onClick={handleLogout} variant="outline">Logout</Button>
-      </div>
-
-      <Tabs defaultValue="users" className="w-full space-y-4">
-        <TabsList className="grid w-full grid-cols-9">
-          <TabsTrigger value="users">Usuários</TabsTrigger>
-          <TabsTrigger value="companies">Empresas</TabsTrigger>
-          <TabsTrigger value="meals">Refeições</TabsTrigger>
-          <TabsTrigger value="rls">Vouchers Extras</TabsTrigger>
-          <TabsTrigger value="disposable">Vouchers Descartáveis</TabsTrigger>
-          <TabsTrigger value="backgrounds">Imagens de Fundo</TabsTrigger>
-          <TabsTrigger value="reports">Relatórios</TabsTrigger>
+    <div className="container mx-auto py-6">
+      <Tabs defaultValue="usuarios" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+          <TabsTrigger value="empresas">Empresas</TabsTrigger>
+          <TabsTrigger value="refeicoes">Refeições</TabsTrigger>
           <TabsTrigger value="turnos">Turnos</TabsTrigger>
-          <TabsTrigger value="managers">Gerentes</TabsTrigger>
+          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+          <TabsTrigger value="rls">RLS</TabsTrigger>
+          <TabsTrigger value="vouchers">Vouchers Descartáveis</TabsTrigger>
+          <TabsTrigger value="imagens">Imagens de Fundo</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="users">
-          <Card>
-            <CardContent className="pt-6">
-              <UserForm />
-            </CardContent>
-          </Card>
+        <TabsContent value="usuarios" className="space-y-4">
+          <UserFormMain />
         </TabsContent>
 
-        <TabsContent value="companies">
-          <Card>
-            <CardContent className="pt-6">
-              <CompanyForm />
-            </CardContent>
-          </Card>
+        <TabsContent value="empresas" className="space-y-4">
+          <CompanyForm />
         </TabsContent>
 
-        <TabsContent value="meals">
-          <Card>
-            <CardContent className="pt-6">
-              <MealScheduleManager />
-            </CardContent>
-          </Card>
+        <TabsContent value="refeicoes" className="space-y-4">
+          <MealTypeForm />
         </TabsContent>
 
-        <TabsContent value="rls">
-          <Card>
-            <CardContent className="pt-6">
-              <RLSForm />
-            </CardContent>
-          </Card>
+        <TabsContent value="turnos" className="space-y-4">
+          <TurnosManager />
         </TabsContent>
 
-        <TabsContent value="disposable">
-          <Card>
-            <CardContent className="pt-6">
-              <DisposableVoucherForm />
-            </CardContent>
-          </Card>
+        <TabsContent value="relatorios" className="space-y-4">
+          <ReportForm />
         </TabsContent>
 
-        <TabsContent value="backgrounds">
-          <Card>
-            <CardContent className="pt-6">
-              <BackgroundImageForm />
-            </CardContent>
-          </Card>
+        <TabsContent value="rls" className="space-y-4">
+          <RLSForm />
         </TabsContent>
 
-        <TabsContent value="reports">
-          <Card>
-            <CardContent className="pt-6">
-              <ReportForm />
-            </CardContent>
-          </Card>
+        <TabsContent value="vouchers" className="space-y-4">
+          <DisposableVoucherForm />
         </TabsContent>
 
-        <TabsContent value="turnos">
-          <Card>
-            <CardContent className="pt-6">
-              <TurnosForm />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="managers">
-          <Card>
-            <CardContent className="pt-6">
-              <AdminList />
-            </CardContent>
-          </Card>
+        <TabsContent value="imagens" className="space-y-4">
+          <BackgroundImageForm />
         </TabsContent>
       </Tabs>
     </div>
