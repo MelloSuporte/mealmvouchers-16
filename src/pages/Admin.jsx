@@ -20,19 +20,24 @@ const Admin = () => {
   const { isAuthenticated, isLoading, logout } = useAdmin();
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token || !isAuthenticated) {
+    console.log('Admin component montado');
+    console.log('Estado de autenticação:', { isAuthenticated, isLoading });
+
+    if (!isLoading && !isAuthenticated) {
+      console.log('Usuário não autenticado, redirecionando...');
       navigate('/voucher');
       return;
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   const handleLogout = () => {
+    console.log('Iniciando logout...');
     logout();
     navigate('/voucher');
   };
 
   if (isLoading) {
+    console.log('Exibindo estado de carregamento...');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -41,9 +46,11 @@ const Admin = () => {
   }
 
   if (!isAuthenticated) {
+    console.log('Não autenticado, retornando null');
     return null;
   }
 
+  console.log('Renderizando interface do admin...');
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex justify-between items-center">
