@@ -5,51 +5,20 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import CompanySelect from './CompanySelect';
 import TurnoSelect from './TurnoSelect';
+import SetorSelect from './SetorSelect';
 import { Upload } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/config/supabase';
-import { toast } from 'sonner';
 
 const UserFormFields = ({
   formData,
   onInputChange,
   onSave,
   isSubmitting,
-  searchCPF,
-  setSearchCPF,
-  onSearch,
-  isSearching,
   showVoucher,
   onToggleVoucher,
   handlePhotoUpload
 }) => {
-  const { data: turnos, isLoading: isLoadingTurnos } = useQuery({
-    queryKey: ['turnos'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('turnos')
-        .select('*')
-        .eq('ativo', true)
-        .order('id');
-
-      if (error) {
-        toast.error('Erro ao carregar turnos');
-        throw error;
-      }
-
-      return data || [];
-    }
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (typeof onSave === 'function') {
-      onSave();
-    }
-  };
-
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form className="space-y-4" onSubmit={onSave}>
       <div className="space-y-2">
         <Label htmlFor="userName" className="required">Nome Completo</Label>
         <Input
@@ -58,7 +27,6 @@ const UserFormFields = ({
           onChange={(e) => onInputChange('userName', e.target.value)}
           placeholder="Digite o nome completo"
           required
-          className={!formData.userName.trim() ? 'border-red-500' : ''}
         />
       </div>
 
@@ -70,7 +38,6 @@ const UserFormFields = ({
           onChange={(e) => onInputChange('userCPF', e.target.value)}
           placeholder="000.000.000-00"
           required
-          className={!formData.userCPF.trim() ? 'border-red-500' : ''}
         />
       </div>
 
@@ -79,8 +46,14 @@ const UserFormFields = ({
         <CompanySelect
           value={formData.company}
           onValueChange={(value) => onInputChange('company', value)}
-          required
-          className={!formData.company ? 'border-red-500' : ''}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="setor" className="required">Setor</Label>
+        <SetorSelect
+          value={formData.selectedSetor}
+          onValueChange={(value) => onInputChange('selectedSetor', value)}
         />
       </div>
 
@@ -89,8 +62,6 @@ const UserFormFields = ({
         <TurnoSelect
           value={formData.selectedTurno}
           onValueChange={(value) => onInputChange('selectedTurno', value)}
-          turnos={turnos}
-          isLoadingTurnos={isLoadingTurnos}
         />
       </div>
 
@@ -102,7 +73,6 @@ const UserFormFields = ({
           onChange={(e) => onInputChange('voucher', e.target.value)}
           placeholder="Digite o voucher"
           required
-          className={!formData.voucher.trim() ? 'border-red-500' : ''}
         />
       </div>
 

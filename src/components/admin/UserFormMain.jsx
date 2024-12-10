@@ -15,6 +15,7 @@ const UserFormMain = () => {
     userCPF: '',
     company: '',
     selectedTurno: '',
+    selectedSetor: '',
     isSuspended: false,
     userPhoto: null,
     voucher: ''
