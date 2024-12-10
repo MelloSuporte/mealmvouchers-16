@@ -25,14 +25,14 @@ export const AdminProvider = ({ children }) => {
       console.log('Admin token:', adminToken);
       console.log('Stored type:', storedType);
 
-      if (adminToken && storedType) {
+      if (adminToken) {
         setIsAuthenticated(true);
-        setAdminType(storedType);
-        console.log('Admin authenticated as:', storedType);
+        setAdminType(storedType || 'master');
+        console.log('Admin authenticated as:', storedType || 'master');
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
-        console.log('Admin not authenticated - missing token or type');
+        console.log('Admin not authenticated');
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
@@ -46,7 +46,6 @@ export const AdminProvider = ({ children }) => {
 
   useEffect(() => {
     console.log('AdminProvider mounted');
-    setIsLoading(true);
     checkAuth();
   }, [checkAuth]);
 

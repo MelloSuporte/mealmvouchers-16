@@ -21,33 +21,31 @@ const Admin = () => {
 
   useEffect(() => {
     console.log('Admin component mounted');
-    console.log('Authentication state:', { isAuthenticated, isMasterAdmin, isManager });
+    console.log('Authentication state:', { isAuthenticated, isMasterAdmin, isManager, isLoading });
 
-    if (!isLoading) {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        console.log('No admin token found, redirecting...');
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
-        navigate('/voucher');
-        return;
-      }
-
-      if (!isAuthenticated) {
-        console.log('User not authenticated, redirecting...');
-        toast.error("Acesso não autorizado");
-        navigate('/voucher');
-        return;
-      }
-
-      if (!isMasterAdmin && !isManager) {
-        console.log('User does not have admin privileges');
-        toast.error("Acesso não autorizado");
-        navigate('/voucher');
-        return;
-      }
-
-      console.log('Admin page loaded successfully');
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      console.log('No admin token found, redirecting...');
+      toast.error("Sessão expirada. Por favor, faça login novamente.");
+      navigate('/voucher');
+      return;
     }
+
+    if (!isAuthenticated && !isLoading) {
+      console.log('User not authenticated, redirecting...');
+      toast.error("Acesso não autorizado");
+      navigate('/voucher');
+      return;
+    }
+
+    if (!isMasterAdmin && !isManager && !isLoading) {
+      console.log('User does not have admin privileges');
+      toast.error("Acesso não autorizado");
+      navigate('/voucher');
+      return;
+    }
+
+    console.log('Admin page loaded successfully');
   }, [navigate, isMasterAdmin, isManager, isAuthenticated, isLoading]);
 
   const handleLogout = () => {
@@ -66,7 +64,7 @@ const Admin = () => {
     );
   }
 
-  if (!isAuthenticated || !isMasterAdmin && !isManager) {
+  if (!isAuthenticated || (!isMasterAdmin && !isManager)) {
     console.log('Not authenticated or not admin/manager, returning null');
     return null;
   }
@@ -163,7 +161,6 @@ const Admin = () => {
             </CardContent>
           </Card>
         </TabsContent>
-
       </Tabs>
     </div>
   );
