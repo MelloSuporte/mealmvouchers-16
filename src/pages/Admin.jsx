@@ -17,35 +17,22 @@ import AdminList from '../components/admin/managers/AdminList';
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { isMasterAdmin, isManager, logout, isAuthenticated, isLoading } = useAdmin();
+  const { isAuthenticated, isLoading, logout } = useAdmin();
 
   useEffect(() => {
-    console.log('Admin component mounted');
-    console.log('Authentication state:', { isAuthenticated, isMasterAdmin, isManager, isLoading });
-
     const token = localStorage.getItem('adminToken');
-    if (!token) {
-      console.log('No admin token found, redirecting...');
-      toast.error("Sessão expirada. Por favor, faça login novamente.");
+    if (!token || !isAuthenticated) {
       navigate('/voucher');
       return;
     }
-
-    if (!isAuthenticated && !isLoading) {
-      console.log('User not authenticated, redirecting...');
-      toast.error("Acesso não autorizado");
-      navigate('/voucher');
-    }
-  }, [navigate, isMasterAdmin, isManager, isAuthenticated, isLoading]);
+  }, [isAuthenticated, navigate]);
 
   const handleLogout = () => {
-    console.log('Logout initiated');
     logout();
     navigate('/voucher');
   };
 
   if (isLoading) {
-    console.log('Showing loading state...');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -54,11 +41,9 @@ const Admin = () => {
   }
 
   if (!isAuthenticated) {
-    console.log('Not authenticated, returning null');
     return null;
   }
 
-  console.log('Rendering admin interface...');
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex justify-between items-center">

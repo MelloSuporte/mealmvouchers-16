@@ -18,27 +18,20 @@ export const AdminProvider = ({ children }) => {
 
   const checkAuth = useCallback(() => {
     try {
-      console.log('Checking admin authentication...');
       const adminToken = localStorage.getItem('adminToken');
       const storedType = localStorage.getItem('adminType');
-      const adminPermissions = localStorage.getItem('adminPermissions');
       
-      console.log('Admin token:', adminToken);
-      console.log('Stored type:', storedType);
-      console.log('Admin permissions:', adminPermissions);
-
       if (adminToken && storedType) {
         setIsAuthenticated(true);
         setAdminType(storedType);
-        console.log('Admin authenticated as:', storedType);
+        console.log('Admin autenticado como:', storedType);
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
-        console.log('Admin not authenticated - missing token or type');
+        console.log('Admin não autenticado');
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
-      toast.error("Erro ao verificar autenticação");
       setIsAuthenticated(false);
       setAdminType(null);
     } finally {
@@ -47,7 +40,6 @@ export const AdminProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    console.log('AdminProvider mounted');
     checkAuth();
   }, [checkAuth]);
 
@@ -55,7 +47,6 @@ export const AdminProvider = ({ children }) => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminType');
     localStorage.removeItem('adminPermissions');
-    localStorage.removeItem('adminId');
     setIsAuthenticated(false);
     setAdminType(null);
     toast.success("Logout realizado com sucesso");
@@ -72,16 +63,13 @@ export const AdminProvider = ({ children }) => {
       try {
         const permissions = JSON.parse(localStorage.getItem('adminPermissions') || '{}');
         return permissions[permission] === true;
-      } catch (error) {
-        console.error('Erro ao verificar permissão:', error);
+      } catch {
         return false;
       }
     },
     logout,
     checkAuth
   };
-
-  console.log('AdminProvider state:', value);
 
   return (
     <AdminContext.Provider value={value}>
