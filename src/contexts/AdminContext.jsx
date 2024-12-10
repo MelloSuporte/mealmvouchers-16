@@ -18,40 +18,35 @@ export const AdminProvider = ({ children }) => {
 
   const checkAuth = useCallback(() => {
     try {
+      console.log('Checking admin authentication...');
       const adminToken = localStorage.getItem('adminToken');
       const storedType = localStorage.getItem('adminType');
       
+      console.log('Admin token:', adminToken);
+      console.log('Stored type:', storedType);
+
       if (adminToken) {
         setIsAuthenticated(true);
-        setAdminType('master');
-      } else if (storedType) {
-        setIsAuthenticated(true);
-        setAdminType(storedType);
+        setAdminType(storedType || 'master');
+        console.log('Admin authenticated as:', storedType || 'master');
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
+        console.log('Admin not authenticated');
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
       toast.error("Erro ao verificar autenticação");
       setIsAuthenticated(false);
       setAdminType(null);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const initializeAdmin = async () => {
-      try {
-        checkAuth();
-      } catch (error) {
-        console.error('Erro ao inicializar admin:', error);
-        toast.error("Erro ao carregar dados do administrador");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAdmin();
+    console.log('AdminProvider mounted');
+    checkAuth();
   }, [checkAuth]);
 
   const logout = useCallback(() => {
@@ -72,6 +67,8 @@ export const AdminProvider = ({ children }) => {
     logout,
     checkAuth
   };
+
+  console.log('AdminProvider state:', value);
 
   if (isLoading) {
     return (

@@ -18,48 +18,54 @@ import logger from '../config/logger';
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { isMasterAdmin, isManager, logout, isAuthenticated } = useAdmin();
+  const { isMasterAdmin, isManager, logout, isAuthenticated, isLoading } = useAdmin();
 
   useEffect(() => {
+    console.log('Admin component mounted');
+    console.log('Authentication state:', { isAuthenticated, isMasterAdmin, isManager });
+
     const token = localStorage.getItem('adminToken');
     if (!token) {
-      logger.warn('Admin token not found, redirecting to voucher page');
+      console.log('No admin token found, redirecting...');
       toast.error("Sessão expirada. Por favor, faça login novamente.");
       navigate('/voucher');
       return;
     }
 
     if (!isAuthenticated) {
-      logger.warn('User not authenticated, redirecting to voucher page');
+      console.log('User not authenticated, redirecting...');
       toast.error("Acesso não autorizado");
       navigate('/voucher');
       return;
     }
 
     if (!isMasterAdmin && !isManager) {
-      logger.warn('User does not have admin privileges');
+      console.log('User does not have admin privileges');
       toast.error("Acesso não autorizado");
       navigate('/voucher');
       return;
     }
 
-    logger.info('Admin page loaded successfully');
+    console.log('Admin page loaded successfully');
   }, [navigate, isMasterAdmin, isManager, isAuthenticated]);
 
   const handleLogout = () => {
-    logger.info('Admin logout initiated');
+    console.log('Logout initiated');
     logout();
     toast.success("Logout realizado com sucesso!");
     navigate('/voucher');
   };
 
-  // If not authenticated or loading, show loading state
-  if (!isAuthenticated) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (
@@ -153,6 +159,7 @@ const Admin = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
       </Tabs>
     </div>
   );
