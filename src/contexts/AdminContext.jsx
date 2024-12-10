@@ -21,18 +21,20 @@ export const AdminProvider = ({ children }) => {
       console.log('Checking admin authentication...');
       const adminToken = localStorage.getItem('adminToken');
       const storedType = localStorage.getItem('adminType');
+      const adminPermissions = localStorage.getItem('adminPermissions');
       
       console.log('Admin token:', adminToken);
       console.log('Stored type:', storedType);
+      console.log('Admin permissions:', adminPermissions);
 
-      if (adminToken) {
+      if (adminToken && storedType) {
         setIsAuthenticated(true);
-        setAdminType(storedType || 'master');
-        console.log('Admin authenticated as:', storedType || 'master');
+        setAdminType(storedType);
+        console.log('Admin authenticated as:', storedType);
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
-        console.log('Admin not authenticated');
+        console.log('Admin not authenticated - missing token or type');
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
@@ -52,6 +54,8 @@ export const AdminProvider = ({ children }) => {
   const logout = useCallback(() => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminType');
+    localStorage.removeItem('adminPermissions');
+    localStorage.removeItem('adminId');
     setIsAuthenticated(false);
     setAdminType(null);
     toast.success("Logout realizado com sucesso");
@@ -63,7 +67,16 @@ export const AdminProvider = ({ children }) => {
     isAuthenticated,
     isMasterAdmin: adminType === 'master',
     isManager: adminType === 'manager' || adminType === 'master',
-    hasPermission: () => isAuthenticated,
+    hasPermission: (permission) => {
+      if (adminType === 'master') return true;
+      try {
+        const permissions = JSON.parse(localStorage.getItem('adminPermissions') || '{}');
+        return permissions[permission] === true;
+      } catch (error) {
+        console.error('Erro ao verificar permissão:', error);
+        return false;
+      }
+    },
     logout,
     checkAuth
   };

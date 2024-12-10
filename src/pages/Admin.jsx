@@ -35,23 +35,12 @@ const Admin = () => {
       console.log('User not authenticated, redirecting...');
       toast.error("Acesso não autorizado");
       navigate('/voucher');
-      return;
     }
-
-    if (!isMasterAdmin && !isManager && !isLoading) {
-      console.log('User does not have admin privileges');
-      toast.error("Acesso não autorizado");
-      navigate('/voucher');
-      return;
-    }
-
-    console.log('Admin page loaded successfully');
   }, [navigate, isMasterAdmin, isManager, isAuthenticated, isLoading]);
 
   const handleLogout = () => {
     console.log('Logout initiated');
     logout();
-    toast.success("Logout realizado com sucesso!");
     navigate('/voucher');
   };
 
@@ -64,8 +53,8 @@ const Admin = () => {
     );
   }
 
-  if (!isAuthenticated || (!isMasterAdmin && !isManager)) {
-    console.log('Not authenticated or not admin/manager, returning null');
+  if (!isAuthenticated) {
+    console.log('Not authenticated, returning null');
     return null;
   }
 
