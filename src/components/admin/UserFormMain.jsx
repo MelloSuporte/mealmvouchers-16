@@ -56,7 +56,7 @@ const UserFormMain = () => {
     setFormData,
     setIsSubmitting,
     setIsSearching,
-    setShowVoucher
+    handleVoucherToggle
   );
 
   return (
