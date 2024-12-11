@@ -65,7 +65,7 @@ CREATE POLICY "vouchers_extras_select_policy" ON vouchers_extras
         EXISTS (
             SELECT 1 FROM usuarios u
             WHERE u.id = auth.uid()
-            AND u.role = 'admin'
+            AND u.role IN ('admin')
             AND NOT u.suspenso
         )
     );
@@ -93,7 +93,7 @@ CREATE POLICY "vouchers_extras_update_policy" ON vouchers_extras
         EXISTS (
             SELECT 1 FROM usuarios u
             WHERE u.id = auth.uid()
-            AND u.role = 'admin'
+            AND u.role IN ('admin')
             AND NOT u.suspenso
         )
     );
@@ -174,9 +174,9 @@ CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
     WITH CHECK (
         -- Apenas sistema pode registrar uso
         EXISTS (
-            SELECT 1 FROM usuarios u
-            WHERE u.id = auth.uid()
-            AND u.role = 'system'
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND au.role = 'system'
         )
         -- Validações adicionais via triggers:
         -- - Limite diário de refeições
@@ -191,72 +191,10 @@ CREATE POLICY "uso_voucher_update_policy" ON uso_voucher
     USING (
         -- Apenas admins podem atualizar em caso de contingência
         EXISTS (
-            SELECT 1 FROM usuarios u
-            WHERE u.id = auth.uid()
-            AND u.role = 'admin'
-            AND NOT u.suspenso
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND au.role = 'admin'
+            AND NOT au.suspenso
         )
     );
-```
-
-## Funções de Validação
-```sql
--- Função para validar horário da refeição
-CREATE OR REPLACE FUNCTION validate_meal_time(
-    p_tipo_refeicao_id UUID,
-    p_horario TIME
-)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-    RETURN EXISTS (
-        SELECT 1 FROM tipos_refeicao tr
-        WHERE tr.id = p_tipo_refeicao_id
-        AND p_horario BETWEEN tr.hora_inicio AND tr.hora_fim + interval '15 minutes'
-    );
-END;
-$$;
-
--- Função para validar limite diário
-CREATE OR REPLACE FUNCTION validate_daily_limit(
-    p_usuario_id UUID,
-    p_tipo_refeicao_id UUID
-)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-    v_count INTEGER;
-BEGIN
-    SELECT COUNT(*)
-    INTO v_count
-    FROM uso_voucher
-    WHERE usuario_id = p_usuario_id
-    AND tipo_refeicao_id = p_tipo_refeicao_id
-    AND DATE(usado_em) = CURRENT_DATE;
-
-    RETURN v_count < 1;
-END;
-$$;
-
--- Função para validar intervalo entre refeições
-CREATE OR REPLACE FUNCTION validate_meal_interval(
-    p_usuario_id UUID
-)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-    RETURN NOT EXISTS (
-        SELECT 1
-        FROM uso_voucher
-        WHERE usuario_id = p_usuario_id
-        AND usado_em > NOW() - interval '3 hours'
-    );
-END;
-$$;
 ```
