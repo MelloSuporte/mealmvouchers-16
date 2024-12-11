@@ -20,7 +20,7 @@ const Admin = () => {
           <TabsTrigger value="refeicoes">Refeições</TabsTrigger>
           <TabsTrigger value="turnos">Turnos</TabsTrigger>
           <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
-          <TabsTrigger value="rls">RLS</TabsTrigger>
+          <TabsTrigger value="rls">Vouchers Extras</TabsTrigger>
           <TabsTrigger value="vouchers">Vouchers Descartáveis</TabsTrigger>
           <TabsTrigger value="imagens">Imagens de Fundo</TabsTrigger>
           <TabsTrigger value="gerentes">Gerentes</TabsTrigger>
