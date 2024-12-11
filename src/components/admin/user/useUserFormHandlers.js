@@ -115,13 +115,33 @@ export const useUserFormHandlers = (
 
       logger.info('Tentando salvar usuário:', userData);
 
-      const { error } = await supabase
+      // First check if user exists
+      const { data: existingUser } = await supabase
         .from('usuarios')
-        .upsert(userData)
-        .select()
+        .select('id')
+        .eq('cpf', cleanCPF)
         .single();
 
-      if (error) throw error;
+      let result;
+      
+      if (existingUser) {
+        // Update existing user
+        result = await supabase
+          .from('usuarios')
+          .update(userData)
+          .eq('id', existingUser.id)
+          .select()
+          .single();
+      } else {
+        // Insert new user
+        result = await supabase
+          .from('usuarios')
+          .insert([userData])
+          .select()
+          .single();
+      }
+
+      if (result.error) throw result.error;
 
       toast.success('Usuário salvo com sucesso!');
       
