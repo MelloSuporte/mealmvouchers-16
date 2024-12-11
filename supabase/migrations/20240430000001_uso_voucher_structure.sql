@@ -14,7 +14,7 @@ BEGIN
         AND column_name = 'voucher_extra_id'
     ) THEN
         ALTER TABLE uso_voucher 
-        ADD COLUMN voucher_extra_id UUID REFERENCES vouchers_extras(id);
+        ADD COLUMN voucher_extra_id INTEGER REFERENCES vouchers_extras(id);
     END IF;
 
     -- Add observacao if it doesn't exist
