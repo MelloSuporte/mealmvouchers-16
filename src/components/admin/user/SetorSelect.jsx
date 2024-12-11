@@ -12,14 +12,20 @@ import { toast } from 'sonner';
 import logger from '../../../config/logger';
 
 const SetorSelect = ({ value, onValueChange }) => {
-  const { data: setores, isLoading } = useQuery({
+  const { data: setores, isLoading, error } = useQuery({
     queryKey: ['setores'],
     queryFn: async () => {
       logger.info('Iniciando busca de setores...');
       
+      // Log da conexão Supabase
+      logger.info('Conexão Supabase:', {
+        url: supabase.supabaseUrl,
+        hasAuth: !!supabase.auth,
+      });
+
       const { data, error } = await supabase
         .from('setores')
-        .select('*')
+        .select('id, nome')
         .eq('ativo', true)
         .order('nome');
 
@@ -29,8 +35,8 @@ const SetorSelect = ({ value, onValueChange }) => {
         throw error;
       }
 
-      // Log the actual data received
-      logger.info('Dados recebidos dos setores:', data);
+      // Log detalhado dos dados recebidos
+      logger.info('Dados brutos recebidos dos setores:', data);
       logger.info(`Total de setores encontrados: ${data?.length || 0}`);
 
       if (!data || data.length === 0) {
@@ -40,18 +46,26 @@ const SetorSelect = ({ value, onValueChange }) => {
 
       return data || [];
     },
-    retry: 1,
+    retry: 2,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 
-  // Log the current state
+  // Log do estado atual
   React.useEffect(() => {
     logger.info('Estado atual dos setores:', {
       loading: isLoading,
+      error: error,
       setoresCount: setores?.length,
       setores: setores
     });
-  }, [setores, isLoading]);
+  }, [setores, isLoading, error]);
+
+  if (error) {
+    logger.error('Erro no componente SetorSelect:', error);
+    toast.error('Erro ao carregar setores');
+  }
 
   return (
     <Select 
