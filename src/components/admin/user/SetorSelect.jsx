@@ -29,6 +29,10 @@ const SetorSelect = ({ value, onValueChange }) => {
       }
 
       logger.info(`${data?.length || 0} setores encontrados`);
+      if (!data || data.length === 0) {
+        logger.info('Nenhum setor cadastrado ou ativo no momento');
+        toast.warning('Nenhum setor disponível para seleção');
+      }
       return data || [];
     }
   });
@@ -40,7 +44,13 @@ const SetorSelect = ({ value, onValueChange }) => {
       disabled={isLoading}
     >
       <SelectTrigger className="w-full h-8 text-sm">
-        <SelectValue placeholder={isLoading ? "Carregando setores..." : "Selecione o setor"} />
+        <SelectValue placeholder={
+          isLoading 
+            ? "Carregando setores..." 
+            : !setores?.length 
+              ? "Nenhum setor disponível" 
+              : "Selecione o setor"
+        } />
       </SelectTrigger>
       <SelectContent>
         {setores && setores.length > 0 ? (
@@ -51,7 +61,7 @@ const SetorSelect = ({ value, onValueChange }) => {
           ))
         ) : (
           <SelectItem value="no-setores" disabled>
-            Nenhum setor disponível
+            {isLoading ? "Carregando..." : "Nenhum setor cadastrado"}
           </SelectItem>
         )}
       </SelectContent>
