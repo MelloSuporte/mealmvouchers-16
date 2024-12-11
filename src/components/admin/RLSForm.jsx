@@ -150,7 +150,7 @@ const RLSForm = () => {
               mode="multiple"
               selected={selectedDates}
               onSelect={setSelectedDates}
-              className="rounded-md border p-0.5 scale-75 origin-top-left"
+              className="rounded-md border w-full"
               locale={ptBR}
               disabled={(date) => {
                 const today = new Date();
@@ -160,10 +160,10 @@ const RLSForm = () => {
               classNames={{
                 day_selected: "bg-primary text-primary-foreground hover:bg-primary/90",
                 day_today: "bg-accent text-accent-foreground",
-                day: "h-4 w-4 text-[8px] p-0 font-normal aria-selected:opacity-100",
+                day: "h-6 w-6 text-[8px] p-0 font-normal aria-selected:opacity-100",
                 head_cell: "text-[8px] font-normal",
                 caption: "text-[8px]",
-                nav_button: "h-3 w-3",
+                nav_button: "h-4 w-4",
                 table: "w-full border-collapse space-y-0.5",
               }}
             />
