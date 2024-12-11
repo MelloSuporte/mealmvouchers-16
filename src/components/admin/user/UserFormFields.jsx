@@ -20,11 +20,11 @@ const UserFormFields = ({
 }) => {
   return (
     <form 
-      className="space-y-6 max-w-3xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700" 
+      className="space-y-4 max-w-2xl mx-auto bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700" 
       onSubmit={onSave}
     >
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Cadastro de Usuário</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Cadastro de Usuário</h2>
         <div className="flex items-center space-x-2">
           <input
             type="file"
@@ -37,15 +37,15 @@ const UserFormFields = ({
             <img 
               src={typeof formData.userPhoto === 'string' ? formData.userPhoto : URL.createObjectURL(formData.userPhoto)} 
               alt="Foto do usuário" 
-              className="w-10 h-10 rounded-full object-cover border-2 border-primary" 
+              className="w-8 h-8 rounded-full object-cover border-2 border-primary" 
             />
           )}
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="userName" className="text-sm font-medium">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="userName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Nome Completo
           </Label>
           <Input
@@ -53,13 +53,13 @@ const UserFormFields = ({
             value={formData.userName}
             onChange={(e) => onInputChange('userName', e.target.value)}
             placeholder="Digite o nome completo"
-            className="h-9"
+            className="h-8 text-sm"
             required
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="userCPF" className="text-sm font-medium">
+        <div className="space-y-1.5">
+          <Label htmlFor="userCPF" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             CPF
           </Label>
           <Input
@@ -67,13 +67,13 @@ const UserFormFields = ({
             value={formData.userCPF}
             onChange={(e) => onInputChange('userCPF', e.target.value)}
             placeholder="000.000.000-00"
-            className="h-9"
+            className="h-8 text-sm"
             required
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="company" className="text-sm font-medium">
+        <div className="space-y-1.5">
+          <Label htmlFor="company" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Empresa
           </Label>
           <CompanySelect
@@ -82,8 +82,8 @@ const UserFormFields = ({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="setor" className="text-sm font-medium">
+        <div className="space-y-1.5">
+          <Label htmlFor="setor" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Setor
           </Label>
           <SetorSelect
@@ -92,8 +92,8 @@ const UserFormFields = ({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="turno" className="text-sm font-medium">
+        <div className="space-y-1.5">
+          <Label htmlFor="turno" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Turno
           </Label>
           <TurnoSelect
@@ -102,8 +102,8 @@ const UserFormFields = ({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="voucher" className="text-sm font-medium">
+        <div className="space-y-1.5">
+          <Label htmlFor="voucher" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Voucher
           </Label>
           <Input
@@ -112,7 +112,7 @@ const UserFormFields = ({
             onChange={(e) => onInputChange('voucher', e.target.value)}
             placeholder="Digite o voucher"
             className={cn(
-              "h-9",
+              "h-8 text-sm",
               formData.voucher && "bg-gray-50 dark:bg-gray-800"
             )}
             required
@@ -120,7 +120,7 @@ const UserFormFields = ({
         </div>
       </div>
 
-      <div className="flex items-center space-x-2 py-2 px-2 bg-gray-50 dark:bg-gray-800 rounded-md">
+      <div className="flex items-center space-x-2 py-1.5 px-2 bg-gray-50 dark:bg-gray-800 rounded-md mt-2">
         <Switch
           id="suspend-user"
           checked={formData.isSuspended}
@@ -135,25 +135,25 @@ const UserFormFields = ({
         </Label>
       </div>
 
-      <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+      <div className="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100 dark:border-gray-700">
         <Button 
           type="button" 
           variant="outline"
           size="sm"
           onClick={() => document.getElementById('photo-upload').click()}
-          className="h-9"
+          className="h-8 text-sm"
         >
-          <Upload size={16} className="mr-2" />
-          Enviar Foto
+          <Upload size={14} className="mr-1.5" />
+          Foto
         </Button>
         <Button 
           type="submit"
           disabled={isSubmitting}
           size="sm"
-          className="h-9"
+          className="h-8 text-sm"
         >
-          <Save size={16} className="mr-2" />
-          {isSubmitting ? 'Processando...' : 'Salvar Usuário'}
+          <Save size={14} className="mr-1.5" />
+          {isSubmitting ? 'Processando...' : 'Salvar'}
         </Button>
       </div>
     </form>

@@ -10,8 +10,8 @@ const UserBasicInfo = ({ formData, onInputChange, disabled }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="space-y-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="space-y-1.5">
         <Label 
           htmlFor="userName"
           className="text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -24,11 +24,11 @@ const UserBasicInfo = ({ formData, onInputChange, disabled }) => {
           value={formData.userName}
           onChange={(e) => onInputChange('userName', e.target.value)}
           disabled={disabled}
-          className="h-9"
+          className="h-8 text-sm"
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <Label 
           htmlFor="userCPF"
           className="text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -42,7 +42,7 @@ const UserBasicInfo = ({ formData, onInputChange, disabled }) => {
           onChange={handleCPFChange}
           maxLength={14}
           disabled={disabled}
-          className="h-9"
+          className="h-8 text-sm"
         />
       </div>
     </div>
