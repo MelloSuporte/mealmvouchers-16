@@ -23,6 +23,7 @@ const UserFormMain = () => {
 
   const [searchCPF, setSearchCPF] = React.useState('');
   const [isSearching, setIsSearching] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { showVoucher, handleVoucherToggle } = useVoucherVisibility();
 
   const { data: turnos, isLoading: isLoadingTurnos } = useQuery({
@@ -67,9 +68,7 @@ const UserFormMain = () => {
           ),
           turnos (
             id,
-            tipo_turno,
-            horario_inicio,
-            horario_fim
+            nome
           )
         `)
         .eq('cpf', cleanCPF)
@@ -78,7 +77,6 @@ const UserFormMain = () => {
       if (error) {
         if (error.code === 'PGRST116') {
           logger.info('Usuário não encontrado para CPF:', cleanCPF);
-          // Gera voucher automático para novo usuário
           const newVoucher = generateCommonVoucher(cleanCPF);
           setFormData(prev => ({
             ...prev,
@@ -98,8 +96,9 @@ const UserFormMain = () => {
         setFormData({
           userName: data.nome,
           userCPF: formatCPF(data.cpf),
-          company: data.empresas?.id?.toString() || '',
-          selectedTurno: data.turno_id?.toString() || '',
+          company: data.empresa_id,
+          selectedTurno: data.turno_id,
+          selectedSetor: data.setor_id?.toString(),
           isSuspended: data.suspenso || false,
           userPhoto: data.foto || null,
           voucher: data.voucher || ''
@@ -117,7 +116,6 @@ const UserFormMain = () => {
   const handleInputChange = (field, value) => {
     if (field === 'userCPF') {
       value = formatCPF(value);
-      // Gera voucher automático quando CPF é alterado manualmente
       if (value.length === 14) {
         const newVoucher = generateCommonVoucher(value);
         setFormData(prev => ({
@@ -141,9 +139,55 @@ const UserFormMain = () => {
     }
   };
 
-  const handleSave = async () => {
-    // Salvar lógica de usuário
-    // ... código para salvar o usuário (não alterado)
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const cleanCPF = formData.userCPF.replace(/\D/g, '');
+      
+      const userData = {
+        nome: formData.userName.trim(),
+        cpf: cleanCPF,
+        empresa_id: formData.company,
+        setor_id: parseInt(formData.selectedSetor),
+        turno_id: formData.selectedTurno,
+        suspenso: formData.isSuspended,
+        foto: formData.userPhoto,
+        voucher: formData.voucher.trim()
+      };
+
+      logger.info('Tentando salvar usuário:', userData);
+
+      const { error } = await supabase
+        .from('usuarios')
+        .upsert(userData, {
+          onConflict: 'cpf',
+          returning: 'minimal'
+        });
+
+      if (error) throw error;
+
+      toast.success('Usuário salvo com sucesso!');
+      
+      // Limpar formulário após salvar
+      setFormData({
+        userName: '',
+        userCPF: '',
+        company: '',
+        selectedTurno: '',
+        selectedSetor: '',
+        isSuspended: false,
+        userPhoto: null,
+        voucher: ''
+      });
+      
+    } catch (error) {
+      logger.error('Erro ao salvar usuário:', error);
+      toast.error(`Erro ao salvar usuário: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -158,7 +202,7 @@ const UserFormMain = () => {
         formData={formData}
         onInputChange={handleInputChange}
         onSave={handleSave}
-        isSubmitting={isSearching}
+        isSubmitting={isSubmitting}
         searchCPF={searchCPF}
         setSearchCPF={setSearchCPF}
         onSearch={handleSearch}

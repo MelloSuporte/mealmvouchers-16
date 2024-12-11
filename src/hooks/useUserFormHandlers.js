@@ -53,8 +53,9 @@ export const useUserFormHandlers = (
         setFormData({
           userName: data.nome,
           userCPF: searchCPF,
-          company: data.empresa_id, // Mantém o UUID original
-          selectedTurno: data.turno_id?.toString() || '',
+          company: data.empresa_id,
+          selectedTurno: data.turno_id,
+          selectedSetor: data.setor_id?.toString(),
           isSuspended: data.suspenso || false,
           userPhoto: data.foto || null,
           voucher: data.voucher || ''
@@ -72,7 +73,9 @@ export const useUserFormHandlers = (
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (e) => {
+    e.preventDefault();
+    
     if (setIsSubmitting) {
       setIsSubmitting(true);
     }
@@ -89,34 +92,42 @@ export const useUserFormHandlers = (
       const userData = {
         nome: formData.userName.trim(),
         cpf: cleanCPF,
-        empresa_id: formData.company, // Mantém o UUID original
-        voucher: formData.voucher.trim(),
+        empresa_id: formData.company,
+        setor_id: parseInt(formData.selectedSetor),
         turno_id: formData.selectedTurno,
         suspenso: formData.isSuspended,
-        foto: formData.userPhoto
+        foto: formData.userPhoto,
+        voucher: formData.voucher.trim()
       };
 
       logger.info('Dados para salvar:', userData);
 
-      const { data, error } = await saveUserToDatabase(userData);
+      const { data, error } = await supabase
+        .from('usuarios')
+        .upsert(userData, {
+          onConflict: 'cpf',
+          returning: 'minimal'
+        });
 
       if (error) throw error;
 
-      toast.success(data.id ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!');
+      toast.success('Usuário salvo com sucesso!');
       
+      // Limpar formulário após salvar
       setFormData({
         userName: '',
         userCPF: '',
         company: '',
         selectedTurno: '',
+        selectedSetor: '',
         isSuspended: false,
         userPhoto: null,
         voucher: ''
       });
       
     } catch (error) {
-      logger.error('Erro ao processar operação:', error);
-      toast.error(`Erro ao processar operação: ${error.message}`);
+      logger.error('Erro ao salvar usuário:', error);
+      toast.error(`Erro ao salvar usuário: ${error.message}`);
     } finally {
       if (setIsSubmitting) {
         setIsSubmitting(false);

@@ -22,14 +22,14 @@ export const validateUserData = (formData) => {
 
   if (!formData.company) {
     errors.push('Empresa é obrigatória');
-  } else if (isNaN(parseInt(formData.company))) {
-    errors.push('ID da empresa inválido');
   }
 
   if (!formData.selectedTurno) {
     errors.push('Turno é obrigatório');
-  } else if (isNaN(parseInt(formData.selectedTurno))) {
-    errors.push('ID do turno inválido');
+  }
+
+  if (!formData.selectedSetor) {
+    errors.push('Setor é obrigatório');
   }
 
   if (!formData.voucher?.trim()) {
