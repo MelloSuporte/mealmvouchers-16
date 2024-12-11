@@ -16,15 +16,32 @@ CREATE TABLE IF NOT EXISTS vouchers_descartaveis (
 /* Enable RLS */
 ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
 
-/* Create policies */
+/* Drop existing policies */
+DROP POLICY IF EXISTS "vouchers_descartaveis_select_policy" ON vouchers_descartaveis;
+DROP POLICY IF EXISTS "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis;
+DROP POLICY IF EXISTS "vouchers_descartaveis_update_policy" ON vouchers_descartaveis;
+
+/* Create new policies with proper security context */
 CREATE POLICY "vouchers_descartaveis_select_policy"
 ON vouchers_descartaveis FOR SELECT
+TO authenticated
 USING (true);
 
 CREATE POLICY "vouchers_descartaveis_insert_policy"
 ON vouchers_descartaveis FOR INSERT
 TO authenticated
-WITH CHECK (true);
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM auth.users
+        WHERE auth.uid() = id
+        AND (
+            raw_user_meta_data->>'role' = 'admin'
+            OR raw_user_meta_data->>'role' = 'manager'
+        )
+    )
+    OR
+    current_setting('app.inserting_voucher_descartavel', true)::boolean = true
+);
 
 CREATE POLICY "vouchers_descartaveis_update_policy"
 ON vouchers_descartaveis FOR UPDATE
@@ -52,13 +69,16 @@ CREATE OR REPLACE FUNCTION insert_voucher_descartavel(
     p_codigo VARCHAR
 )
 RETURNS UUID
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = public
 LANGUAGE plpgsql
 AS $$
 DECLARE
     v_id UUID;
 BEGIN
+    /* Set the security context for RLS */
+    PERFORM set_config('app.inserting_voucher_descartavel', 'true', true);
+    
     /* Verificar se o tipo de refeição está ativo */
     IF NOT EXISTS (
         SELECT 1 
@@ -102,9 +122,14 @@ BEGIN
     )
     RETURNING id INTO v_id;
 
+    /* Reset the security context */
+    PERFORM set_config('app.inserting_voucher_descartavel', 'false', true);
+
     RETURN v_id;
 EXCEPTION
     WHEN OTHERS THEN
+        /* Reset the security context in case of error */
+        PERFORM set_config('app.inserting_voucher_descartavel', 'false', true);
         RAISE EXCEPTION 'Erro ao inserir voucher descartável: %', SQLERRM;
 END;
 $$;
