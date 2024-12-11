@@ -54,15 +54,14 @@ CREATE POLICY "Setores são visíveis para todos os usuários autenticados"
   USING (true);
 
 -- Insert default sectors if they don't exist
-INSERT INTO setores (nome_setor)
-SELECT nome
-FROM (VALUES 
-  ('Administrativo'),
-  ('Produção'),
-  ('Manutenção'),
-  ('Logística'),
-  ('Qualidade')
-) AS new_sectors(nome)
-WHERE NOT EXISTS (
-  SELECT 1 FROM setores WHERE nome_setor = new_sectors.nome
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM setores LIMIT 1) THEN
+    INSERT INTO setores (nome_setor) VALUES
+      ('Administrativo'),
+      ('Produção'),
+      ('Manutenção'),
+      ('Logística'),
+      ('Qualidade');
+  END IF;
+END $$;
