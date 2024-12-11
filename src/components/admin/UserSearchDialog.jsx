@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from 'lucide-react';
+import { formatCPF } from '../../utils/formatters';
 
 const UserSearchDialog = ({ isOpen, onClose, onSearch }) => {
   const [searchCPF, setSearchCPF] = useState('');
@@ -13,6 +14,11 @@ const UserSearchDialog = ({ isOpen, onClose, onSearch }) => {
     onClose();
   };
 
+  const handleCPFChange = (e) => {
+    const formattedCPF = formatCPF(e.target.value);
+    setSearchCPF(formattedCPF);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -21,9 +27,10 @@ const UserSearchDialog = ({ isOpen, onClose, onSearch }) => {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            placeholder="CPF do usuário"
+            placeholder="000.000.000-00"
             value={searchCPF}
-            onChange={(e) => setSearchCPF(e.target.value)}
+            onChange={handleCPFChange}
+            maxLength={14}
           />
           <Button type="submit">
             <Search className="mr-2 h-4 w-4" />
