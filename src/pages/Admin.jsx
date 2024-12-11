@@ -8,6 +8,7 @@ import RLSForm from '@/components/admin/RLSForm';
 import DisposableVoucherForm from '@/components/admin/DisposableVoucherForm';
 import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import TurnosForm from '@/components/admin/TurnosForm';
+import AdminList from '@/components/admin/managers/AdminList';
 
 const Admin = () => {
   return (
@@ -22,6 +23,7 @@ const Admin = () => {
           <TabsTrigger value="rls">RLS</TabsTrigger>
           <TabsTrigger value="vouchers">Vouchers Descartáveis</TabsTrigger>
           <TabsTrigger value="imagens">Imagens de Fundo</TabsTrigger>
+          <TabsTrigger value="gerentes">Gerentes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="usuarios" className="space-y-4">
@@ -54,6 +56,10 @@ const Admin = () => {
 
         <TabsContent value="imagens" className="space-y-4">
           <BackgroundImageForm />
+        </TabsContent>
+
+        <TabsContent value="gerentes" className="space-y-4">
+          <AdminList />
         </TabsContent>
       </Tabs>
     </div>
