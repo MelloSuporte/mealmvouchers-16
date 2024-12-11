@@ -37,6 +37,7 @@ const MealTypeForm = () => {
 
         if (error) {
           console.error('Erro na consulta:', error);
+          toast.error("Erro ao buscar dados da refeição: " + error.message);
           throw error;
         }
 
@@ -48,6 +49,7 @@ const MealTypeForm = () => {
           setEndTime(data.horario_fim || '');
           setMaxUsersPerDay(data.max_usuarios_por_dia?.toString() || '');
           setToleranceMinutes(data.minutos_tolerancia?.toString() || '15');
+          toast.success("Dados da refeição carregados com sucesso!");
         } else {
           console.log('Nenhum dado encontrado para:', mealType);
           setExistingMealData(null);
@@ -56,16 +58,12 @@ const MealTypeForm = () => {
           setEndTime('');
           setMaxUsersPerDay('');
           setToleranceMinutes('15');
+          toast.info("Nova refeição - preencha os dados necessários");
         }
       } catch (error) {
         console.error('Erro ao buscar dados da refeição:', error);
         toast.error("Erro ao buscar dados da refeição. Por favor, tente novamente.");
         setExistingMealData(null);
-        setMealValue('');
-        setStartTime('');
-        setEndTime('');
-        setMaxUsersPerDay('');
-        setToleranceMinutes('15');
       }
     };
 
@@ -107,6 +105,8 @@ const MealTypeForm = () => {
       if (error) throw error;
 
       toast.success(`Tipo de refeição ${mealType} ${existingMealData ? 'atualizado' : 'salvo'} com sucesso!`);
+      
+      // Limpar formulário após salvar
       setMealType("");
       setMealValue("");
       setStartTime("");
