@@ -117,7 +117,9 @@ export const useUserFormHandlers = (
 
       const { error } = await supabase
         .from('usuarios')
-        .upsert(userData);
+        .upsert(userData)
+        .select()
+        .single();
 
       if (error) throw error;
 
