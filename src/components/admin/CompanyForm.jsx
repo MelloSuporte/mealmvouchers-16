@@ -19,7 +19,7 @@ const CompanyForm = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('empresas')
-        .select('*')
+        .select('id, nome, cnpj, logo, criado_em')
         .order('nome');
 
       if (error) {
@@ -27,13 +27,7 @@ const CompanyForm = () => {
         throw new Error(error.message);
       }
 
-      return (data || []).map(empresa => ({
-        id: empresa.id,
-        nome: empresa.nome,
-        cnpj: empresa.cnpj,
-        logo: empresa.logo,
-        createdAt: empresa.created_at
-      }));
+      return data || [];
     }
   });
 
