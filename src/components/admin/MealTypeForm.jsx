@@ -21,28 +21,53 @@ const MealTypeForm = () => {
 
   useEffect(() => {
     const fetchExistingMealData = async () => {
-      if (!mealType) return;
+      if (!mealType) {
+        setExistingMealData(null);
+        return;
+      }
 
       try {
+        console.log('Buscando dados para o tipo de refeição:', mealType);
+        
         const { data, error } = await supabase
           .from('tipos_refeicao')
           .select('*')
           .eq('nome', mealType)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro na consulta:', error);
+          throw error;
+        }
 
         if (data) {
+          console.log('Dados encontrados:', data);
           setExistingMealData(data);
           setMealValue(data.valor.toString());
           setStartTime(data.horario_inicio || '');
           setEndTime(data.horario_fim || '');
           setMaxUsersPerDay(data.max_usuarios_por_dia?.toString() || '');
           setToleranceMinutes(data.minutos_tolerancia?.toString() || '15');
+        } else {
+          console.log('Nenhum dado encontrado para:', mealType);
+          // Reset form for new entry
+          setExistingMealData(null);
+          setMealValue('');
+          setStartTime('');
+          setEndTime('');
+          setMaxUsersPerDay('');
+          setToleranceMinutes('15');
         }
       } catch (error) {
         console.error('Erro ao buscar dados da refeição:', error);
-        toast.error("Erro ao buscar dados da refeição: " + error.message);
+        toast.error("Erro ao buscar dados da refeição. Por favor, tente novamente.");
+        // Reset form on error
+        setExistingMealData(null);
+        setMealValue('');
+        setStartTime('');
+        setEndTime('');
+        setMaxUsersPerDay('');
+        setToleranceMinutes('15');
       }
     };
 
