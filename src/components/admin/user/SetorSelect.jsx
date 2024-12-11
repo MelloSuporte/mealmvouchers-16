@@ -35,11 +35,11 @@ const SetorSelect = ({ value, onValueChange }) => {
 
   return (
     <Select 
-      value={value} 
+      value={value?.toString()} 
       onValueChange={onValueChange}
       disabled={isLoading}
     >
-      <SelectTrigger>
+      <SelectTrigger className="w-full h-8 text-sm">
         <SelectValue placeholder={isLoading ? "Carregando setores..." : "Selecione o setor"} />
       </SelectTrigger>
       <SelectContent>

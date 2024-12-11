@@ -24,7 +24,7 @@ const TurnoSelect = ({ value, onValueChange, turnos = [], isLoadingTurnos }) => 
       onValueChange={onValueChange}
       disabled={isLoadingTurnos}
     >
-      <SelectTrigger className="w-full">
+      <SelectTrigger className="w-full h-8 text-sm">
         <SelectValue placeholder={isLoadingTurnos ? "Carregando turnos..." : "Selecione o turno"} />
       </SelectTrigger>
       <SelectContent>
