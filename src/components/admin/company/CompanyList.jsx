@@ -30,7 +30,7 @@ const CompanyList = ({ companies = [], isLoading, onEdit }) => {
                 <TableCell className="py-2 px-2">{company.nome}</TableCell>
                 <TableCell className="py-2 px-2">{company.cnpj}</TableCell>
                 <TableCell className="py-2 px-2">
-                  {company.createdAt && format(new Date(company.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                  {company.created_at && format(new Date(company.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                 </TableCell>
                 <TableCell className="py-2 px-2">
                   <Button 
