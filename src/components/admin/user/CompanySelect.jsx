@@ -33,15 +33,15 @@ const CompanySelect = ({ value, onValueChange, includeAllOption = false, placeho
       onValueChange={onValueChange}
       disabled={isLoading}
     >
-      <SelectTrigger className="w-full">
+      <SelectTrigger className="h-9 text-sm">
         <SelectValue placeholder={isLoading ? "Carregando empresas..." : placeholder} />
       </SelectTrigger>
       <SelectContent>
         {includeAllOption && (
-          <SelectItem value="all">Todas as empresas</SelectItem>
+          <SelectItem value="all" className="text-sm">Todas as empresas</SelectItem>
         )}
         {Array.isArray(empresas) && empresas.map((empresa) => (
-          <SelectItem key={empresa.id} value={empresa.id.toString()}>
+          <SelectItem key={empresa.id} value={empresa.id.toString()} className="text-sm">
             {empresa.nome}
           </SelectItem>
         ))}
