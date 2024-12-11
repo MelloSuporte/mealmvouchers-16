@@ -44,18 +44,12 @@ const UserConfirmation = () => {
 
       const { code, userName, turno, cpf } = JSON.parse(voucherData);
 
-      // Validate voucher
+      // Validate voucher using RPC instead of direct insert
       const { data, error } = await supabase
-        .from('uso_voucher')
-        .insert([
-          {
-            usuario_id: cpf,
-            tipo_refeicao_id: turno,
-            usado_em: new Date().toISOString()
-          }
-        ])
-        .select()
-        .single();
+        .rpc('validate_and_use_common_voucher', {
+          p_usuario_id: cpf,
+          p_tipo_refeicao_id: turno
+        });
 
       if (error) {
         console.error('Erro na validação:', {
