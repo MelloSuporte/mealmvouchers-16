@@ -123,62 +123,73 @@ const MealTypeForm = () => {
   };
 
   return (
-    <form className="space-y-4">
-      <Select value={mealType} onValueChange={setMealType}>
-        <SelectTrigger>
-          <SelectValue placeholder="Selecione o tipo de refeição" />
-        </SelectTrigger>
-        <SelectContent>
-          {mealTypes.map((type) => (
-            <SelectItem key={type} value={type}>{type}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <form className="space-y-3 max-w-md mx-auto p-4">
+      <div className="space-y-2">
+        <Select value={mealType} onValueChange={setMealType}>
+          <SelectTrigger className="h-9">
+            <SelectValue placeholder="Selecione o tipo de refeição" />
+          </SelectTrigger>
+          <SelectContent>
+            {mealTypes.map((type) => (
+              <SelectItem key={type} value={type}>{type}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      <Input 
-        placeholder="Valor da refeição" 
-        type="number" 
-        step="0.01" 
-        value={mealValue}
-        onChange={(e) => setMealValue(e.target.value)}
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <Input 
+          placeholder="Valor da refeição" 
+          type="number" 
+          step="0.01" 
+          value={mealValue}
+          onChange={(e) => setMealValue(e.target.value)}
+          className="h-9"
+        />
+
+        <Input 
+          placeholder="Limite de usuários/dia" 
+          type="number" 
+          value={maxUsersPerDay}
+          onChange={(e) => setMaxUsersPerDay(e.target.value)}
+          className="h-9"
+        />
+      </div>
 
       {mealType !== "Extra" && (
-        <>
+        <div className="grid grid-cols-2 gap-3">
           <Input 
             placeholder="Horário de início" 
             type="time" 
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
+            className="h-9"
           />
           <Input 
             placeholder="Horário de fim" 
             type="time" 
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
+            className="h-9"
           />
-        </>
+        </div>
       )}
-
-      <Input 
-        placeholder="Limite de usuários por dia (opcional)" 
-        type="number" 
-        value={maxUsersPerDay}
-        onChange={(e) => setMaxUsersPerDay(e.target.value)}
-      />
 
       <Input 
         placeholder="Minutos de tolerância" 
         type="number" 
         value={toleranceMinutes}
         onChange={(e) => setToleranceMinutes(e.target.value)}
+        className="h-9"
       />
 
       <Button 
         type="button" 
         onClick={handleSaveMealType}
         disabled={isSubmitting}
-        className="w-full"
+        className="w-full h-9"
+        variant="default"
+        size="sm"
       >
         {isSubmitting ? 'Salvando...' : existingMealData ? 'Atualizar Tipo de Refeição' : 'Cadastrar Tipo de Refeição'}
       </Button>
