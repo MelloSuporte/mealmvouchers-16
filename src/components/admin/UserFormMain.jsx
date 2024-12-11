@@ -68,8 +68,8 @@ const UserFormMain = () => {
           turnos (
             id,
             tipo_turno,
-            hora_inicio,
-            hora_fim
+            horario_inicio,
+            horario_fim
           ),
           setores (
             id,
