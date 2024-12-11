@@ -110,11 +110,11 @@ const CompanyForm = () => {
   };
 
   if (error) {
-    return <div>Erro ao carregar empresas: {error.message}</div>;
+    return <div className="text-sm text-destructive text-center py-4">Erro ao carregar empresas: {error.message}</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4">
       <CompanyFormFields
         companyName={nomeEmpresa}
         setCompanyName={setNomeEmpresa}
