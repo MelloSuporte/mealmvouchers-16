@@ -1,7 +1,32 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '../../../config/supabase';
+import { toast } from 'sonner';
+import logger from '../../../config/logger';
 
-const TurnoSelect = ({ value, onValueChange, turnos = [], isLoadingTurnos }) => {
+const TurnoSelect = ({ value, onValueChange }) => {
+  const { data: turnos, isLoading } = useQuery({
+    queryKey: ['turnos'],
+    queryFn: async () => {
+      logger.info('Buscando turnos ativos...');
+      const { data, error } = await supabase
+        .from('turnos')
+        .select('*')
+        .eq('ativo', true)
+        .order('id');
+
+      if (error) {
+        logger.error('Erro ao carregar turnos:', error);
+        toast.error('Erro ao carregar turnos');
+        throw error;
+      }
+
+      logger.info(`${data?.length || 0} turnos encontrados`);
+      return data || [];
+    }
+  });
+
   const formatTime = (time) => {
     if (!time) return '';
     const [hours, minutes] = time.split(':');
@@ -22,10 +47,10 @@ const TurnoSelect = ({ value, onValueChange, turnos = [], isLoadingTurnos }) => 
     <Select 
       value={value?.toString()}
       onValueChange={onValueChange}
-      disabled={isLoadingTurnos}
+      disabled={isLoading}
     >
       <SelectTrigger className="w-full h-8 text-sm">
-        <SelectValue placeholder={isLoadingTurnos ? "Carregando turnos..." : "Selecione o turno"} />
+        <SelectValue placeholder={isLoading ? "Carregando turnos..." : "Selecione o turno"} />
       </SelectTrigger>
       <SelectContent>
         {turnos && turnos.length > 0 ? (
