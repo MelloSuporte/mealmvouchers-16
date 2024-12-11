@@ -142,30 +142,31 @@ const BackgroundImageForm = () => {
   };
 
   return (
-    <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
       {Object.entries({
         voucher: 'Tela Voucher',
         userConfirmation: 'Tela Confirmação de Usuário',
         bomApetite: 'Tela Bom Apetite'
       }).map(([key, label]) => (
-        <div key={key} className="space-y-2">
-          <Label htmlFor={key}>{label}</Label>
-          <div className="flex flex-col gap-4">
+        <div key={key} className="space-y-2 bg-white/50 p-4 rounded-lg shadow-sm">
+          <Label htmlFor={key} className="text-sm font-medium text-gray-700">{label}</Label>
+          <div className="flex flex-col gap-3">
             <Input
               id={key}
               type="file"
               accept="image/*"
               onChange={(e) => handleFileChange(key, e)}
               disabled={isLoading}
+              className="h-9 text-sm file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
             />
             <Button 
               type="button" 
               onClick={() => handleSaveBackground(key)}
               disabled={isLoading || !backgrounds[key]}
-              className="w-fit"
+              className="w-fit h-9 text-sm px-4 inline-flex items-center gap-2"
             >
-              <Save className="mr-2 h-4 w-4" />
-              {isLoading ? "Salvando..." : `Salvar Imagem ${label}`}
+              <Save className="h-4 w-4" />
+              {isLoading ? "Salvando..." : `Salvar ${label}`}
             </Button>
             <ImagePreview imageUrl={previews[key]} label={label} />
           </div>

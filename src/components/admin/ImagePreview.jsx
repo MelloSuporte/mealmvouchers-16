@@ -8,7 +8,7 @@ const ImagePreview = ({ imageUrl, label }) => {
       <img
         src={imageUrl}
         alt={`Preview ${label}`}
-        className="max-w-xs h-auto rounded-lg shadow-md"
+        className="max-w-sm h-auto rounded-lg shadow-sm border border-gray-100"
       />
     </div>
   );
