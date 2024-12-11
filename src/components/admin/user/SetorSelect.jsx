@@ -12,9 +12,9 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
         logger.info('Iniciando busca de setores...');
         const { data, error } = await supabase
           .from('setores')
-          .select('id, nome')
+          .select('id, nome_setor')
           .eq('ativo', true)
-          .order('nome');
+          .order('nome_setor');
 
         if (error) {
           logger.error('Erro ao buscar setores:', error);
@@ -22,7 +22,6 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
           throw error;
         }
 
-        // Log detalhado dos dados retornados
         console.log('Resposta completa da consulta:', data);
         logger.info(`${data?.length || 0} setores encontrados`);
         
@@ -30,13 +29,12 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
           logger.warn('Nenhum setor encontrado na tabela');
           console.warn('Tabela de setores vazia');
           
-          // Vamos inserir alguns setores padrão se a tabela estiver vazia
           const defaultSetores = [
-            { nome: 'Administrativo' },
-            { nome: 'Produção' },
-            { nome: 'Manutenção' },
-            { nome: 'Logística' },
-            { nome: 'Qualidade' }
+            { nome_setor: 'Administrativo' },
+            { nome_setor: 'Produção' },
+            { nome_setor: 'Manutenção' },
+            { nome_setor: 'Logística' },
+            { nome_setor: 'Qualidade' }
           ];
 
           const { data: insertedData, error: insertError } = await supabase
@@ -70,7 +68,6 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
     toast.error('Erro ao carregar setores');
   }
 
-  // Log do estado atual do componente
   console.log('Estado atual:', {
     value,
     setoresCount: setores?.length,
@@ -97,7 +94,7 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
             value={setor.id.toString()} 
             className="text-sm"
           >
-            {setor.nome}
+            {setor.nome_setor}
           </SelectItem>
         ))}
       </SelectContent>
