@@ -22,7 +22,7 @@ const UserConfirmation = () => {
       const { code, userName, turno, cpf } = JSON.parse(voucherData);
 
       // Validate voucher
-      const { data, error } = await supabase
+      const { data: validationData, error: validationError } = await supabase
         .from('uso_voucher')
         .insert([
           {
@@ -34,15 +34,15 @@ const UserConfirmation = () => {
         .select()
         .single();
 
-      if (error) {
+      if (validationError) {
         console.error('Erro na validação:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
+          message: validationError.message,
+          details: validationError.details,
+          hint: validationError.hint,
+          code: validationError.code
         });
         
-        throw new Error(error.message);
+        throw new Error(validationError.message);
       }
 
       // Clear stored data
