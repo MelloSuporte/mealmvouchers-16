@@ -1,29 +1,25 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from 'lucide-react';
-import { formatCPF } from '../../../utils/formatters';
+import { Search } from "lucide-react";
 
 const UserSearchSection = ({ searchCPF, setSearchCPF, onSearch, isSearching }) => {
-  const handleCPFChange = (e) => {
-    const formattedCPF = formatCPF(e.target.value);
-    setSearchCPF(formattedCPF);
-  };
-
   return (
-    <div className="flex space-x-2">
+    <div className="flex gap-2 max-w-md mb-4">
       <Input
-        placeholder="Digite o CPF para buscar (000.000.000-00)"
+        placeholder="Digite o CPF para buscar"
         value={searchCPF}
-        onChange={handleCPFChange}
-        maxLength={14}
+        onChange={(e) => setSearchCPF(e.target.value)}
+        className="h-9"
       />
       <Button 
-        type="button" 
-        onClick={onSearch}
+        onClick={onSearch} 
         disabled={isSearching}
+        size="sm"
+        className="h-9 whitespace-nowrap"
       >
-        <Search className="h-4 w-4" />
+        <Search size={16} className="mr-2" />
+        {isSearching ? 'Buscando...' : 'Buscar'}
       </Button>
     </div>
   );
