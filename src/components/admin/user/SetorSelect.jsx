@@ -12,9 +12,9 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
         logger.info('Iniciando busca de setores...');
         const { data, error } = await supabase
           .from('setores')
-          .select('id, nome_setor')
+          .select('id, nome')
           .eq('ativo', true)
-          .order('nome_setor');
+          .order('nome');
 
         if (error) {
           logger.error('Erro ao buscar setores:', error);
@@ -22,22 +22,20 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
         }
 
         logger.info(`${data?.length || 0} setores encontrados`);
-        console.log('Setores encontrados:', data); // Debug log
         return data || [];
       } catch (error) {
         logger.error('Erro ao carregar setores:', error);
         toast.error('Erro ao carregar setores');
         return [];
       }
-    }
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: 2
   });
 
   if (error) {
     toast.error('Erro ao carregar setores');
   }
-
-  console.log('Current value:', value); // Debug log
-  console.log('Available setores:', setores); // Debug log
 
   return (
     <Select 
@@ -58,7 +56,7 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
             value={setor.id.toString()} 
             className="text-sm"
           >
-            {setor.nome_setor}
+            {setor.nome}
           </SelectItem>
         ))}
       </SelectContent>
