@@ -12,9 +12,9 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
         logger.info('Iniciando busca de setores...');
         const { data, error } = await supabase
           .from('setores')
-          .select('id, nome')
+          .select('id, nome_setor')
           .eq('ativo', true)
-          .order('nome');
+          .order('nome_setor');
 
         if (error) {
           logger.error('Erro ao buscar setores:', error);
@@ -54,7 +54,7 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
             value={setor.id.toString()} 
             className="text-sm"
           >
-            {setor.nome}
+            {setor.nome_setor}
           </SelectItem>
         ))}
       </SelectContent>
