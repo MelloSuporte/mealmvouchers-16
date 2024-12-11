@@ -18,7 +18,7 @@ const SetorSelect = ({ value, onValueChange }) => {
       logger.info('Buscando setores ativos...');
       const { data, error } = await supabase
         .from('setores')
-        .select('*')
+        .select('id, nome')
         .eq('ativo', true)
         .order('nome');
 
