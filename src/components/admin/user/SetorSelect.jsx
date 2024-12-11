@@ -15,10 +15,11 @@ const SetorSelect = ({ value, onValueChange }) => {
   const { data: setores, isLoading } = useQuery({
     queryKey: ['setores'],
     queryFn: async () => {
-      logger.info('Buscando setores ativos...');
+      logger.info('Iniciando busca de setores...');
+      
       const { data, error } = await supabase
         .from('setores')
-        .select('id, nome')
+        .select('*')
         .eq('ativo', true)
         .order('nome');
 
@@ -28,14 +29,29 @@ const SetorSelect = ({ value, onValueChange }) => {
         throw error;
       }
 
-      logger.info(`${data?.length || 0} setores encontrados`);
+      // Log the actual data received
+      logger.info('Dados recebidos dos setores:', data);
+      logger.info(`Total de setores encontrados: ${data?.length || 0}`);
+
       if (!data || data.length === 0) {
         logger.info('Nenhum setor cadastrado ou ativo no momento');
         toast.warning('Nenhum setor disponível para seleção');
       }
+
       return data || [];
-    }
+    },
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  // Log the current state
+  React.useEffect(() => {
+    logger.info('Estado atual dos setores:', {
+      loading: isLoading,
+      setoresCount: setores?.length,
+      setores: setores
+    });
+  }, [setores, isLoading]);
 
   return (
     <Select 
