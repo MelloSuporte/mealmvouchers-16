@@ -13,6 +13,7 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
         const { data, error } = await supabase
           .from('setores')
           .select('id, nome')
+          .eq('ativo', true)
           .order('nome');
 
         if (error) {
@@ -20,7 +21,7 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
           throw error;
         }
 
-        logger.info('Setores encontrados:', data);
+        logger.info(`${data?.length || 0} setores encontrados:`, data);
         return data || [];
       } catch (error) {
         logger.error('Erro ao carregar setores:', error);
