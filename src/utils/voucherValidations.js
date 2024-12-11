@@ -1,5 +1,39 @@
 import logger from '../config/logger';
-import { VOUCHER_TYPES } from './voucherTypes';
+import { supabase } from '../config/supabase';
+
+export const validateVoucherComum = async (voucher) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select(`
+        id,
+        nome,
+        empresa_id,
+        turno_id,
+        empresas (
+          nome,
+          ativo
+        ),
+        turnos (
+          tipo_turno,
+          horario_inicio,
+          horario_fim
+        )
+      `)
+      .eq('voucher', voucher)
+      .eq('suspenso', false)
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Voucher inválido');
+    if (!data.empresas?.ativo) throw new Error('Empresa inativa');
+    
+    return data;
+  } catch (error) {
+    logger.error('Erro ao validar voucher comum:', error);
+    throw error;
+  }
+};
 
 export const validateVoucherTime = (currentTime, mealType) => {
   if (!mealType.hora_inicio || !mealType.hora_fim) {
@@ -25,13 +59,11 @@ export const validateVoucherTime = (currentTime, mealType) => {
 export const validateDisposableVoucherRules = async (voucher, supabase) => {
   console.log('Validando voucher descartável:', voucher);
 
-  // Verificar se o voucher já foi usado
   if (voucher.usado) {
     console.log('Voucher já foi utilizado');
     throw new Error('Este voucher já foi utilizado');
   }
 
-  // Verificar se o voucher está expirado
   const expirationDate = new Date(voucher.data_expiracao);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -48,7 +80,6 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
     throw new Error(`Este voucher é válido apenas para ${formattedDate}`);
   }
 
-  // Buscar tipo de refeição do voucher
   const { data: voucherMealType, error: voucherMealTypeError } = await supabase
     .from('tipos_refeicao')
     .select('*')
@@ -60,12 +91,10 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
     throw new Error('Tipo de refeição do voucher não encontrado');
   }
 
-  // Verificar se o tipo de refeição está ativo
   if (!voucherMealType.ativo) {
     throw new Error('Este tipo de refeição não está mais ativo');
   }
 
-  // Verificar se o tipo de refeição do voucher corresponde ao tipo selecionado
   console.log('Comparando tipos de refeição:', {
     voucherType: voucherMealType.nome,
     selectedType: voucher.tipos_refeicao.nome
@@ -75,7 +104,6 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
     throw new Error(`Este voucher é válido apenas para ${voucherMealType.nome}`);
   }
 
-  // Verificar horário específico do tipo de refeição
   const currentTime = new Date().toTimeString().slice(0, 5);
   console.log('Verificando horário específico da refeição:', currentTime);
   
@@ -100,7 +128,7 @@ export const validateDisposableVoucherRules = async (voucher, supabase) => {
 
 export const validateVoucherByType = (voucherType, { code, cpf, mealType, user }) => {
   switch (voucherType) {
-    case VOUCHER_TYPES.DISPOSABLE:
+    case 'DISPOSABLE':
       if (!code || !mealType) {
         throw new Error('Código do voucher e tipo de refeição são obrigatórios para voucher descartável');
       }
@@ -109,7 +137,7 @@ export const validateVoucherByType = (voucherType, { code, cpf, mealType, user }
       }
       break;
 
-    case VOUCHER_TYPES.NORMAL:
+    case 'NORMAL':
       if (!code || !cpf || !mealType) {
         throw new Error('CPF, código do voucher e tipo de refeição são obrigatórios para voucher normal');
       }
@@ -118,7 +146,7 @@ export const validateVoucherByType = (voucherType, { code, cpf, mealType, user }
       }
       break;
 
-    case VOUCHER_TYPES.EXTRA:
+    case 'EXTRA':
       if (!code || !cpf || !mealType) {
         throw new Error('CPF, código do voucher e tipo de refeição são obrigatórios para voucher extra');
       }
