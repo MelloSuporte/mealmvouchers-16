@@ -18,14 +18,45 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
 
         if (error) {
           logger.error('Erro ao buscar setores:', error);
+          console.error('Erro Supabase:', error);
           throw error;
         }
 
+        // Log detalhado dos dados retornados
+        console.log('Resposta completa da consulta:', data);
         logger.info(`${data?.length || 0} setores encontrados`);
-        console.log('Setores encontrados:', data); // Debug log
+        
+        if (!data || data.length === 0) {
+          logger.warn('Nenhum setor encontrado na tabela');
+          console.warn('Tabela de setores vazia');
+          
+          // Vamos inserir alguns setores padrão se a tabela estiver vazia
+          const defaultSetores = [
+            { nome: 'Administrativo' },
+            { nome: 'Produção' },
+            { nome: 'Manutenção' },
+            { nome: 'Logística' },
+            { nome: 'Qualidade' }
+          ];
+
+          const { data: insertedData, error: insertError } = await supabase
+            .from('setores')
+            .insert(defaultSetores)
+            .select();
+
+          if (insertError) {
+            logger.error('Erro ao inserir setores padrão:', insertError);
+            throw insertError;
+          }
+
+          logger.info('Setores padrão inseridos com sucesso');
+          return insertedData || [];
+        }
+
         return data || [];
       } catch (error) {
         logger.error('Erro ao carregar setores:', error);
+        console.error('Erro completo:', error);
         toast.error('Erro ao carregar setores');
         return [];
       }
@@ -35,11 +66,17 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
   });
 
   if (error) {
+    console.error('Erro no componente:', error);
     toast.error('Erro ao carregar setores');
   }
 
-  console.log('Current value:', value); // Debug log
-  console.log('Available setores:', setores); // Debug log
+  // Log do estado atual do componente
+  console.log('Estado atual:', {
+    value,
+    setoresCount: setores?.length,
+    isLoading,
+    hasError: !!error
+  });
 
   return (
     <Select 
