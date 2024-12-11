@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 const TurnosForm = () => {
   const navigate = useNavigate();
@@ -84,10 +85,10 @@ const TurnosForm = () => {
 
   const getTurnoLabel = (tipoTurno) => {
     const labels = {
-      'central': 'Turno Central (Administrativo)',
-      'primeiro': 'Primeiro Turno',
-      'segundo': 'Segundo Turno',
-      'terceiro': 'Terceiro Turno'
+      'central': 'Administrativo',
+      'primeiro': '1º Turno',
+      'segundo': '2º Turno',
+      'terceiro': '3º Turno'
     };
     return labels[tipoTurno] || tipoTurno;
   };
@@ -120,20 +121,20 @@ const TurnosForm = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <Button onClick={() => setDialogoAberto(true)} size="sm">
+        <Button onClick={() => setDialogoAberto(true)} size="sm" className="bg-primary hover:bg-primary/90">
           <Plus className="mr-2 h-4 w-4" />
           Novo Turno
         </Button>
       </div>
 
-      <div className="rounded-md border overflow-hidden">
+      <div className="rounded-md border shadow-sm">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold">Tipo</TableHead>
-              <TableHead className="font-semibold w-32">Início</TableHead>
-              <TableHead className="font-semibold w-32">Fim</TableHead>
-              <TableHead className="font-semibold w-24 text-center">Status</TableHead>
+              <TableHead className="py-2 text-xs font-medium">Turno</TableHead>
+              <TableHead className="py-2 text-xs font-medium w-24">Início</TableHead>
+              <TableHead className="py-2 text-xs font-medium w-24">Fim</TableHead>
+              <TableHead className="py-2 text-xs font-medium w-20 text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -143,15 +144,13 @@ const TurnosForm = () => {
                 className="cursor-pointer hover:bg-muted/30 transition-colors"
                 onClick={() => handleEditarTurno(turno)}
               >
-                <TableCell className="font-medium">{getTurnoLabel(turno.tipo_turno)}</TableCell>
-                <TableCell>{turno.horario_inicio}</TableCell>
-                <TableCell>{turno.horario_fim}</TableCell>
-                <TableCell className="text-center">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    turno.ativo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                  }`}>
+                <TableCell className="py-2 text-sm font-medium">{getTurnoLabel(turno.tipo_turno)}</TableCell>
+                <TableCell className="py-2 text-sm">{turno.horario_inicio}</TableCell>
+                <TableCell className="py-2 text-sm">{turno.horario_fim}</TableCell>
+                <TableCell className="py-2 text-center">
+                  <Badge variant={turno.ativo ? "success" : "secondary"} className="text-xs">
                     {turno.ativo ? 'Ativo' : 'Inativo'}
-                  </span>
+                  </Badge>
                 </TableCell>
               </TableRow>
             ))}
