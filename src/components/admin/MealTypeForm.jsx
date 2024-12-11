@@ -10,6 +10,8 @@ const MealTypeForm = () => {
   const [mealValue, setMealValue] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [maxUsersPerDay, setMaxUsersPerDay] = useState("");
+  const [toleranceMinutes, setToleranceMinutes] = useState("15");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const mealTypes = [
@@ -30,10 +32,11 @@ const MealTypeForm = () => {
         .insert([{
           nome: mealType,
           valor: parseFloat(mealValue),
-          hora_inicio: startTime || null,
-          hora_fim: endTime || null,
+          horario_inicio: startTime || null,
+          horario_fim: endTime || null,
           ativo: true,
-          minutos_tolerancia: 15
+          max_usuarios_por_dia: maxUsersPerDay ? parseInt(maxUsersPerDay) : null,
+          minutos_tolerancia: parseInt(toleranceMinutes) || 15
         }]);
 
       if (error) throw error;
@@ -43,6 +46,8 @@ const MealTypeForm = () => {
       setMealValue("");
       setStartTime("");
       setEndTime("");
+      setMaxUsersPerDay("");
+      setToleranceMinutes("15");
     } catch (error) {
       console.error('Erro ao salvar tipo de refeição:', error);
       toast.error("Erro ao salvar tipo de refeição: " + error.message);
@@ -63,6 +68,7 @@ const MealTypeForm = () => {
           ))}
         </SelectContent>
       </Select>
+
       <Input 
         placeholder="Valor da refeição" 
         type="number" 
@@ -70,6 +76,7 @@ const MealTypeForm = () => {
         value={mealValue}
         onChange={(e) => setMealValue(e.target.value)}
       />
+
       {mealType !== "Extra" && (
         <>
           <Input 
@@ -86,10 +93,26 @@ const MealTypeForm = () => {
           />
         </>
       )}
+
+      <Input 
+        placeholder="Limite de usuários por dia (opcional)" 
+        type="number" 
+        value={maxUsersPerDay}
+        onChange={(e) => setMaxUsersPerDay(e.target.value)}
+      />
+
+      <Input 
+        placeholder="Minutos de tolerância" 
+        type="number" 
+        value={toleranceMinutes}
+        onChange={(e) => setToleranceMinutes(e.target.value)}
+      />
+
       <Button 
         type="button" 
         onClick={handleSaveMealType}
         disabled={isSubmitting}
+        className="w-full"
       >
         {isSubmitting ? 'Cadastrando...' : 'Cadastrar Tipo de Refeição'}
       </Button>
