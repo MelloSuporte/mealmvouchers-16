@@ -42,7 +42,10 @@ CREATE INDEX idx_vouchers_descartaveis_codigo ON vouchers_descartaveis(codigo);
 GRANT ALL ON vouchers_descartaveis TO authenticated;
 GRANT ALL ON vouchers_descartaveis TO service_role;
 
--- Create helper function for inserting disposable vouchers
+-- Drop existing function if it exists
+DROP FUNCTION IF EXISTS insert_voucher_descartavel;
+
+-- Create helper function for inserting disposable vouchers with correct column names
 CREATE OR REPLACE FUNCTION insert_voucher_descartavel(
     p_tipo_refeicao_id UUID,
     p_data_expiracao DATE,
@@ -80,7 +83,7 @@ BEGIN
         RAISE EXCEPTION 'Data de expiração deve ser futura';
     END IF;
 
-    -- Inserir o voucher
+    -- Inserir o voucher usando os nomes corretos das colunas
     INSERT INTO vouchers_descartaveis (
         id,
         tipo_refeicao_id,
@@ -112,47 +115,3 @@ GRANT EXECUTE ON FUNCTION insert_voucher_descartavel TO authenticated;
 
 -- Add comment
 COMMENT ON FUNCTION insert_voucher_descartavel IS 'Insere um novo voucher descartável com validações de segurança';
-
--- Create helper function for using disposable vouchers
-CREATE OR REPLACE FUNCTION use_voucher_descartavel(
-    p_codigo VARCHAR
-)
-RETURNS UUID
-SECURITY INVOKER
-SET search_path = public
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_id UUID;
-BEGIN
-    -- Verificar se o voucher existe e não está usado
-    SELECT id INTO v_id
-    FROM vouchers_descartaveis
-    WHERE codigo = p_codigo
-    AND NOT usado
-    AND data_expiracao >= CURRENT_TIMESTAMP;
-
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Voucher não encontrado, já utilizado ou expirado';
-    END IF;
-
-    -- Marcar voucher como usado
-    UPDATE vouchers_descartaveis
-    SET 
-        usado = true,
-        data_uso = CURRENT_TIMESTAMP
-    WHERE id = v_id;
-
-    RETURN v_id;
-EXCEPTION
-    WHEN OTHERS THEN
-        RAISE EXCEPTION 'Erro ao usar voucher descartável: %', SQLERRM;
-END;
-$$;
-
--- Set function permissions
-REVOKE ALL ON FUNCTION use_voucher_descartavel FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION use_voucher_descartavel TO authenticated;
-
--- Add comment
-COMMENT ON FUNCTION use_voucher_descartavel IS 'Marca um voucher descartável como usado';
