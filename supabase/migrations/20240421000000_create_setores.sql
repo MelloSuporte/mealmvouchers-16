@@ -1,10 +1,19 @@
--- Create setores table if it doesn't exist
-CREATE TABLE IF NOT EXISTS setores (
-  id SERIAL PRIMARY KEY,
-  nome VARCHAR(255) NOT NULL,
-  ativo BOOLEAN DEFAULT TRUE,
-  criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+-- Verifica se a tabela setores já existe antes de criar
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM information_schema.tables 
+    WHERE table_name = 'setores'
+  ) THEN
+    CREATE TABLE setores (
+      id SERIAL PRIMARY KEY,
+      nome_setor VARCHAR(255) NOT NULL,
+      ativo BOOLEAN DEFAULT TRUE,
+      criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  END IF;
+END $$;
 
 -- Add setor_id to usuarios table if it doesn't exist
 DO $$ 
@@ -45,7 +54,7 @@ CREATE POLICY "Setores são visíveis para todos os usuários autenticados"
   USING (true);
 
 -- Insert default sectors if they don't exist
-INSERT INTO setores (nome)
+INSERT INTO setores (nome_setor)
 SELECT nome
 FROM (VALUES 
   ('Administrativo'),
@@ -55,5 +64,5 @@ FROM (VALUES
   ('Qualidade')
 ) AS new_sectors(nome)
 WHERE NOT EXISTS (
-  SELECT 1 FROM setores WHERE nome = new_sectors.nome
+  SELECT 1 FROM setores WHERE nome_setor = new_sectors.nome
 );
