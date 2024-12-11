@@ -1,7 +1,7 @@
--- Drop existing table
+/* Drop existing table */
 DROP TABLE IF EXISTS vouchers_descartaveis CASCADE;
 
--- Create table with UUID
+/* Create table with UUID */
 CREATE TABLE IF NOT EXISTS vouchers_descartaveis (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     codigo VARCHAR(4) NOT NULL,
@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS vouchers_descartaveis (
     UNIQUE(codigo)
 );
 
--- Enable RLS
+/* Enable RLS */
 ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
 
--- Create policies
+/* Create policies */
 CREATE POLICY "vouchers_descartaveis_select_policy"
 ON vouchers_descartaveis FOR SELECT
 USING (true);
@@ -32,20 +32,20 @@ TO authenticated
 USING (true)
 WITH CHECK (true);
 
--- Create indexes
+/* Create indexes */
 CREATE INDEX idx_vouchers_descartaveis_tipo_refeicao ON vouchers_descartaveis(tipo_refeicao_id);
 CREATE INDEX idx_vouchers_descartaveis_data_expiracao ON vouchers_descartaveis(data_expiracao);
 CREATE INDEX idx_vouchers_descartaveis_usado ON vouchers_descartaveis(usado);
 CREATE INDEX idx_vouchers_descartaveis_codigo ON vouchers_descartaveis(codigo);
 
--- Ensure proper permissions
+/* Ensure proper permissions */
 GRANT ALL ON vouchers_descartaveis TO authenticated;
 GRANT ALL ON vouchers_descartaveis TO service_role;
 
--- Drop existing function if it exists
+/* Drop existing function if it exists */
 DROP FUNCTION IF EXISTS insert_voucher_descartavel;
 
--- Create helper function for inserting disposable vouchers with correct column names
+/* Create helper function for inserting disposable vouchers with correct column names */
 CREATE OR REPLACE FUNCTION insert_voucher_descartavel(
     p_tipo_refeicao_id UUID,
     p_data_expiracao DATE,
@@ -59,7 +59,7 @@ AS $$
 DECLARE
     v_id UUID;
 BEGIN
-    -- Verificar se o tipo de refeição está ativo
+    /* Verificar se o tipo de refeição está ativo */
     IF NOT EXISTS (
         SELECT 1 
         FROM tipos_refeicao 
@@ -69,7 +69,7 @@ BEGIN
         RAISE EXCEPTION 'Tipo de refeição inválido ou inativo';
     END IF;
 
-    -- Verificar se o código já existe
+    /* Verificar se o código já existe */
     IF EXISTS (
         SELECT 1 
         FROM vouchers_descartaveis 
@@ -78,12 +78,12 @@ BEGIN
         RAISE EXCEPTION 'Código de voucher já existe';
     END IF;
 
-    -- Verificar se a data de expiração é válida
+    /* Verificar se a data de expiração é válida */
     IF p_data_expiracao < CURRENT_DATE THEN
         RAISE EXCEPTION 'Data de expiração deve ser futura';
     END IF;
 
-    -- Inserir o voucher usando os nomes corretos das colunas
+    /* Inserir o voucher usando os nomes corretos das colunas */
     INSERT INTO vouchers_descartaveis (
         id,
         tipo_refeicao_id,
@@ -109,9 +109,9 @@ EXCEPTION
 END;
 $$;
 
--- Set function permissions
+/* Set function permissions */
 REVOKE ALL ON FUNCTION insert_voucher_descartavel FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION insert_voucher_descartavel TO authenticated;
 
--- Add comment
+/* Add comment */
 COMMENT ON FUNCTION insert_voucher_descartavel IS 'Insere um novo voucher descartável com validações de segurança';
