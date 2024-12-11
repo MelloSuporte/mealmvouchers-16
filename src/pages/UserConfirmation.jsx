@@ -34,7 +34,7 @@ const UserConfirmation = () => {
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
-      // Get stored voucher data
+      // Obter dados do voucher
       const voucherData = localStorage.getItem('commonVoucher');
       if (!voucherData) {
         toast.error('Dados do voucher não encontrados');
@@ -44,28 +44,26 @@ const UserConfirmation = () => {
 
       const { code, userName, turno, cpf } = JSON.parse(voucherData);
 
-      // Validate voucher using RPC instead of direct insert
-      const { data, error } = await supabase
+      // Validar voucher usando RPC
+      const { data: validationResult, error: validationError } = await supabase
         .rpc('validate_and_use_common_voucher', {
           p_usuario_id: cpf,
           p_tipo_refeicao_id: turno
         });
 
-      if (error) {
-        console.error('Erro na validação:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        
-        throw new Error(error.message);
+      if (validationError) {
+        console.error('Erro na validação:', validationError);
+        throw new Error(validationError.message || 'Erro ao validar voucher');
       }
 
-      // Clear stored data
+      if (!validationResult?.success) {
+        throw new Error(validationResult?.error || 'Erro ao validar voucher');
+      }
+
+      // Limpar dados armazenados
       localStorage.removeItem('commonVoucher');
       
-      // Navigate to success page
+      // Navegar para página de sucesso
       navigate('/bom-apetite', { 
         state: { userName, turno } 
       });
