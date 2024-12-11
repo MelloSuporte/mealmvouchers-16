@@ -68,25 +68,40 @@ const UserConfirmation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-red-700 flex flex-col items-center justify-center p-4">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full space-y-6">
-        <h2 className="text-2xl font-bold text-center text-gray-900">
+        <h2 className="text-2xl font-bold text-center">
           Confirmar Refeição
         </h2>
         
         <p className="text-center text-gray-600">
-          Deseja confirmar sua refeição?
+          Por favor, confirme os dados abaixo
         </p>
 
-        <div className="flex flex-col space-y-3">
-          <Button
-            onClick={handleConfirm}
-            disabled={isLoading}
-            className="w-full bg-green-600 hover:bg-green-700"
-          >
-            {isLoading ? 'Confirmando...' : 'Confirmar'}
-          </Button>
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="font-bold text-lg mb-2">Dados do Usuário</h3>
+          <p className="flex items-center gap-2">
+            <span className="text-green-600">✓</span>
+            {JSON.parse(localStorage.getItem('commonVoucher') || '{}').userName || 'Usuário'}
+          </p>
+        </div>
 
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="font-bold text-lg mb-2">Tipo de Refeição</h3>
+          <p className="flex items-center gap-2">
+            <span className="text-green-600">✓</span>
+            {JSON.parse(localStorage.getItem('commonVoucher') || '{}').turno || 'Refeição'}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 text-gray-600">
+          <span className="text-blue-600">ℹ</span>
+          <p className="text-sm">
+            Ao confirmar, seu voucher será validado e você será redirecionado para a próxima etapa.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <Button
             onClick={handleCancel}
             variant="outline"
@@ -94,6 +109,14 @@ const UserConfirmation = () => {
             disabled={isLoading}
           >
             Cancelar
+          </Button>
+
+          <Button
+            onClick={handleConfirm}
+            disabled={isLoading}
+            className="w-full bg-blue-900 hover:bg-blue-800"
+          >
+            {isLoading ? 'Confirmando...' : 'Confirmar'}
           </Button>
         </div>
       </div>
