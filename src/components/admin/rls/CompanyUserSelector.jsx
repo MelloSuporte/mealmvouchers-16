@@ -45,7 +45,6 @@ const CompanyUserSelector = ({
           .maybeSingle();
 
         if (error) {
-          // Verifica se o erro é de "nenhum resultado encontrado"
           if (error.code === 'PGRST116') {
             toast.info('Usuário não encontrado');
             return null;
@@ -79,9 +78,9 @@ const CompanyUserSelector = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-[9px] font-medium text-gray-700 mb-0.5">
           Empresa
         </label>
         <Select
@@ -89,13 +88,13 @@ const CompanyUserSelector = ({
           onValueChange={setSelectedCompany}
           disabled={isLoadingCompanies}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full h-7 text-[10px]">
             <SelectValue placeholder="Selecione uma empresa" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas as Empresas</SelectItem>
+            <SelectItem value="all" className="text-[10px] py-0.5">Todas as Empresas</SelectItem>
             {companies.map((company) => (
-              <SelectItem key={company.id} value={company.id.toString()}>
+              <SelectItem key={company.id} value={company.id.toString()} className="text-[10px] py-0.5">
                 {company.nome}
               </SelectItem>
             ))}
@@ -104,7 +103,7 @@ const CompanyUserSelector = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-[9px] font-medium text-gray-700 mb-0.5">
           Buscar Usuário
         </label>
         <Input
@@ -112,14 +111,14 @@ const CompanyUserSelector = ({
           value={searchTerm}
           onChange={handleInputChange}
           placeholder="Digite o CPF do usuário"
-          className="w-full"
+          className="w-full h-7 text-[10px]"
           maxLength={14}
         />
       </div>
 
       {searchTerm.length >= 11 && searchedUser && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-[9px] font-medium text-gray-700 mb-0.5">
             Selecionar Usuário
           </label>
           <Select
@@ -127,11 +126,11 @@ const CompanyUserSelector = ({
             onValueChange={setSelectedUser}
             disabled={isLoadingUser}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full h-7 text-[10px]">
               <SelectValue placeholder="Selecione um usuário" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={searchedUser.id.toString()}>
+              <SelectItem value={searchedUser.id.toString()} className="text-[10px] py-0.5">
                 {searchedUser.nome} - {searchedUser.cpf}
               </SelectItem>
             </SelectContent>
