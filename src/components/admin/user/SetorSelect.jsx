@@ -21,7 +21,7 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
           throw error;
         }
 
-        logger.info(`${data?.length || 0} setores encontrados:`, data);
+        logger.info(`${data?.length || 0} setores encontrados`);
         return data || [];
       } catch (error) {
         logger.error('Erro ao carregar setores:', error);
@@ -48,8 +48,12 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
         {includeAllOption && (
           <SelectItem value="all" className="text-sm">Todos os setores</SelectItem>
         )}
-        {Array.isArray(setores) && setores.map((setor) => (
-          <SelectItem key={setor.id} value={setor.id.toString()} className="text-sm">
+        {setores && setores.map((setor) => (
+          <SelectItem 
+            key={setor.id} 
+            value={setor.id.toString()} 
+            className="text-sm"
+          >
             {setor.nome}
           </SelectItem>
         ))}
