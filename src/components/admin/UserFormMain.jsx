@@ -46,9 +46,76 @@ const UserFormMain = () => {
     }
   });
 
+  const handleSearch = async () => {
+    if (!searchCPF) {
+      toast.error('Por favor, informe um CPF para buscar');
+      return;
+    }
+
+    setIsSearching(true);
+    const cleanCPF = searchCPF.replace(/\D/g, '');
+    logger.info('Iniciando busca por CPF:', cleanCPF);
+
+    try {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select(`
+          *,
+          empresas (
+            id,
+            nome
+          ),
+          turnos (
+            id,
+            nome
+          ),
+          setores (
+            id,
+            nome_setor
+          )
+        `)
+        .eq('cpf', cleanCPF)
+        .maybeSingle();
+
+      if (error) {
+        logger.error('Erro na busca por CPF:', error);
+        toast.error('Erro ao buscar usuário');
+        return;
+      }
+
+      if (data) {
+        logger.info('Usuário encontrado:', { id: data.id, nome: data.nome });
+        setFormData({
+          userName: data.nome,
+          userCPF: formatCPF(data.cpf),
+          company: data.empresa_id,
+          selectedTurno: data.turno_id,
+          selectedSetor: data.setor_id?.toString(),
+          isSuspended: data.suspenso || false,
+          userPhoto: data.foto,
+          voucher: data.voucher || ''
+        });
+        toast.success('Usuário encontrado!');
+      } else {
+        logger.info('Usuário não encontrado para CPF:', cleanCPF);
+        const newVoucher = generateCommonVoucher(cleanCPF);
+        setFormData(prev => ({
+          ...prev,
+          userCPF: formatCPF(cleanCPF),
+          voucher: newVoucher
+        }));
+        toast.info('Usuário não encontrado. Novo voucher gerado.');
+      }
+    } catch (error) {
+      logger.error('Erro ao buscar usuário:', error);
+      toast.error('Erro ao buscar usuário');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const {
     handleInputChange,
-    handleSearch,
     handleSave,
     handlePhotoUpload
   } = useUserFormHandlers(
