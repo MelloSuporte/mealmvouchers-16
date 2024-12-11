@@ -35,8 +35,8 @@ const ChartTabs = () => {
       const { data, error } = await supabase
         .from('vw_uso_voucher_detalhado')
         .select('*')
-        .gte('usado_em', startDate.toISOString())
-        .lte('usado_em', endDate.toISOString());
+        .gte('data_uso', startDate.toISOString())
+        .lte('data_uso', endDate.toISOString());
 
       if (error) {
         console.error('Erro ao buscar dados:', error);
@@ -64,8 +64,8 @@ const ChartTabs = () => {
       // Processa os dados retornados da query
       if (data && data.length > 0) {
         data.forEach(registro => {
-          if (registro.usado_em && registro.tipo_refeicao) {
-            const dataUso = new Date(registro.usado_em);
+          if (registro.data_uso && registro.tipo_refeicao) {
+            const dataUso = new Date(registro.data_uso);
             const dia = format(dataUso, 'EEEE', { locale: ptBR });
             console.log('Processando registro:', {
               data: dataUso,
@@ -118,14 +118,14 @@ const ChartTabs = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('vw_uso_voucher_detalhado')
-        .select('usado_em')
-        .order('usado_em', { ascending: true });
+        .select('data_uso')
+        .order('data_uso', { ascending: true });
 
       if (error) throw error;
 
       // Processar dados para o gráfico de tendência
       const trend = data.reduce((acc, curr) => {
-        const dia = new Date(curr.usado_em).toLocaleDateString('pt-BR');
+        const dia = new Date(curr.data_uso).toLocaleDateString('pt-BR');
         acc[dia] = (acc[dia] || 0) + 1;
         return acc;
       }, {});
