@@ -16,7 +16,7 @@ CREATE POLICY "usuarios_voucher_select_policy" ON usuarios
         EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND au.role IN ('admin', 'gestor')
+            AND au.permissoes->>'gerenciar_usuarios' = 'true'
             AND NOT au.suspenso
         )
     );
@@ -29,7 +29,7 @@ CREATE POLICY "usuarios_voucher_update_policy" ON usuarios
         EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND au.role = 'system'
+            AND au.permissoes->>'sistema' = 'true'
         )
     );
 ```
@@ -44,7 +44,7 @@ CREATE POLICY "uso_voucher_comum_insert_policy" ON uso_voucher
         EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND au.role = 'system'
+            AND au.permissoes->>'sistema' = 'true'
         )
         -- Validações exclusivas via triggers:
         -- - Limite diário de refeições
@@ -62,7 +62,7 @@ CREATE POLICY "uso_voucher_comum_select_policy" ON uso_voucher
         EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND au.role IN ('admin', 'gestor')
+            AND au.permissoes->>'gerenciar_usuarios' = 'true'
             AND NOT au.suspenso
         )
     );
@@ -75,3 +75,4 @@ CREATE POLICY "uso_voucher_comum_select_policy" ON uso_voucher
 3. O registro de uso é feito na tabela `uso_voucher`
 4. Validações adicionais são implementadas via triggers
 5. O histórico de uso pode ser visualizado pelo próprio usuário ou por admins/gestores
+6. As permissões são verificadas através do campo JSONB 'permissoes' da tabela admin_users
