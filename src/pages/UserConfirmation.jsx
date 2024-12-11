@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -7,6 +7,29 @@ import { supabase } from '../config/supabase';
 const UserConfirmation = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState('');
+
+  useEffect(() => {
+    const fetchBackgroundImage = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('background_images')
+          .select('image_url')
+          .eq('page', 'userConfirmation')
+          .eq('is_active', true)
+          .single();
+
+        if (error) throw error;
+        if (data?.image_url) {
+          setBackgroundImage(data.image_url);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar imagem de fundo:', error);
+      }
+    };
+
+    fetchBackgroundImage();
+  }, []);
 
   const handleConfirm = async () => {
     setIsLoading(true);
@@ -68,7 +91,16 @@ const UserConfirmation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-red-700 flex flex-col items-center justify-center p-4">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      style={{
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundColor: 'rgb(185, 28, 28)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full space-y-6">
         <h2 className="text-2xl font-bold text-center">
           Confirmar Refeição
