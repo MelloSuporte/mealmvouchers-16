@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 const SetorSelect = ({ value, onValueChange, includeAllOption = false, placeholder = "Selecione o setor" }) => {
   const { data: setores = [], isLoading, error } = useQuery({
@@ -10,6 +11,8 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
     queryFn: async () => {
       try {
         logger.info('Iniciando busca de setores...');
+        console.log('Iniciando consulta à tabela setores');
+        
         const { data, error } = await supabase
           .from('setores')
           .select('id, nome_setor')
@@ -22,7 +25,7 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
           throw error;
         }
 
-        console.log('Resposta completa da consulta:', data);
+        console.log('Dados retornados da consulta:', data);
         logger.info(`${data?.length || 0} setores encontrados`);
         
         if (!data || data.length === 0) {
@@ -37,6 +40,8 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
             { nome_setor: 'Qualidade' }
           ];
 
+          console.log('Tentando inserir setores padrão:', defaultSetores);
+
           const { data: insertedData, error: insertError } = await supabase
             .from('setores')
             .insert(defaultSetores)
@@ -44,14 +49,16 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
 
           if (insertError) {
             logger.error('Erro ao inserir setores padrão:', insertError);
+            console.error('Erro ao inserir setores:', insertError);
             throw insertError;
           }
 
           logger.info('Setores padrão inseridos com sucesso');
+          console.log('Setores padrão inseridos:', insertedData);
           return insertedData || [];
         }
 
-        return data || [];
+        return data;
       } catch (error) {
         logger.error('Erro ao carregar setores:', error);
         console.error('Erro completo:', error);
@@ -66,11 +73,27 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
   if (error) {
     console.error('Erro no componente:', error);
     toast.error('Erro ao carregar setores');
+    return (
+      <div className="flex items-center gap-2 text-red-500">
+        <AlertCircle size={16} />
+        <span>Erro ao carregar setores</span>
+      </div>
+    );
   }
 
-  console.log('Estado atual:', {
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-gray-500">
+        <Loader2 size={16} className="animate-spin" />
+        <span>Carregando setores...</span>
+      </div>
+    );
+  }
+
+  console.log('Estado atual do componente:', {
     value,
     setoresCount: setores?.length,
+    setores,
     isLoading,
     hasError: !!error
   });
@@ -88,15 +111,18 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
         {includeAllOption && (
           <SelectItem value="all" className="text-sm">Todos os setores</SelectItem>
         )}
-        {setores && setores.map((setor) => (
-          <SelectItem 
-            key={setor.id} 
-            value={setor.id.toString()} 
-            className="text-sm"
-          >
-            {setor.nome_setor}
-          </SelectItem>
-        ))}
+        {setores && setores.map((setor) => {
+          console.log('Renderizando setor:', setor);
+          return (
+            <SelectItem 
+              key={setor.id} 
+              value={setor.id.toString()} 
+              className="text-sm"
+            >
+              {setor.nome_setor}
+            </SelectItem>
+          );
+        })}
       </SelectContent>
     </Select>
   );
