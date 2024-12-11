@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,10 +13,41 @@ const MealTypeForm = () => {
   const [maxUsersPerDay, setMaxUsersPerDay] = useState("");
   const [toleranceMinutes, setToleranceMinutes] = useState("15");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingMealData, setExistingMealData] = useState(null);
 
   const mealTypes = [
     "Café (1)", "Café (2)", "Almoço", "Lanche", "Jantar", "Ceia", "Desjejum", "Extra"
   ];
+
+  useEffect(() => {
+    const fetchExistingMealData = async () => {
+      if (!mealType) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('tipos_refeicao')
+          .select('*')
+          .eq('nome', mealType)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setExistingMealData(data);
+          setMealValue(data.valor.toString());
+          setStartTime(data.horario_inicio || '');
+          setEndTime(data.horario_fim || '');
+          setMaxUsersPerDay(data.max_usuarios_por_dia?.toString() || '');
+          setToleranceMinutes(data.minutos_tolerancia?.toString() || '15');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados da refeição:', error);
+        toast.error("Erro ao buscar dados da refeição: " + error.message);
+      }
+    };
+
+    fetchExistingMealData();
+  }, [mealType]);
 
   const handleSaveMealType = async () => {
     if (!mealType || !mealValue || (mealType !== "Extra" && (!startTime || !endTime))) {
@@ -27,27 +58,39 @@ const MealTypeForm = () => {
     try {
       setIsSubmitting(true);
       
-      const { error } = await supabase
-        .from('tipos_refeicao')
-        .insert([{
-          nome: mealType,
-          valor: parseFloat(mealValue),
-          horario_inicio: startTime || null,
-          horario_fim: endTime || null,
-          ativo: true,
-          max_usuarios_por_dia: maxUsersPerDay ? parseInt(maxUsersPerDay) : null,
-          minutos_tolerancia: parseInt(toleranceMinutes) || 15
-        }]);
+      const mealData = {
+        nome: mealType,
+        valor: parseFloat(mealValue),
+        horario_inicio: startTime || null,
+        horario_fim: endTime || null,
+        ativo: true,
+        max_usuarios_por_dia: maxUsersPerDay ? parseInt(maxUsersPerDay) : null,
+        minutos_tolerancia: parseInt(toleranceMinutes) || 15
+      };
 
+      let operation;
+      if (existingMealData) {
+        operation = supabase
+          .from('tipos_refeicao')
+          .update(mealData)
+          .eq('id', existingMealData.id);
+      } else {
+        operation = supabase
+          .from('tipos_refeicao')
+          .insert([mealData]);
+      }
+
+      const { error } = await operation;
       if (error) throw error;
 
-      toast.success(`Tipo de refeição ${mealType} salvo com sucesso!`);
+      toast.success(`Tipo de refeição ${mealType} ${existingMealData ? 'atualizado' : 'salvo'} com sucesso!`);
       setMealType("");
       setMealValue("");
       setStartTime("");
       setEndTime("");
       setMaxUsersPerDay("");
       setToleranceMinutes("15");
+      setExistingMealData(null);
     } catch (error) {
       console.error('Erro ao salvar tipo de refeição:', error);
       toast.error("Erro ao salvar tipo de refeição: " + error.message);
@@ -114,7 +157,7 @@ const MealTypeForm = () => {
         disabled={isSubmitting}
         className="w-full"
       >
-        {isSubmitting ? 'Cadastrando...' : 'Cadastrar Tipo de Refeição'}
+        {isSubmitting ? 'Salvando...' : existingMealData ? 'Atualizar Tipo de Refeição' : 'Cadastrar Tipo de Refeição'}
       </Button>
     </form>
   );
