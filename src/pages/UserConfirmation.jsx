@@ -1,167 +1,102 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from "sonner";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Check, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from '../config/supabase';
 
 const UserConfirmation = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [backgroundImage, setBackgroundImage] = useState('');
-
-  useEffect(() => {
-    const fetchBackgroundImage = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('background_images')
-          .select('image_url')
-          .eq('page', 'userConfirmation')
-          .eq('is_active', true)
-          .single();
-
-        if (error) throw error;
-        if (data?.image_url) {
-          setBackgroundImage(data.image_url);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar imagem de fundo:', error);
-      }
-    };
-
-    fetchBackgroundImage();
-    
-    const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
-    const extraVoucher = JSON.parse(localStorage.getItem('extraVoucher') || '{}');
-
-    if (!location.state?.mealType || (!commonVoucher.code && !extraVoucher.code)) {
-      toast.error('Informações incompletas');
-      navigate('/voucher');
-      return;
-    }
-
-    setUserName(commonVoucher.userName || extraVoucher.userName || 'Usuário');
-  }, [location.state, navigate]);
 
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
-      const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
-      const extraVoucher = JSON.parse(localStorage.getItem('extraVoucher') || '{}');
-      
-      // Validar o voucher diretamente no Supabase
-      const { data: voucherData, error: voucherError } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('voucher', commonVoucher.code || extraVoucher.code)
-        .eq('cpf', commonVoucher.cpf || extraVoucher.cpf)
+      // Get stored voucher data
+      const voucherData = localStorage.getItem('commonVoucher');
+      if (!voucherData) {
+        toast.error('Dados do voucher não encontrados');
+        navigate('/');
+        return;
+      }
+
+      const { code, userName, turno, cpf } = JSON.parse(voucherData);
+
+      // Validate voucher
+      const { data: validationData, error: validationError } = await supabase
+        .from('uso_voucher')
+        .insert([
+          {
+            usuario_id: cpf,
+            tipo_refeicao_id: turno,
+            usado_em: new Date().toISOString()
+          }
+        ])
+        .select()
         .single();
 
-      if (voucherError) {
-        throw new Error('Voucher inválido ou não encontrado');
+      if (validationError) {
+        console.error('Erro na validação:', {
+          message: validationError.message,
+          details: validationError.details,
+          hint: validationError.hint,
+          code: validationError.code
+        });
+        
+        throw new Error(validationError.message);
       }
 
-      // Buscar o ID do tipo de refeição (primeiro resultado ativo)
-      const { data: mealTypeData, error: mealTypeError } = await supabase
-        .from('tipos_refeicao')
-        .select('id')
-        .eq('nome', location.state.mealType)
-        .eq('ativo', true)
-        .limit(1);
-
-      if (mealTypeError || !mealTypeData || mealTypeData.length === 0) {
-        throw new Error('Tipo de refeição não encontrado');
-      }
-
-      // Registrar o uso do voucher na tabela uso_voucher
-      const { error: usageError } = await supabase
-        .from('uso_voucher')
-        .insert([{
-          usuario_id: voucherData.id,
-          tipo_refeicao_id: mealTypeData[0].id,
-          usado_em: new Date().toISOString()
-        }]);
-
-      if (usageError) throw usageError;
-
-      // Navegação para a página de sucesso
-      navigate(`/bom-apetite/${encodeURIComponent(userName)}`, {
-        state: { 
-          userName: userName,
-          mealType: location.state.mealType 
-        }
+      // Clear stored data
+      localStorage.removeItem('commonVoucher');
+      
+      // Navigate to success page
+      navigate('/bom-apetite', { 
+        state: { userName, turno } 
       });
 
-      // Limpar vouchers do localStorage após uso bem-sucedido
-      localStorage.removeItem('commonVoucher');
-      localStorage.removeItem('extraVoucher');
     } catch (error) {
       console.error('Erro na validação:', error);
       toast.error(error.message || 'Erro ao validar voucher');
-      navigate('/voucher');
+      navigate('/');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleCancel = () => {
+    localStorage.removeItem('commonVoucher');
+    navigate('/');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background bg-cover bg-center bg-no-repeat"
-         style={{
-           backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined
-         }}>
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">Confirmar Refeição</CardTitle>
-          <CardDescription className="text-center">
-            Por favor, confirme os dados abaixo
-          </CardDescription>
-        </CardHeader>
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full space-y-6">
+        <h2 className="text-2xl font-bold text-center text-gray-900">
+          Confirmar Refeição
+        </h2>
         
-        <CardContent className="space-y-4">
-          <div className="p-4 bg-secondary rounded-lg">
-            <h3 className="font-semibold text-lg mb-2">Dados do Usuário</h3>
-            <div className="flex items-center space-x-2">
-              <Check className="h-5 w-5 text-primary" />
-              <span>{userName}</span>
-            </div>
-          </div>
+        <p className="text-center text-gray-600">
+          Deseja confirmar sua refeição?
+        </p>
 
-          <div className="p-4 bg-secondary rounded-lg">
-            <h3 className="font-semibold text-lg mb-2">Tipo de Refeição</h3>
-            <div className="flex items-center space-x-2">
-              <Check className="h-5 w-5 text-primary" />
-              <span>{location.state?.mealType || 'Não especificado'}</span>
-            </div>
-          </div>
-
-          <div className="bg-muted/50 p-4 rounded-lg flex items-start space-x-2">
-            <AlertCircle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-            <p className="text-sm text-muted-foreground">
-              Ao confirmar, seu voucher será validado e você será redirecionado para a próxima etapa.
-            </p>
-          </div>
-        </CardContent>
-
-        <CardFooter className="flex justify-between space-x-4">
-          <Button 
-            variant="outline" 
-            className="w-full"
-            onClick={() => navigate('/voucher')}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            className="w-full"
+        <div className="flex flex-col space-y-3">
+          <Button
             onClick={handleConfirm}
             disabled={isLoading}
+            className="w-full bg-green-600 hover:bg-green-700"
           >
             {isLoading ? 'Confirmando...' : 'Confirmar'}
           </Button>
-        </CardFooter>
-      </Card>
+
+          <Button
+            onClick={handleCancel}
+            variant="outline"
+            className="w-full"
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
