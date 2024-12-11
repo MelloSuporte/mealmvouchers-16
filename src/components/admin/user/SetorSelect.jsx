@@ -46,7 +46,7 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false, placehold
       </SelectTrigger>
       <SelectContent>
         {includeAllOption && (
-          <SelectItem value="all" className="text-sm">Todos os setores</SelectItem>
+          <SelectItem value="all" className="text-sm">Todos os setor</SelectItem>
         )}
         {setores && setores.map((setor) => (
           <SelectItem 
