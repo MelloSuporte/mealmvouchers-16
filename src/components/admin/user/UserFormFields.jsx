@@ -18,7 +18,9 @@ const UserFormFields = ({
   handlePhotoUpload
 }) => {
   return (
-    <form className="space-y-3 max-w-2xl mx-auto" onSubmit={onSave}>
+    <form className="space-y-4 max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-sm" onSubmit={onSave}>
+      <h2 className="text-xl font-semibold mb-4">Cadastro de Usuário</h2>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="userName" className="text-sm font-medium">Nome Completo</Label>

@@ -5,22 +5,25 @@ import { Search } from "lucide-react";
 
 const UserSearchSection = ({ searchCPF, setSearchCPF, onSearch, isSearching }) => {
   return (
-    <div className="flex gap-2 max-w-md mb-4">
-      <Input
-        placeholder="Digite o CPF para buscar"
-        value={searchCPF}
-        onChange={(e) => setSearchCPF(e.target.value)}
-        className="h-9"
-      />
-      <Button 
-        onClick={onSearch} 
-        disabled={isSearching}
-        size="sm"
-        className="h-9 whitespace-nowrap"
-      >
-        <Search size={16} className="mr-2" />
-        {isSearching ? 'Buscando...' : 'Buscar'}
-      </Button>
+    <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
+      <h2 className="text-lg font-semibold mb-3">Buscar Usuário</h2>
+      <div className="flex gap-2 max-w-md">
+        <Input
+          placeholder="Digite o CPF para buscar"
+          value={searchCPF}
+          onChange={(e) => setSearchCPF(e.target.value)}
+          className="h-9"
+        />
+        <Button 
+          onClick={onSearch} 
+          disabled={isSearching}
+          size="sm"
+          className="h-9 whitespace-nowrap"
+        >
+          <Search size={16} className="mr-2" />
+          {isSearching ? 'Buscando...' : 'Buscar'}
+        </Button>
+      </div>
     </div>
   );
 };
