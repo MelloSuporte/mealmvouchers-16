@@ -16,7 +16,7 @@ const MealTypeForm = () => {
   const [existingMealData, setExistingMealData] = useState(null);
 
   const mealTypes = [
-    "Breakfast (1)", "Breakfast (2)", "Lunch", "Snack", "Dinner", "Supper", "Morning Meal", "Extra"
+    "Café (1)", "Café (2)", "Almoço", "Lanche", "Jantar", "Ceia", "Refeição Matinal", "Extra"
   ];
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const MealTypeForm = () => {
       }
 
       try {
-        console.log('Fetching data for meal type:', mealType);
+        console.log('Buscando dados para o tipo de refeição:', mealType);
         
         const { data, error } = await supabase
           .from('tipos_refeicao')
@@ -36,12 +36,12 @@ const MealTypeForm = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('Query error:', error);
+          console.error('Erro na consulta:', error);
           throw error;
         }
 
         if (data) {
-          console.log('Data found:', data);
+          console.log('Dados encontrados:', data);
           setExistingMealData(data);
           setMealValue(data.valor.toString());
           setStartTime(data.horario_inicio || '');
@@ -49,8 +49,7 @@ const MealTypeForm = () => {
           setMaxUsersPerDay(data.max_usuarios_por_dia?.toString() || '');
           setToleranceMinutes(data.minutos_tolerancia?.toString() || '15');
         } else {
-          console.log('No data found for:', mealType);
-          // Reset form for new entry
+          console.log('Nenhum dado encontrado para:', mealType);
           setExistingMealData(null);
           setMealValue('');
           setStartTime('');
@@ -59,9 +58,8 @@ const MealTypeForm = () => {
           setToleranceMinutes('15');
         }
       } catch (error) {
-        console.error('Error fetching meal data:', error);
-        toast.error("Error fetching meal data. Please try again.");
-        // Reset form on error
+        console.error('Erro ao buscar dados da refeição:', error);
+        toast.error("Erro ao buscar dados da refeição. Por favor, tente novamente.");
         setExistingMealData(null);
         setMealValue('');
         setStartTime('');
@@ -76,7 +74,7 @@ const MealTypeForm = () => {
 
   const handleSaveMealType = async () => {
     if (!mealType || !mealValue || (mealType !== "Extra" && (!startTime || !endTime))) {
-      toast.error("Please fill in all required fields.");
+      toast.error("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
 
@@ -108,7 +106,7 @@ const MealTypeForm = () => {
       const { error } = await operation;
       if (error) throw error;
 
-      toast.success(`Meal type ${mealType} ${existingMealData ? 'updated' : 'saved'} successfully!`);
+      toast.success(`Tipo de refeição ${mealType} ${existingMealData ? 'atualizado' : 'salvo'} com sucesso!`);
       setMealType("");
       setMealValue("");
       setStartTime("");
@@ -117,8 +115,8 @@ const MealTypeForm = () => {
       setToleranceMinutes("15");
       setExistingMealData(null);
     } catch (error) {
-      console.error('Error saving meal type:', error);
-      toast.error("Error saving meal type: " + error.message);
+      console.error('Erro ao salvar tipo de refeição:', error);
+      toast.error("Erro ao salvar tipo de refeição: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -128,7 +126,7 @@ const MealTypeForm = () => {
     <form className="space-y-4">
       <Select value={mealType} onValueChange={setMealType}>
         <SelectTrigger>
-          <SelectValue placeholder="Select meal type" />
+          <SelectValue placeholder="Selecione o tipo de refeição" />
         </SelectTrigger>
         <SelectContent>
           {mealTypes.map((type) => (
@@ -138,7 +136,7 @@ const MealTypeForm = () => {
       </Select>
 
       <Input 
-        placeholder="Meal value" 
+        placeholder="Valor da refeição" 
         type="number" 
         step="0.01" 
         value={mealValue}
@@ -148,13 +146,13 @@ const MealTypeForm = () => {
       {mealType !== "Extra" && (
         <>
           <Input 
-            placeholder="Start time" 
+            placeholder="Horário de início" 
             type="time" 
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
           />
           <Input 
-            placeholder="End time" 
+            placeholder="Horário de fim" 
             type="time" 
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
@@ -163,14 +161,14 @@ const MealTypeForm = () => {
       )}
 
       <Input 
-        placeholder="Users limit per day (optional)" 
+        placeholder="Limite de usuários por dia (opcional)" 
         type="number" 
         value={maxUsersPerDay}
         onChange={(e) => setMaxUsersPerDay(e.target.value)}
       />
 
       <Input 
-        placeholder="Tolerance minutes" 
+        placeholder="Minutos de tolerância" 
         type="number" 
         value={toleranceMinutes}
         onChange={(e) => setToleranceMinutes(e.target.value)}
@@ -182,7 +180,7 @@ const MealTypeForm = () => {
         disabled={isSubmitting}
         className="w-full"
       >
-        {isSubmitting ? 'Saving...' : existingMealData ? 'Update Meal Type' : 'Register Meal Type'}
+        {isSubmitting ? 'Salvando...' : existingMealData ? 'Atualizar Tipo de Refeição' : 'Cadastrar Tipo de Refeição'}
       </Button>
     </form>
   );
