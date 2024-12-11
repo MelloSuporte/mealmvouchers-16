@@ -101,13 +101,9 @@ const TurnosForm = () => {
   }
 
   if (erro) {
-    console.error('Erro detalhado:', erro);
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
         <p className="text-red-600">Erro ao buscar turnos: {erro.message}</p>
-        <pre className="mt-2 text-sm text-red-500 overflow-auto">
-          {JSON.stringify(erro, null, 2)}
-        </pre>
         <Button 
           onClick={() => recarregar()} 
           variant="outline" 
@@ -120,56 +116,62 @@ const TurnosForm = () => {
   }
 
   const turnos = Array.isArray(dadosTurnos) ? dadosTurnos : [];
-  console.log('Renderizando turnos:', turnos);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <Button onClick={() => setDialogoAberto(true)}>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <Button onClick={() => setDialogoAberto(true)} size="sm">
           <Plus className="mr-2 h-4 w-4" />
           Novo Turno
         </Button>
-        <NovoTurnoDialog
-          isOpen={dialogoAberto}
-          onOpenChange={setDialogoAberto}
-          novoTurno={novoTurno}
-          setNovoTurno={setNovoTurno}
-          onCreateTurno={handleNovoTurno}
-        />
-        <EditarTurnoDialog
-          isOpen={dialogoEdicaoAberto}
-          onOpenChange={setDialogoEdicaoAberto}
-          turno={turnoSelecionado}
-          onSave={handleSalvarEdicao}
-        />
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Horário Início</TableHead>
-              <TableHead>Horário Fim</TableHead>
-              <TableHead>Status</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="font-semibold">Tipo</TableHead>
+              <TableHead className="font-semibold w-32">Início</TableHead>
+              <TableHead className="font-semibold w-32">Fim</TableHead>
+              <TableHead className="font-semibold w-24 text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {turnos.map((turno) => (
               <TableRow 
                 key={turno.id}
-                className="cursor-pointer hover:bg-gray-50"
+                className="cursor-pointer hover:bg-muted/30 transition-colors"
                 onClick={() => handleEditarTurno(turno)}
               >
-                <TableCell>{getTurnoLabel(turno.tipo_turno)}</TableCell>
+                <TableCell className="font-medium">{getTurnoLabel(turno.tipo_turno)}</TableCell>
                 <TableCell>{turno.horario_inicio}</TableCell>
                 <TableCell>{turno.horario_fim}</TableCell>
-                <TableCell>{turno.ativo ? 'Ativo' : 'Inativo'}</TableCell>
+                <TableCell className="text-center">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    turno.ativo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {turno.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <NovoTurnoDialog
+        isOpen={dialogoAberto}
+        onOpenChange={setDialogoAberto}
+        novoTurno={novoTurno}
+        setNovoTurno={setNovoTurno}
+        onCreateTurno={handleNovoTurno}
+      />
+      <EditarTurnoDialog
+        isOpen={dialogoEdicaoAberto}
+        onOpenChange={setDialogoEdicaoAberto}
+        turno={turnoSelecionado}
+        onSave={handleSalvarEdicao}
+      />
     </div>
   );
 };

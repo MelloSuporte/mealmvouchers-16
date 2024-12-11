@@ -11,44 +11,50 @@ export const MealListTable = ({
   onToggleActive 
 }) => {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-12">
-            <Checkbox 
-              checked={selectedMeals.length === meals.length && meals.length > 0}
-              onCheckedChange={onSelectAll}
-            />
-          </TableHead>
-          <TableHead>Nome</TableHead>
-          <TableHead>Valor</TableHead>
-          <TableHead>Horário Início</TableHead>
-          <TableHead>Horário Fim</TableHead>
-          <TableHead className="text-right">Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {meals.map((meal) => (
-          <TableRow key={meal.id}>
-            <TableCell>
+    <div className="rounded-md border overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/50">
+            <TableHead className="w-10 p-2">
               <Checkbox 
-                checked={selectedMeals.includes(meal.id)}
-                onCheckedChange={() => onSelectMeal(meal.id)}
+                checked={selectedMeals.length === meals.length && meals.length > 0}
+                onCheckedChange={onSelectAll}
               />
-            </TableCell>
-            <TableCell>{meal.nome}</TableCell>
-            <TableCell>R$ {meal.valor.toFixed(2)}</TableCell>
-            <TableCell>{meal.hora_inicio || '-'}</TableCell>
-            <TableCell>{meal.hora_fim || '-'}</TableCell>
-            <TableCell className="text-right">
-              <Switch 
-                checked={meal.ativo}
-                onCheckedChange={() => onToggleActive(meal.id, !meal.ativo)}
-              />
-            </TableCell>
+            </TableHead>
+            <TableHead className="font-semibold">Nome</TableHead>
+            <TableHead className="font-semibold">Valor</TableHead>
+            <TableHead className="font-semibold">Início</TableHead>
+            <TableHead className="font-semibold">Fim</TableHead>
+            <TableHead className="text-right w-20 font-semibold">Status</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {meals.map((meal) => (
+            <TableRow 
+              key={meal.id}
+              className="hover:bg-muted/30 transition-colors"
+            >
+              <TableCell className="p-2">
+                <Checkbox 
+                  checked={selectedMeals.includes(meal.id)}
+                  onCheckedChange={() => onSelectMeal(meal.id)}
+                />
+              </TableCell>
+              <TableCell className="font-medium">{meal.nome}</TableCell>
+              <TableCell>R$ {meal.valor.toFixed(2)}</TableCell>
+              <TableCell>{meal.hora_inicio || '-'}</TableCell>
+              <TableCell>{meal.hora_fim || '-'}</TableCell>
+              <TableCell className="text-right">
+                <Switch 
+                  checked={meal.ativo}
+                  onCheckedChange={() => onToggleActive(meal.id, !meal.ativo)}
+                  className="data-[state=checked]:bg-green-500"
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
