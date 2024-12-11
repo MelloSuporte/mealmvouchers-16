@@ -105,16 +105,16 @@ const RLSForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-sm">
-      <CardHeader className="space-y-0.5 pb-1">
-        <CardTitle className="text-[10px] font-medium">Vouchers Extras</CardTitle>
-        <CardDescription className="text-[7px] text-muted-foreground">
+    <Card className="w-full max-w-2xl mx-auto shadow-sm">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl font-semibold">Vouchers Extras</CardTitle>
+        <CardDescription className="text-sm text-muted-foreground">
           Gere vouchers extras para usuários específicos
         </CardDescription>
       </CardHeader>
       
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-1">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <CompanyUserSelector
             selectedCompany={selectedCompany}
             setSelectedCompany={setSelectedCompany}
@@ -126,24 +126,24 @@ const RLSForm = () => {
             isLoadingUsers={isLoadingUsers}
           />
 
-          <div className="space-y-0.5">
-            <Label htmlFor="observacao" className="text-[8px]">Observação</Label>
+          <div className="space-y-2">
+            <Label htmlFor="observacao" className="text-sm">Observação</Label>
             <Input
               id="observacao"
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
               placeholder="Observação opcional para o voucher extra"
               maxLength={255}
-              className="h-5 text-[9px]"
+              className="h-10"
             />
-            <p className="text-[7px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               A observação será registrada junto ao voucher
             </p>
           </div>
 
-          <div className="space-y-0.5">
-            <Label className="text-[8px] flex items-center gap-1">
-              <CalendarDays className="h-2 w-2" />
+          <div className="space-y-2">
+            <Label className="text-sm flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
               Datas para Voucher Extra
             </Label>
             <Calendar
@@ -160,14 +160,14 @@ const RLSForm = () => {
               classNames={{
                 day_selected: "bg-primary text-primary-foreground hover:bg-primary/90",
                 day_today: "bg-accent text-accent-foreground",
-                day: "h-6 w-6 text-[8px] p-0 font-normal aria-selected:opacity-100",
-                head_cell: "text-[8px] font-normal",
-                caption: "text-[8px]",
-                nav_button: "h-4 w-4",
-                table: "w-full border-collapse space-y-0.5",
+                day: "h-9 w-9 text-sm p-0 font-normal aria-selected:opacity-100",
+                head_cell: "text-sm font-normal",
+                caption: "text-sm",
+                nav_button: "h-7 w-7",
+                table: "w-full border-collapse space-y-1",
               }}
             />
-            <p className="text-[7px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {selectedDates.length === 0 
                 ? "Selecione as datas desejadas" 
                 : `${selectedDates.length} data(s) selecionada(s)`
@@ -178,7 +178,7 @@ const RLSForm = () => {
           <Button 
             type="submit" 
             disabled={isSubmitting || !selectedUser || selectedDates.length === 0}
-            className="w-full h-5 text-[9px]"
+            className="w-full h-10 text-sm"
           >
             {isSubmitting ? 'Gerando...' : 'Gerar Vouchers Extras'}
           </Button>
