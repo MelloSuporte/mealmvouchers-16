@@ -57,11 +57,23 @@ const UserConfirmation = () => {
         throw new Error('Usuário não encontrado');
       }
 
-      // Agora validar o voucher usando o ID do usuário
+      // Buscar o ID do tipo de refeição baseado no turno
+      const { data: tipoRefeicaoData, error: tipoRefeicaoError } = await supabase
+        .from('tipos_refeicao')
+        .select('id')
+        .eq('nome', turno)
+        .single();
+
+      if (tipoRefeicaoError) {
+        console.error('Erro ao buscar tipo de refeição:', tipoRefeicaoError);
+        throw new Error('Tipo de refeição não encontrado');
+      }
+
+      // Agora validar o voucher usando o ID do usuário e o ID do tipo de refeição
       const { data: validationResult, error: validationError } = await supabase
         .rpc('validate_and_use_common_voucher', {
           p_usuario_id: userData.id,
-          p_tipo_refeicao_id: turno
+          p_tipo_refeicao_id: tipoRefeicaoData.id
         });
 
       if (validationError) {
