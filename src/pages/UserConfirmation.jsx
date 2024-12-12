@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '../config/supabase';
+import logger from '../config/logger';
 
 const UserConfirmation = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const UserConfirmation = () => {
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
-      // Obter dados do voucher
+      // Obter dados do voucher do localStorage
       const voucherData = localStorage.getItem('commonVoucher');
       if (!voucherData) {
         toast.error('Dados do voucher não encontrados');
@@ -44,10 +45,22 @@ const UserConfirmation = () => {
 
       const { code, userName, turno, cpf } = JSON.parse(voucherData);
 
-      // Validar voucher usando RPC
+      // Primeiro, buscar o ID do usuário usando o CPF
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .eq('cpf', cpf)
+        .single();
+
+      if (userError) {
+        console.error('Erro ao buscar usuário:', userError);
+        throw new Error('Usuário não encontrado');
+      }
+
+      // Agora validar o voucher usando o ID do usuário
       const { data: validationResult, error: validationError } = await supabase
         .rpc('validate_and_use_common_voucher', {
-          p_usuario_id: cpf,
+          p_usuario_id: userData.id,
           p_tipo_refeicao_id: turno
         });
 
@@ -65,7 +78,7 @@ const UserConfirmation = () => {
       
       // Navegar para página de sucesso
       navigate('/bom-apetite', { 
-        state: { userName, turno } 
+        state: { userName: userData.nome, turno } 
       });
 
     } catch (error) {
