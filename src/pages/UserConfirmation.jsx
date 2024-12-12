@@ -32,6 +32,17 @@ const UserConfirmation = () => {
     fetchBackgroundImage();
   }, []);
 
+  const getMealTypeByTurno = (turno) => {
+    // Mapeamento de turnos para tipos de refeição
+    const mealTypeMap = {
+      'central': 'Almoço',
+      'primeiro': 'Café (1)',
+      'segundo': 'Jantar',
+      'terceiro': 'Ceia'
+    };
+    return mealTypeMap[turno] || 'Almoço'; // Default para 'Almoço' se não encontrar
+  };
+
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
@@ -57,11 +68,15 @@ const UserConfirmation = () => {
         throw new Error('Usuário não encontrado');
       }
 
-      // Buscar o ID do tipo de refeição baseado no turno
+      // Mapear o turno para o tipo de refeição correto
+      const mealTypeName = getMealTypeByTurno(turno);
+      console.log('Buscando tipo de refeição:', mealTypeName);
+
+      // Buscar o ID do tipo de refeição baseado no nome mapeado
       const { data: tipoRefeicaoData, error: tipoRefeicaoError } = await supabase
         .from('tipos_refeicao')
         .select('id')
-        .eq('nome', turno)
+        .eq('nome', mealTypeName)
         .single();
 
       if (tipoRefeicaoError) {
@@ -78,7 +93,7 @@ const UserConfirmation = () => {
 
       if (validationError) {
         console.error('Erro na validação:', validationError);
-        throw new Error(validationError.message || 'Erro ao validar voucher');
+        throw validationError;
       }
 
       if (!validationResult?.success) {
@@ -139,7 +154,7 @@ const UserConfirmation = () => {
           <h3 className="font-bold text-lg mb-2">Tipo de Refeição</h3>
           <p className="flex items-center gap-2">
             <span className="text-green-600">✓</span>
-            {JSON.parse(localStorage.getItem('commonVoucher') || '{}').turno || 'Refeição'}
+            {getMealTypeByTurno(JSON.parse(localStorage.getItem('commonVoucher') || '{}').turno) || 'Refeição'}
           </p>
         </div>
 
