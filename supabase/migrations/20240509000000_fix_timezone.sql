@@ -20,8 +20,6 @@ WHERE data_uso IS NOT NULL
 
 UPDATE vouchers_extras
 SET usado_em = usado_em AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo',
-    criado_em = criado_em AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo',
-    atualizado_em = atualizado_em AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo'
+    criado_em = criado_em AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo'
 WHERE usado_em IS NOT NULL 
-   OR criado_em IS NOT NULL 
-   OR atualizado_em IS NOT NULL;
+   OR criado_em IS NOT NULL;
