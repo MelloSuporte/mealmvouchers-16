@@ -13,7 +13,7 @@ const ReportMetrics = () => {
   const { filters, handleFilterChange } = useReportFilters();
   const { data: metrics, isLoading, error } = useReportMetrics(filters);
 
-  const handleExportClick = () => {
+  const handleExportClick = async () => {
     try {
       if (!metrics?.filteredData?.length) {
         toast.error("Não há dados para exportar");
@@ -26,7 +26,8 @@ const ReportMetrics = () => {
         metrics
       });
 
-      exportToPDF(metrics, filters);
+      await exportToPDF(metrics, filters);
+      toast.success("Relatório exportado com sucesso!");
     } catch (error) {
       console.error('Erro ao exportar:', error);
       toast.error("Erro ao exportar relatório: " + error.message);

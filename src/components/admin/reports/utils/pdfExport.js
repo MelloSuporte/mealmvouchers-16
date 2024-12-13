@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { toast } from "sonner";
 
-export const exportToPDF = (metrics, filters) => {
+export const exportToPDF = async (metrics, filters) => {
   try {
     if (!metrics?.filteredData?.length) {
       toast.error("Não há dados para exportar");
@@ -78,10 +78,10 @@ export const exportToPDF = (metrics, filters) => {
     const fileName = `relatorio-refeicoes-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
     doc.save(fileName);
     
-    toast.success("Relatório exportado com sucesso!");
     console.log('Relatório exportado:', fileName);
+    return fileName;
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
-    toast.error("Erro ao gerar relatório: " + error.message);
+    throw new Error("Erro ao gerar relatório: " + error.message);
   }
 };
