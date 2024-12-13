@@ -7,13 +7,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { toast } from "sonner";
 
 const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
-  if (!metrics) return null;
+  if (!metrics) {
+    console.log('Métricas não disponíveis para filtros');
+    return null;
+  }
 
+  const handleDateChange = (type, date) => {
+    console.log(`Alterando data ${type}:`, date);
+    if (type === 'startDate' && date > endDate) {
+      toast.error("Data inicial não pode ser maior que a data final");
+      return;
+    }
+    if (type === 'endDate' && date < startDate) {
+      toast.error("Data final não pode ser menor que a data inicial");
+      return;
+    }
+    onFilterChange(type, date);
+  };
+
+  // Extrair dados únicos para os filtros
   const companies = Object.keys(metrics.byCompany || {});
   const shifts = Object.keys(metrics.byShift || {});
   const mealTypes = Object.keys(metrics.byMealType || {});
+
+  console.log('Dados disponíveis para filtros:', {
+    companies,
+    shifts,
+    mealTypes
+  });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
@@ -38,7 +62,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
         <label className="text-sm font-medium mb-2 block">Data Inicial</label>
         <DatePicker
           date={startDate}
-          onDateChange={(date) => onFilterChange('startDate', date)}
+          onDateChange={(date) => handleDateChange('startDate', date)}
         />
       </div>
 
@@ -46,7 +70,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
         <label className="text-sm font-medium mb-2 block">Data Final</label>
         <DatePicker
           date={endDate}
-          onDateChange={(date) => onFilterChange('endDate', date)}
+          onDateChange={(date) => handleDateChange('endDate', date)}
         />
       </div>
 
