@@ -30,7 +30,7 @@ const ChartTabs = () => {
       const startDate = startOfWeek(new Date(), { locale: ptBR });
       const endDate = endOfWeek(new Date(), { locale: ptBR });
 
-      console.log('Consultando dados de:', startDate, 'até:', endDate);
+      console.log('Consultando dados semanais de:', startDate, 'até:', endDate);
 
       const { data, error } = await supabase
         .from('vw_uso_voucher_detalhado')
@@ -39,11 +39,11 @@ const ChartTabs = () => {
         .lte('data_uso', endDate.toISOString());
 
       if (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados semanais:', error);
         throw error;
       }
 
-      console.log('Dados retornados:', data);
+      console.log('Dados semanais retornados:', data);
 
       // Inicializa os dias da semana
       const diasDaSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
@@ -64,25 +64,18 @@ const ChartTabs = () => {
       // Processa os dados retornados da query
       if (data && data.length > 0) {
         data.forEach(registro => {
-          if (registro.data_uso && registro.tipo_refeicao) {
-            const dataUso = new Date(registro.data_uso);
-            const dia = format(dataUso, 'EEEE', { locale: ptBR });
-            console.log('Processando registro:', {
-              data: dataUso,
-              dia,
-              tipo: registro.tipo_refeicao
-            });
-            
-            if (dadosPorDia[dia]) {
-              dadosPorDia[dia][registro.tipo_refeicao] = (dadosPorDia[dia][registro.tipo_refeicao] || 0) + 1;
-            }
+          const dataUso = new Date(registro.data_uso);
+          const dia = format(dataUso, 'EEEE', { locale: ptBR });
+          
+          if (dadosPorDia[dia] && registro.tipo_refeicao) {
+            dadosPorDia[dia][registro.tipo_refeicao] = (dadosPorDia[dia][registro.tipo_refeicao] || 0) + 1;
           }
         });
       }
 
       // Converte o objeto em array mantendo a ordem dos dias da semana
       const dadosFinais = diasDaSemana.map(dia => dadosPorDia[dia]);
-      console.log('Dados processados:', dadosFinais);
+      console.log('Dados semanais processados:', dadosFinais);
       
       return dadosFinais;
     },
@@ -95,7 +88,7 @@ const ChartTabs = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('vw_uso_voucher_detalhado')
-        .select('tipo_refeicao');
+        .select('tipo_refeicao, valor_refeicao');
 
       if (error) throw error;
 

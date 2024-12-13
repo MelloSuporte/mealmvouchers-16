@@ -24,7 +24,7 @@ const ReportMetrics = () => {
   const { data: metrics, isLoading } = useQuery({
     queryKey: ['report-metrics', filters],
     queryFn: async () => {
-      console.log('Consultando dados de:', filters.startDate, 'até:', filters.endDate);
+      console.log('Consultando métricas de:', filters.startDate, 'até:', filters.endDate);
 
       const { data: usageData, error } = await supabase
         .from('vw_uso_voucher_detalhado')
@@ -33,11 +33,11 @@ const ReportMetrics = () => {
         .lte('data_uso', filters.endDate.toISOString());
 
       if (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar métricas:', error);
         throw error;
       }
 
-      console.log('Dados retornados:', usageData);
+      console.log('Dados das métricas retornados:', usageData);
 
       // Filtra os dados baseado nos filtros selecionados
       const filteredData = usageData.filter(item => {
@@ -47,7 +47,7 @@ const ReportMetrics = () => {
         return true;
       });
 
-      console.log('Dados filtrados:', filteredData);
+      console.log('Dados das métricas filtrados:', filteredData);
 
       const totalCost = filteredData.reduce((sum, item) => sum + (item.valor_refeicao || 0), 0);
       const averageCost = filteredData.length > 0 ? totalCost / filteredData.length : 0;
