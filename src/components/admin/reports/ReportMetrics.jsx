@@ -33,7 +33,7 @@ const ReportMetrics = () => {
         .lte('data_uso', filters.endDate.toISOString());
 
       if (filters.company !== 'all') {
-        query.eq('empresa', filters.company);
+        query.eq('nome_empresa', filters.company);
       }
 
       if (filters.shift !== 'all') {
@@ -68,7 +68,7 @@ const ReportMetrics = () => {
 
       // Agrupamentos para os filtros
       const byCompany = usageData.reduce((acc, curr) => {
-        const empresa = curr.empresa || 'Não especificado';
+        const empresa = curr.nome_empresa || 'Não especificado';
         acc[empresa] = (acc[empresa] || 0) + 1;
         return acc;
       }, {});
