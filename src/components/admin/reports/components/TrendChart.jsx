@@ -1,6 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { COLORS } from '../charts/ChartColors';
+import { COLORS } from '../../../charts/ChartColors';
 
 const TrendChart = ({ data }) => {
   if (!data?.length) {
