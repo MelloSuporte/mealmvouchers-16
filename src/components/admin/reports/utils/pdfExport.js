@@ -7,11 +7,14 @@ import { toast } from "sonner";
 export const exportToPDF = async (metrics, filters) => {
   try {
     if (!metrics?.filteredData?.length) {
-      toast.error("Não há dados para exportar");
-      return;
+      throw new Error("Não há dados para exportar");
     }
 
-    console.log('Dados para exportação:', metrics);
+    console.log('Iniciando exportação com dados:', {
+      metricsLength: metrics?.filteredData?.length,
+      filters,
+      firstRow: metrics?.filteredData[0]
+    });
 
     const doc = new jsPDF();
     
@@ -20,7 +23,9 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text("Relatório de Custos de Refeições", 14, 15);
     
     doc.setFontSize(10);
-    doc.text(`Período: ${format(filters.startDate, 'dd/MM/yyyy', { locale: ptBR })} a ${format(filters.endDate, 'dd/MM/yyyy', { locale: ptBR })}`, 14, 25);
+    const startDate = filters.startDate ? format(new Date(filters.startDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
+    const endDate = filters.endDate ? format(new Date(filters.endDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
+    doc.text(`Período: ${startDate} a ${endDate}`, 14, 25);
     
     // Usar os nomes corretos das empresas e turnos do objeto metrics
     const empresaNome = metrics.filteredData[0]?.usuario?.empresa?.nome || 'Todas';
@@ -39,15 +44,22 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text(`Vouchers Descartáveis: ${metrics.disposableVouchers || 0}`, 14, 70);
 
     // Dados detalhados em tabela
-    const tableData = metrics.filteredData.map(item => [
-      format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-      item.usuario?.nome || '-',
-      item.codigo_voucher || '-',
-      item.tipo_refeicao?.nome || '-',
-      `R$ ${parseFloat(item.tipo_refeicao?.valor || 0).toFixed(2)}`,
-      item.usuario?.turno?.tipo_turno || '-',
-      item.usuario?.empresa?.nome || '-'
-    ]);
+    const tableData = metrics.filteredData.map(item => {
+      try {
+        return [
+          item.usado_em ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
+          item.usuario?.nome || '-',
+          item.codigo_voucher || '-',
+          item.tipo_refeicao?.nome || '-',
+          item.tipo_refeicao?.valor ? `R$ ${parseFloat(item.tipo_refeicao.valor).toFixed(2)}` : 'R$ 0,00',
+          item.usuario?.turno?.tipo_turno || '-',
+          item.usuario?.empresa?.nome || '-'
+        ];
+      } catch (error) {
+        console.error('Erro ao processar linha da tabela:', error, item);
+        return ['-', '-', '-', '-', '-', '-', '-'];
+      }
+    });
 
     doc.autoTable({
       startY: 80,
@@ -76,12 +88,13 @@ export const exportToPDF = async (metrics, filters) => {
 
     // Nome do arquivo com data e hora atual
     const fileName = `relatorio-refeicoes-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
+    
+    console.log('Salvando arquivo:', fileName);
     doc.save(fileName);
     
-    console.log('Relatório exportado:', fileName);
     return fileName;
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
-    throw new Error("Erro ao gerar relatório: " + error.message);
+    throw error;
   }
 };
