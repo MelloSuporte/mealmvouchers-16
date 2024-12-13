@@ -18,7 +18,7 @@ export const useFilterOptions = () => {
 
         if (empresasError) {
           console.error('Erro ao buscar empresas:', empresasError);
-          throw empresasError;
+          throw new Error(`Erro ao buscar empresas: ${empresasError.message}`);
         }
         console.log('Empresas encontradas:', empresas?.length || 0);
 
@@ -31,7 +31,7 @@ export const useFilterOptions = () => {
 
         if (turnosError) {
           console.error('Erro ao buscar turnos:', turnosError);
-          throw turnosError;
+          throw new Error(`Erro ao buscar turnos: ${turnosError.message}`);
         }
         console.log('Turnos encontrados:', turnos?.length || 0);
 
@@ -44,7 +44,7 @@ export const useFilterOptions = () => {
 
         if (tiposError) {
           console.error('Erro ao buscar tipos de refeição:', tiposError);
-          throw tiposError;
+          throw new Error(`Erro ao buscar tipos de refeição: ${tiposError.message}`);
         }
         console.log('Tipos de refeição encontrados:', tiposRefeicao?.length || 0);
 
