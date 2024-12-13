@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Select,
   SelectContent,
@@ -8,28 +8,11 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { useFilterOptions } from './hooks/useFilterOptions';
+import { Skeleton } from "@/components/ui/skeleton";
 
-const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
-  const [filterOptions, setFilterOptions] = useState({
-    empresas: [],
-    turnos: [],
-    tiposRefeicao: []
-  });
-
-  useEffect(() => {
-    const loadFilterOptions = async () => {
-      try {
-        const options = await metrics.fetchFilterOptions();
-        setFilterOptions(options);
-      } catch (error) {
-        console.error('Erro ao carregar opções dos filtros:', error);
-        toast.error('Erro ao carregar opções dos filtros');
-      }
-    };
-
-    loadFilterOptions();
-  }, [metrics]);
+const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
+  const { data: filterOptions, isLoading, error } = useFilterOptions();
 
   const handleDateChange = (type, date) => {
     console.log(`Alterando data ${type}:`, date);
@@ -44,6 +27,24 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
     onFilterChange(type, date);
   };
 
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="h-[70px]" />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500 p-4 bg-red-50 rounded-md mb-8">
+        Erro ao carregar filtros. Por favor, tente novamente.
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
       <div>
@@ -54,7 +55,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
-            {filterOptions.empresas.map((empresa) => (
+            {filterOptions?.empresas.map((empresa) => (
               <SelectItem key={empresa.id} value={empresa.id}>
                 {empresa.nome}
               </SelectItem>
@@ -87,7 +88,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {filterOptions.turnos.map((turno) => (
+            {filterOptions?.turnos.map((turno) => (
               <SelectItem key={turno.id} value={turno.id}>
                 {turno.tipo_turno}
               </SelectItem>
@@ -104,7 +105,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {filterOptions.tiposRefeicao.map((tipo) => (
+            {filterOptions?.tiposRefeicao.map((tipo) => (
               <SelectItem key={tipo.id} value={tipo.id}>
                 {tipo.nome}
               </SelectItem>
