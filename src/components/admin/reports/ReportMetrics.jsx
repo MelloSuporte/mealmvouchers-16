@@ -1,31 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
-import { startOfDay, endOfDay } from 'date-fns';
 import ReportFilters from './ReportFilters';
 import MetricsCards from './MetricsCards';
 import { Button } from "@/components/ui/button";
 import { FileDown } from 'lucide-react';
 import { useReportMetrics } from './hooks/useReportMetrics';
 import { exportToPDF } from './utils/pdfExport';
+import { useReportFilters } from './hooks/useReportFilters';
+import { toast } from "sonner";
 
 const ReportMetrics = () => {
-  const [filters, setFilters] = useState({
-    company: 'all',
-    startDate: startOfDay(new Date()),
-    endDate: endOfDay(new Date()),
-    shift: 'all',
-    mealType: 'all'
-  });
-
+  const { filters, handleFilterChange } = useReportFilters();
   const { data: metrics, isLoading } = useReportMetrics(filters);
-
-  const handleFilterChange = (filterType, value) => {
-    console.log('Alterando filtro:', filterType, 'para:', value);
-    setFilters(prev => ({
-      ...prev,
-      [filterType]: value
-    }));
-  };
 
   const handleExportClick = () => {
     if (!metrics?.filteredData?.length) {
