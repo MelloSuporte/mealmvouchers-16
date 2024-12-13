@@ -11,6 +11,10 @@ import { DatePicker } from "@/components/ui/date-picker";
 const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
   if (!metrics) return null;
 
+  const companies = Object.keys(metrics.byCompany || {});
+  const shifts = Object.keys(metrics.byShift || {});
+  const mealTypes = Object.keys(metrics.byMealType || {});
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
       <div>
@@ -21,7 +25,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
-            {Object.keys(metrics.byCompany || {}).map((company) => (
+            {companies.map((company) => (
               <SelectItem key={company} value={company}>
                 {company}
               </SelectItem>
@@ -54,7 +58,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {Object.keys(metrics.byShift || {}).map((shift) => (
+            {shifts.map((shift) => (
               <SelectItem key={shift} value={shift}>
                 {shift}
               </SelectItem>
@@ -71,7 +75,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {Object.keys(metrics.byMealType || {}).map((mealType) => (
+            {mealTypes.map((mealType) => (
               <SelectItem key={mealType} value={mealType}>
                 {mealType}
               </SelectItem>

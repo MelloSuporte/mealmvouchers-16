@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from '../../../config/supabase';
-import { format, startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReportFilters from './ReportFilters';
 import MetricsCards from './MetricsCards';
@@ -26,47 +26,66 @@ const ReportMetrics = () => {
     queryFn: async () => {
       console.log('Consultando métricas com filtros:', filters);
 
-      let query = supabase
+      // Primeiro, vamos buscar os dados base
+      const { data: usageData, error: usageError } = await supabase
         .from('vw_uso_voucher_detalhado')
-        .select('*')
-        .gte('data_uso', filters.startDate.toISOString())
-        .lte('data_uso', filters.endDate.toISOString());
+        .select('*');
 
-      if (filters.company !== 'all') {
-        query = query.eq('empresa', filters.company);
-      }
-      if (filters.shift !== 'all') {
-        query = query.eq('turno', filters.shift);
-      }
-      if (filters.mealType !== 'all') {
-        query = query.eq('tipo_refeicao', filters.mealType);
-      }
-
-      const { data: usageData, error } = await query;
-
-      if (error) {
-        console.error('Erro ao buscar métricas:', error);
+      if (usageError) {
+        console.error('Erro ao buscar dados:', usageError);
         toast.error('Erro ao carregar dados');
-        throw error;
+        throw usageError;
       }
 
-      console.log('Dados retornados:', usageData);
+      console.log('Dados brutos retornados:', usageData);
 
-      const totalCost = usageData.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0);
-      const averageCost = usageData.length > 0 ? totalCost / usageData.length : 0;
+      // Filtragem dos dados
+      let filteredData = usageData;
+
+      // Filtro por data
+      filteredData = filteredData.filter(item => {
+        const itemDate = new Date(item.data_uso);
+        return itemDate >= filters.startDate && itemDate <= filters.endDate;
+      });
+
+      // Filtro por empresa
+      if (filters.company !== 'all') {
+        filteredData = filteredData.filter(item => item.empresa === filters.company);
+      }
+
+      // Filtro por turno
+      if (filters.shift !== 'all') {
+        filteredData = filteredData.filter(item => item.turno === filters.shift);
+      }
+
+      // Filtro por tipo de refeição
+      if (filters.mealType !== 'all') {
+        filteredData = filteredData.filter(item => item.tipo_refeicao === filters.mealType);
+      }
+
+      console.log('Dados filtrados:', filteredData);
+
+      // Cálculo das métricas
+      const totalCost = filteredData.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0);
+      const averageCost = filteredData.length > 0 ? totalCost / filteredData.length : 0;
       
-      const regularVouchers = usageData.filter(item => item.tipo_voucher === 'comum').length;
-      const disposableVouchers = usageData.filter(item => item.tipo_voucher === 'descartavel').length;
+      const regularVouchers = filteredData.filter(item => item.tipo_voucher === 'comum').length;
+      const disposableVouchers = filteredData.filter(item => item.tipo_voucher === 'descartavel').length;
+
+      // Agrupamentos para os filtros
+      const byCompany = groupBy(filteredData, 'empresa');
+      const byShift = groupBy(filteredData, 'turno');
+      const byMealType = groupBy(filteredData, 'tipo_refeicao');
 
       return {
         totalCost,
         averageCost,
         regularVouchers,
         disposableVouchers,
-        byCompany: groupBy(usageData, 'empresa'),
-        byShift: groupBy(usageData, 'turno'),
-        byMealType: groupBy(usageData, 'tipo_refeicao'),
-        filteredData: usageData
+        byCompany,
+        byShift,
+        byMealType,
+        filteredData
       };
     }
   });
