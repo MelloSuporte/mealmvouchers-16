@@ -26,35 +26,35 @@ const ReportMetrics = () => {
     queryFn: async () => {
       console.log('Consultando métricas com filtros:', filters);
 
-      const query = supabase
+      // Primeiro, vamos buscar os dados da view
+      let query = supabase
         .from('vw_uso_voucher_detalhado')
         .select('*')
         .gte('data_uso', filters.startDate.toISOString())
         .lte('data_uso', filters.endDate.toISOString());
 
+      // Aplicar filtros condicionais
       if (filters.company !== 'all') {
-        query.eq('nome_empresa', filters.company);
+        query = query.eq('empresa', filters.company);
       }
-
       if (filters.shift !== 'all') {
-        query.eq('turno', filters.shift);
+        query = query.eq('turno', filters.shift);
       }
-
       if (filters.mealType !== 'all') {
-        query.eq('tipo_refeicao', filters.mealType);
+        query = query.eq('tipo_refeicao', filters.mealType);
       }
 
       const { data: usageData, error } = await query;
 
       if (error) {
         console.error('Erro ao buscar dados:', error);
-        toast.error('Erro ao carregar dados');
+        toast.error('Erro ao carregar dados do relatório');
         throw error;
       }
 
       console.log('Dados brutos retornados:', usageData);
 
-      // Cálculo das métricas
+      // Processamento dos dados
       const totalCost = usageData.reduce((sum, item) => 
         sum + (parseFloat(item.valor_refeicao) || 0), 0);
       
@@ -68,7 +68,7 @@ const ReportMetrics = () => {
 
       // Agrupamentos para os filtros
       const byCompany = usageData.reduce((acc, curr) => {
-        const empresa = curr.nome_empresa || 'Não especificado';
+        const empresa = curr.empresa || 'Não especificado';
         acc[empresa] = (acc[empresa] || 0) + 1;
         return acc;
       }, {});
@@ -84,16 +84,6 @@ const ReportMetrics = () => {
         acc[tipo] = (acc[tipo] || 0) + 1;
         return acc;
       }, {});
-
-      console.log('Métricas calculadas:', {
-        totalCost,
-        averageCost,
-        regularVouchers,
-        disposableVouchers,
-        byCompany,
-        byShift,
-        byMealType
-      });
 
       return {
         totalCost,
@@ -125,15 +115,18 @@ const ReportMetrics = () => {
     try {
       const doc = new jsPDF();
       
+      // Cabeçalho do relatório
       doc.setFontSize(16);
       doc.text("Relatório de Custos de Refeições", 14, 15);
       
+      // Informações dos filtros aplicados
       doc.setFontSize(10);
       doc.text(`Período: ${format(filters.startDate, 'dd/MM/yyyy')} a ${format(filters.endDate, 'dd/MM/yyyy')}`, 14, 25);
       doc.text(`Empresa: ${filters.company === 'all' ? 'Todas' : filters.company}`, 14, 30);
       doc.text(`Turno: ${filters.shift === 'all' ? 'Todos' : filters.shift}`, 14, 35);
       doc.text(`Tipo de Refeição: ${filters.mealType === 'all' ? 'Todos' : filters.mealType}`, 14, 40);
 
+      // Dados da tabela
       const tableData = metrics.filteredData.map(item => [
         format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm'),
         item.nome_usuario || '-',
@@ -143,18 +136,21 @@ const ReportMetrics = () => {
           style: 'currency', 
           currency: 'BRL' 
         }).format(item.valor_refeicao || 0),
-        item.turno || '-'
+        item.turno || '-',
+        item.empresa || '-'
       ]);
 
+      // Configuração da tabela
       doc.autoTable({
         startY: 50,
-        head: [['Data/Hora', 'Usuário', 'Voucher', 'Refeição', 'Valor', 'Turno']],
+        head: [['Data/Hora', 'Usuário', 'Voucher', 'Refeição', 'Valor', 'Turno', 'Empresa']],
         body: tableData,
         theme: 'grid',
         styles: { fontSize: 8 },
         headStyles: { fillColor: [66, 66, 66] }
       });
 
+      // Salvar o PDF
       doc.save(`relatorio-refeicoes-${format(new Date(), 'dd-MM-yyyy')}.pdf`);
       toast.success("Relatório exportado com sucesso!");
     } catch (error) {
