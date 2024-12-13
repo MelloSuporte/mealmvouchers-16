@@ -11,15 +11,31 @@ import { toast } from "sonner";
 
 const ReportMetrics = () => {
   const { filters, handleFilterChange } = useReportFilters();
-  const { data: metrics, isLoading } = useReportMetrics(filters);
+  const { data: metrics, isLoading, error } = useReportMetrics(filters);
 
   const handleExportClick = () => {
-    if (!metrics?.filteredData?.length) {
-      toast.error("Não há dados para exportar");
-      return;
+    try {
+      if (!metrics?.filteredData?.length) {
+        toast.error("Não há dados para exportar");
+        return;
+      }
+
+      console.log('Iniciando exportação com dados:', {
+        metricsLength: metrics?.filteredData?.length,
+        filters
+      });
+
+      exportToPDF(metrics, filters);
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      toast.error("Erro ao exportar relatório: " + error.message);
     }
-    exportToPDF(metrics, filters);
   };
+
+  if (error) {
+    console.error('Erro ao carregar métricas:', error);
+    toast.error("Erro ao carregar dados do relatório");
+  }
 
   if (isLoading) {
     return (
