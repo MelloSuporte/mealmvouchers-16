@@ -34,7 +34,7 @@ const MealDistributionChart = ({ data }) => {
             );
           })}
         </Pie>
-        <Tooltip />
+        <Tooltip formatter={(value) => [`${value} refeições`, 'Quantidade']} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>

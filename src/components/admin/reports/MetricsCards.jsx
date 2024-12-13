@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const MetricsCards = ({ metrics }) => {
   const formatValue = (value) => {
-    if (value === undefined || value === null) return '0.00';
-    return typeof value === 'number' ? value.toFixed(2) : '0.00';
+    if (value === undefined || value === null) return '0,00';
+    return typeof value === 'number' ? value.toFixed(2).replace('.', ',') : '0,00';
   };
 
   return (

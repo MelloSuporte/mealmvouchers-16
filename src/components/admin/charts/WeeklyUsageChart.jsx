@@ -34,8 +34,8 @@ const WeeklyUsageChart = ({ data, tiposRefeicao }) => {
       <BarChart data={chartData} barSize={100}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="dia" />
-        <YAxis />
-        <Tooltip />
+        <YAxis label={{ value: 'Quantidade', angle: -90, position: 'insideLeft' }} />
+        <Tooltip formatter={(value) => [`${value} refeições`, 'Quantidade']} />
         <Legend />
         {tiposRefeicao.map((tipo) => {
           const normalizedName = normalizeMealName(tipo);
