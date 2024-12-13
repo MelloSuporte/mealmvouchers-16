@@ -8,20 +8,48 @@ export const useReportMetrics = (filters) => {
     queryFn: async () => {
       console.log('Consultando métricas com filtros:', filters);
 
+      // Base query para uso_voucher com joins necessários
       let query = supabase
         .from('vw_uso_voucher_detalhado')
-        .select('*')
-        .gte('data_uso', filters.startDate.toISOString())
-        .lte('data_uso', filters.endDate.toISOString());
+        .select(`
+          *,
+          usuarios (
+            id,
+            nome,
+            cpf,
+            empresa_id,
+            turno_id
+          ),
+          tipos_refeicao (
+            id,
+            nome,
+            valor
+          ),
+          empresas (
+            id,
+            nome
+          ),
+          turnos (
+            id,
+            tipo_turno
+          )
+        `);
 
+      // Aplicar filtros
+      if (filters.startDate) {
+        query = query.gte('usado_em', filters.startDate.toISOString());
+      }
+      if (filters.endDate) {
+        query = query.lte('usado_em', filters.endDate.toISOString());
+      }
       if (filters.company !== 'all') {
-        query = query.eq('empresa', filters.company);
+        query = query.eq('empresa_id', filters.company);
       }
       if (filters.shift !== 'all') {
-        query = query.eq('turno', filters.shift);
+        query = query.eq('turno_id', filters.shift);
       }
       if (filters.mealType !== 'all') {
-        query = query.eq('tipo_refeicao', filters.mealType);
+        query = query.eq('tipo_refeicao_id', filters.mealType);
       }
 
       const { data: usageData, error } = await query;
@@ -34,6 +62,7 @@ export const useReportMetrics = (filters) => {
 
       console.log('Dados brutos retornados:', usageData);
 
+      // Calcular métricas
       const totalCost = usageData.reduce((sum, item) => 
         sum + (parseFloat(item.valor_refeicao) || 0), 0);
       
@@ -45,20 +74,23 @@ export const useReportMetrics = (filters) => {
       const disposableVouchers = usageData.filter(item => 
         item.tipo_voucher === 'descartavel').length;
 
+      // Agrupar por empresa
       const byCompany = usageData.reduce((acc, curr) => {
-        const empresa = curr.empresa || 'Não especificado';
+        const empresa = curr.empresa?.nome || 'Não especificado';
         acc[empresa] = (acc[empresa] || 0) + 1;
         return acc;
       }, {});
 
+      // Agrupar por turno
       const byShift = usageData.reduce((acc, curr) => {
-        const turno = curr.turno || 'Não especificado';
+        const turno = curr.turno?.tipo_turno || 'Não especificado';
         acc[turno] = (acc[turno] || 0) + 1;
         return acc;
       }, {});
 
+      // Agrupar por tipo de refeição
       const byMealType = usageData.reduce((acc, curr) => {
-        const tipo = curr.tipo_refeicao || 'Não especificado';
+        const tipo = curr.tipo_refeicao?.nome || 'Não especificado';
         acc[tipo] = (acc[tipo] || 0) + 1;
         return acc;
       }, {});

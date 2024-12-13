@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -11,10 +11,25 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
-  if (!metrics) {
-    console.log('Métricas não disponíveis para filtros');
-    return null;
-  }
+  const [filterOptions, setFilterOptions] = useState({
+    empresas: [],
+    turnos: [],
+    tiposRefeicao: []
+  });
+
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        const options = await metrics.fetchFilterOptions();
+        setFilterOptions(options);
+      } catch (error) {
+        console.error('Erro ao carregar opções dos filtros:', error);
+        toast.error('Erro ao carregar opções dos filtros');
+      }
+    };
+
+    loadFilterOptions();
+  }, [metrics]);
 
   const handleDateChange = (type, date) => {
     console.log(`Alterando data ${type}:`, date);
@@ -29,16 +44,6 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
     onFilterChange(type, date);
   };
 
-  const companies = Object.keys(metrics.byCompany || {});
-  const shifts = Object.keys(metrics.byShift || {});
-  const mealTypes = Object.keys(metrics.byMealType || {});
-
-  console.log('Dados disponíveis para filtros:', {
-    companies,
-    shifts,
-    mealTypes
-  });
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
       <div>
@@ -49,9 +54,9 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
-            {companies.map((company) => (
-              <SelectItem key={company} value={company}>
-                {company}
+            {filterOptions.empresas.map((empresa) => (
+              <SelectItem key={empresa.id} value={empresa.id}>
+                {empresa.nome}
               </SelectItem>
             ))}
           </SelectContent>
@@ -82,9 +87,9 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {shifts.map((shift) => (
-              <SelectItem key={shift} value={shift}>
-                {shift}
+            {filterOptions.turnos.map((turno) => (
+              <SelectItem key={turno.id} value={turno.id}>
+                {turno.tipo_turno}
               </SelectItem>
             ))}
           </SelectContent>
@@ -99,9 +104,9 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {mealTypes.map((mealType) => (
-              <SelectItem key={mealType} value={mealType}>
-                {mealType}
+            {filterOptions.tiposRefeicao.map((tipo) => (
+              <SelectItem key={tipo.id} value={tipo.id}>
+                {tipo.nome}
               </SelectItem>
             ))}
           </SelectContent>
