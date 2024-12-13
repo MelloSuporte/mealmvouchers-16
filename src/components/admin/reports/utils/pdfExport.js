@@ -11,6 +11,8 @@ export const exportToPDF = (metrics, filters) => {
       return;
     }
 
+    console.log('Dados para exportação:', metrics);
+
     const doc = new jsPDF();
     
     // Configuração do cabeçalho
@@ -18,10 +20,16 @@ export const exportToPDF = (metrics, filters) => {
     doc.text("Relatório de Custos de Refeições", 14, 15);
     
     doc.setFontSize(10);
-    doc.text(`Período: ${format(filters.startDate, 'dd/MM/yyyy')} a ${format(filters.endDate, 'dd/MM/yyyy')}`, 14, 25);
-    doc.text(`Empresa: ${filters.company === 'all' ? 'Todas' : metrics.empresaNome || 'Não especificada'}`, 14, 30);
-    doc.text(`Turno: ${filters.shift === 'all' ? 'Todos' : metrics.turnoNome || 'Não especificado'}`, 14, 35);
-    doc.text(`Tipo de Refeição: ${filters.mealType === 'all' ? 'Todos' : metrics.tipoRefeicaoNome || 'Não especificado'}`, 14, 40);
+    doc.text(`Período: ${format(filters.startDate, 'dd/MM/yyyy', { locale: ptBR })} a ${format(filters.endDate, 'dd/MM/yyyy', { locale: ptBR })}`, 14, 25);
+    
+    // Usar os nomes corretos das empresas e turnos do objeto metrics
+    const empresaNome = metrics.filteredData[0]?.usuario?.empresa?.nome || 'Todas';
+    const turnoNome = metrics.filteredData[0]?.usuario?.turno?.tipo_turno || 'Todos';
+    const tipoRefeicaoNome = metrics.filteredData[0]?.tipo_refeicao?.nome || 'Todos';
+
+    doc.text(`Empresa: ${filters.company === 'all' ? 'Todas' : empresaNome}`, 14, 30);
+    doc.text(`Turno: ${filters.shift === 'all' ? 'Todos' : turnoNome}`, 14, 35);
+    doc.text(`Tipo de Refeição: ${filters.mealType === 'all' ? 'Todos' : tipoRefeicaoNome}`, 14, 40);
 
     // Métricas resumidas
     doc.text("Resumo:", 14, 50);
@@ -32,16 +40,13 @@ export const exportToPDF = (metrics, filters) => {
 
     // Dados detalhados em tabela
     const tableData = metrics.filteredData.map(item => [
-      format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm'),
-      item.nome_usuario || '-',
+      format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      item.usuario?.nome || '-',
       item.codigo_voucher || '-',
-      item.tipo_refeicao || '-',
-      new Intl.NumberFormat('pt-BR', { 
-        style: 'currency', 
-        currency: 'BRL' 
-      }).format(item.valor_refeicao || 0),
-      item.turno || '-',
-      item.empresa || '-'
+      item.tipo_refeicao?.nome || '-',
+      `R$ ${parseFloat(item.tipo_refeicao?.valor || 0).toFixed(2)}`,
+      item.usuario?.turno?.tipo_turno || '-',
+      item.usuario?.empresa?.nome || '-'
     ]);
 
     doc.autoTable({
@@ -69,8 +74,8 @@ export const exportToPDF = (metrics, filters) => {
       }
     });
 
-    // Nome do arquivo com data atual
-    const fileName = `relatorio-refeicoes-${format(new Date(), 'dd-MM-yyyy-HH-mm')}.pdf`;
+    // Nome do arquivo com data e hora atual
+    const fileName = `relatorio-refeicoes-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
     doc.save(fileName);
     
     toast.success("Relatório exportado com sucesso!");

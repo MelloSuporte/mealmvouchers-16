@@ -22,7 +22,8 @@ const ReportMetrics = () => {
 
       console.log('Iniciando exportação com dados:', {
         metricsLength: metrics?.filteredData?.length,
-        filters
+        filters,
+        metrics
       });
 
       exportToPDF(metrics, filters);
