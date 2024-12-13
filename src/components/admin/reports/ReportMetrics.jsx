@@ -26,51 +26,55 @@ const ReportMetrics = () => {
     queryFn: async () => {
       console.log('Consultando métricas de:', filters.startDate, 'até:', filters.endDate);
 
-      const { data: usageData, error } = await supabase
+      let query = supabase
         .from('vw_uso_voucher_detalhado')
         .select('*')
         .gte('data_uso', filters.startDate.toISOString())
         .lte('data_uso', filters.endDate.toISOString());
 
+      // Aplicar filtros adicionais
+      if (filters.company !== 'all') {
+        query = query.eq('empresa', filters.company);
+      }
+      if (filters.shift !== 'all') {
+        query = query.eq('turno', filters.shift);
+      }
+      if (filters.mealType !== 'all') {
+        query = query.eq('tipo_refeicao', filters.mealType);
+      }
+
+      const { data: usageData, error } = await query;
+
       if (error) {
         console.error('Erro ao buscar métricas:', error);
+        toast.error('Erro ao carregar dados');
         throw error;
       }
 
       console.log('Dados das métricas retornados:', usageData);
 
-      // Filtra os dados baseado nos filtros selecionados
-      const filteredData = usageData.filter(item => {
-        if (filters.company !== 'all' && item.empresa !== filters.company) return false;
-        if (filters.shift !== 'all' && item.turno !== filters.shift) return false;
-        if (filters.mealType !== 'all' && item.tipo_refeicao !== filters.mealType) return false;
-        return true;
-      });
-
-      console.log('Dados das métricas filtrados:', filteredData);
-
-      const totalCost = filteredData.reduce((sum, item) => sum + (item.valor_refeicao || 0), 0);
-      const averageCost = filteredData.length > 0 ? totalCost / filteredData.length : 0;
+      const totalCost = usageData.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0);
+      const averageCost = usageData.length > 0 ? totalCost / usageData.length : 0;
       
-      const regularVouchers = filteredData.filter(item => item.tipo_voucher === 'comum').length;
-      const disposableVouchers = filteredData.filter(item => item.tipo_voucher === 'descartavel').length;
+      const regularVouchers = usageData.filter(item => item.tipo_voucher === 'comum').length;
+      const disposableVouchers = usageData.filter(item => item.tipo_voucher === 'descartavel').length;
 
       // Segmentação por Empresa
-      const byCompany = filteredData.reduce((acc, item) => {
+      const byCompany = usageData.reduce((acc, item) => {
         const company = item.empresa || 'Não especificada';
         acc[company] = (acc[company] || 0) + 1;
         return acc;
       }, {});
 
       // Segmentação por Turno
-      const byShift = filteredData.reduce((acc, item) => {
+      const byShift = usageData.reduce((acc, item) => {
         const shift = item.turno || 'Não especificado';
         acc[shift] = (acc[shift] || 0) + 1;
         return acc;
       }, {});
 
       // Segmentação por Tipo de Refeição
-      const byMealType = filteredData.reduce((acc, item) => {
+      const byMealType = usageData.reduce((acc, item) => {
         const mealType = item.tipo_refeicao || 'Não especificado';
         acc[mealType] = (acc[mealType] || 0) + 1;
         return acc;
@@ -84,7 +88,7 @@ const ReportMetrics = () => {
         byCompany,
         byShift,
         byMealType,
-        filteredData
+        filteredData: usageData
       };
     }
   });

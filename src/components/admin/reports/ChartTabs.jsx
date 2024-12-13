@@ -8,6 +8,7 @@ import { COLORS } from '../charts/ChartColors';
 import { supabase } from '../../../config/supabase';
 import { startOfWeek, endOfWeek, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from "sonner";
 
 const ChartTabs = () => {
   // Primeiro, vamos buscar os tipos de refeição disponíveis
@@ -19,7 +20,10 @@ const ChartTabs = () => {
         .select('nome')
         .eq('ativo', true);
 
-      if (error) throw error;
+      if (error) {
+        toast.error('Erro ao carregar tipos de refeição');
+        throw error;
+      }
       return data.map(tipo => tipo.nome);
     }
   });
@@ -40,6 +44,7 @@ const ChartTabs = () => {
 
       if (error) {
         console.error('Erro ao buscar dados semanais:', error);
+        toast.error('Erro ao carregar dados semanais');
         throw error;
       }
 
@@ -64,11 +69,13 @@ const ChartTabs = () => {
       // Processa os dados retornados da query
       if (data && data.length > 0) {
         data.forEach(registro => {
-          const dataUso = new Date(registro.data_uso);
-          const dia = format(dataUso, 'EEEE', { locale: ptBR });
-          
-          if (dadosPorDia[dia] && registro.tipo_refeicao) {
-            dadosPorDia[dia][registro.tipo_refeicao] = (dadosPorDia[dia][registro.tipo_refeicao] || 0) + 1;
+          if (registro.data_uso && registro.tipo_refeicao) {
+            const dataUso = new Date(registro.data_uso);
+            const dia = format(dataUso, 'EEEE', { locale: ptBR });
+            
+            if (dadosPorDia[dia]) {
+              dadosPorDia[dia][registro.tipo_refeicao] = (dadosPorDia[dia][registro.tipo_refeicao] || 0) + 1;
+            }
           }
         });
       }
@@ -90,7 +97,10 @@ const ChartTabs = () => {
         .from('vw_uso_voucher_detalhado')
         .select('tipo_refeicao, valor_refeicao');
 
-      if (error) throw error;
+      if (error) {
+        toast.error('Erro ao carregar distribuição de refeições');
+        throw error;
+      }
 
       // Processar dados para o gráfico de pizza
       const distribution = data.reduce((acc, curr) => {
@@ -114,7 +124,10 @@ const ChartTabs = () => {
         .select('data_uso')
         .order('data_uso', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        toast.error('Erro ao carregar tendência de uso');
+        throw error;
+      }
 
       // Processar dados para o gráfico de tendência
       const trend = data.reduce((acc, curr) => {
