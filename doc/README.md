@@ -47,6 +47,12 @@
    - Logs
    - Troubleshooting
 
+10. [Diretrizes do Projeto](./guidelines.md)
+    - Processo de mudanças
+    - Implementação gradual
+    - Testes e validação
+    - Documentação
+
 ## Como Usar Esta Documentação
 
 Esta documentação foi organizada de forma modular para facilitar a navegação e manutenção. Cada seção está em um arquivo separado com foco em um aspecto específico do sistema.
