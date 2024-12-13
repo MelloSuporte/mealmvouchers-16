@@ -10,6 +10,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { useFilterOptions } from './hooks/useFilterOptions';
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
   const { data: filterOptions, isLoading, error } = useFilterOptions();
@@ -40,7 +41,21 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
   if (error) {
     return (
       <div className="text-red-500 p-4 bg-red-50 rounded-md mb-8">
-        Erro ao carregar filtros. Por favor, tente novamente.
+        <p>Erro ao carregar filtros: {error.message}</p>
+        <p className="text-sm mt-2">Por favor, verifique se há dados cadastrados e tente novamente.</p>
+      </div>
+    );
+  }
+
+  // Verificar se há dados em todas as listas
+  const hasNoData = (!filterOptions?.empresas?.length && !filterOptions?.turnos?.length && !filterOptions?.tiposRefeicao?.length);
+  
+  if (hasNoData) {
+    return (
+      <div className="bg-yellow-50 p-4 rounded-md mb-8">
+        <p className="text-yellow-700">
+          Nenhum dado encontrado para os filtros. Verifique se existem empresas, turnos e tipos de refeição cadastrados e ativos.
+        </p>
       </div>
     );
   }
@@ -55,7 +70,7 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
-            {filterOptions?.empresas.map((empresa) => (
+            {filterOptions?.empresas?.map((empresa) => (
               <SelectItem key={empresa.id} value={empresa.id}>
                 {empresa.nome}
               </SelectItem>
@@ -88,7 +103,7 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {filterOptions?.turnos.map((turno) => (
+            {filterOptions?.turnos?.map((turno) => (
               <SelectItem key={turno.id} value={turno.id}>
                 {turno.tipo_turno}
               </SelectItem>
@@ -105,7 +120,7 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {filterOptions?.tiposRefeicao.map((tipo) => (
+            {filterOptions?.tiposRefeicao?.map((tipo) => (
               <SelectItem key={tipo.id} value={tipo.id}>
                 {tipo.nome}
               </SelectItem>
