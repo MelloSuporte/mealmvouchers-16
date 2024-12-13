@@ -10,28 +10,26 @@ export const useReportMetrics = (filters) => {
 
       // Base query para uso_voucher com joins necessários
       let query = supabase
-        .from('vw_uso_voucher_detalhado')
+        .from('uso_voucher')
         .select(`
           *,
-          usuarios (
+          usuario:usuario_id(
             id,
             nome,
             cpf,
-            empresa_id,
-            turno_id
+            empresa:empresa_id(
+              id,
+              nome
+            ),
+            turno:turno_id(
+              id,
+              tipo_turno
+            )
           ),
-          tipos_refeicao (
+          tipo_refeicao:tipo_refeicao_id(
             id,
             nome,
             valor
-          ),
-          empresas (
-            id,
-            nome
-          ),
-          turnos (
-            id,
-            tipo_turno
           )
         `);
 
@@ -43,13 +41,13 @@ export const useReportMetrics = (filters) => {
         query = query.lte('usado_em', filters.endDate.toISOString());
       }
       if (filters.company !== 'all') {
-        query = query.eq('empresa_id', filters.company);
+        query = query.eq('usuario.empresa.id', filters.company);
       }
       if (filters.shift !== 'all') {
-        query = query.eq('turno_id', filters.shift);
+        query = query.eq('usuario.turno.id', filters.shift);
       }
       if (filters.mealType !== 'all') {
-        query = query.eq('tipo_refeicao_id', filters.mealType);
+        query = query.eq('tipo_refeicao.id', filters.mealType);
       }
 
       const { data: usageData, error } = await query;
@@ -64,7 +62,7 @@ export const useReportMetrics = (filters) => {
 
       // Calcular métricas
       const totalCost = usageData.reduce((sum, item) => 
-        sum + (parseFloat(item.valor_refeicao) || 0), 0);
+        sum + (parseFloat(item.tipo_refeicao?.valor) || 0), 0);
       
       const averageCost = usageData.length > 0 ? totalCost / usageData.length : 0;
       
@@ -76,14 +74,14 @@ export const useReportMetrics = (filters) => {
 
       // Agrupar por empresa
       const byCompany = usageData.reduce((acc, curr) => {
-        const empresa = curr.empresa?.nome || 'Não especificado';
+        const empresa = curr.usuario?.empresa?.nome || 'Não especificado';
         acc[empresa] = (acc[empresa] || 0) + 1;
         return acc;
       }, {});
 
       // Agrupar por turno
       const byShift = usageData.reduce((acc, curr) => {
-        const turno = curr.turno?.tipo_turno || 'Não especificado';
+        const turno = curr.usuario?.turno?.tipo_turno || 'Não especificado';
         acc[turno] = (acc[turno] || 0) + 1;
         return acc;
       }, {});
