@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
@@ -41,7 +42,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
       <div>
-        <label className="text-sm font-medium mb-2 block">Empresa</label>
+        <Label className="text-sm font-medium mb-2 block">Empresa</Label>
         <Select onValueChange={(value) => onFilterChange('company', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione a empresa" />
@@ -58,7 +59,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
       </div>
 
       <div>
-        <label className="text-sm font-medium mb-2 block">Data Inicial</label>
+        <Label className="text-sm font-medium mb-2 block">Data Inicial</Label>
         <DatePicker
           date={startDate}
           onDateChange={(date) => handleDateChange('startDate', date)}
@@ -66,7 +67,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
       </div>
 
       <div>
-        <label className="text-sm font-medium mb-2 block">Data Final</label>
+        <Label className="text-sm font-medium mb-2 block">Data Final</Label>
         <DatePicker
           date={endDate}
           onDateChange={(date) => handleDateChange('endDate', date)}
@@ -74,7 +75,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
       </div>
 
       <div>
-        <label className="text-sm font-medium mb-2 block">Turno</label>
+        <Label className="text-sm font-medium mb-2 block">Turno</Label>
         <Select onValueChange={(value) => onFilterChange('shift', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione o turno" />
@@ -91,7 +92,7 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
       </div>
 
       <div>
-        <label className="text-sm font-medium mb-2 block">Tipo de Refeição</label>
+        <Label className="text-sm font-medium mb-2 block">Tipo de Refeição</Label>
         <Select onValueChange={(value) => onFilterChange('mealType', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione o tipo" />
