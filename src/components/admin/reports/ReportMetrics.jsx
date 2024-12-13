@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from '../../../config/supabase';
-import { format, startOfDay, endOfDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { startOfDay, endOfDay } from 'date-fns';
 import ReportFilters from './ReportFilters';
 import MetricsCards from './MetricsCards';
 import { Button } from "@/components/ui/button";
 import { FileDown } from 'lucide-react';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { toast } from "sonner";
+import { useReportMetrics } from './hooks/useReportMetrics';
+import { exportToPDF } from './utils/pdfExport';
 
 const ReportMetrics = () => {
   const [filters, setFilters] = useState({
@@ -21,82 +17,7 @@ const ReportMetrics = () => {
     mealType: 'all'
   });
 
-  const { data: metrics, isLoading } = useQuery({
-    queryKey: ['report-metrics', filters],
-    queryFn: async () => {
-      console.log('Consultando métricas com filtros:', filters);
-
-      // Primeiro, vamos buscar os dados da view
-      let query = supabase
-        .from('vw_uso_voucher_detalhado')
-        .select('*')
-        .gte('data_uso', filters.startDate.toISOString())
-        .lte('data_uso', filters.endDate.toISOString());
-
-      // Aplicar filtros condicionais
-      if (filters.company !== 'all') {
-        query = query.eq('empresa', filters.company);
-      }
-      if (filters.shift !== 'all') {
-        query = query.eq('turno', filters.shift);
-      }
-      if (filters.mealType !== 'all') {
-        query = query.eq('tipo_refeicao', filters.mealType);
-      }
-
-      const { data: usageData, error } = await query;
-
-      if (error) {
-        console.error('Erro ao buscar dados:', error);
-        toast.error('Erro ao carregar dados do relatório');
-        throw error;
-      }
-
-      console.log('Dados brutos retornados:', usageData);
-
-      // Processamento dos dados
-      const totalCost = usageData.reduce((sum, item) => 
-        sum + (parseFloat(item.valor_refeicao) || 0), 0);
-      
-      const averageCost = usageData.length > 0 ? totalCost / usageData.length : 0;
-      
-      const regularVouchers = usageData.filter(item => 
-        item.tipo_voucher === 'comum').length;
-      
-      const disposableVouchers = usageData.filter(item => 
-        item.tipo_voucher === 'descartavel').length;
-
-      // Agrupamentos para os filtros
-      const byCompany = usageData.reduce((acc, curr) => {
-        const empresa = curr.empresa || 'Não especificado';
-        acc[empresa] = (acc[empresa] || 0) + 1;
-        return acc;
-      }, {});
-
-      const byShift = usageData.reduce((acc, curr) => {
-        const turno = curr.turno || 'Não especificado';
-        acc[turno] = (acc[turno] || 0) + 1;
-        return acc;
-      }, {});
-
-      const byMealType = usageData.reduce((acc, curr) => {
-        const tipo = curr.tipo_refeicao || 'Não especificado';
-        acc[tipo] = (acc[tipo] || 0) + 1;
-        return acc;
-      }, {});
-
-      return {
-        totalCost,
-        averageCost,
-        regularVouchers,
-        disposableVouchers,
-        byCompany,
-        byShift,
-        byMealType,
-        filteredData: usageData
-      };
-    }
-  });
+  const { data: metrics, isLoading } = useReportMetrics(filters);
 
   const handleFilterChange = (filterType, value) => {
     console.log('Alterando filtro:', filterType, 'para:', value);
@@ -111,52 +32,7 @@ const ReportMetrics = () => {
       toast.error("Não há dados para exportar");
       return;
     }
-
-    try {
-      const doc = new jsPDF();
-      
-      // Cabeçalho do relatório
-      doc.setFontSize(16);
-      doc.text("Relatório de Custos de Refeições", 14, 15);
-      
-      // Informações dos filtros aplicados
-      doc.setFontSize(10);
-      doc.text(`Período: ${format(filters.startDate, 'dd/MM/yyyy')} a ${format(filters.endDate, 'dd/MM/yyyy')}`, 14, 25);
-      doc.text(`Empresa: ${filters.company === 'all' ? 'Todas' : filters.company}`, 14, 30);
-      doc.text(`Turno: ${filters.shift === 'all' ? 'Todos' : filters.shift}`, 14, 35);
-      doc.text(`Tipo de Refeição: ${filters.mealType === 'all' ? 'Todos' : filters.mealType}`, 14, 40);
-
-      // Dados da tabela
-      const tableData = metrics.filteredData.map(item => [
-        format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm'),
-        item.nome_usuario || '-',
-        item.codigo_voucher || '-',
-        item.tipo_refeicao || '-',
-        new Intl.NumberFormat('pt-BR', { 
-          style: 'currency', 
-          currency: 'BRL' 
-        }).format(item.valor_refeicao || 0),
-        item.turno || '-',
-        item.empresa || '-'
-      ]);
-
-      // Configuração da tabela
-      doc.autoTable({
-        startY: 50,
-        head: [['Data/Hora', 'Usuário', 'Voucher', 'Refeição', 'Valor', 'Turno', 'Empresa']],
-        body: tableData,
-        theme: 'grid',
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [66, 66, 66] }
-      });
-
-      // Salvar o PDF
-      doc.save(`relatorio-refeicoes-${format(new Date(), 'dd-MM-yyyy')}.pdf`);
-      toast.success("Relatório exportado com sucesso!");
-    } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
-      toast.error("Erro ao gerar relatório");
-    }
+    exportToPDF(metrics, filters);
   };
 
   if (isLoading) {

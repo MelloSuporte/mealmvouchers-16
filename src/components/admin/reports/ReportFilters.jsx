@@ -28,7 +28,6 @@ const ReportFilters = ({ metrics, onFilterChange, startDate, endDate }) => {
     onFilterChange(type, date);
   };
 
-  // Extrair dados únicos para os filtros
   const companies = Object.keys(metrics.byCompany || {});
   const shifts = Object.keys(metrics.byShift || {});
   const mealTypes = Object.keys(metrics.byMealType || {});
