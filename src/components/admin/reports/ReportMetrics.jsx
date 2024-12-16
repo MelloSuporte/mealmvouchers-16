@@ -24,7 +24,7 @@ const ReportMetrics = () => {
           .from('uso_voucher')
           .select(`
             *,
-            usuarios (
+            usuarios!uso_voucher_usuario_id_fkey (
               id,
               nome,
               cpf,
