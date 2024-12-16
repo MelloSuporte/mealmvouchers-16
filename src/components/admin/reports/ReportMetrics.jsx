@@ -8,6 +8,7 @@ import { useReportMetrics } from './hooks/useReportMetrics';
 import { exportToPDF } from './utils/pdfExport';
 import { useReportFilters } from './hooks/useReportFilters';
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const ReportMetrics = () => {
   const { filters, handleFilterChange } = useReportFilters();
@@ -16,7 +17,7 @@ const ReportMetrics = () => {
   const handleExportClick = async () => {
     try {
       if (!metrics?.filteredData?.length) {
-        toast.error("Não há dados para exportar");
+        toast.error("Não há dados para exportar no período selecionado");
         return;
       }
 
@@ -37,16 +38,18 @@ const ReportMetrics = () => {
   if (error) {
     return (
       <div className="space-y-6">
-        <div className="bg-red-50 p-4 rounded-md">
-          <p className="text-red-600">Erro ao carregar dados: {error.message}</p>
-          <Button 
-            onClick={() => refetch()} 
-            variant="outline" 
-            className="mt-2"
-          >
-            Tentar novamente
-          </Button>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>
+            Erro ao carregar dados: {error.message}
+            <Button 
+              onClick={() => refetch()} 
+              variant="outline" 
+              className="ml-2"
+            >
+              Tentar novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -77,6 +80,12 @@ const ReportMetrics = () => {
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
+      ) : metrics?.filteredData?.length === 0 ? (
+        <Alert>
+          <AlertDescription>
+            Nenhum dado encontrado para o período e filtros selecionados.
+          </AlertDescription>
+        </Alert>
       ) : (
         <MetricsCards metrics={metrics} />
       )}

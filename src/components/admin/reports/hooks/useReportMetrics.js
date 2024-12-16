@@ -60,38 +60,52 @@ export const useReportMetrics = (filters) => {
 
       console.log('Dados brutos retornados:', usageData);
 
+      // Se não houver dados, retornar objeto com valores zerados
+      if (!usageData || usageData.length === 0) {
+        return {
+          totalCost: 0,
+          averageCost: 0,
+          regularVouchers: 0,
+          disposableVouchers: 0,
+          byCompany: {},
+          byShift: {},
+          byMealType: {},
+          filteredData: []
+        };
+      }
+
       // Calcular métricas
-      const totalCost = usageData?.reduce((sum, item) => 
-        sum + (parseFloat(item.tipo_refeicao?.valor) || 0), 0) || 0;
+      const totalCost = usageData.reduce((sum, item) => 
+        sum + (parseFloat(item.tipo_refeicao?.valor) || 0), 0);
       
-      const averageCost = usageData?.length > 0 ? totalCost / usageData.length : 0;
+      const averageCost = usageData.length > 0 ? totalCost / usageData.length : 0;
       
-      const regularVouchers = usageData?.filter(item => 
-        item.tipo_voucher === 'comum')?.length || 0;
+      const regularVouchers = usageData.filter(item => 
+        item.tipo_voucher === 'comum').length;
       
-      const disposableVouchers = usageData?.filter(item => 
-        item.tipo_voucher === 'descartavel')?.length || 0;
+      const disposableVouchers = usageData.filter(item => 
+        item.tipo_voucher === 'descartavel').length;
 
       // Agrupar por empresa
-      const byCompany = usageData?.reduce((acc, curr) => {
+      const byCompany = usageData.reduce((acc, curr) => {
         const empresa = curr.usuario?.empresa?.nome || 'Não especificado';
         acc[empresa] = (acc[empresa] || 0) + 1;
         return acc;
-      }, {}) || {};
+      }, {});
 
       // Agrupar por turno
-      const byShift = usageData?.reduce((acc, curr) => {
+      const byShift = usageData.reduce((acc, curr) => {
         const turno = curr.usuario?.turno?.tipo_turno || 'Não especificado';
         acc[turno] = (acc[turno] || 0) + 1;
         return acc;
-      }, {}) || {};
+      }, {});
 
       // Agrupar por tipo de refeição
-      const byMealType = usageData?.reduce((acc, curr) => {
+      const byMealType = usageData.reduce((acc, curr) => {
         const tipo = curr.tipo_refeicao?.nome || 'Não especificado';
         acc[tipo] = (acc[tipo] || 0) + 1;
         return acc;
-      }, {}) || {};
+      }, {});
 
       return {
         totalCost,
@@ -101,7 +115,7 @@ export const useReportMetrics = (filters) => {
         byCompany,
         byShift,
         byMealType,
-        filteredData: usageData || []
+        filteredData: usageData
       };
     },
     retry: 1,
