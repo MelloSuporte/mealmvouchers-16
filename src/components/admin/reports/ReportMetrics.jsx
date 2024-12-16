@@ -14,7 +14,6 @@ import { supabase } from '@/config/supabase';
 const ReportMetrics = () => {
   const { filters, handleFilterChange } = useReportFilters();
   
-  // Query para buscar dados de uso
   const { data: usageData, isLoading: isLoadingUsage, error: usageError } = useQuery({
     queryKey: ['usage-data', filters],
     queryFn: async () => {
@@ -25,16 +24,17 @@ const ReportMetrics = () => {
           .from('vw_uso_voucher_detalhado')
           .select('*');
 
+        // Using the correct column name empresa_id
         if (filters.company && filters.company !== 'all') {
           query = query.eq('empresa_id', filters.company);
         }
         
         if (filters.startDate) {
-          query = query.gte('data_uso', filters.startDate.toISOString());
+          query = query.gte('usado_em', filters.startDate.toISOString());
         }
         
         if (filters.endDate) {
-          query = query.lte('data_uso', filters.endDate.toISOString());
+          query = query.lte('usado_em', filters.endDate.toISOString());
         }
 
         if (filters.shift && filters.shift !== 'all') {
@@ -49,7 +49,7 @@ const ReportMetrics = () => {
         
         if (error) {
           console.error('Erro ao buscar dados:', error);
-          throw new Error(error.message);
+          throw error;
         }
 
         return data || [];
@@ -58,7 +58,7 @@ const ReportMetrics = () => {
         throw error;
       }
     },
-    retry: false,
+    retry: 1,
     staleTime: 30000,
     cacheTime: 60000,
   });
