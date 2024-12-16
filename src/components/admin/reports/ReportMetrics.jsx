@@ -26,7 +26,7 @@ const ReportMetrics = () => {
           .select('*');
 
         if (filters.company && filters.company !== 'all') {
-          query = query.eq('empresa', filters.company);
+          query = query.eq('empresa_id', filters.company);  // Changed to empresa_id
         }
         
         if (filters.startDate) {

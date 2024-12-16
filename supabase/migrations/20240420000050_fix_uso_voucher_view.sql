@@ -1,7 +1,7 @@
 -- Drop the existing view if it exists
 DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
 
--- Create the updated view with proper joins
+-- Create the updated view with proper joins and column names
 CREATE OR REPLACE VIEW vw_uso_voucher_detalhado AS
 SELECT 
     uv.id,
@@ -9,8 +9,8 @@ SELECT
     u.id as usuario_id,
     u.nome as nome_usuario,
     u.cpf,
-    e.id as empresa,  -- Changed from empresa_uuid to empresa
-    e.nome as nome_empresa,  -- Changed to be more specific
+    e.id as empresa_id,  -- Keep empresa_id for consistency
+    e.nome as nome_empresa,
     t.tipo_turno as turno,
     tr.nome as tipo_refeicao,
     tr.valor,
