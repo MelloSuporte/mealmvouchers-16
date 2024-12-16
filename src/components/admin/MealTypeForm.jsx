@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from '../../config/supabase';
+import MealTypeFields from './meal-type/MealTypeFields';
 
 const MealTypeForm = () => {
   const [mealType, setMealType] = useState("");
@@ -37,6 +35,10 @@ const MealTypeForm = () => {
           .maybeSingle();
 
         if (error) {
+          if (error.code === '42501') {
+            toast.error("Erro de permissão: Você não tem acesso a esta funcionalidade");
+            return;
+          }
           console.error('Erro na consulta:', error);
           toast.error("Erro ao buscar dados da refeição: " + error.message);
           throw error;
@@ -103,7 +105,14 @@ const MealTypeForm = () => {
       }
 
       const { error } = await operation;
-      if (error) throw error;
+      
+      if (error) {
+        if (error.code === '42501') {
+          toast.error("Erro de permissão: Você não tem acesso para salvar tipos de refeição");
+          return;
+        }
+        throw error;
+      }
 
       toast.success(`Tipo de refeição ${mealType} ${existingMealData ? 'atualizado' : 'salvo'} com sucesso!`);
       
@@ -124,92 +133,30 @@ const MealTypeForm = () => {
   };
 
   return (
-    <form className="space-y-3 max-w-md mx-auto p-4">
-      <div className="space-y-2">
-        <Label htmlFor="meal-type">Tipo de Refeição</Label>
-        <Select value={mealType} onValueChange={setMealType}>
-          <SelectTrigger className="h-9" id="meal-type">
-            <SelectValue placeholder="Selecione o tipo de refeição" />
-          </SelectTrigger>
-          <SelectContent>
-            {mealTypes.map((type) => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label htmlFor="meal-value">Valor (R$)</Label>
-          <Input 
-            id="meal-value"
-            placeholder="0,00" 
-            type="number" 
-            step="0.01" 
-            value={mealValue}
-            onChange={(e) => setMealValue(e.target.value)}
-            className="h-9"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <Label htmlFor="max-users">Limite Diário</Label>
-          <Input 
-            id="max-users"
-            placeholder="Nº usuários" 
-            type="number" 
-            value={maxUsersPerDay}
-            onChange={(e) => setMaxUsersPerDay(e.target.value)}
-            className="h-9"
-          />
-        </div>
-      </div>
-
-      {mealType !== "Extra" && (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label htmlFor="start-time">Início</Label>
-            <Input 
-              id="start-time"
-              placeholder="Horário inicial" 
-              type="time" 
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="h-9"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="end-time">Término</Label>
-            <Input 
-              id="end-time"
-              placeholder="Horário final" 
-              type="time" 
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="h-9"
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-1">
-        <Label htmlFor="tolerance">Tolerância</Label>
-        <Input 
-          id="tolerance"
-          placeholder="Minutos" 
-          type="number" 
-          value={toleranceMinutes}
-          onChange={(e) => setToleranceMinutes(e.target.value)}
-          className="h-9"
-        />
-      </div>
+    <form className="space-y-4 max-w-md mx-auto bg-white p-6 rounded-lg shadow-sm">
+      <h2 className="text-xl font-semibold mb-4">Configuração de Refeição</h2>
+      
+      <MealTypeFields 
+        mealType={mealType}
+        setMealType={setMealType}
+        mealValue={mealValue}
+        setMealValue={setMealValue}
+        startTime={startTime}
+        setStartTime={setStartTime}
+        endTime={endTime}
+        setEndTime={setEndTime}
+        maxUsersPerDay={maxUsersPerDay}
+        setMaxUsersPerDay={setMaxUsersPerDay}
+        toleranceMinutes={toleranceMinutes}
+        setToleranceMinutes={setToleranceMinutes}
+        mealTypes={mealTypes}
+      />
 
       <Button 
         type="button" 
         onClick={handleSaveMealType}
         disabled={isSubmitting}
-        className="w-full h-9"
+        className="w-full h-9 mt-6"
         variant="default"
         size="sm"
       >

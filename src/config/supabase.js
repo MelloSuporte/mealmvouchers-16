@@ -22,10 +22,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: { 
-      'x-my-custom-header': 'voucher-app',
       'apikey': supabaseAnonKey,
       'Authorization': `Bearer ${supabaseAnonKey}`
     }
+  },
+  db: {
+    schema: 'public'
   }
 });
 
