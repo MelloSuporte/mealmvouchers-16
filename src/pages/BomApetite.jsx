@@ -20,7 +20,11 @@ const BomApetite = () => {
           .eq('is_active', true)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao buscar imagem de fundo:', error);
+          return;
+        }
+        
         if (data?.image_url) {
           setBackgroundImage(data.image_url);
         }
@@ -31,7 +35,10 @@ const BomApetite = () => {
 
     fetchBackgroundImage();
 
+    // Verifica se tem userName e mealType
     if (!userName || !location.state?.mealType) {
+      console.log('Redirecionando para /voucher - Dados inválidos:', { userName, mealType: location.state?.mealType });
+      toast.error("Dados inválidos. Redirecionando...");
       navigate('/voucher');
       return;
     }
@@ -45,6 +52,7 @@ const BomApetite = () => {
       setCountdown((prevCount) => {
         if (prevCount <= 1) {
           clearInterval(timer);
+          console.log('Redirecionando para /voucher após countdown');
           toast.success("Redirecionando para a página de voucher...");
           navigate('/voucher');
           return 0;
@@ -64,16 +72,21 @@ const BomApetite = () => {
 
   return (
     <div 
-      className="flex flex-col items-center justify-center min-h-screen bg-blue-600 p-4 bg-cover bg-center bg-no-repeat"
+      className="flex flex-col items-center justify-center min-h-screen p-4 bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'linear-gradient(to bottom, #2563eb, #1d4ed8)',
+        backgroundColor: '#2563eb'
       }}
     >
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+      <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-8 max-w-md w-full text-center">
         <h1 className="text-4xl font-bold text-green-600 mb-4">Bom Apetite!</h1>
         <p className="text-xl mb-4">Olá, {decodeURIComponent(userName)}!</p>
-        <p className="text-lg mb-6">Aproveite seu(sua) {location.state?.mealType || 'refeição'}.</p>
-        <p className="text-md">Retornando à página de voucher em {countdown} segundos...</p>
+        <p className="text-lg mb-6">
+          Aproveite seu(sua) {location.state?.mealType || 'refeição'}.
+        </p>
+        <p className="text-md text-gray-600">
+          Retornando à página de voucher em {countdown} segundos...
+        </p>
       </div>
     </div>
   );
