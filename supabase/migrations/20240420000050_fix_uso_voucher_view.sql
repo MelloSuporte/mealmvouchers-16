@@ -9,7 +9,7 @@ SELECT
     u.id as usuario_id,
     u.nome as nome_usuario,
     u.cpf,
-    e.id as empresa_id,
+    u.empresa_id,  -- Changed to match the usuarios table column name
     e.nome as nome_empresa,
     t.tipo_turno as turno,
     tr.nome as tipo_refeicao,
