@@ -9,8 +9,8 @@ SELECT
     u.id as usuario_id,
     u.nome as nome_usuario,
     u.cpf,
-    e.id as empresa_uuid,
-    e.nome as empresa,
+    e.id as empresa,  -- Changed from empresa_uuid to empresa
+    e.nome as nome_empresa,  -- Changed to be more specific
     t.tipo_turno as turno,
     tr.nome as tipo_refeicao,
     tr.valor,

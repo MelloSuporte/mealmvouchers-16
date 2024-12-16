@@ -13,7 +13,7 @@ export const useReportMetrics = (filters) => {
         .select('*');
 
       if (filters.company && filters.company !== 'all') {
-        query = query.eq('empresa_uuid', filters.company);
+        query = query.eq('empresa', filters.company);  // Using 'empresa' to match the view
       }
       
       if (filters.startDate) {
@@ -64,7 +64,7 @@ export const useReportMetrics = (filters) => {
 
       // Agrupar por empresa
       const byCompany = usageData.reduce((acc, curr) => {
-        const empresa = curr.empresa || 'Não especificado';
+        const empresa = curr.nome_empresa || 'Não especificado';  // Using nome_empresa
         acc[empresa] = (acc[empresa] || 0) + 1;
         return acc;
       }, {});
