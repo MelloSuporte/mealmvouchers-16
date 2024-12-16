@@ -5,6 +5,7 @@ DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
 CREATE OR REPLACE VIEW vw_uso_voucher_detalhado AS
 SELECT 
     uv.id,
+    uv.usado_em,
     uv.usado_em as data_uso,
     u.id as usuario_id,
     u.nome as nome_usuario,

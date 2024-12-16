@@ -29,11 +29,11 @@ const ReportMetrics = () => {
         }
         
         if (filters.startDate) {
-          query = query.gte('data_uso', filters.startDate.toISOString());
+          query = query.gte('usado_em', filters.startDate.toISOString());
         }
         
         if (filters.endDate) {
-          query = query.lte('data_uso', filters.endDate.toISOString());
+          query = query.lte('usado_em', filters.endDate.toISOString());
         }
 
         if (filters.shift && filters.shift !== 'all') {
