@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
-import { useAdmin } from '@/contexts/AdminContext';
+import { AdminProvider, useAdmin } from '@/contexts/AdminContext';
 import UserFormMain from '@/components/admin/UserFormMain';
 import CompanyForm from '@/components/admin/CompanyForm';
 import MealTypeForm from '@/components/admin/MealTypeForm';
@@ -14,7 +14,8 @@ import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import TurnosForm from '@/components/admin/TurnosForm';
 import AdminList from '@/components/admin/managers/AdminList';
 
-const Admin = () => {
+// Componente interno que usa o hook useAdmin
+const AdminContent = () => {
   const { logout } = useAdmin();
   const navigate = useNavigate();
 
@@ -86,6 +87,15 @@ const Admin = () => {
         </TabsContent>
       </Tabs>
     </div>
+  );
+};
+
+// Componente principal que fornece o contexto
+const Admin = () => {
+  return (
+    <AdminProvider>
+      <AdminContent />
+    </AdminProvider>
   );
 };
 
