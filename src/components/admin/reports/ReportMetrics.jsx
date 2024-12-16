@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 const ReportMetrics = () => {
   const { filters, handleFilterChange } = useReportFilters();
-  const { data: metrics, isLoading, error } = useReportMetrics(filters);
+  const { data: metrics, isLoading, error, refetch } = useReportMetrics(filters);
 
   const handleExportClick = async () => {
     try {
@@ -35,16 +35,18 @@ const ReportMetrics = () => {
   };
 
   if (error) {
-    console.error('Erro ao carregar métricas:', error);
-    toast.error("Erro ao carregar dados do relatório");
-  }
-
-  if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-32" />
-        ))}
+      <div className="space-y-6">
+        <div className="bg-red-50 p-4 rounded-md">
+          <p className="text-red-600">Erro ao carregar dados: {error.message}</p>
+          <Button 
+            onClick={() => refetch()} 
+            variant="outline" 
+            className="mt-2"
+          >
+            Tentar novamente
+          </Button>
+        </div>
       </div>
     );
   }
@@ -54,7 +56,6 @@ const ReportMetrics = () => {
       <div className="flex justify-between items-start">
         <div className="flex-1">
           <ReportFilters 
-            metrics={metrics} 
             onFilterChange={handleFilterChange}
             startDate={filters.startDate}
             endDate={filters.endDate}
@@ -63,13 +64,22 @@ const ReportMetrics = () => {
         <Button 
           onClick={handleExportClick}
           className="ml-4"
-          disabled={!metrics?.filteredData?.length}
+          disabled={!metrics?.filteredData?.length || isLoading}
         >
           <FileDown className="mr-2 h-4 w-4" />
           Exportar Relatório
         </Button>
       </div>
-      <MetricsCards metrics={metrics} />
+      
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      ) : (
+        <MetricsCards metrics={metrics} />
+      )}
     </div>
   );
 };

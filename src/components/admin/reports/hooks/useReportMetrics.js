@@ -40,13 +40,13 @@ export const useReportMetrics = (filters) => {
       if (filters.endDate) {
         query = query.lte('usado_em', filters.endDate.toISOString());
       }
-      if (filters.company !== 'all') {
+      if (filters.company && filters.company !== 'all') {
         query = query.eq('usuario.empresa.id', filters.company);
       }
-      if (filters.shift !== 'all') {
+      if (filters.shift && filters.shift !== 'all') {
         query = query.eq('usuario.turno.id', filters.shift);
       }
-      if (filters.mealType !== 'all') {
+      if (filters.mealType && filters.mealType !== 'all') {
         query = query.eq('tipo_refeicao.id', filters.mealType);
       }
 
@@ -61,37 +61,37 @@ export const useReportMetrics = (filters) => {
       console.log('Dados brutos retornados:', usageData);
 
       // Calcular métricas
-      const totalCost = usageData.reduce((sum, item) => 
-        sum + (parseFloat(item.tipo_refeicao?.valor) || 0), 0);
+      const totalCost = usageData?.reduce((sum, item) => 
+        sum + (parseFloat(item.tipo_refeicao?.valor) || 0), 0) || 0;
       
-      const averageCost = usageData.length > 0 ? totalCost / usageData.length : 0;
+      const averageCost = usageData?.length > 0 ? totalCost / usageData.length : 0;
       
-      const regularVouchers = usageData.filter(item => 
-        item.tipo_voucher === 'comum').length;
+      const regularVouchers = usageData?.filter(item => 
+        item.tipo_voucher === 'comum')?.length || 0;
       
-      const disposableVouchers = usageData.filter(item => 
-        item.tipo_voucher === 'descartavel').length;
+      const disposableVouchers = usageData?.filter(item => 
+        item.tipo_voucher === 'descartavel')?.length || 0;
 
       // Agrupar por empresa
-      const byCompany = usageData.reduce((acc, curr) => {
+      const byCompany = usageData?.reduce((acc, curr) => {
         const empresa = curr.usuario?.empresa?.nome || 'Não especificado';
         acc[empresa] = (acc[empresa] || 0) + 1;
         return acc;
-      }, {});
+      }, {}) || {};
 
       // Agrupar por turno
-      const byShift = usageData.reduce((acc, curr) => {
+      const byShift = usageData?.reduce((acc, curr) => {
         const turno = curr.usuario?.turno?.tipo_turno || 'Não especificado';
         acc[turno] = (acc[turno] || 0) + 1;
         return acc;
-      }, {});
+      }, {}) || {};
 
       // Agrupar por tipo de refeição
-      const byMealType = usageData.reduce((acc, curr) => {
+      const byMealType = usageData?.reduce((acc, curr) => {
         const tipo = curr.tipo_refeicao?.nome || 'Não especificado';
         acc[tipo] = (acc[tipo] || 0) + 1;
         return acc;
-      }, {});
+      }, {}) || {};
 
       return {
         totalCost,
@@ -101,8 +101,11 @@ export const useReportMetrics = (filters) => {
         byCompany,
         byShift,
         byMealType,
-        filteredData: usageData
+        filteredData: usageData || []
       };
-    }
+    },
+    retry: 1,
+    staleTime: 30000, // 30 segundos
+    refetchOnWindowFocus: false,
   });
 };

@@ -7,6 +7,9 @@ const MetricsCards = ({ metrics }) => {
     return typeof value === 'number' ? value.toFixed(2).replace('.', ',') : '0,00';
   };
 
+  // Ensure metrics object exists
+  const safeMetrics = metrics || {};
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
@@ -15,7 +18,7 @@ const MetricsCards = ({ metrics }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            R$ {formatValue(metrics?.totalCost)}
+            R$ {formatValue(safeMetrics.totalCost)}
           </div>
         </CardContent>
       </Card>
@@ -26,7 +29,7 @@ const MetricsCards = ({ metrics }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            R$ {formatValue(metrics?.averageCost)}
+            R$ {formatValue(safeMetrics.averageCost)}
           </div>
         </CardContent>
       </Card>
@@ -37,7 +40,7 @@ const MetricsCards = ({ metrics }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {metrics?.regularVouchers || 0}
+            {safeMetrics.regularVouchers || 0}
           </div>
         </CardContent>
       </Card>
@@ -48,7 +51,7 @@ const MetricsCards = ({ metrics }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {metrics?.disposableVouchers || 0}
+            {safeMetrics.disposableVouchers || 0}
           </div>
         </CardContent>
       </Card>
