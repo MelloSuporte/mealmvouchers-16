@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { supabase } from '../config/supabase';
 
 const BomApetite = () => {
-  const { userName } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [countdown, setCountdown] = useState(5);
   const [backgroundImage, setBackgroundImage] = useState('');
+  const userName = location.state?.userName || 'Visitante';
+  const turno = location.state?.turno || '';
 
   useEffect(() => {
     const fetchBackgroundImage = async () => {
@@ -35,9 +36,9 @@ const BomApetite = () => {
 
     fetchBackgroundImage();
 
-    // Verifica se tem userName e mealType
-    if (!userName || !location.state?.mealType) {
-      console.log('Redirecionando para /voucher - Dados inválidos:', { userName, mealType: location.state?.mealType });
+    // Verifica se tem userName
+    if (!location.state?.userName) {
+      console.log('Redirecionando para /voucher - Dados inválidos:', { userName: location.state?.userName });
       toast.error("Dados inválidos. Redirecionando...");
       navigate('/voucher');
       return;
@@ -53,7 +54,6 @@ const BomApetite = () => {
         if (prevCount <= 1) {
           clearInterval(timer);
           console.log('Redirecionando para /voucher após countdown');
-          toast.success("Redirecionando para a página de voucher...");
           navigate('/voucher');
           return 0;
         }
@@ -68,7 +68,7 @@ const BomApetite = () => {
       localStorage.removeItem('commonVoucher');
       localStorage.removeItem('extraVoucher');
     };
-  }, [navigate, userName, location.state]);
+  }, [navigate, location.state]);
 
   return (
     <div 
@@ -80,9 +80,9 @@ const BomApetite = () => {
     >
       <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-8 max-w-md w-full text-center">
         <h1 className="text-4xl font-bold text-green-600 mb-4">Bom Apetite!</h1>
-        <p className="text-xl mb-4">Olá, {decodeURIComponent(userName)}!</p>
+        <p className="text-xl mb-4">Olá, {userName}!</p>
         <p className="text-lg mb-6">
-          Aproveite seu(sua) {location.state?.mealType || 'refeição'}.
+          Aproveite sua refeição!
         </p>
         <p className="text-md text-gray-600">
           Retornando à página de voucher em {countdown} segundos...
