@@ -21,6 +21,16 @@ CREATE POLICY "tipos_refeicao_insert_policy" ON tipos_refeicao
             AND u.role = 'admin'
             AND NOT u.suspenso
         )
+        OR 
+        EXISTS (
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND (
+                au.permissoes->>'gerenciar_vouchers_extra' = 'true'
+                OR au.permissoes->>'gerenciar_vouchers_descartaveis' = 'true'
+            )
+            AND NOT au.suspenso
+        )
     );
 
 CREATE POLICY "tipos_refeicao_update_policy" ON tipos_refeicao
@@ -32,6 +42,16 @@ CREATE POLICY "tipos_refeicao_update_policy" ON tipos_refeicao
             AND u.role = 'admin'
             AND NOT u.suspenso
         )
+        OR 
+        EXISTS (
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND (
+                au.permissoes->>'gerenciar_vouchers_extra' = 'true'
+                OR au.permissoes->>'gerenciar_vouchers_descartaveis' = 'true'
+            )
+            AND NOT au.suspenso
+        )
     );
 
 CREATE POLICY "tipos_refeicao_delete_policy" ON tipos_refeicao
@@ -42,6 +62,16 @@ CREATE POLICY "tipos_refeicao_delete_policy" ON tipos_refeicao
             WHERE u.id = auth.uid()
             AND u.role = 'admin'
             AND NOT u.suspenso
+        )
+        OR 
+        EXISTS (
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND (
+                au.permissoes->>'gerenciar_vouchers_extra' = 'true'
+                OR au.permissoes->>'gerenciar_vouchers_descartaveis' = 'true'
+            )
+            AND NOT au.suspenso
         )
     );
 

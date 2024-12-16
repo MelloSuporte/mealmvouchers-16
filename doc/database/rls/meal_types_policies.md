@@ -16,9 +16,19 @@ CREATE POLICY "tipos_refeicao_insert_policy" ON tipos_refeicao
     FOR INSERT TO authenticated
     WITH CHECK (
         EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+        OR 
+        EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND au.permissoes->>'gerenciar_refeicoes' = 'true'
+            AND (
+                au.permissoes->>'gerenciar_vouchers_extra' = 'true'
+                OR au.permissoes->>'gerenciar_vouchers_descartaveis' = 'true'
+            )
             AND NOT au.suspenso
         )
     );
@@ -28,9 +38,19 @@ CREATE POLICY "tipos_refeicao_update_policy" ON tipos_refeicao
     FOR UPDATE TO authenticated
     USING (
         EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+        OR 
+        EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND au.permissoes->>'gerenciar_refeicoes' = 'true'
+            AND (
+                au.permissoes->>'gerenciar_vouchers_extra' = 'true'
+                OR au.permissoes->>'gerenciar_vouchers_descartaveis' = 'true'
+            )
             AND NOT au.suspenso
         )
     );
@@ -40,9 +60,19 @@ CREATE POLICY "tipos_refeicao_delete_policy" ON tipos_refeicao
     FOR DELETE TO authenticated
     USING (
         EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+        OR 
+        EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND au.permissoes->>'gerenciar_refeicoes' = 'true'
+            AND (
+                au.permissoes->>'gerenciar_vouchers_extra' = 'true'
+                OR au.permissoes->>'gerenciar_vouchers_descartaveis' = 'true'
+            )
             AND NOT au.suspenso
         )
     );
