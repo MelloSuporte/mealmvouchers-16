@@ -21,11 +21,29 @@ const ReportMetrics = () => {
         console.log('Buscando dados de uso com filtros:', filters);
         
         let query = supabase
-          .from('vw_uso_voucher_detalhado')
-          .select('*');
+          .from('uso_voucher')
+          .select(`
+            *,
+            usuarios (
+              id,
+              nome,
+              cpf,
+              empresa:empresas (
+                id,
+                nome
+              ),
+              turno:turnos (
+                tipo_turno
+              )
+            ),
+            tipo_refeicao:tipos_refeicao (
+              nome,
+              valor
+            )
+          `);
 
         if (filters.company && filters.company !== 'all') {
-          query = query.eq('empresa_id', filters.company);
+          query = query.eq('usuarios.empresa_id', filters.company);
         }
         
         if (filters.startDate) {
@@ -37,11 +55,11 @@ const ReportMetrics = () => {
         }
 
         if (filters.shift && filters.shift !== 'all') {
-          query = query.eq('turno', filters.shift);
+          query = query.eq('usuarios.turno.tipo_turno', filters.shift);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
-          query = query.eq('tipo_refeicao', filters.mealType);
+          query = query.eq('tipo_refeicao.nome', filters.mealType);
         }
 
         const { data, error } = await query;
@@ -51,7 +69,19 @@ const ReportMetrics = () => {
           throw error;
         }
 
-        return data || [];
+        // Transform data to match the expected format
+        const transformedData = data.map(item => ({
+          id: item.id,
+          usado_em: item.usado_em,
+          nome_usuario: item.usuarios?.nome,
+          cpf: item.usuarios?.cpf,
+          empresa: item.usuarios?.empresa?.nome,
+          tipo_refeicao: item.tipo_refeicao?.nome,
+          valor_refeicao: item.tipo_refeicao?.valor,
+          turno: item.usuarios?.turno?.tipo_turno
+        }));
+
+        return transformedData || [];
       } catch (error) {
         console.error('Erro na consulta:', error);
         throw error;
