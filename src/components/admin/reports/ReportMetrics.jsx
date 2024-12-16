@@ -24,17 +24,16 @@ const ReportMetrics = () => {
           .from('vw_uso_voucher_detalhado')
           .select('*');
 
-        // Using the correct column name empresa_id
         if (filters.company && filters.company !== 'all') {
           query = query.eq('empresa_id', filters.company);
         }
         
         if (filters.startDate) {
-          query = query.gte('usado_em', filters.startDate.toISOString());
+          query = query.gte('data_uso', filters.startDate.toISOString());
         }
         
         if (filters.endDate) {
-          query = query.lte('usado_em', filters.endDate.toISOString());
+          query = query.lte('data_uso', filters.endDate.toISOString());
         }
 
         if (filters.shift && filters.shift !== 'all') {
