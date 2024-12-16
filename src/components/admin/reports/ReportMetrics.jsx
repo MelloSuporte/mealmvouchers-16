@@ -9,10 +9,69 @@ import { exportToPDF } from './utils/pdfExport';
 import { useReportFilters } from './hooks/useReportFilters';
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/config/supabase';
 
 const ReportMetrics = () => {
   const { filters, handleFilterChange } = useReportFilters();
-  const { data: metrics, isLoading, error, refetch } = useReportMetrics(filters);
+  
+  // Query para buscar dados de uso
+  const { data: usageData, isLoading: isLoadingUsage, error: usageError } = useQuery({
+    queryKey: ['usage-data', filters],
+    queryFn: async () => {
+      console.log('Buscando dados de uso com filtros:', filters);
+      
+      let query = supabase
+        .from('vw_uso_voucher_detalhado')
+        .select('*');
+
+      if (filters.company && filters.company !== 'all') {
+        query = query.eq('empresa_id', filters.company);
+      }
+      
+      if (filters.startDate) {
+        query = query.gte('data_uso', filters.startDate.toISOString());
+      }
+      
+      if (filters.endDate) {
+        query = query.lte('data_uso', filters.endDate.toISOString());
+      }
+
+      if (filters.shift && filters.shift !== 'all') {
+        query = query.eq('turno_id', filters.shift);
+      }
+
+      if (filters.mealType && filters.mealType !== 'all') {
+        query = query.eq('tipo_refeicao_id', filters.mealType);
+      }
+
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Erro ao buscar dados:', error);
+        throw error;
+      }
+
+      return data;
+    }
+  });
+
+  // Calcular métricas
+  const metrics = React.useMemo(() => {
+    if (!usageData) return null;
+
+    const totalCost = usageData.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0);
+    const regularVouchers = usageData.filter(item => item.tipo_voucher === 'comum').length;
+    const disposableVouchers = usageData.filter(item => item.tipo_voucher === 'descartavel').length;
+
+    return {
+      totalCost,
+      averageCost: usageData.length > 0 ? totalCost / usageData.length : 0,
+      regularVouchers,
+      disposableVouchers,
+      filteredData: usageData
+    };
+  }, [usageData]);
 
   const handleExportClick = async () => {
     try {
@@ -35,19 +94,12 @@ const ReportMetrics = () => {
     }
   };
 
-  if (error) {
+  if (usageError) {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
           <AlertDescription>
-            Erro ao carregar dados: {error.message}
-            <Button 
-              onClick={() => refetch()} 
-              variant="outline" 
-              className="ml-2"
-            >
-              Tentar novamente
-            </Button>
+            Erro ao carregar dados: {usageError.message}
           </AlertDescription>
         </Alert>
       </div>
@@ -67,14 +119,14 @@ const ReportMetrics = () => {
         <Button 
           onClick={handleExportClick}
           className="ml-4"
-          disabled={!metrics?.filteredData?.length || isLoading}
+          disabled={!metrics?.filteredData?.length || isLoadingUsage}
         >
           <FileDown className="mr-2 h-4 w-4" />
           Exportar Relatório
         </Button>
       </div>
       
-      {isLoading ? (
+      {isLoadingUsage ? (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-32" />
