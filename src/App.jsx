@@ -10,6 +10,7 @@ import Admin from './pages/Admin';
 import BackgroundImages from './pages/BackgroundImages';
 import { Toaster } from './components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
+import { AdminProvider } from './contexts/AdminContext';
 
 // Criar uma instância do QueryClient
 const queryClient = new QueryClient({
@@ -26,21 +27,23 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          {/* Redireciona / para /voucher */}
-          <Route path="/" element={<Navigate to="/voucher" replace />} />
-          <Route path="/voucher" element={<Voucher />} />
-          <Route path="/refeitorio" element={<Home />} />
-          <Route path="/user-confirmation" element={<UserConfirmation />} />
-          <Route path="/bom-apetite" element={<BomApetite />} />
-          <Route path="/self-services" element={<SelfServices />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/background-images" element={<BackgroundImages />} />
-        </Routes>
-        <Toaster />
-        <SonnerToaster position="top-right" />
-      </Router>
+      <AdminProvider>
+        <Router>
+          <Routes>
+            {/* Redireciona / para /voucher */}
+            <Route path="/" element={<Navigate to="/voucher" replace />} />
+            <Route path="/voucher" element={<Voucher />} />
+            <Route path="/refeitorio" element={<Home />} />
+            <Route path="/user-confirmation" element={<UserConfirmation />} />
+            <Route path="/bom-apetite" element={<BomApetite />} />
+            <Route path="/self-services" element={<SelfServices />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/background-images" element={<BackgroundImages />} />
+          </Routes>
+          <Toaster />
+          <SonnerToaster position="top-right" />
+        </Router>
+      </AdminProvider>
     </QueryClientProvider>
   );
 }
