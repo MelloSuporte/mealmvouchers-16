@@ -2,6 +2,7 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 const MealTypeFields = ({ 
   mealType, 
@@ -16,7 +17,8 @@ const MealTypeFields = ({
   setMaxUsersPerDay,
   toleranceMinutes,
   setToleranceMinutes,
-  mealTypes
+  mealTypes,
+  existingMealData
 }) => {
   return (
     <>
@@ -99,6 +101,19 @@ const MealTypeFields = ({
           className="h-9"
         />
       </div>
+
+      {existingMealData && (
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="active"
+            checked={existingMealData.ativo}
+            onCheckedChange={(checked) => {
+              existingMealData.ativo = checked;
+            }}
+          />
+          <Label htmlFor="active">Refeição Ativa</Label>
+        </div>
+      )}
     </>
   );
 };

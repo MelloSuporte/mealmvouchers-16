@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '../../config/supabase';
 import MealTypeFields from './meal-type/MealTypeFields';
+import { useQuery } from '@tanstack/react-query';
 
 const MealTypeForm = () => {
   const [mealType, setMealType] = useState("");
@@ -14,9 +15,20 @@ const MealTypeForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingMealData, setExistingMealData] = useState(null);
 
-  const mealTypes = [
-    "Café (1)", "Café (2)", "Almoço", "Lanche", "Jantar", "Ceia", "Refeição Matinal", "Extra"
-  ];
+  // Fetch real meal types from database
+  const { data: mealTypes = [] } = useQuery({
+    queryKey: ['meal-types'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tipos_refeicao')
+        .select('nome')
+        .order('nome');
+      
+      if (error) throw error;
+      return data.map(type => type.nome);
+    },
+    initialData: ["Café (1)", "Café (2)", "Almoço", "Lanche", "Jantar", "Extra"]
+  });
 
   useEffect(() => {
     const fetchExistingMealData = async () => {
@@ -150,6 +162,7 @@ const MealTypeForm = () => {
         toleranceMinutes={toleranceMinutes}
         setToleranceMinutes={setToleranceMinutes}
         mealTypes={mealTypes}
+        existingMealData={existingMealData}
       />
 
       <Button 
