@@ -24,6 +24,7 @@ CREATE TABLE usuarios (
     empresa_id UUID REFERENCES empresas(id),
     turno_id UUID REFERENCES turnos(id),
     setor_id INTEGER REFERENCES setores(id),
+    role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin', 'gestor', 'system')),
     ativo BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
