@@ -26,7 +26,7 @@ const ReportMetrics = () => {
           .select('*');
 
         if (filters.company && filters.company !== 'all') {
-          query = query.eq('empresa_id', filters.company);  // Changed to empresa_id
+          query = query.eq('empresa_id', filters.company);
         }
         
         if (filters.startDate) {
@@ -63,7 +63,6 @@ const ReportMetrics = () => {
     cacheTime: 60000,
   });
 
-  // Calcular métricas
   const metrics = React.useMemo(() => {
     if (!usageData) return null;
 
