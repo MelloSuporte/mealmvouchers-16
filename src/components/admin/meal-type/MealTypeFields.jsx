@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { supabase } from '../../../config/supabase';
+import { toast } from "sonner";
 
 const MealTypeFields = ({ 
   mealType, 
@@ -20,6 +22,29 @@ const MealTypeFields = ({
   mealTypes,
   existingMealData
 }) => {
+  const handleActiveChange = async (checked) => {
+    if (!existingMealData?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('tipos_refeicao')
+        .update({ ativo: checked })
+        .eq('id', existingMealData.id);
+
+      if (error) {
+        console.error('Erro ao atualizar status da refeição:', error);
+        toast.error("Erro ao atualizar status da refeição");
+        return;
+      }
+
+      existingMealData.ativo = checked;
+      toast.success(`Refeição ${checked ? 'ativada' : 'suspensa'} com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao atualizar status da refeição:', error);
+      toast.error("Erro ao atualizar status da refeição");
+    }
+  };
+
   return (
     <>
       <div className="space-y-2">
@@ -107,9 +132,7 @@ const MealTypeFields = ({
           <Switch 
             id="active"
             checked={existingMealData.ativo}
-            onCheckedChange={(checked) => {
-              existingMealData.ativo = checked;
-            }}
+            onCheckedChange={handleActiveChange}
           />
           <Label htmlFor="active">Refeição Ativa</Label>
         </div>
