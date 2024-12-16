@@ -74,12 +74,12 @@ const BomApetite = () => {
     <div 
       className="flex flex-col items-center justify-center min-h-screen p-4 bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'linear-gradient(to bottom, #2563eb, #1d4ed8)',
-        backgroundColor: '#2563eb'
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'linear-gradient(to bottom, #9b87f5, #7E69AB)',
+        backgroundColor: '#9b87f5'
       }}
     >
       <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-        <h1 className="text-4xl font-bold text-green-600 mb-4">Bom Apetite!</h1>
+        <h1 className="text-4xl font-bold text-[#6E59A5] mb-4">Bom Apetite!</h1>
         <p className="text-xl mb-4">Olá, {userName}!</p>
         <p className="text-lg mb-6">
           Aproveite sua refeição!
