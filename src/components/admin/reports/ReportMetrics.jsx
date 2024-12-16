@@ -4,7 +4,6 @@ import ReportFilters from './ReportFilters';
 import MetricsCards from './MetricsCards';
 import { Button } from "@/components/ui/button";
 import { FileDown } from 'lucide-react';
-import { useReportMetrics } from './hooks/useReportMetrics';
 import { exportToPDF } from './utils/pdfExport';
 import { useReportFilters } from './hooks/useReportFilters';
 import { toast } from "sonner";
@@ -19,48 +18,56 @@ const ReportMetrics = () => {
   const { data: usageData, isLoading: isLoadingUsage, error: usageError } = useQuery({
     queryKey: ['usage-data', filters],
     queryFn: async () => {
-      console.log('Buscando dados de uso com filtros:', filters);
-      
-      let query = supabase
-        .from('vw_uso_voucher_detalhado')
-        .select('*');
+      try {
+        console.log('Buscando dados de uso com filtros:', filters);
+        
+        let query = supabase
+          .from('vw_uso_voucher_detalhado')
+          .select('*');
 
-      if (filters.company && filters.company !== 'all') {
-        query = query.eq('empresa', filters.company); // Changed from empresa_id to empresa
-      }
-      
-      if (filters.startDate) {
-        query = query.gte('data_uso', filters.startDate.toISOString());
-      }
-      
-      if (filters.endDate) {
-        query = query.lte('data_uso', filters.endDate.toISOString());
-      }
+        if (filters.company && filters.company !== 'all') {
+          query = query.eq('empresa', filters.company);
+        }
+        
+        if (filters.startDate) {
+          query = query.gte('data_uso', filters.startDate.toISOString());
+        }
+        
+        if (filters.endDate) {
+          query = query.lte('data_uso', filters.endDate.toISOString());
+        }
 
-      if (filters.shift && filters.shift !== 'all') {
-        query = query.eq('turno', filters.shift); // Changed from turno_id to turno
-      }
+        if (filters.shift && filters.shift !== 'all') {
+          query = query.eq('turno', filters.shift);
+        }
 
-      if (filters.mealType && filters.mealType !== 'all') {
-        query = query.eq('tipo_refeicao', filters.mealType); // Changed from tipo_refeicao_id to tipo_refeicao
-      }
+        if (filters.mealType && filters.mealType !== 'all') {
+          query = query.eq('tipo_refeicao', filters.mealType);
+        }
 
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Erro ao buscar dados:', error);
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Erro ao buscar dados:', error);
+          throw new Error(error.message);
+        }
+
+        return data || [];
+      } catch (error) {
+        console.error('Erro na consulta:', error);
         throw error;
       }
-
-      return data;
-    }
+    },
+    retry: false,
+    staleTime: 30000,
+    cacheTime: 60000,
   });
 
   // Calcular métricas
   const metrics = React.useMemo(() => {
     if (!usageData) return null;
 
-    const totalCost = usageData.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0);
+    const totalCost = usageData.reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);
     const regularVouchers = usageData.filter(item => item.tipo_voucher === 'comum').length;
     const disposableVouchers = usageData.filter(item => item.tipo_voucher === 'descartavel').length;
 
