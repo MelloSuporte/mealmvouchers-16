@@ -26,7 +26,7 @@ const ReportMetrics = () => {
         .select('*');
 
       if (filters.company && filters.company !== 'all') {
-        query = query.eq('empresa_id', filters.company);
+        query = query.eq('empresa', filters.company); // Changed from empresa_id to empresa
       }
       
       if (filters.startDate) {
@@ -38,11 +38,11 @@ const ReportMetrics = () => {
       }
 
       if (filters.shift && filters.shift !== 'all') {
-        query = query.eq('turno_id', filters.shift);
+        query = query.eq('turno', filters.shift); // Changed from turno_id to turno
       }
 
       if (filters.mealType && filters.mealType !== 'all') {
-        query = query.eq('tipo_refeicao_id', filters.mealType);
+        query = query.eq('tipo_refeicao', filters.mealType); // Changed from tipo_refeicao_id to tipo_refeicao
       }
 
       const { data, error } = await query;
