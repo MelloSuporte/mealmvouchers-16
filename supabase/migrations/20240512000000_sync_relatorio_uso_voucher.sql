@@ -29,7 +29,7 @@ BEGIN
         e.nome as nome_empresa,
         t.tipo_turno as turno,
         s.id as setor_id,
-        s.nome as nome_setor,
+        s.nome_setor as nome_setor,
         tr.nome as tipo_refeicao,
         tr.valor,
         uv.observacao
@@ -78,7 +78,7 @@ SELECT
     e.nome as nome_empresa,
     t.tipo_turno as turno,
     s.id as setor_id,
-    s.nome as nome_setor,
+    s.nome_setor as nome_setor,
     tr.nome as tipo_refeicao,
     tr.valor,
     uv.observacao
