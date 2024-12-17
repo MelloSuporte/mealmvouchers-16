@@ -35,7 +35,7 @@ export const exportToPDF = async (metrics, filters) => {
       format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
       item.nome_usuario || '-',
       item.cpf || '-',
-      item.empresa || '-',
+      item.nome_empresa || '-',
       item.tipo_refeicao || '-',
       `R$ ${parseFloat(item.valor || 0).toFixed(2)}`,
       item.turno || '-'
@@ -56,17 +56,16 @@ export const exportToPDF = async (metrics, filters) => {
         fontStyle: 'bold'
       },
       columnStyles: {
-        0: { cellWidth: 30 }, // Data/Hora
-        1: { cellWidth: 40 }, // Usuário
-        2: { cellWidth: 25 }, // CPF
-        3: { cellWidth: 30 }, // Empresa
-        4: { cellWidth: 25 }, // Refeição
-        5: { cellWidth: 20 }, // Valor
-        6: { cellWidth: 20 }  // Turno
+        0: { cellWidth: 30 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 20 }
       }
     });
 
-    // Nome do arquivo com data atual
     const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
     
     console.log('Salvando arquivo:', fileName);

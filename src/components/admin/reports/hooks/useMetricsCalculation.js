@@ -8,7 +8,6 @@ export const useMetricsCalculation = (usageData) => {
 
     const totalCost = usageData.reduce((sum, item) => {
       const valor = parseFloat(item.valor || 0);
-      console.log(`Somando valor: ${valor} ao total: ${sum}`);
       return sum + valor;
     }, 0);
     

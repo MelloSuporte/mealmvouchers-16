@@ -10,18 +10,7 @@ export const useUsageData = (filters) => {
         
         let query = supabase
           .from('vw_uso_voucher_detalhado')
-          .select(`
-            id,
-            data_uso,
-            nome_usuario,
-            cpf,
-            empresa_id,
-            nome_empresa,
-            turno,
-            tipo_refeicao,
-            valor
-          `)
-          .order('data_uso', { ascending: false });
+          .select('*');
 
         if (filters.company && filters.company !== 'all') {
           query = query.eq('empresa_id', filters.company);
@@ -51,6 +40,8 @@ export const useUsageData = (filters) => {
           query = query.eq('tipo_refeicao', filters.mealType);
         }
 
+        console.log('Query SQL:', query.toSQL());
+        
         const { data, error } = await query;
         
         if (error) {
