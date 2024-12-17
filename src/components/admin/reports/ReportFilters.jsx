@@ -30,8 +30,8 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-        {[...Array(5)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
+        {[...Array(6)].map((_, i) => (
           <Skeleton key={i} className="h-[70px]" />
         ))}
       </div>
@@ -48,20 +48,20 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
   }
 
   // Verificar se há dados em todas as listas
-  const hasNoData = (!filterOptions?.empresas?.length && !filterOptions?.turnos?.length && !filterOptions?.tiposRefeicao?.length);
+  const hasNoData = (!filterOptions?.empresas?.length && !filterOptions?.turnos?.length && !filterOptions?.tiposRefeicao?.length && !filterOptions?.setores?.length);
   
   if (hasNoData) {
     return (
       <div className="bg-yellow-50 p-4 rounded-md mb-8">
         <p className="text-yellow-700">
-          Nenhum dado encontrado para os filtros. Verifique se existem empresas, turnos e tipos de refeição cadastrados e ativos.
+          Nenhum dado encontrado para os filtros. Verifique se existem empresas, turnos, setores e tipos de refeição cadastrados e ativos.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
       <div>
         <Label className="text-sm font-medium mb-2 block">Empresa</Label>
         <Select onValueChange={(value) => onFilterChange('company', value)}>
@@ -106,6 +106,23 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
             {filterOptions?.turnos?.map((turno) => (
               <SelectItem key={turno.id} value={turno.id}>
                 {turno.tipo_turno}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label className="text-sm font-medium mb-2 block">Setor</Label>
+        <Select onValueChange={(value) => onFilterChange('sector', value)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o setor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            {filterOptions?.setores?.map((setor) => (
+              <SelectItem key={setor.id} value={setor.id}>
+                {setor.nome_setor}
               </SelectItem>
             ))}
           </SelectContent>

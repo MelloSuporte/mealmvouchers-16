@@ -28,6 +28,7 @@ const ReportMetrics = () => {
               id,
               nome,
               cpf,
+              setor_id,
               empresa:empresas (
                 id,
                 nome
@@ -62,6 +63,10 @@ const ReportMetrics = () => {
           query = query.eq('usuarios.turno.tipo_turno', filters.shift);
         }
 
+        if (filters.sector && filters.sector !== 'all') {
+          query = query.eq('usuarios.setor_id', filters.sector);
+        }
+
         if (filters.mealType && filters.mealType !== 'all') {
           query = query.eq('tipo_refeicao.nome', filters.mealType);
         }
@@ -82,7 +87,8 @@ const ReportMetrics = () => {
           empresa: item.usuarios?.empresa?.nome,
           tipo_refeicao: item.tipo_refeicao?.nome,
           valor: item.tipo_refeicao?.valor,
-          turno: item.usuarios?.turno?.tipo_turno
+          turno: item.usuarios?.turno?.tipo_turno,
+          setor_id: item.usuarios?.setor_id
         }));
 
         console.log('Dados transformados:', transformedData);

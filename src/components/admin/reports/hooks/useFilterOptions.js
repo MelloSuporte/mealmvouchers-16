@@ -35,6 +35,19 @@ export const useFilterOptions = () => {
         }
         console.log('Turnos encontrados:', turnos?.length || 0);
 
+        // Buscar setores ativos
+        const { data: setores, error: setoresError } = await supabase
+          .from('setores')
+          .select('id, nome_setor')
+          .eq('ativo', true)
+          .order('nome_setor');
+
+        if (setoresError) {
+          console.error('Erro ao buscar setores:', setoresError);
+          throw new Error(`Erro ao buscar setores: ${setoresError.message}`);
+        }
+        console.log('Setores encontrados:', setores?.length || 0);
+
         // Buscar tipos de refeição ativos
         const { data: tiposRefeicao, error: tiposError } = await supabase
           .from('tipos_refeicao')
@@ -55,6 +68,9 @@ export const useFilterOptions = () => {
         if (!turnos?.length) {
           console.warn('Nenhum turno ativo encontrado');
         }
+        if (!setores?.length) {
+          console.warn('Nenhum setor ativo encontrado');
+        }
         if (!tiposRefeicao?.length) {
           console.warn('Nenhum tipo de refeição ativo encontrado');
         }
@@ -62,6 +78,7 @@ export const useFilterOptions = () => {
         const result = {
           empresas: empresas || [],
           turnos: turnos || [],
+          setores: setores || [],
           tiposRefeicao: tiposRefeicao || []
         };
 
