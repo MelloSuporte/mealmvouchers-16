@@ -6,8 +6,8 @@ const MealDistributionChart = ({ data }) => {
 
   if (chartData.length === 0) {
     return (
-      <div className="w-full h-[300px] flex items-center justify-center text-gray-500">
-        Nenhum dado disponível
+      <div className="w-full h-[300px] flex items-center justify-center text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
+        <p className="text-center">Nenhum dado disponível para o período selecionado</p>
       </div>
     );
   }
@@ -22,22 +22,35 @@ const MealDistributionChart = ({ data }) => {
           cx="50%"
           cy="50%"
           outerRadius={100}
-          label={(entry) => entry.nome}
+          label={(entry) => `${entry.nome}: ${entry.valor}`}
+          labelLine={true}
         >
           {chartData.map((entry) => {
             const color = COLORS[entry.nome] || COLORS.EXTRA;
-            console.log('Nome da refeição:', entry.nome);
-            console.log('Cor aplicada:', color);
             return (
               <Cell 
                 key={`cell-${entry.nome}`} 
                 fill={color}
+                stroke="#fff"
+                strokeWidth={2}
               />
             );
           })}
         </Pie>
-        <Tooltip formatter={(value) => [`${value} refeições`, 'Quantidade']} />
-        <Legend />
+        <Tooltip 
+          formatter={(value, name) => [`${value} refeições`, name]}
+          contentStyle={{
+            backgroundColor: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '6px',
+            padding: '8px'
+          }}
+        />
+        <Legend 
+          verticalAlign="bottom" 
+          height={36}
+          formatter={(value) => <span className="text-sm">{value}</span>}
+        />
       </PieChart>
     </ResponsiveContainer>
   );
