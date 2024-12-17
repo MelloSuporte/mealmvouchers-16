@@ -1,5 +1,6 @@
 -- Verifica se a tabela já existe antes de criar
 DO $$
+DECLARE
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'relatorio_uso_voucher') THEN
         -- Create new table
@@ -48,12 +49,13 @@ BEGIN
         RETURNS TRIGGER
         SECURITY DEFINER
         SET search_path = public
-        LANGUAGE plpgsql AS $$
+        LANGUAGE plpgsql 
+        AS $func$
         BEGIN
             NEW.updated_at = CURRENT_TIMESTAMP;
             RETURN NEW;
         END;
-        $$;
+        $func$;
 
         -- Create trigger for timestamp updates
         CREATE TRIGGER update_relatorio_uso_voucher_timestamp
@@ -64,5 +66,5 @@ BEGIN
         -- Grant permissions
         GRANT SELECT ON relatorio_uso_voucher TO authenticated;
     END IF;
-END
+END;
 $$;
