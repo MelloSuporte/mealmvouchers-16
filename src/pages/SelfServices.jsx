@@ -67,7 +67,7 @@ const SelfServices = () => {
       if (disposableVoucher.code) {
         navigate(`/bom-apetite/Usuario`, { 
           state: { 
-            mealType: meal.id, // Passando o ID do tipo de refeição
+            mealType: meal.id,
             mealName: meal.nome,
             userName: 'Usuario'
           }
@@ -79,7 +79,7 @@ const SelfServices = () => {
           state: { 
             userName: commonVoucher.userName,
             userTurno: commonVoucher.turno,
-            mealType: meal.id, // Passando o ID do tipo de refeição
+            mealType: meal.id,
             mealName: meal.nome,
             voucherCode: commonVoucher.code,
             cpf: commonVoucher.cpf

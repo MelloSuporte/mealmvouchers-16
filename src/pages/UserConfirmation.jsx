@@ -38,13 +38,18 @@ const UserConfirmation = () => {
     try {
       const { mealType, mealName, voucherCode, cpf } = location.state;
       
-      logger.info('Buscando tipo de refeição:', mealName);
+      logger.info('Dados para validação:', {
+        mealType,
+        mealName,
+        voucherCode,
+        cpf
+      });
 
       // Validar voucher
       const { data: validationResult, error: validationError } = await supabase
         .rpc('validate_and_use_voucher', {
           p_codigo: voucherCode,
-          p_tipo_refeicao_id: mealType // Usando o ID do tipo de refeição
+          p_tipo_refeicao_id: mealType // Usando o UUID do tipo de refeição
         });
 
       if (validationError) {
