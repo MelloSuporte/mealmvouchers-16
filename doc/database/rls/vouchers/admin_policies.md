@@ -1,40 +1,32 @@
-# Políticas RLS para Administradores
+# Políticas RLS Administrativas
 
-## Políticas de Consulta
+## Overview
+Políticas para operações administrativas em vouchers.
+
 ```sql
--- Política para consulta de histórico por admins
-CREATE POLICY "admin_historico_select_policy" ON uso_voucher
-    FOR SELECT TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM admin_users au
-            WHERE au.id = auth.uid()
-            AND au.role IN ('admin', 'gestor')
-            AND NOT au.suspenso
-        )
-    );
+-- Enable RLS on admin operations
+ALTER TABLE admin_voucher_ops ENABLE ROW LEVEL SECURITY;
 
--- Política para gestão de vouchers por admins
-CREATE POLICY "admin_voucher_management_policy" ON vouchers_comuns
+-- Admin operations policy
+CREATE POLICY "admin_voucher_ops_policy" ON admin_voucher_ops
     FOR ALL TO authenticated
     USING (
         EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND au.role IN ('admin', 'gestor')
+            AND au.role = 'admin'
             AND NOT au.suspenso
         )
     );
+
+-- System operations policy
+CREATE POLICY "system_voucher_ops_policy" ON admin_voucher_ops
+    FOR ALL TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND au.permissoes->>'sistema' = 'true'
+        )
+    );
 ```
-
-## Notas de Implementação
-
-1. Acesso Administrativo:
-   - Admins e gestores precisam estar autenticados
-   - Podem visualizar todo o histórico de uso
-   - Podem gerenciar vouchers (criar, atualizar, desativar)
-
-2. Restrições:
-   - Apenas usuários com perfil adequado
-   - Usuário não pode estar suspenso
-   - Validação de empresa/setor quando aplicável

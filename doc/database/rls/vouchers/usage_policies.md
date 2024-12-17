@@ -1,28 +1,34 @@
-# Voucher Usage Policies
+# Políticas RLS para Uso de Vouchers
 
 ## Overview
-Policies controlling voucher usage and validation.
+Políticas que controlam o uso e validação de vouchers.
 
 ```sql
--- Enable RLS on uso_voucher table
+-- Enable RLS
 ALTER TABLE uso_voucher ENABLE ROW LEVEL SECURITY;
 
--- Policy for registering voucher usage (no auth required)
-CREATE POLICY "allow_voucher_usage_registration" ON uso_voucher
-    FOR INSERT
-    WITH CHECK (true);
+-- Insert policy (system only)
+CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
+    FOR INSERT TO authenticated
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND au.permissoes->>'sistema' = 'true'
+        )
+    );
 
--- Policy for viewing usage history (authenticated users only)
-CREATE POLICY "allow_view_usage_history" ON uso_voucher
-    FOR SELECT
+-- Select policy
+CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
+    FOR SELECT TO authenticated
     USING (
         usuario_id = auth.uid()
-        OR 
+        OR
         EXISTS (
-            SELECT 1 FROM usuarios u
-            WHERE u.id = auth.uid()
-            AND u.role IN ('admin', 'gestor')
-            AND NOT u.suspenso
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND au.permissoes->>'gerenciar_usuarios' = 'true'
+            AND NOT au.suspenso
         )
     );
 ```

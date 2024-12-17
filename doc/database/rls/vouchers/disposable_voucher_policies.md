@@ -1,22 +1,35 @@
-# Disposable Voucher RLS Policies
+# Políticas RLS para Vouchers Descartáveis
 
 ## Overview
-Disposable vouchers can be used without authentication using a 4-digit code. The system validates:
-- Expiration date
-- One-time use
-- Meal type restrictions
+Políticas específicas para vouchers descartáveis.
 
-## Policies
-
-### SELECT Policy
 ```sql
-CREATE POLICY "allow_voucher_descartavel_select_by_code" ON vouchers_descartaveis
-    FOR SELECT USING (true);
+-- Enable RLS
+ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
+
+-- Select policy
+CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
+    FOR SELECT TO authenticated
+    USING (
+        NOT usado
+        OR
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role IN ('admin', 'gestor')
+            AND NOT u.suspenso
+        )
+    );
+
+-- Insert policy (admins and managers)
+CREATE POLICY "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis
+    FOR INSERT TO authenticated
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role IN ('admin', 'gestor')
+            AND NOT u.suspenso
+        )
+    );
 ```
-
-This policy allows checking voucher validity without authentication.
-
-## Validation Rules
-- Must be used before expiration date
-- Can only be used once
-- Must match specified meal type
