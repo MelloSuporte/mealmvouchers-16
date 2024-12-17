@@ -79,8 +79,8 @@ const VoucherTable = ({ vouchers = [] }) => {
     <Card className="shadow-sm">
       <CardContent className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <Label className="text-sm font-medium text-gray-700">
-            Vouchers Descartáveis Ativos ({vouchers?.length || 0})
+          <Label className="text-lg font-semibold text-gray-900">
+            Vouchers Descartáveis Ativos
           </Label>
           <Button 
             onClick={downloadPDF} 
@@ -97,25 +97,25 @@ const VoucherTable = ({ vouchers = [] }) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs font-medium">Código</TableHead>
-                <TableHead className="text-xs font-medium">Tipo Refeição</TableHead>
-                <TableHead className="text-xs font-medium">Data Criação</TableHead>
-                <TableHead className="text-xs font-medium">Data Expiração</TableHead>
+                <TableHead className="text-sm font-medium text-gray-700">Código</TableHead>
+                <TableHead className="text-sm font-medium text-gray-700">Tipo Refeição</TableHead>
+                <TableHead className="text-sm font-medium text-gray-700">Data Criação</TableHead>
+                <TableHead className="text-sm font-medium text-gray-700">Data Expiração</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vouchers && vouchers.length > 0 ? (
                 vouchers.map((voucher) => (
                   <TableRow key={voucher.id} className="hover:bg-gray-50">
-                    <TableCell className="text-xs">{voucher.codigo || '-'}</TableCell>
-                    <TableCell className="text-xs">{voucher.tipos_refeicao?.nome || '-'}</TableCell>
-                    <TableCell className="text-xs">{formatDate(voucher.data_criacao)}</TableCell>
-                    <TableCell className="text-xs">{formatDate(voucher.data_expiracao)}</TableCell>
+                    <TableCell className="text-sm">{voucher.codigo || '-'}</TableCell>
+                    <TableCell className="text-sm">{voucher.tipos_refeicao?.nome || '-'}</TableCell>
+                    <TableCell className="text-sm">{formatDate(voucher.data_criacao)}</TableCell>
+                    <TableCell className="text-sm">{formatDate(voucher.data_expiracao)}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-xs text-gray-500 py-4">
+                  <TableCell colSpan={4} className="text-center text-sm text-gray-500 py-8">
                     Nenhum voucher ativo encontrado
                   </TableCell>
                 </TableRow>
