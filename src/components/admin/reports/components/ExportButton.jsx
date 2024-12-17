@@ -7,13 +7,13 @@ import { exportToPDF } from '../utils/pdfExport';
 const ExportButton = ({ metrics, filters, isLoading }) => {
   const handleExportClick = async () => {
     try {
-      if (!metrics?.filteredData?.length) {
+      if (!metrics?.data?.length) {
         toast.error("Não há dados para exportar no período selecionado");
         return;
       }
 
       console.log('Iniciando exportação com dados:', {
-        metricsLength: metrics?.filteredData?.length,
+        dataLength: metrics?.data?.length,
         filters,
         metrics
       });
@@ -30,7 +30,7 @@ const ExportButton = ({ metrics, filters, isLoading }) => {
     <Button 
       onClick={handleExportClick}
       className="ml-4"
-      disabled={!metrics?.filteredData?.length || isLoading}
+      disabled={!metrics?.data?.length || isLoading}
     >
       <FileDown className="mr-2 h-4 w-4" />
       Exportar Relatório
