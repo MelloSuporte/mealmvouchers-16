@@ -26,8 +26,7 @@ const MealTypeForm = () => {
       
       if (error) throw error;
       return data.map(type => type.nome);
-    },
-    initialData: ["Café (1)", "Café (2)", "Almoço", "Lanche", "Jantar", "Extra"]
+    }
   });
 
   useEffect(() => {
