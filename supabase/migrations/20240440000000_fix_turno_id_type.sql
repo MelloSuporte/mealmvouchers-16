@@ -14,16 +14,16 @@ FROM turnos;
 -- Atualizar a nova coluna com os UUIDs correspondentes dos turnos
 UPDATE usuarios u
 SET turno_id_uuid = (
-    SELECT m.new_uuid
+    SELECT m.new_uuid::uuid
     FROM turno_id_mapping m
-    WHERE m.old_id = u.turno_id
+    WHERE m.old_id::integer = u.turno_id::integer
 );
 
 -- Atualizar os IDs na tabela turnos
 UPDATE turnos t
-SET id = m.new_uuid
+SET id = m.new_uuid::uuid
 FROM turno_id_mapping m
-WHERE t.id = m.old_id;
+WHERE t.id::integer = m.old_id::integer;
 
 -- Remover a tabela temporária
 DROP TABLE turno_id_mapping;
