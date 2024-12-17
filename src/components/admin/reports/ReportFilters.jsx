@@ -39,6 +39,7 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
   }
 
   if (error) {
+    console.error('Erro ao carregar filtros:', error);
     return (
       <div className="text-red-500 p-4 bg-red-50 rounded-md mb-8">
         <p>Erro ao carregar filtros: {error.message}</p>

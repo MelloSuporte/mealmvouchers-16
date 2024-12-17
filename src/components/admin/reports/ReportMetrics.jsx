@@ -44,7 +44,7 @@ const ReportMetrics = () => {
           `);
 
         if (filters.company && filters.company !== 'all') {
-          query = query.eq('usuarios.empresa_id', filters.company);
+          query = query.eq('usuarios.empresa.id', filters.company);
         }
         
         if (filters.startDate) {
@@ -60,7 +60,7 @@ const ReportMetrics = () => {
         }
 
         if (filters.shift && filters.shift !== 'all') {
-          query = query.eq('usuarios.turno.tipo_turno', filters.shift);
+          query = query.eq('usuarios.turno.id', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
@@ -68,7 +68,7 @@ const ReportMetrics = () => {
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
-          query = query.eq('tipo_refeicao.nome', filters.mealType);
+          query = query.eq('tipo_refeicao.id', filters.mealType);
         }
 
         const { data, error } = await query;
@@ -178,7 +178,7 @@ const ReportMetrics = () => {
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
-      ) : metrics?.filteredData?.length === 0 ? (
+      ) : usageData?.length === 0 ? (
         <Alert>
           <AlertDescription>
             Nenhum dado encontrado para o período e filtros selecionados.

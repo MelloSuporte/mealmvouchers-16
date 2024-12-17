@@ -20,7 +20,7 @@ export const useFilterOptions = () => {
           console.error('Erro ao buscar empresas:', empresasError);
           throw new Error(`Erro ao buscar empresas: ${empresasError.message}`);
         }
-        console.log('Empresas encontradas:', empresas?.length || 0);
+        console.log('[INFO]', empresas?.length, 'empresas encontradas');
 
         // Buscar turnos ativos
         const { data: turnos, error: turnosError } = await supabase
@@ -33,7 +33,7 @@ export const useFilterOptions = () => {
           console.error('Erro ao buscar turnos:', turnosError);
           throw new Error(`Erro ao buscar turnos: ${turnosError.message}`);
         }
-        console.log('Turnos encontrados:', turnos?.length || 0);
+        console.log('[INFO]', turnos?.length, 'turnos encontrados');
 
         // Buscar setores ativos
         const { data: setores, error: setoresError } = await supabase
@@ -46,7 +46,7 @@ export const useFilterOptions = () => {
           console.error('Erro ao buscar setores:', setoresError);
           throw new Error(`Erro ao buscar setores: ${setoresError.message}`);
         }
-        console.log('Setores encontrados:', setores?.length || 0);
+        console.log('[INFO]', setores?.length, 'setores encontrados');
 
         // Buscar tipos de refeição ativos
         const { data: tiposRefeicao, error: tiposError } = await supabase
@@ -59,21 +59,7 @@ export const useFilterOptions = () => {
           console.error('Erro ao buscar tipos de refeição:', tiposError);
           throw new Error(`Erro ao buscar tipos de refeição: ${tiposError.message}`);
         }
-        console.log('Tipos de refeição encontrados:', tiposRefeicao?.length || 0);
-
-        // Verificar se alguma das listas está vazia
-        if (!empresas?.length) {
-          console.warn('Nenhuma empresa ativa encontrada');
-        }
-        if (!turnos?.length) {
-          console.warn('Nenhum turno ativo encontrado');
-        }
-        if (!setores?.length) {
-          console.warn('Nenhum setor ativo encontrado');
-        }
-        if (!tiposRefeicao?.length) {
-          console.warn('Nenhum tipo de refeição ativo encontrado');
-        }
+        console.log('[INFO]', tiposRefeicao?.length, 'tipos de refeição encontrados');
 
         const result = {
           empresas: empresas || [],
