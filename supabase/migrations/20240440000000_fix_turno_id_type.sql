@@ -4,21 +4,26 @@ ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS fk_usuarios_turnos;
 -- Adicionar uma coluna temporária para fazer a migração
 ALTER TABLE usuarios ADD COLUMN turno_id_uuid UUID;
 
+-- Criar uma tabela temporária para mapear os IDs antigos com novos UUIDs
+CREATE TEMP TABLE turno_id_mapping AS
+SELECT 
+    CASE tipo_turno
+        WHEN 'central' THEN 1
+        WHEN 'primeiro' THEN 2
+        WHEN 'segundo' THEN 3
+        WHEN 'terceiro' THEN 4
+    END AS old_id,
+    id AS new_uuid
+FROM turnos;
+
 -- Atualizar a nova coluna com os UUIDs correspondentes dos turnos
 UPDATE usuarios u
-SET turno_id_uuid = (
-    SELECT id::uuid
-    FROM turnos t 
-    WHERE t.tipo_turno = (
-        CASE u.turno_id::integer
-            WHEN 1 THEN 'central'
-            WHEN 2 THEN 'primeiro'
-            WHEN 3 THEN 'segundo'
-            WHEN 4 THEN 'terceiro'
-            ELSE 'central'
-        END
-    )
-);
+SET turno_id_uuid = m.new_uuid
+FROM turno_id_mapping m
+WHERE u.turno_id::integer = m.old_id;
+
+-- Remover a tabela temporária
+DROP TABLE turno_id_mapping;
 
 -- Remover a coluna antiga
 ALTER TABLE usuarios DROP COLUMN turno_id;
