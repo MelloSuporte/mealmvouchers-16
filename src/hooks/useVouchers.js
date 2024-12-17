@@ -7,22 +7,22 @@ export const useVouchers = () => {
     queryKey: ['disposableVouchers'],
     queryFn: async () => {
       try {
+        // Cria data com timezone de São Paulo
         const now = new Date();
-        // Ajusta para GMT-3 (America/Sao_Paulo)
-        const offset = -3;
-        now.setHours(now.getHours() + offset, 0, 0, 0);
+        const saoPauloDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        saoPauloDate.setHours(0, 0, 0, 0); // Início do dia
         
         console.log('Iniciando busca de vouchers...');
-        console.log('Data atual (GMT-3):', now.toISOString());
+        console.log('Data atual (São Paulo):', saoPauloDate.toISOString());
 
-        // Primeiro, vamos verificar todos os vouchers na tabela para debug
+        // Debug: Verificar todos os vouchers
         const { data: allVouchers, error: debugError } = await supabase
           .from('vouchers_descartaveis')
           .select('*');
           
         console.log('Todos os vouchers na tabela:', allVouchers);
 
-        // Agora fazemos a query com os filtros
+        // Query com os filtros
         const { data, error, count } = await supabase
           .from('vouchers_descartaveis')
           .select(`
@@ -37,8 +37,7 @@ export const useVouchers = () => {
             )
           `, { count: 'exact' })
           .eq('usado', false)
-          .gte('data_expiracao', now.toLocaleDateString('en-CA'))  // Formato YYYY-MM-DD
-          .order('data_expiracao', { ascending: true });
+          .gte('data_expiracao', saoPauloDate.toISOString().split('T')[0]);
 
         if (error) {
           console.error('Erro detalhado ao buscar vouchers:', {
