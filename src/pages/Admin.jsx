@@ -10,6 +10,8 @@ import RLSForm from '@/components/admin/RLSForm';
 import DisposableVoucherForm from '@/components/admin/DisposableVoucherForm';
 import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
+import AdminList from '@/components/admin/managers/AdminList';
+import TurnosForm from '@/components/admin/TurnosForm';
 
 const Admin = () => {
   const { user } = useAdmin();
@@ -27,6 +29,8 @@ const Admin = () => {
             <TabsTrigger value="rls">RLS</TabsTrigger>
             <TabsTrigger value="disposable-vouchers">Vouchers Descartáveis</TabsTrigger>
             <TabsTrigger value="background-images">Imagens de Fundo</TabsTrigger>
+            <TabsTrigger value="managers">Gerentes</TabsTrigger>
+            <TabsTrigger value="turnos">Turnos</TabsTrigger>
           </TabsList>
           <TabsContent value="users">
             <Card>
@@ -61,6 +65,16 @@ const Admin = () => {
           <TabsContent value="background-images">
             <Card>
               <BackgroundImageForm />
+            </Card>
+          </TabsContent>
+          <TabsContent value="managers">
+            <Card>
+              <AdminList />
+            </Card>
+          </TabsContent>
+          <TabsContent value="turnos">
+            <Card>
+              <TurnosForm />
             </Card>
           </TabsContent>
         </Tabs>
