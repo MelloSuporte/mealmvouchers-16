@@ -37,6 +37,8 @@ export const useDisposableVoucherFormLogic = () => {
         const now = new Date();
         now.setHours(0, 0, 0, 0);
         
+        console.log('Buscando vouchers com data >= ', now.toISOString());
+        
         const { data, error } = await supabase
           .from('vouchers_descartaveis')
           .select(`
@@ -49,7 +51,7 @@ export const useDisposableVoucherFormLogic = () => {
               minutos_tolerancia
             )
           `)
-          .eq('status', 'ativo')
+          .eq('usado', false)
           .gte('data_expiracao', now.toISOString())
           .order('data_expiracao', { ascending: true });
 
