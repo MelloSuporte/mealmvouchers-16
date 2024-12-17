@@ -1,48 +1,57 @@
-# Regras de Uso de Vouchers
+# Regras de Vouchers
 
-## Voucher Comum
+## 1. Voucher Comum
 
-### Limites
-- 2 refeições por período
-- Máximo 3 refeições por dia
-- Intervalo mínimo entre refeições: 3 horas
+### Geração
+- Gerado automaticamente para cada usuário
+- Código numérico de 4 dígitos
+- Nunca expira
+- Único na base de dados
+- Vinculado ao CPF do usuário
+
+### Algoritmo de Geração
+- Utiliza dígitos do CPF (posições 2-11)
+- Soma dos dígitos do CPF
+- Timestamp para garantir aleatoriedade
+- Verificação de unicidade na base
 
 ### Validações
-- Verificação de voucher ativo
+- Verificação de vínculo com usuário ativo
 - Validação de empresa ativa
 - Verificação de turno do usuário
-- Verificação de horário da refeição
-- Verificação de limite diário
 
-## Voucher Extra
+## 2. Voucher Extra
 
 ### Características
 - Validade temporária (data específica)
 - Requer autorização de gestor
-- Vinculado a usuário específico e empresa
+- Vinculado a usuário específico
 - Permite observações/justificativas
 
-### Limites
-- 1 refeição por período
-- Máximo 1 refeição por dia
-- Intervalo mínimo entre refeições: 3 horas
+### Regras de Autorização
+- Somente gestores podem autorizar
+- Necessário informar motivo
+- Limite máximo de vouchers extras por usuário/mês
 
-### Validações
-- Verificação de autorização
-- Verificação de data de validade
-- Validação de empresa ativa
-- Verificação de turno do usuário
-- Verificação de horário da refeição
-- Verificação de limite diário
+### Validade
+- Data específica de uso
+- Não permite uso em data diferente
+- Cancelamento automático após data
 
-## Horários e Tolerâncias
+## 3. Voucher Descartável
 
-### Horários de Refeição
-- Café da Manhã: 06:00 - 09:00
-- Almoço: 11:00 - 14:00
-- Jantar: 17:00 - 20:00
-- Ceia: 22:00 - 00:00
+### Características
+- Uso único
+- Não vinculado a usuário específico
+- Válido para data específica
+- Pode ser gerado em lote
 
-### Tolerâncias
-- Padrão: 15 minutos
-- Excepcional: 30 minutos (com autorização)
+### Regras de Geração em Lote
+- Limite máximo por lote: 100 vouchers
+- Necessário informar data de validade
+- Prefixo específico para identificação
+
+### Controle
+- Invalidação após uso
+- Expiração automática após data
+- Rastreabilidade de geração
