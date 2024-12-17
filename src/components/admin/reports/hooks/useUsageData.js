@@ -42,7 +42,7 @@ export const useUsageData = (filters) => {
 
         if (filters.sector && filters.sector !== 'all') {
           console.log('Aplicando filtro de setor:', filters.sector);
-          query = query.eq('nome_setor', filters.sector);
+          query = query.eq('setor_id', filters.sector);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {

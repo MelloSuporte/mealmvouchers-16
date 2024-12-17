@@ -1,11 +1,10 @@
 -- Drop existing view
 DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
 
--- Recreate view with correct column names
+-- Create the updated view with proper joins and column names
 CREATE OR REPLACE VIEW vw_uso_voucher_detalhado AS
 SELECT 
     uv.id,
-    uv.usado_em,
     uv.usado_em as data_uso,
     u.id as usuario_id,
     u.nome as nome_usuario,
@@ -13,7 +12,8 @@ SELECT
     u.empresa_id,
     e.nome as nome_empresa,
     t.tipo_turno as turno,
-    s.nome_setor as setor,
+    s.id as setor_id,
+    s.nome_setor,
     tr.nome as tipo_refeicao,
     tr.valor,
     uv.observacao
