@@ -27,7 +27,8 @@ export const normalizeMealName = (name) => {
     'desjejum': 'DESJEJUM',
     'extra': 'EXTRA',
     'café 04:00 às 05:00': 'DESJEJUM',
-    'café 08:00 às 08:30': 'CAFE_MANHA'
+    'café 08:00 às 08:30': 'CAFE_MANHA',
+    'refeição extra': 'EXTRA'
   };
   
   const normalized = name.toLowerCase().trim();
