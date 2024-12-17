@@ -15,14 +15,15 @@ export const useVouchers = () => {
           usado: false,
           data_atual: now.toISOString()
         });
-        
-        // Primeiro, vamos logar todos os vouchers para debug
+
+        // Primeiro, vamos verificar todos os vouchers na tabela para debug
         const { data: allVouchers, error: debugError } = await supabase
           .from('vouchers_descartaveis')
           .select('*');
           
         console.log('Todos os vouchers na tabela:', allVouchers);
 
+        // Agora fazemos a query com os filtros
         const { data, error, count } = await supabase
           .from('vouchers_descartaveis')
           .select(`
@@ -37,7 +38,7 @@ export const useVouchers = () => {
             )
           `, { count: 'exact' })
           .eq('usado', false)
-          .gte('data_expiracao', now.toISOString())  // Alterado de lte para gte
+          .gt('data_expiracao', now.toISOString())  // Alterado para gt (maior que) a data atual
           .order('data_expiracao', { ascending: true });
 
         if (error) {
