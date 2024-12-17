@@ -7,23 +7,23 @@ ALTER TABLE usuarios ADD COLUMN turno_id_uuid UUID;
 -- Criar uma tabela temporária para mapear os IDs antigos com novos UUIDs
 CREATE TEMP TABLE turno_id_mapping AS
 SELECT 
-    CASE tipo_turno
-        WHEN 'central' THEN 1
-        WHEN 'primeiro' THEN 2
-        WHEN 'segundo' THEN 3
-        WHEN 'terceiro' THEN 4
-    END AS old_id,
-    id AS new_uuid
+    id AS old_id,
+    gen_random_uuid() AS new_uuid
 FROM turnos;
 
 -- Atualizar a nova coluna com os UUIDs correspondentes dos turnos
 UPDATE usuarios u
 SET turno_id_uuid = (
-    SELECT t.id
-    FROM turnos t
-    JOIN turno_id_mapping m ON t.id = m.new_uuid
-    WHERE m.old_id = u.turno_id::integer
+    SELECT m.new_uuid
+    FROM turno_id_mapping m
+    WHERE m.old_id = u.turno_id
 );
+
+-- Atualizar os IDs na tabela turnos
+UPDATE turnos t
+SET id = m.new_uuid
+FROM turno_id_mapping m
+WHERE t.id = m.old_id;
 
 -- Remover a tabela temporária
 DROP TABLE turno_id_mapping;
