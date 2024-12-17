@@ -20,8 +20,8 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text("Relatório de Uso de Vouchers", 14, 15);
     
     doc.setFontSize(10);
-    const startDate = filters.startDate ? format(filters.startDate, 'dd/MM/yyyy', { locale: ptBR }) : '-';
-    const endDate = filters.endDate ? format(filters.endDate, 'dd/MM/yyyy', { locale: ptBR }) : '-';
+    const startDate = filters.startDate ? format(new Date(filters.startDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
+    const endDate = filters.endDate ? format(new Date(filters.endDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
     doc.text(`Período: ${startDate} a ${endDate}`, 14, 25);
 
     // Métricas resumidas
