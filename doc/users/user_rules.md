@@ -22,8 +22,33 @@
 - Usuário comum
 - Operador
 
-### Capacidades
-- Administrador: Acesso total
-- Gestor: Gestão de equipe e vouchers
-- Usuário: Uso básico
-- Operador: Validação de vouchers
+### Capacidades por Nível
+
+#### Administrador (role = 'admin')
+- Gerenciar Vouchers Extra
+- Gerenciar Vouchers Descartáveis
+- Gerenciar Usuários
+- Gerenciar Relatórios
+- Acesso total ao sistema
+- Configuração de parâmetros do sistema
+- Gestão de empresas
+
+#### Gestor
+- Gestão de equipe
+- Gestão de vouchers
+- Visualização de relatórios da sua equipe
+
+#### Usuário
+- Uso básico do sistema
+- Visualização dos próprios vouchers
+- Atualização de dados pessoais
+
+#### Operador
+- Validação de vouchers
+- Registro de uso de vouchers
+
+### Validações de Permissões
+- Verificação de role = 'admin' para acesso administrativo
+- Verificação de status de suspensão
+- Verificação de vínculo com empresa ativa
+- Registro de logs de ações administrativas
