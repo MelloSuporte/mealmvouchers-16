@@ -2,6 +2,9 @@
 DROP POLICY IF EXISTS "uso_voucher_insert_policy" ON uso_voucher;
 DROP POLICY IF EXISTS "uso_voucher_select_policy" ON uso_voucher;
 
+-- Remover a view que depende da coluna id
+DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
+
 -- Remover a constraint existente
 ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS fk_usuarios_turnos;
 
@@ -52,6 +55,27 @@ REFERENCES turnos(id);
 -- Criar índice para melhorar performance
 CREATE INDEX IF NOT EXISTS idx_usuarios_turno_id ON usuarios(turno_id);
 
+-- Recriar a view com a nova estrutura
+CREATE OR REPLACE VIEW vw_uso_voucher_detalhado AS
+SELECT 
+    uv.id,
+    uv.usado_em,
+    uv.usado_em as data_uso,
+    u.id as usuario_id,
+    u.nome as nome_usuario,
+    u.cpf,
+    u.empresa_id,
+    e.nome as nome_empresa,
+    t.tipo_turno as turno,
+    tr.nome as tipo_refeicao,
+    tr.valor,
+    uv.observacao
+FROM uso_voucher uv
+LEFT JOIN usuarios u ON uv.usuario_id = u.id
+LEFT JOIN empresas e ON u.empresa_id = e.id
+LEFT JOIN turnos t ON u.turno_id = t.id
+LEFT JOIN tipos_refeicao tr ON uv.tipo_refeicao_id = tr.id;
+
 -- Recriar as policies
 CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
     FOR INSERT TO authenticated
@@ -82,9 +106,5 @@ CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
         )
     );
 
--- Adicionar comentários explicativos
-COMMENT ON POLICY "uso_voucher_insert_policy" ON uso_voucher 
-IS 'Controla inserção de registros de uso de vouchers com validação de horários';
-
-COMMENT ON POLICY "uso_voucher_select_policy" ON uso_voucher 
-IS 'Controla visualização do histórico de uso de vouchers';
+-- Grant permissions
+GRANT SELECT ON vw_uso_voucher_detalhado TO authenticated;
