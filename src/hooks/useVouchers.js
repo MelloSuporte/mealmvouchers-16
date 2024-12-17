@@ -11,10 +11,7 @@ export const useVouchers = () => {
         now.setHours(0, 0, 0, 0);
         
         console.log('Iniciando busca de vouchers...');
-        console.log('Configurações da query:', {
-          usado: false,
-          data_atual: now.toISOString()
-        });
+        console.log('Data atual para comparação:', now.toISOString());
 
         // Primeiro, vamos verificar todos os vouchers na tabela para debug
         const { data: allVouchers, error: debugError } = await supabase
@@ -38,7 +35,7 @@ export const useVouchers = () => {
             )
           `, { count: 'exact' })
           .eq('usado', false)
-          .gt('data_expiracao', now.toISOString())  // Alterado para gt (maior que) a data atual
+          .gte('data_expiracao', now.toLocaleDateString('en-CA'))  // Formato YYYY-MM-DD
           .order('data_expiracao', { ascending: true });
 
         if (error) {
