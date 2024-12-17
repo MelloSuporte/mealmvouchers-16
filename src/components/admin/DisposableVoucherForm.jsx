@@ -23,6 +23,8 @@ const DisposableVoucherForm = () => {
     handleGenerateVouchers
   } = useDisposableVoucherFormLogic();
 
+  console.log('Todos os vouchers:', allVouchers); // Debug log
+
   if (isLoading) {
     return <div className="text-sm text-gray-500">Carregando tipos de refeição...</div>;
   }
@@ -99,7 +101,7 @@ const DisposableVoucherForm = () => {
         </CardContent>
       </Card>
 
-      <VoucherTable vouchers={allVouchers.filter(v => !v.usado)} />
+      <VoucherTable vouchers={allVouchers} />
     </div>
   );
 };
