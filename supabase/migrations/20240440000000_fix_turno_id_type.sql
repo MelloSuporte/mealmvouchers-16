@@ -8,55 +8,40 @@ DROP VIEW IF EXISTS vw_uso_voucher_detalhado;
 -- Remover a constraint existente
 ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS fk_usuarios_turnos;
 
--- Remover o valor padrão da coluna id antes de alterar o tipo
-ALTER TABLE turnos ALTER COLUMN id DROP DEFAULT;
+-- Adicionar coluna UUID temporária
+ALTER TABLE turnos ADD COLUMN IF NOT EXISTS id_uuid UUID DEFAULT gen_random_uuid();
 
--- Adicionar coluna UUID temporária em usuarios
-ALTER TABLE usuarios ADD COLUMN turno_id_uuid UUID;
+-- Criar tabela temporária para mapear IDs
+CREATE TEMP TABLE IF NOT EXISTS turnos_id_map AS
+SELECT id, id_uuid FROM turnos;
 
--- Alterar o tipo da coluna id na tabela turnos para UUID
-ALTER TABLE turnos
-ADD COLUMN id_uuid UUID;
-
--- Criar uma tabela temporária para mapear IDs antigos a novos UUIDs
-CREATE TEMP TABLE id_mapping AS
-SELECT id, gen_random_uuid() as new_uuid
-FROM turnos;
-
--- Atualizar a nova coluna com os UUIDs correspondentes
-UPDATE turnos t
-SET id_uuid = m.new_uuid
-FROM id_mapping m
-WHERE t.id = m.id;
-
--- Atualizar a referência na tabela usuarios
+-- Atualizar referências na tabela usuarios
 UPDATE usuarios u
-SET turno_id_uuid = t.id_uuid
-FROM turnos t
-WHERE u.turno_id = t.id;
+SET turno_id = t.id_uuid
+FROM turnos_id_map t
+WHERE u.turno_id::text = t.id::text;
 
--- Remover a coluna antiga e renomear a nova em turnos
-ALTER TABLE turnos DROP COLUMN id;
+-- Alterar tipo da coluna id para UUID
+ALTER TABLE turnos DROP COLUMN id CASCADE;
 ALTER TABLE turnos RENAME COLUMN id_uuid TO id;
-
--- Remover a coluna antiga e renomear a nova em usuarios
-ALTER TABLE usuarios DROP COLUMN turno_id;
-ALTER TABLE usuarios RENAME COLUMN turno_id_uuid TO turno_id;
-
--- Adicionar a constraint de primary key na nova coluna
 ALTER TABLE turnos ADD PRIMARY KEY (id);
 
--- Recriar a foreign key constraint
+-- Atualizar a constraint na tabela usuarios
 ALTER TABLE usuarios
-ADD CONSTRAINT fk_usuarios_turnos
-FOREIGN KEY (turno_id)
-REFERENCES turnos(id);
+    ALTER COLUMN turno_id TYPE UUID USING turno_id::uuid;
+
+ALTER TABLE usuarios
+    ADD CONSTRAINT fk_usuarios_turnos
+    FOREIGN KEY (turno_id)
+    REFERENCES turnos(id);
 
 -- Criar índice para melhorar performance
 CREATE INDEX IF NOT EXISTS idx_usuarios_turno_id ON usuarios(turno_id);
 
--- Recriar a view com a nova estrutura
-CREATE OR REPLACE VIEW vw_uso_voucher_detalhado AS
+-- Recriar a view com a nova estrutura e SECURITY INVOKER
+CREATE OR REPLACE VIEW vw_uso_voucher_detalhado
+WITH (security_barrier = true, security_invoker = true)
+AS
 SELECT 
     uv.id,
     uv.usado_em,
@@ -81,30 +66,55 @@ CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
     FOR INSERT TO authenticated
     WITH CHECK (
         EXISTS (
-            SELECT 1 FROM usuarios u
-            JOIN turnos t ON t.id = u.turno_id
-            JOIN tipos_refeicao tr ON tr.id = tipo_refeicao_id
-            WHERE u.id = usuario_id
-            AND t.ativo = true
-            AND tr.ativo = true
-            AND CURRENT_TIME BETWEEN t.horario_inicio AND t.horario_fim
-            AND CURRENT_TIME BETWEEN tr.horario_inicio 
-                AND tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND au.permissoes->>'sistema' = 'true'
+        )
+        AND
+        (
+            -- Validação para voucher extra
+            (
+                voucher_extra_id IS NOT NULL
+                AND EXISTS (
+                    SELECT 1 FROM vouchers_extras ve
+                    WHERE ve.id = voucher_extra_id
+                    AND NOT ve.usado
+                )
+            )
+            OR
+            -- Validação para voucher comum
+            (
+                voucher_extra_id IS NULL
+                AND EXISTS (
+                    SELECT 1 FROM usuarios u
+                    WHERE u.id = usuario_id
+                    AND NOT u.suspenso
+                    AND EXISTS (
+                        SELECT 1 FROM empresas e
+                        WHERE e.id = u.empresa_id
+                        AND e.ativo = true
+                    )
+                )
+            )
         )
     );
 
 CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
     FOR SELECT TO authenticated
     USING (
-        usuario_id = auth.uid()
-        OR
         EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND au.permissoes->>'gerenciar_usuarios' = 'true'
+            AND (
+                au.permissoes->>'gerenciar_usuarios' = 'true'
+                OR au.permissoes->>'sistema' = 'true'
+            )
             AND NOT au.suspenso
         )
     );
 
 -- Grant permissions
 GRANT SELECT ON vw_uso_voucher_detalhado TO authenticated;
+
+-- Add comments
+COMMENT ON VIEW vw_uso_voucher_detalhado IS 'View detalhada do uso de vouchers com informações relacionadas (SECURITY INVOKER)';
