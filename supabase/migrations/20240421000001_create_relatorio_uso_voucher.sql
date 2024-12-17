@@ -39,14 +39,17 @@ CREATE POLICY "Usuários podem ver registros de sua empresa"
         )
     );
 
--- Create function to update timestamps
+-- Create function to update timestamps with explicit search path
 CREATE OR REPLACE FUNCTION update_relatorio_uso_voucher_timestamp()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$;
 
 -- Create trigger for timestamp updates
 CREATE TRIGGER update_relatorio_uso_voucher_timestamp
