@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export const exportToPDF = async (metrics, filters) => {
   try {
-    console.log('Iniciando exportação PDF com dados:', { metrics, filters });
+    console.log('Iniciando exportação com dados:', { metrics, filters });
 
     if (!metrics?.data?.length) {
       toast.error("Não há dados para exportar");
@@ -27,24 +27,23 @@ export const exportToPDF = async (metrics, filters) => {
     // Métricas resumidas
     doc.text("Resumo:", 14, 35);
     doc.text(`Total Gasto: R$ ${metrics.totalCost?.toFixed(2) || '0,00'}`, 14, 45);
-    doc.text(`Custo Médio: R$ ${metrics.averageCost?.toFixed(2) || '0,00'}`, 14, 55);
+    doc.text(`Custo Médio por Refeição: R$ ${metrics.averageCost?.toFixed(2) || '0,00'}`, 14, 55);
     doc.text(`Total de Refeições: ${metrics.data?.length || 0}`, 14, 65);
 
     // Dados detalhados em tabela
     const tableData = metrics.data.map(item => [
-      format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
       item.nome_usuario || '-',
       item.cpf || '-',
       item.empresa || '-',
       item.tipo_refeicao || '-',
       `R$ ${parseFloat(item.valor || 0).toFixed(2)}`,
-      item.turno || '-',
-      item.setor || '-'
+      item.turno || '-'
     ]);
 
     doc.autoTable({
       startY: 75,
-      head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor']],
+      head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -63,8 +62,7 @@ export const exportToPDF = async (metrics, filters) => {
         3: { cellWidth: 30 }, // Empresa
         4: { cellWidth: 25 }, // Refeição
         5: { cellWidth: 20 }, // Valor
-        6: { cellWidth: 20 }, // Turno
-        7: { cellWidth: 20 }  // Setor
+        6: { cellWidth: 20 }  // Turno
       }
     });
 
