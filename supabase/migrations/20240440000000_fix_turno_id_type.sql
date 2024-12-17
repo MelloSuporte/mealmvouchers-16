@@ -5,8 +5,9 @@ ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS fk_usuarios_turnos;
 ALTER TABLE usuarios ADD COLUMN turno_id_uuid UUID;
 
 -- Atualizar a nova coluna com os UUIDs correspondentes
+-- Usando CAST para converter o id para texto e então para UUID
 UPDATE usuarios u
-SET turno_id_uuid = t.id
+SET turno_id_uuid = t.id::text::uuid
 FROM turnos t
 WHERE u.turno_id = t.id::integer;
 
