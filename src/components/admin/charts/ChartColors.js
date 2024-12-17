@@ -1,11 +1,11 @@
 export const COLORS = {
-  CAFE: '#ea384c',     // Vermelho para Café 08:00 às 08:30
-  ALMOCO: '#2196F3',   // Mantendo Azul para Almoço
-  LANCHE: '#FF9800',   // Mantendo Laranja para Lanche
-  JANTAR: '#4CAF50',   // Mantendo Verde para Jantar
-  CEIA: '#9C27B0',     // Mantendo Roxo para Ceia
-  DESJEJUM: '#221F26', // Marrom escuro para Café 04:00 às 05:00
-  EXTRA: '#FEF7CD',    // Amarelo suave para Refeição Extra
+  CAFE: '#8B4513',      // Marrom para Café da Manhã
+  ALMOCO: '#2196F3',    // Azul para Almoço
+  LANCHE: '#FF9800',    // Laranja para Lanche
+  JANTAR: '#4CAF50',    // Verde para Jantar
+  CEIA: '#9C27B0',      // Roxo para Ceia
+  DESJEJUM: '#8B4513',  // Marrom (mesmo do café)
+  EXTRA: '#FF9800',     // Laranja (mesmo do lanche)
 };
 
 // Função para normalizar nomes de refeições
