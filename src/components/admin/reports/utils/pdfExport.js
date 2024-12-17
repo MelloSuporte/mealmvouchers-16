@@ -38,12 +38,13 @@ export const exportToPDF = async (metrics, filters) => {
       item.nome_empresa || '-',
       item.tipo_refeicao || '-',
       `R$ ${parseFloat(item.valor || 0).toFixed(2)}`,
-      item.turno || '-'
+      item.turno || '-',
+      item.nome_setor || '-'
     ]);
 
     doc.autoTable({
       startY: 75,
-      head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno']],
+      head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -56,13 +57,14 @@ export const exportToPDF = async (metrics, filters) => {
         fontStyle: 'bold'
       },
       columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 40 },
+        0: { cellWidth: 25 },
+        1: { cellWidth: 35 },
         2: { cellWidth: 25 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 25 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 20 },
         5: { cellWidth: 20 },
-        6: { cellWidth: 20 }
+        6: { cellWidth: 20 },
+        7: { cellWidth: 20 }
       }
     });
 

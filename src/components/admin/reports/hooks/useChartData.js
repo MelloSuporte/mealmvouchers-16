@@ -12,7 +12,7 @@ export const useChartData = (tiposRefeicao) => {
       const endDate = endOfWeek(new Date(), { locale: ptBR });
 
       const { data, error } = await supabase
-        .from('vw_uso_voucher_detalhado')
+        .from('relatorio_uso_voucher')
         .select('*')
         .gte('data_uso', startDate.toISOString())
         .lte('data_uso', endDate.toISOString());
@@ -59,7 +59,7 @@ export const useChartData = (tiposRefeicao) => {
     queryKey: ['distribution-data'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('vw_uso_voucher_detalhado')
+        .from('relatorio_uso_voucher')
         .select('tipo_refeicao')
         .gte('data_uso', subDays(new Date(), 30).toISOString());
 
@@ -88,7 +88,7 @@ export const useChartData = (tiposRefeicao) => {
       const startDate = subDays(new Date(), 30);
       
       const { data, error } = await supabase
-        .from('vw_uso_voucher_detalhado')
+        .from('relatorio_uso_voucher')
         .select('data_uso')
         .gte('data_uso', startDate.toISOString())
         .order('data_uso', { ascending: true });
