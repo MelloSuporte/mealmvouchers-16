@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
-import { startOfDay, endOfDay } from 'date-fns';
+import { toast } from "sonner";
 
 export const useUsageData = (filters) => {
   return useQuery({
@@ -15,8 +15,8 @@ export const useUsageData = (filters) => {
 
         // Filtro de data
         if (filters.startDate && filters.endDate) {
-          const start = startOfDay(filters.startDate);
-          const end = endOfDay(filters.endDate);
+          const start = filters.startDate;
+          const end = filters.endDate;
           
           console.log('Aplicando filtro de data:', {
             start: start.toISOString(),
@@ -58,6 +58,7 @@ export const useUsageData = (filters) => {
 
         if (error) {
           console.error('Erro ao buscar dados:', error);
+          toast.error('Erro ao carregar dados do relatório');
           throw error;
         }
 
@@ -65,6 +66,7 @@ export const useUsageData = (filters) => {
         return data || [];
       } catch (error) {
         console.error('Erro na query:', error);
+        toast.error('Erro ao carregar dados do relatório');
         throw error;
       }
     },
