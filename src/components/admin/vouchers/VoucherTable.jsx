@@ -18,12 +18,12 @@ import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const VoucherTable = ({ vouchers = [] }) => {
-  console.log('Vouchers recebidos:', vouchers); // Debug log
+  console.log('Vouchers recebidos na tabela:', vouchers);
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = parseISO(dateString);
-    return isValid(date) ? format(date, "dd/MM/yyyy HH:mm", { locale: ptBR }) : '-';
+    return isValid(date) ? format(date, "dd/MM/yyyy", { locale: ptBR }) : '-';
   };
 
   const downloadPDF = () => {
@@ -37,11 +37,11 @@ const VoucherTable = ({ vouchers = [] }) => {
         voucher.codigo,
         voucher.tipos_refeicao?.nome || 'Não especificado',
         formatDate(voucher.data_criacao),
-        formatDate(voucher.data_expiracao)
+        formatDate(voucher.validade)
       ]);
 
       autoTable(doc, {
-        head: [['Código', 'Tipo Refeição', 'Data Criação', 'Data Expiração']],
+        head: [['Código', 'Tipo Refeição', 'Data Criação', 'Data Validade']],
         body: tableData,
         startY: 25,
         theme: 'grid',
@@ -76,7 +76,7 @@ const VoucherTable = ({ vouchers = [] }) => {
                 <TableHead className="text-xs font-medium">Código</TableHead>
                 <TableHead className="text-xs font-medium">Tipo Refeição</TableHead>
                 <TableHead className="text-xs font-medium">Data Criação</TableHead>
-                <TableHead className="text-xs font-medium">Data Expiração</TableHead>
+                <TableHead className="text-xs font-medium">Data Validade</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -86,7 +86,7 @@ const VoucherTable = ({ vouchers = [] }) => {
                     <TableCell className="text-xs">{voucher.codigo}</TableCell>
                     <TableCell className="text-xs">{voucher.tipos_refeicao?.nome || 'Não especificado'}</TableCell>
                     <TableCell className="text-xs">{formatDate(voucher.data_criacao)}</TableCell>
-                    <TableCell className="text-xs">{formatDate(voucher.data_expiracao)}</TableCell>
+                    <TableCell className="text-xs">{formatDate(voucher.validade)}</TableCell>
                   </TableRow>
                 ))
               ) : (

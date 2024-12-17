@@ -11,12 +11,14 @@ export const useVouchers = () => {
         now.setHours(0, 0, 0, 0);
         
         console.log('Buscando vouchers ativos...');
+        console.log('Data atual para filtro:', now.toISOString());
         
         const { data, error } = await supabase
           .from('vouchers_descartaveis')
           .select(`
             *,
             tipos_refeicao (
+              id,
               nome,
               valor,
               horario_inicio,
@@ -25,8 +27,8 @@ export const useVouchers = () => {
             )
           `)
           .eq('usado', false)
-          .gte('data_expiracao', now.toISOString())
-          .order('data_expiracao', { ascending: true });
+          .gte('validade', now.toISOString())
+          .order('validade', { ascending: true });
 
         if (error) {
           console.error('Erro ao buscar vouchers:', error);
