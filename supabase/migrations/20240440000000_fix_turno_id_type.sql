@@ -19,8 +19,9 @@ FROM turnos;
 -- Atualizar a nova coluna com os UUIDs correspondentes dos turnos
 UPDATE usuarios u
 SET turno_id_uuid = (
-    SELECT m.new_uuid
-    FROM turno_id_mapping m
+    SELECT t.id
+    FROM turnos t
+    JOIN turno_id_mapping m ON t.id = m.new_uuid
     WHERE m.old_id = u.turno_id::integer
 );
 
