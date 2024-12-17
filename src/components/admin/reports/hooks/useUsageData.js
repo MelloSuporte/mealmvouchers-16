@@ -11,14 +11,13 @@ export const useUsageData = (filters) => {
         let query = supabase
           .from('uso_voucher')
           .select(`
-            *,
-            usuarios!uso_voucher_usuario_id_fkey (
-              id,
+            id,
+            usado_em,
+            usuarios (
               nome,
               cpf,
               setor_id,
               empresa:empresas (
-                id,
                 nome
               ),
               turno:turnos (
@@ -32,7 +31,7 @@ export const useUsageData = (filters) => {
           `);
 
         if (filters.company && filters.company !== 'all') {
-          query = query.eq('usuarios.empresa.id', filters.company);
+          query = query.eq('usuarios.empresa_id', filters.company);
         }
         
         if (filters.startDate) {
@@ -48,7 +47,7 @@ export const useUsageData = (filters) => {
         }
 
         if (filters.shift && filters.shift !== 'all') {
-          query = query.eq('usuarios.turno.id', filters.shift);
+          query = query.eq('usuarios.turno_id', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
@@ -56,7 +55,7 @@ export const useUsageData = (filters) => {
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
-          query = query.eq('tipo_refeicao.id', filters.mealType);
+          query = query.eq('tipo_refeicao_id', filters.mealType);
         }
 
         const { data, error } = await query;

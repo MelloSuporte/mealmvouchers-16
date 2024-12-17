@@ -11,7 +11,7 @@ const MetricsCards = ({ metrics }) => {
   const safeMetrics = metrics || {};
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Gasto</CardTitle>
@@ -25,7 +25,7 @@ const MetricsCards = ({ metrics }) => {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Custo Médio</CardTitle>
+          <CardTitle className="text-sm font-medium">Custo Médio por Refeição</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
@@ -36,22 +36,11 @@ const MetricsCards = ({ metrics }) => {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Vouchers Regulares</CardTitle>
+          <CardTitle className="text-sm font-medium">Total de Refeições</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {safeMetrics.regularVouchers || 0}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Vouchers Descartáveis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {safeMetrics.disposableVouchers || 0}
+            {safeMetrics.data?.length || 0}
           </div>
         </CardContent>
       </Card>
