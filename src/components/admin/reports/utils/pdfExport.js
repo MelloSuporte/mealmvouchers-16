@@ -36,16 +36,15 @@ export const exportToPDF = async (metrics, filters) => {
       format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
       item.nome_usuario || '-',
       item.cpf || '-',
-      item.codigo_voucher || '-',
       item.empresa || '-',
       item.tipo_refeicao || '-',
-      `R$ ${parseFloat(item.valor_refeicao || 0).toFixed(2)}`,
+      `R$ ${parseFloat(item.valor || 0).toFixed(2)}`,
       item.turno || '-'
     ]);
 
     doc.autoTable({
       startY: 85,
-      head: [['Data/Hora', 'Usuário', 'CPF', 'Voucher', 'Empresa', 'Refeição', 'Valor', 'Turno']],
+      head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 8 },

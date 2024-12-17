@@ -47,11 +47,15 @@ const ReportMetrics = () => {
         }
         
         if (filters.startDate) {
-          query = query.gte('usado_em', filters.startDate.toISOString());
+          const startDate = new Date(filters.startDate);
+          startDate.setUTCHours(0, 0, 0, 0);
+          query = query.gte('usado_em', startDate.toISOString());
         }
         
         if (filters.endDate) {
-          query = query.lte('usado_em', filters.endDate.toISOString());
+          const endDate = new Date(filters.endDate);
+          endDate.setUTCHours(23, 59, 59, 999);
+          query = query.lte('usado_em', endDate.toISOString());
         }
 
         if (filters.shift && filters.shift !== 'all') {
@@ -77,10 +81,11 @@ const ReportMetrics = () => {
           cpf: item.usuarios?.cpf,
           empresa: item.usuarios?.empresa?.nome,
           tipo_refeicao: item.tipo_refeicao?.nome,
-          valor_refeicao: item.tipo_refeicao?.valor,
+          valor: item.tipo_refeicao?.valor,
           turno: item.usuarios?.turno?.tipo_turno
         }));
 
+        console.log('Dados transformados:', transformedData);
         return transformedData || [];
       } catch (error) {
         console.error('Erro na consulta:', error);
