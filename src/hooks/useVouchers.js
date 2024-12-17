@@ -13,9 +13,16 @@ export const useVouchers = () => {
         console.log('Iniciando busca de vouchers...');
         console.log('Configurações da query:', {
           usado: false,
-          data_expiracao_min: now.toISOString()
+          data_atual: now.toISOString()
         });
         
+        // Primeiro, vamos logar todos os vouchers para debug
+        const { data: allVouchers, error: debugError } = await supabase
+          .from('vouchers_descartaveis')
+          .select('*');
+          
+        console.log('Todos os vouchers na tabela:', allVouchers);
+
         const { data, error, count } = await supabase
           .from('vouchers_descartaveis')
           .select(`
@@ -30,7 +37,7 @@ export const useVouchers = () => {
             )
           `, { count: 'exact' })
           .eq('usado', false)
-          .gte('data_expiracao', now.toISOString())
+          .lte('data_expiracao', now.toISOString())
           .order('data_expiracao', { ascending: true });
 
         if (error) {
@@ -44,7 +51,7 @@ export const useVouchers = () => {
           throw error;
         }
 
-        console.log('Resultado da query:', {
+        console.log('Resultado da query filtrada:', {
           total: count,
           vouchers: data,
           primeiroVoucher: data?.[0]
