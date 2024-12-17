@@ -37,7 +37,7 @@ export const useDisposableVoucherFormLogic = () => {
         const now = new Date();
         now.setHours(0, 0, 0, 0);
         
-        console.log('Buscando vouchers com data >= ', now.toISOString());
+        console.log('Buscando vouchers ativos...');
         
         const { data, error } = await supabase
           .from('vouchers_descartaveis')
@@ -57,6 +57,7 @@ export const useDisposableVoucherFormLogic = () => {
 
         if (error) {
           console.error('Erro ao buscar vouchers:', error);
+          toast.error(`Erro ao buscar vouchers: ${error.message}`);
           throw error;
         }
 
