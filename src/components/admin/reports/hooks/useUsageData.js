@@ -9,13 +9,13 @@ export const useUsageData = (filters) => {
       try {
         console.log('Iniciando busca de dados com filtros:', filters);
         
-        // Log da query inicial
         let query = supabase
           .from('vw_uso_voucher_detalhado')
           .select('*');
 
         console.log('Query base criada');
 
+        // Aplicar filtros somente se não forem 'all' ou undefined
         if (filters.company && filters.company !== 'all') {
           console.log('Aplicando filtro de empresa:', filters.company);
           query = query.eq('empresa_id', filters.company);
@@ -23,14 +23,14 @@ export const useUsageData = (filters) => {
         
         if (filters.startDate) {
           const startDate = new Date(filters.startDate);
-          startDate.setUTCHours(0, 0, 0, 0);
+          startDate.setHours(0, 0, 0, 0);
           console.log('Aplicando filtro de data inicial:', startDate.toISOString());
           query = query.gte('data_uso', startDate.toISOString());
         }
         
         if (filters.endDate) {
           const endDate = new Date(filters.endDate);
-          endDate.setUTCHours(23, 59, 59, 999);
+          endDate.setHours(23, 59, 59, 999);
           console.log('Aplicando filtro de data final:', endDate.toISOString());
           query = query.lte('data_uso', endDate.toISOString());
         }
@@ -50,7 +50,7 @@ export const useUsageData = (filters) => {
           query = query.eq('tipo_refeicao_id', filters.mealType);
         }
 
-        console.log('Executando consulta...');
+        // Executar a query e logar o SQL gerado
         const { data, error } = await query;
         
         if (error) {
@@ -61,10 +61,11 @@ export const useUsageData = (filters) => {
 
         console.log('Dados retornados:', data);
         
-        // Log adicional para verificar a estrutura dos dados
+        // Log detalhado dos dados retornados
         if (data && data.length > 0) {
-          console.log('Exemplo do primeiro registro:', data[0]);
+          console.log('Primeiro registro:', data[0]);
           console.log('Campos disponíveis:', Object.keys(data[0]));
+          console.log('Total de registros:', data.length);
         } else {
           console.log('Nenhum dado encontrado com os filtros aplicados');
         }

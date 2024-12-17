@@ -7,6 +7,7 @@ export const useMetricsCalculation = (usageData) => {
     console.log('Calculando métricas com dados:', usageData);
 
     const totalCost = usageData.reduce((sum, item) => {
+      // Usar o campo valor que vem da view
       const valor = parseFloat(item.valor || 0);
       console.log('Valor sendo somado:', valor, 'do item:', item);
       return sum + valor;
