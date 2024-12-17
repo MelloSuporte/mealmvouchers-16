@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { supabase } from '../../config/supabase';
-import MealTypeFields from './meal-type/MealTypeFields';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '../../../config/supabase';
+import { toast } from "sonner";
 
-const MealTypeForm = () => {
+export const useMealTypeForm = () => {
   const [mealType, setMealType] = useState("");
   const [mealValue, setMealValue] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -15,7 +13,6 @@ const MealTypeForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingMealData, setExistingMealData] = useState(null);
 
-  // Fetch real meal types from database
   const { data: mealTypes = [], refetch: refetchMealTypes } = useQuery({
     queryKey: ['meal-types'],
     queryFn: async () => {
@@ -155,40 +152,23 @@ const MealTypeForm = () => {
     }
   };
 
-  return (
-    <form className="space-y-4 max-w-md mx-auto bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-xl font-semibold mb-4">Configuração de Refeição</h2>
-      
-      <MealTypeFields 
-        mealType={mealType}
-        setMealType={setMealType}
-        mealValue={mealValue}
-        setMealValue={setMealValue}
-        startTime={startTime}
-        setStartTime={setStartTime}
-        endTime={endTime}
-        setEndTime={setEndTime}
-        maxUsersPerDay={maxUsersPerDay}
-        setMaxUsersPerDay={setMaxUsersPerDay}
-        toleranceMinutes={toleranceMinutes}
-        setToleranceMinutes={setToleranceMinutes}
-        mealTypes={mealTypes}
-        existingMealData={existingMealData}
-        onStatusChange={handleStatusChange}
-      />
-
-      <Button 
-        type="button" 
-        onClick={handleSaveMealType}
-        disabled={isSubmitting}
-        className="w-full h-9 mt-6"
-        variant="default"
-        size="sm"
-      >
-        {isSubmitting ? 'Salvando...' : existingMealData ? 'Atualizar Refeição' : 'Cadastrar Refeição'}
-      </Button>
-    </form>
-  );
+  return {
+    mealType,
+    setMealType,
+    mealValue,
+    setMealValue,
+    startTime,
+    setStartTime,
+    endTime,
+    setEndTime,
+    maxUsersPerDay,
+    setMaxUsersPerDay,
+    toleranceMinutes,
+    setToleranceMinutes,
+    mealTypes,
+    existingMealData,
+    isSubmitting,
+    handleSaveMealType,
+    handleStatusChange
+  };
 };
-
-export default MealTypeForm;
