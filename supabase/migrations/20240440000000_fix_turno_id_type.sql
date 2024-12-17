@@ -13,7 +13,7 @@ SELECT
         WHEN 'segundo' THEN 3
         WHEN 'terceiro' THEN 4
     END AS old_id,
-    id AS new_uuid
+    id::uuid AS new_uuid
 FROM turnos;
 
 -- Atualizar a nova coluna com os UUIDs correspondentes dos turnos
