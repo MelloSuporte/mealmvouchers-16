@@ -10,8 +10,18 @@ export const useUsageData = (filters) => {
         
         let query = supabase
           .from('vw_uso_voucher_detalhado')
-          .select('*')
-          .order('usado_em', { ascending: false });
+          .select(`
+            id,
+            data_uso,
+            nome_usuario,
+            cpf,
+            empresa_id,
+            nome_empresa,
+            turno,
+            tipo_refeicao,
+            valor
+          `)
+          .order('data_uso', { ascending: false });
 
         if (filters.company && filters.company !== 'all') {
           query = query.eq('empresa_id', filters.company);
