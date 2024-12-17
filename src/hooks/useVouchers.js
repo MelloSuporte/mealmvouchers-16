@@ -10,10 +10,13 @@ export const useVouchers = () => {
         const now = new Date();
         now.setHours(0, 0, 0, 0);
         
-        console.log('Buscando vouchers ativos...');
-        console.log('Data atual para filtro:', now.toISOString());
+        console.log('Iniciando busca de vouchers...');
+        console.log('Configurações da query:', {
+          usado: false,
+          data_expiracao_min: now.toISOString()
+        });
         
-        const { data, error } = await supabase
+        const { data, error, count } = await supabase
           .from('vouchers_descartaveis')
           .select(`
             *,
@@ -25,21 +28,35 @@ export const useVouchers = () => {
               horario_fim,
               minutos_tolerancia
             )
-          `)
+          `, { count: 'exact' })
           .eq('usado', false)
           .gte('data_expiracao', now.toISOString())
           .order('data_expiracao', { ascending: true });
 
         if (error) {
-          console.error('Erro ao buscar vouchers:', error);
+          console.error('Erro detalhado ao buscar vouchers:', {
+            error,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
           toast.error(`Erro ao buscar vouchers: ${error.message}`);
           throw error;
         }
 
-        console.log('Vouchers ativos encontrados:', data);
+        console.log('Resultado da query:', {
+          total: count,
+          vouchers: data,
+          primeiroVoucher: data?.[0]
+        });
+
         return data || [];
       } catch (error) {
-        console.error('Erro ao buscar vouchers:', error);
+        console.error('Erro ao buscar vouchers:', {
+          error,
+          message: error.message,
+          stack: error.stack
+        });
         toast.error(`Erro ao buscar vouchers: ${error.message}`);
         return [];
       }

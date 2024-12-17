@@ -18,11 +18,23 @@ import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const VoucherTable = ({ vouchers = [] }) => {
-  console.log('Vouchers recebidos na tabela:', vouchers);
+  console.log('Renderizando VoucherTable com:', {
+    quantidadeVouchers: vouchers?.length,
+    vouchers,
+    primeiroVoucher: vouchers?.[0]
+  });
 
   const formatDate = (dateString) => {
-    if (!dateString) return '-';
+    if (!dateString) {
+      console.log('Data inválida recebida:', dateString);
+      return '-';
+    }
     const date = parseISO(dateString);
+    console.log('Formatando data:', {
+      original: dateString,
+      parsed: date,
+      isValid: isValid(date)
+    });
     return isValid(date) ? format(date, "dd/MM/yyyy", { locale: ptBR }) : '-';
   };
 
@@ -52,8 +64,8 @@ const VoucherTable = ({ vouchers = [] }) => {
       doc.save('vouchers-descartaveis-ativos.pdf');
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
-      toast.error('Erro ao gerar PDF');
       console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar PDF');
     }
   };
 
@@ -61,7 +73,9 @@ const VoucherTable = ({ vouchers = [] }) => {
     <Card className="shadow-sm">
       <CardContent className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <Label className="text-sm font-medium text-gray-700">Vouchers Descartáveis Ativos</Label>
+          <Label className="text-sm font-medium text-gray-700">
+            Vouchers Descartáveis Ativos ({vouchers?.length || 0})
+          </Label>
           {vouchers.length > 0 && (
             <Button onClick={downloadPDF} variant="outline" size="sm" className="h-8 text-xs">
               <Download className="mr-2 h-3 w-3" />
