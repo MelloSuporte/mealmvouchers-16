@@ -1,5 +1,5 @@
 import { PieChart, Pie, Tooltip, Legend, Cell, ResponsiveContainer } from 'recharts';
-import { COLORS, normalizeMealName } from './ChartColors';
+import { COLORS } from './ChartColors';
 
 const MealDistributionChart = ({ data }) => {
   const chartData = Array.isArray(data) ? data : [];
