@@ -1,5 +1,5 @@
--- Drop existing function if exists
-DROP FUNCTION IF EXISTS validate_and_use_voucher;
+-- Drop function if exists
+DROP FUNCTION IF EXISTS validate_and_use_voucher(VARCHAR, UUID);
 
 -- Create updated function with time and shift validation
 CREATE OR REPLACE FUNCTION validate_and_use_voucher(
@@ -144,9 +144,9 @@ END;
 $$;
 
 -- Grant necessary permissions
-REVOKE ALL ON FUNCTION validate_and_use_voucher FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION validate_and_use_voucher TO authenticated;
-GRANT EXECUTE ON FUNCTION validate_and_use_voucher TO anon;
+REVOKE ALL ON FUNCTION validate_and_use_voucher(VARCHAR, UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION validate_and_use_voucher(VARCHAR, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION validate_and_use_voucher(VARCHAR, UUID) TO anon;
 
 -- Add comment
-COMMENT ON FUNCTION validate_and_use_voucher IS 'Validates and registers voucher usage with time and shift restrictions';
+COMMENT ON FUNCTION validate_and_use_voucher(VARCHAR, UUID) IS 'Validates and registers voucher usage with time and shift restrictions';
