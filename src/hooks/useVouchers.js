@@ -8,10 +8,12 @@ export const useVouchers = () => {
     queryFn: async () => {
       try {
         const now = new Date();
-        now.setHours(0, 0, 0, 0);
+        // Ajusta para GMT-3 (America/Sao_Paulo)
+        const offset = -3;
+        now.setHours(now.getHours() + offset, 0, 0, 0);
         
         console.log('Iniciando busca de vouchers...');
-        console.log('Data atual para comparação:', now.toISOString());
+        console.log('Data atual (GMT-3):', now.toISOString());
 
         // Primeiro, vamos verificar todos os vouchers na tabela para debug
         const { data: allVouchers, error: debugError } = await supabase
