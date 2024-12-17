@@ -1,6 +1,9 @@
 -- Primeiro, remover a constraint existente
 ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS fk_usuarios_turnos;
 
+-- Remover o valor padrão da coluna id antes de alterar o tipo
+ALTER TABLE turnos ALTER COLUMN id DROP DEFAULT;
+
 -- Alterar o tipo da coluna id na tabela turnos para UUID
 ALTER TABLE turnos 
 ALTER COLUMN id TYPE UUID USING id::text::uuid;
