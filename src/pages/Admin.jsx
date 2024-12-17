@@ -12,14 +12,26 @@ import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
 import AdminList from '@/components/admin/managers/AdminList';
 import TurnosForm from '@/components/admin/TurnosForm';
+import { LogOut } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 const Admin = () => {
-  const { user } = useAdmin();
+  const { user, logout } = useAdmin();
 
   return (
     <AdminProvider>
       <div className="p-4">
-        <h1 className="text-2xl font-bold">Administração</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Administração</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={logout}
+            className="hover:bg-slate-100"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </div>
         <Tabs defaultValue="users" className="mt-4">
           <TabsList>
             <TabsTrigger value="users">Usuários</TabsTrigger>
