@@ -26,7 +26,7 @@ const Admin = () => {
             <TabsTrigger value="companies">Empresas</TabsTrigger>
             <TabsTrigger value="meal-types">Tipos de Refeição</TabsTrigger>
             <TabsTrigger value="reports">Relatórios</TabsTrigger>
-            <TabsTrigger value="rls">RLS</TabsTrigger>
+            <TabsTrigger value="rls">Vouchers Extras</TabsTrigger>
             <TabsTrigger value="disposable-vouchers">Vouchers Descartáveis</TabsTrigger>
             <TabsTrigger value="background-images">Imagens de Fundo</TabsTrigger>
             <TabsTrigger value="managers">Gerentes</TabsTrigger>
