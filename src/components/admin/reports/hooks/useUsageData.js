@@ -37,17 +37,17 @@ export const useUsageData = (filters) => {
 
         if (filters.shift && filters.shift !== 'all') {
           console.log('Aplicando filtro de turno:', filters.shift);
-          query = query.eq('turno_id', filters.shift);
+          query = query.eq('turno', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
           console.log('Aplicando filtro de setor:', filters.sector);
-          query = query.eq('setor_id', filters.sector);
+          query = query.eq('setor', filters.sector);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
           console.log('Aplicando filtro de tipo de refeição:', filters.mealType);
-          query = query.eq('tipo_refeicao_id', filters.mealType);
+          query = query.eq('tipo_refeicao', filters.mealType);
         }
 
         // Executar a query e logar o SQL gerado
