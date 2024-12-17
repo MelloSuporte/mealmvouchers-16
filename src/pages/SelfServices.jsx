@@ -5,12 +5,12 @@ import { Coffee, Utensils, Moon, Plus, Sandwich } from 'lucide-react';
 import { toast } from "sonner";
 import { supabase } from '../config/supabase';
 import { useQuery } from '@tanstack/react-query';
+import logger from '../config/logger';
 
 const SelfServices = () => {
   const navigate = useNavigate();
   const [backgroundImage, setBackgroundImage] = useState('');
 
-  // Busca as refeições cadastradas da tabela tipos_refeicao
   const { data: meals, isLoading, error } = useQuery({
     queryKey: ['tipos_refeicao'],
     queryFn: async () => {
@@ -56,16 +56,19 @@ const SelfServices = () => {
     }
   }, [navigate]);
 
-  const handleMealSelection = async (mealType) => {
+  const handleMealSelection = async (meal) => {
     try {
       const disposableVoucher = JSON.parse(localStorage.getItem('disposableVoucher') || '{}');
       const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
       
+      logger.info('Selecionando refeição:', meal);
+
       // Se for voucher descartável
       if (disposableVoucher.code) {
         navigate(`/bom-apetite/Usuario`, { 
           state: { 
-            mealType,
+            mealType: meal.id, // Passando o ID do tipo de refeição
+            mealName: meal.nome,
             userName: 'Usuario'
           }
         });
@@ -76,7 +79,8 @@ const SelfServices = () => {
           state: { 
             userName: commonVoucher.userName,
             userTurno: commonVoucher.turno,
-            mealType,
+            mealType: meal.id, // Passando o ID do tipo de refeição
+            mealName: meal.nome,
             voucherCode: commonVoucher.code,
             cpf: commonVoucher.cpf
           }
@@ -124,7 +128,7 @@ const SelfServices = () => {
           {meals && meals.map((meal) => (
             <Button
               key={meal.id}
-              onClick={() => handleMealSelection(meal.nome)}
+              onClick={() => handleMealSelection(meal)}
               className="w-full h-32 bg-transparent hover:bg-gray-100 text-gray-800 font-semibold py-6 px-4 border border-gray-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
             >
               {meal.nome.toLowerCase().includes('almoço') && <Utensils className="h-12 w-12 mb-2" />}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '../config/supabase';
@@ -7,6 +7,7 @@ import logger from '../config/logger';
 
 const UserConfirmation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState('');
 
@@ -32,86 +33,43 @@ const UserConfirmation = () => {
     fetchBackgroundImage();
   }, []);
 
-  const getMealTypeByTurno = (turno) => {
-    // Mapeamento de turnos para tipos de refeição
-    const mealTypeMap = {
-      'central': 'Almoço',
-      'primeiro': 'Café (1)',
-      'segundo': 'Jantar',
-      'terceiro': 'Ceia'
-    };
-    return mealTypeMap[turno] || 'Almoço'; // Default para 'Almoço' se não encontrar
-  };
-
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
-      // Obter dados do voucher do localStorage
-      const voucherData = localStorage.getItem('commonVoucher');
-      if (!voucherData) {
-        toast.error('Dados do voucher não encontrados');
-        navigate('/');
-        return;
-      }
+      const { mealType, mealName, voucherCode, cpf } = location.state;
+      
+      logger.info('Buscando tipo de refeição:', mealName);
 
-      const { code, userName, turno, cpf } = JSON.parse(voucherData);
-
-      // Primeiro, buscar o ID do usuário usando o CPF
-      const { data: userData, error: userError } = await supabase
-        .from('usuarios')
-        .select('id, nome')
-        .eq('cpf', cpf)
-        .single();
-
-      if (userError) {
-        console.error('Erro ao buscar usuário:', userError);
-        throw new Error('Usuário não encontrado');
-      }
-
-      // Mapear o turno para o tipo de refeição correto
-      const mealTypeName = getMealTypeByTurno(turno);
-      console.log('Buscando tipo de refeição:', mealTypeName);
-
-      // Buscar o ID do tipo de refeição baseado no nome mapeado
-      const { data: tipoRefeicaoData, error: tipoRefeicaoError } = await supabase
-        .from('tipos_refeicao')
-        .select('id')
-        .eq('nome', mealTypeName)
-        .single();
-
-      if (tipoRefeicaoError) {
-        console.error('Erro ao buscar tipo de refeição:', tipoRefeicaoError);
-        throw new Error('Tipo de refeição não encontrado');
-      }
-
-      // Agora validar o voucher usando o ID do usuário e o ID do tipo de refeição
+      // Validar voucher
       const { data: validationResult, error: validationError } = await supabase
-        .rpc('validate_and_use_common_voucher', {
-          p_usuario_id: userData.id,
-          p_tipo_refeicao_id: tipoRefeicaoData.id
+        .rpc('validate_and_use_voucher', {
+          p_codigo: voucherCode,
+          p_tipo_refeicao_id: mealType // Usando o ID do tipo de refeição
         });
 
       if (validationError) {
-        console.error('Erro na validação:', validationError);
-        throw validationError;
+        logger.error('Erro na validação:', validationError);
+        throw new Error(validationError.message || 'Erro ao validar voucher');
       }
 
       if (!validationResult?.success) {
         throw new Error(validationResult?.error || 'Erro ao validar voucher');
       }
 
-      // Limpar dados armazenados
+      // Limpar dados do localStorage
       localStorage.removeItem('commonVoucher');
       
       // Navegar para página de sucesso
       navigate('/bom-apetite', { 
-        state: { userName: userData.nome, turno } 
+        state: { 
+          userName: location.state.userName,
+          turno: location.state.userTurno
+        } 
       });
 
     } catch (error) {
-      console.error('Erro na validação:', error);
+      logger.error('Erro na validação:', error);
       toast.error(error.message || 'Erro ao validar voucher');
-      navigate('/');
     } finally {
       setIsLoading(false);
     }
@@ -146,7 +104,7 @@ const UserConfirmation = () => {
           <h3 className="font-bold text-lg mb-2">Dados do Usuário</h3>
           <p className="flex items-center gap-2">
             <span className="text-green-600">✓</span>
-            {JSON.parse(localStorage.getItem('commonVoucher') || '{}').userName || 'Usuário'}
+            {location.state?.userName || 'Usuário'}
           </p>
         </div>
 
@@ -154,7 +112,7 @@ const UserConfirmation = () => {
           <h3 className="font-bold text-lg mb-2">Tipo de Refeição</h3>
           <p className="flex items-center gap-2">
             <span className="text-green-600">✓</span>
-            {getMealTypeByTurno(JSON.parse(localStorage.getItem('commonVoucher') || '{}').turno) || 'Refeição'}
+            {location.state?.mealName || 'Refeição'}
           </p>
         </div>
 
