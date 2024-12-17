@@ -1,81 +1,69 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
-import { toast } from "sonner";
 
 export const useUsageData = (filters) => {
   return useQuery({
     queryKey: ['usage-data', filters],
     queryFn: async () => {
       try {
-        console.log('Iniciando busca de dados com filtros:', filters);
+        console.log('Buscando dados de uso com filtros:', filters);
         
         let query = supabase
-          .from('vw_uso_voucher_detalhado')
+          .from('relatorio_uso_voucher')
           .select('*');
 
-        console.log('Query base criada');
+        // Filtro de data
+        if (filters.startDate && filters.endDate) {
+          console.log('Aplicando filtro de data:', {
+            start: filters.startDate,
+            end: filters.endDate
+          });
+          
+          query = query
+            .gte('data_uso', filters.startDate)
+            .lte('data_uso', filters.endDate);
+        }
 
-        // Aplicar filtros somente se não forem 'all' ou undefined
+        // Filtro de empresa
         if (filters.company && filters.company !== 'all') {
           console.log('Aplicando filtro de empresa:', filters.company);
           query = query.eq('empresa_id', filters.company);
         }
-        
-        if (filters.startDate) {
-          const startDate = new Date(filters.startDate);
-          startDate.setHours(0, 0, 0, 0);
-          console.log('Aplicando filtro de data inicial:', startDate.toISOString());
-          query = query.gte('data_uso', startDate.toISOString());
-        }
-        
-        if (filters.endDate) {
-          const endDate = new Date(filters.endDate);
-          endDate.setHours(23, 59, 59, 999);
-          console.log('Aplicando filtro de data final:', endDate.toISOString());
-          query = query.lte('data_uso', endDate.toISOString());
-        }
 
+        // Filtro de turno
         if (filters.shift && filters.shift !== 'all') {
           console.log('Aplicando filtro de turno:', filters.shift);
           query = query.eq('turno', filters.shift);
         }
 
+        // Filtro de setor
         if (filters.sector && filters.sector !== 'all') {
           console.log('Aplicando filtro de setor:', filters.sector);
           query = query.eq('setor_id', filters.sector);
         }
 
+        // Filtro de tipo de refeição
         if (filters.mealType && filters.mealType !== 'all') {
           console.log('Aplicando filtro de tipo de refeição:', filters.mealType);
           query = query.eq('tipo_refeicao', filters.mealType);
         }
 
-        const { data, error } = await query;
+        console.log('Query final:', query);
         
+        const { data, error } = await query;
+
         if (error) {
-          console.error('Erro na consulta:', error);
-          toast.error('Erro ao carregar dados');
+          console.error('Erro ao buscar dados:', error);
           throw error;
         }
 
-        console.log('Dados retornados:', data);
-        
-        if (data && data.length > 0) {
-          console.log('Primeiro registro:', data[0]);
-          console.log('Campos disponíveis:', Object.keys(data[0]));
-          console.log('Total de registros:', data.length);
-        } else {
-          console.log('Nenhum dado encontrado com os filtros aplicados');
-        }
-
+        console.log('Dados recuperados:', data?.length || 0, 'registros');
         return data || [];
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
-        toast.error('Erro ao carregar dados');
+        console.error('Erro na query:', error);
         throw error;
       }
     },
-    retry: 1,
-    staleTime: 30000
+    enabled: !!filters
   });
 };
