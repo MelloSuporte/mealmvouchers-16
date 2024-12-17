@@ -48,7 +48,7 @@ BEGIN
         CREATE OR REPLACE FUNCTION update_relatorio_uso_voucher_timestamp()
         RETURNS TRIGGER
         SECURITY DEFINER
-        SET search_path = public
+        SET search_path TO public
         LANGUAGE plpgsql 
         AS $func$
         BEGIN
