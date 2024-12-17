@@ -16,7 +16,7 @@ const SelfServices = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tipos_refeicao')
-        .select('*')
+        .select('id, nome, ativo')
         .eq('ativo', true)
         .order('nome');
       
@@ -61,13 +61,13 @@ const SelfServices = () => {
       const disposableVoucher = JSON.parse(localStorage.getItem('disposableVoucher') || '{}');
       const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
       
-      logger.info('Selecionando refeição:', meal);
+      logger.info('Selecionando refeição:', { mealId: meal.id, mealName: meal.nome });
 
       // Se for voucher descartável
       if (disposableVoucher.code) {
         navigate(`/bom-apetite/Usuario`, { 
           state: { 
-            mealType: meal.id,
+            mealType: meal.id, // Já é UUID do banco
             mealName: meal.nome,
             userName: 'Usuario'
           }
@@ -75,10 +75,23 @@ const SelfServices = () => {
       } 
       // Se for voucher comum ou extra
       else if (commonVoucher.code) {
+        // Buscar o turno_id (que é UUID) do usuário
+        const { data: userData, error: userError } = await supabase
+          .from('usuarios')
+          .select('turno_id')
+          .eq('cpf', commonVoucher.cpf)
+          .single();
+
+        if (userError) {
+          logger.error('Erro ao buscar turno do usuário:', userError);
+          toast.error('Erro ao buscar dados do usuário');
+          return;
+        }
+
         navigate('/user-confirmation', { 
           state: { 
             userName: commonVoucher.userName,
-            userTurno: commonVoucher.turno,
+            userTurno: userData.turno_id,
             mealType: meal.id,
             mealName: meal.nome,
             voucherCode: commonVoucher.code,
@@ -90,6 +103,7 @@ const SelfServices = () => {
         navigate('/voucher');
       }
     } catch (error) {
+      logger.error('Erro ao processar seleção de refeição:', error);
       toast.error('Erro ao processar voucher');
       navigate('/voucher');
     }
