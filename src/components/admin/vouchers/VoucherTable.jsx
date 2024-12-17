@@ -40,14 +40,19 @@ const VoucherTable = ({ vouchers = [] }) => {
 
   const downloadPDF = () => {
     try {
+      if (!vouchers || vouchers.length === 0) {
+        toast.error('Não há dados para exportar');
+        return;
+      }
+
       const doc = new jsPDF();
       
       doc.setFontSize(14);
       doc.text('Vouchers Descartáveis Ativos', 14, 15);
       
       const tableData = vouchers.map(voucher => [
-        voucher.codigo,
-        voucher.tipos_refeicao?.nome || 'Não especificado',
+        voucher.codigo || '-',
+        voucher.tipos_refeicao?.nome || '-',
         formatDate(voucher.data_criacao),
         formatDate(voucher.data_expiracao)
       ]);
@@ -61,11 +66,12 @@ const VoucherTable = ({ vouchers = [] }) => {
         headStyles: { fillColor: [59, 130, 246] }
       });
 
-      doc.save('vouchers-descartaveis-ativos.pdf');
+      const fileName = `vouchers-descartaveis-ativos-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
+      doc.save(fileName);
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      toast.error('Erro ao gerar PDF');
+      toast.error('Erro ao gerar PDF: ' + error.message);
     }
   };
 
@@ -76,12 +82,16 @@ const VoucherTable = ({ vouchers = [] }) => {
           <Label className="text-sm font-medium text-gray-700">
             Vouchers Descartáveis Ativos ({vouchers?.length || 0})
           </Label>
-          {vouchers.length > 0 && (
-            <Button onClick={downloadPDF} variant="outline" size="sm" className="h-8 text-xs">
-              <Download className="mr-2 h-3 w-3" />
-              Baixar PDF
-            </Button>
-          )}
+          <Button 
+            onClick={downloadPDF} 
+            variant="outline" 
+            size="sm" 
+            className="h-8 text-xs"
+            disabled={!vouchers?.length}
+          >
+            <Download className="mr-2 h-3 w-3" />
+            Baixar PDF
+          </Button>
         </div>
         <div className="overflow-x-auto rounded-lg border">
           <Table>
@@ -94,11 +104,11 @@ const VoucherTable = ({ vouchers = [] }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vouchers.length > 0 ? (
+              {vouchers && vouchers.length > 0 ? (
                 vouchers.map((voucher) => (
                   <TableRow key={voucher.id} className="hover:bg-gray-50">
-                    <TableCell className="text-xs">{voucher.codigo}</TableCell>
-                    <TableCell className="text-xs">{voucher.tipos_refeicao?.nome || 'Não especificado'}</TableCell>
+                    <TableCell className="text-xs">{voucher.codigo || '-'}</TableCell>
+                    <TableCell className="text-xs">{voucher.tipos_refeicao?.nome || '-'}</TableCell>
                     <TableCell className="text-xs">{formatDate(voucher.data_criacao)}</TableCell>
                     <TableCell className="text-xs">{formatDate(voucher.data_expiracao)}</TableCell>
                   </TableRow>
