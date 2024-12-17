@@ -40,7 +40,7 @@ export const useUsageData = (filters) => {
           query = query.eq('tipo_refeicao', filters.mealType);
         }
 
-        console.log('Query SQL:', query.toSQL());
+        console.log('Executando consulta...');
         
         const { data, error } = await query;
         
