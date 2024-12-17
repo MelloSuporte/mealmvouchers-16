@@ -7,27 +7,22 @@ export const useUsageData = (filters) => {
     queryKey: ['usage-data', filters],
     queryFn: async () => {
       try {
-        console.log('Buscando dados com filtros:', filters);
+        console.log('Iniciando busca de dados com filtros:', filters);
         
         let query = supabase
           .from('vw_uso_voucher_detalhado')
           .select('*');
 
-        // Aplicar filtros
         if (filters.company && filters.company !== 'all') {
           query = query.eq('empresa_id', filters.company);
         }
         
         if (filters.startDate) {
-          const startDate = new Date(filters.startDate);
-          startDate.setUTCHours(0, 0, 0, 0);
-          query = query.gte('data_uso', startDate.toISOString());
+          query = query.gte('data_uso', filters.startDate.toISOString());
         }
         
         if (filters.endDate) {
-          const endDate = new Date(filters.endDate);
-          endDate.setUTCHours(23, 59, 59, 999);
-          query = query.lte('data_uso', endDate.toISOString());
+          query = query.lte('data_uso', filters.endDate.toISOString());
         }
 
         if (filters.shift && filters.shift !== 'all') {
@@ -43,25 +38,21 @@ export const useUsageData = (filters) => {
         }
 
         console.log('Executando consulta...');
-        
         const { data, error } = await query;
         
         if (error) {
-          console.error('Erro ao buscar dados:', error);
-          toast.error('Erro ao carregar dados do relatório');
+          console.error('Erro na consulta:', error);
+          toast.error('Erro ao carregar dados');
           throw error;
         }
 
         console.log('Dados retornados:', data);
         return data || [];
       } catch (error) {
-        console.error('Erro na consulta:', error);
-        toast.error('Erro ao carregar dados do relatório');
+        console.error('Erro ao buscar dados:', error);
+        toast.error('Erro ao carregar dados');
         throw error;
       }
-    },
-    retry: 1,
-    staleTime: 30000,
-    cacheTime: 60000,
+    }
   });
 };
