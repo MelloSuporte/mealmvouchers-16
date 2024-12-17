@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
+import { startOfDay, endOfDay } from 'date-fns';
 
 export const useUsageData = (filters) => {
   return useQuery({
@@ -14,17 +15,17 @@ export const useUsageData = (filters) => {
 
         // Filtro de data
         if (filters.startDate && filters.endDate) {
-          const startISOString = filters.startDate.toISOString();
-          const endISOString = filters.endDate.toISOString();
+          const start = startOfDay(filters.startDate);
+          const end = endOfDay(filters.endDate);
           
           console.log('Aplicando filtro de data:', {
-            start: startISOString,
-            end: endISOString
+            start: start.toISOString(),
+            end: end.toISOString()
           });
           
           query = query
-            .gte('data_uso', startISOString)
-            .lte('data_uso', endISOString);
+            .gte('data_uso', start.toISOString())
+            .lte('data_uso', end.toISOString());
         }
 
         // Filtro de empresa
