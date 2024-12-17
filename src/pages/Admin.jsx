@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdminProvider, useAdmin } from '@/contexts/AdminContext';
 import UserFormMain from '@/components/admin/UserFormMain';
 import CompanyForm from '@/components/admin/CompanyForm';
-import MealTypeForm from '@/components/admin/MealTypeForm';
+import MealTypeForm from '@/components/admin/meal-type/MealTypeForm.jsx';
 import ReportForm from '@/components/admin/ReportForm';
 import RLSForm from '@/components/admin/RLSForm';
 import DisposableVoucherForm from '@/components/admin/DisposableVoucherForm';
