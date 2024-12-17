@@ -13,6 +13,7 @@ SELECT
     u.empresa_id,
     e.nome as nome_empresa,
     t.tipo_turno as turno,
+    s.nome_setor as setor,
     tr.nome as tipo_refeicao,
     tr.valor,
     uv.observacao
@@ -20,6 +21,7 @@ FROM uso_voucher uv
 LEFT JOIN usuarios u ON uv.usuario_id = u.id
 LEFT JOIN empresas e ON u.empresa_id = e.id
 LEFT JOIN turnos t ON u.turno_id = t.id
+LEFT JOIN setores s ON u.setor_id = s.id
 LEFT JOIN tipos_refeicao tr ON uv.tipo_refeicao_id = tr.id;
 
 -- Grant permissions

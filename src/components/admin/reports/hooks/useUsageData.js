@@ -42,7 +42,7 @@ export const useUsageData = (filters) => {
 
         if (filters.sector && filters.sector !== 'all') {
           console.log('Aplicando filtro de setor:', filters.sector);
-          query = query.eq('setor', filters.sector);
+          query = query.eq('nome_setor', filters.sector);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
@@ -50,7 +50,6 @@ export const useUsageData = (filters) => {
           query = query.eq('tipo_refeicao', filters.mealType);
         }
 
-        // Executar a query e logar o SQL gerado
         const { data, error } = await query;
         
         if (error) {
@@ -61,7 +60,6 @@ export const useUsageData = (filters) => {
 
         console.log('Dados retornados:', data);
         
-        // Log detalhado dos dados retornados
         if (data && data.length > 0) {
           console.log('Primeiro registro:', data[0]);
           console.log('Campos disponíveis:', Object.keys(data[0]));
