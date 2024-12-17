@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
+import { toast } from "sonner";
 
 export const useUsageData = (filters) => {
   return useQuery({
@@ -12,6 +13,7 @@ export const useUsageData = (filters) => {
           .from('vw_uso_voucher_detalhado')
           .select('*');
 
+        // Aplicar filtros
         if (filters.company && filters.company !== 'all') {
           query = query.eq('empresa_id', filters.company);
         }
@@ -46,6 +48,7 @@ export const useUsageData = (filters) => {
         
         if (error) {
           console.error('Erro ao buscar dados:', error);
+          toast.error('Erro ao carregar dados do relatório');
           throw error;
         }
 
@@ -53,6 +56,7 @@ export const useUsageData = (filters) => {
         return data || [];
       } catch (error) {
         console.error('Erro na consulta:', error);
+        toast.error('Erro ao carregar dados do relatório');
         throw error;
       }
     },
