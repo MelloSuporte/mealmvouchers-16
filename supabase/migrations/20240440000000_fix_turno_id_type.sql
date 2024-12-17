@@ -8,6 +8,9 @@ ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS fk_usuarios_turnos;
 -- Remover o valor padrão da coluna id antes de alterar o tipo
 ALTER TABLE turnos ALTER COLUMN id DROP DEFAULT;
 
+-- Adicionar coluna UUID temporária em usuarios
+ALTER TABLE usuarios ADD COLUMN turno_id_uuid UUID;
+
 -- Alterar o tipo da coluna id na tabela turnos para UUID
 ALTER TABLE turnos
 ADD COLUMN id_uuid UUID;
@@ -25,13 +28,17 @@ WHERE t.id = m.id;
 
 -- Atualizar a referência na tabela usuarios
 UPDATE usuarios u
-SET turno_id = t.id_uuid
+SET turno_id_uuid = t.id_uuid
 FROM turnos t
-WHERE u.turno_id::text = t.id::text;
+WHERE u.turno_id = t.id;
 
--- Remover a coluna antiga e renomear a nova
+-- Remover a coluna antiga e renomear a nova em turnos
 ALTER TABLE turnos DROP COLUMN id;
 ALTER TABLE turnos RENAME COLUMN id_uuid TO id;
+
+-- Remover a coluna antiga e renomear a nova em usuarios
+ALTER TABLE usuarios DROP COLUMN turno_id;
+ALTER TABLE usuarios RENAME COLUMN turno_id_uuid TO turno_id;
 
 -- Adicionar a constraint de primary key na nova coluna
 ALTER TABLE turnos ADD PRIMARY KEY (id);
