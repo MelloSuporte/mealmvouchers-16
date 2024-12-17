@@ -37,11 +37,11 @@ const VoucherTable = ({ vouchers = [] }) => {
         voucher.codigo,
         voucher.tipos_refeicao?.nome || 'Não especificado',
         formatDate(voucher.data_criacao),
-        formatDate(voucher.validade)
+        formatDate(voucher.data_expiracao)
       ]);
 
       autoTable(doc, {
-        head: [['Código', 'Tipo Refeição', 'Data Criação', 'Data Validade']],
+        head: [['Código', 'Tipo Refeição', 'Data Criação', 'Data Expiração']],
         body: tableData,
         startY: 25,
         theme: 'grid',
@@ -76,7 +76,7 @@ const VoucherTable = ({ vouchers = [] }) => {
                 <TableHead className="text-xs font-medium">Código</TableHead>
                 <TableHead className="text-xs font-medium">Tipo Refeição</TableHead>
                 <TableHead className="text-xs font-medium">Data Criação</TableHead>
-                <TableHead className="text-xs font-medium">Data Validade</TableHead>
+                <TableHead className="text-xs font-medium">Data Expiração</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -86,7 +86,7 @@ const VoucherTable = ({ vouchers = [] }) => {
                     <TableCell className="text-xs">{voucher.codigo}</TableCell>
                     <TableCell className="text-xs">{voucher.tipos_refeicao?.nome || 'Não especificado'}</TableCell>
                     <TableCell className="text-xs">{formatDate(voucher.data_criacao)}</TableCell>
-                    <TableCell className="text-xs">{formatDate(voucher.validade)}</TableCell>
+                    <TableCell className="text-xs">{formatDate(voucher.data_expiracao)}</TableCell>
                   </TableRow>
                 ))
               ) : (

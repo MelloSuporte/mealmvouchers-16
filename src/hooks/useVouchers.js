@@ -27,8 +27,8 @@ export const useVouchers = () => {
             )
           `)
           .eq('usado', false)
-          .gte('validade', now.toISOString())
-          .order('validade', { ascending: true });
+          .gte('data_expiracao', now.toISOString())
+          .order('data_expiracao', { ascending: true });
 
         if (error) {
           console.error('Erro ao buscar vouchers:', error);
