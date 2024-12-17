@@ -16,7 +16,7 @@ const MealTypeForm = () => {
   const [existingMealData, setExistingMealData] = useState(null);
 
   // Fetch real meal types from database
-  const { data: mealTypes = [] } = useQuery({
+  const { data: mealTypes = [], refetch: refetchMealTypes } = useQuery({
     queryKey: ['meal-types'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -135,11 +135,23 @@ const MealTypeForm = () => {
       setMaxUsersPerDay("");
       setToleranceMinutes("15");
       setExistingMealData(null);
+      
+      // Recarregar lista de tipos de refeição
+      refetchMealTypes();
     } catch (error) {
       console.error('Erro ao salvar tipo de refeição:', error);
       toast.error("Erro ao salvar tipo de refeição: " + error.message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleStatusChange = (newStatus) => {
+    if (existingMealData) {
+      setExistingMealData({
+        ...existingMealData,
+        ativo: newStatus
+      });
     }
   };
 
@@ -162,6 +174,7 @@ const MealTypeForm = () => {
         setToleranceMinutes={setToleranceMinutes}
         mealTypes={mealTypes}
         existingMealData={existingMealData}
+        onStatusChange={handleStatusChange}
       />
 
       <Button 

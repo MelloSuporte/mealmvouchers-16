@@ -20,7 +20,8 @@ const MealTypeFields = ({
   toleranceMinutes,
   setToleranceMinutes,
   mealTypes,
-  existingMealData
+  existingMealData,
+  onStatusChange
 }) => {
   const handleActiveChange = async (checked) => {
     if (!existingMealData?.id) return;
@@ -37,7 +38,10 @@ const MealTypeFields = ({
         return;
       }
 
-      existingMealData.ativo = checked;
+      if (onStatusChange) {
+        onStatusChange(checked);
+      }
+      
       toast.success(`Refeição ${checked ? 'ativada' : 'suspensa'} com sucesso!`);
     } catch (error) {
       console.error('Erro ao atualizar status da refeição:', error);
@@ -128,7 +132,7 @@ const MealTypeFields = ({
       </div>
 
       {existingMealData && (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 pt-2">
           <Switch 
             id="active"
             checked={existingMealData.ativo}
