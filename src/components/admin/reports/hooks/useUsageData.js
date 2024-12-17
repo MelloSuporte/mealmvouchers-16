@@ -9,9 +9,12 @@ export const useUsageData = (filters) => {
       try {
         console.log('Iniciando busca de dados com filtros:', filters);
         
+        // Log da query inicial
         let query = supabase
           .from('vw_uso_voucher_detalhado')
           .select('*');
+
+        console.log('Query base criada');
 
         if (filters.company && filters.company !== 'all') {
           console.log('Aplicando filtro de empresa:', filters.company);
@@ -57,6 +60,15 @@ export const useUsageData = (filters) => {
         }
 
         console.log('Dados retornados:', data);
+        
+        // Log adicional para verificar a estrutura dos dados
+        if (data && data.length > 0) {
+          console.log('Exemplo do primeiro registro:', data[0]);
+          console.log('Campos disponíveis:', Object.keys(data[0]));
+        } else {
+          console.log('Nenhum dado encontrado com os filtros aplicados');
+        }
+
         return data || [];
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
