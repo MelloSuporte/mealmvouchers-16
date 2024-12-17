@@ -2,39 +2,37 @@
 
 ## 1. Turnos
 
+Os horários dos turnos são configuráveis através do sistema e armazenados no banco de dados.
+
 ### Central
-- Horário: 08:00 às 17:00
 - Intervalo padrão: 1 hora
-- Flexibilidade: 30 minutos
+- Flexibilidade: 15 minutos
 
 ### Primeiro Turno
-- Horário: 06:00 às 14:00
 - Intervalo padrão: 1 hora
 - Flexibilidade: 15 minutos
 
 ### Segundo Turno
-- Horário: 14:00 às 22:00
 - Intervalo padrão: 1 hora
 - Flexibilidade: 15 minutos
 
 ### Terceiro Turno
-- Horário: 22:00 às 06:00
 - Intervalo padrão: 1 hora
 - Flexibilidade: 15 minutos
 
 ## 2. Refeições
 
 ### Tipos
-- Café da Manhã
-- Almoço
-- Jantar
+- Café 04:00 às 05:00
 - Ceia
+- Refeição Extra
+- Café 06:00 às 06:30
+- Jantar
+- Lanche
+- Café 08:00 às 08:30
+- Almoço
 
-### Horários
-- Café da Manhã: 06:00 - 09:00
-- Almoço: 11:00 - 14:00
-- Jantar: 17:00 - 20:00
-- Ceia: 22:00 - 00:00
+Os horários das refeições são configuráveis através do sistema e armazenados no banco de dados.
 
 ### Tolerâncias
 - Padrão: 15 minutos
