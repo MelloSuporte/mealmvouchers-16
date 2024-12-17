@@ -49,7 +49,7 @@ export const useDisposableVoucherFormLogic = () => {
               minutos_tolerancia
             )
           `)
-          .eq('usado', false)
+          .eq('status', 'ativo')
           .gte('data_expiracao', now.toISOString())
           .order('data_expiracao', { ascending: true });
 
@@ -58,6 +58,7 @@ export const useDisposableVoucherFormLogic = () => {
           throw error;
         }
 
+        console.log('Vouchers ativos encontrados:', data);
         return data || [];
       } catch (error) {
         console.error('Erro ao buscar vouchers:', error);
