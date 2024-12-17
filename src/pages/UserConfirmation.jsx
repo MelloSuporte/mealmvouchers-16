@@ -45,11 +45,11 @@ const UserConfirmation = () => {
         cpf
       });
 
-      // Primeiro, buscar o turno_id como UUID do banco
+      // Buscar o turno usando o ID diretamente
       const { data: turnoData, error: turnoError } = await supabase
         .from('turnos')
         .select('id')
-        .eq('tipo_turno', location.state.userTurno)
+        .eq('id', location.state.userTurno)
         .single();
 
       if (turnoError) {
@@ -80,7 +80,7 @@ const UserConfirmation = () => {
       navigate('/bom-apetite', { 
         state: { 
           userName: location.state.userName,
-          turno: turnoData.id // Usando o UUID do turno
+          turno: turnoData.id
         } 
       });
 
