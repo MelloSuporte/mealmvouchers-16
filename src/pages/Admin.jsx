@@ -14,9 +14,16 @@ import AdminList from '@/components/admin/managers/AdminList';
 import TurnosForm from '@/components/admin/TurnosForm';
 import { LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 
 const Admin = () => {
   const { user, logout } = useAdmin();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/voucher');
+  };
 
   return (
     <AdminProvider>
@@ -26,7 +33,7 @@ const Admin = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={logout}
+            onClick={handleLogout}
             className="hover:bg-slate-100"
           >
             <LogOut className="h-5 w-5" />
