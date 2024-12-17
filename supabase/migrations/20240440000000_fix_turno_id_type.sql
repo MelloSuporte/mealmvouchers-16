@@ -13,14 +13,16 @@ SELECT
         WHEN 'segundo' THEN 3
         WHEN 'terceiro' THEN 4
     END AS old_id,
-    id::uuid AS new_uuid
+    id AS new_uuid
 FROM turnos;
 
 -- Atualizar a nova coluna com os UUIDs correspondentes dos turnos
 UPDATE usuarios u
-SET turno_id_uuid = m.new_uuid
-FROM turno_id_mapping m
-WHERE u.turno_id::integer = m.old_id;
+SET turno_id_uuid = (
+    SELECT m.new_uuid
+    FROM turno_id_mapping m
+    WHERE m.old_id = u.turno_id::integer
+);
 
 -- Remover a tabela temporária
 DROP TABLE turno_id_mapping;
