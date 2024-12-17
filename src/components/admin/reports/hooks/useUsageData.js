@@ -14,14 +14,17 @@ export const useUsageData = (filters) => {
 
         // Filtro de data
         if (filters.startDate && filters.endDate) {
+          const startISOString = filters.startDate.toISOString();
+          const endISOString = filters.endDate.toISOString();
+          
           console.log('Aplicando filtro de data:', {
-            start: filters.startDate,
-            end: filters.endDate
+            start: startISOString,
+            end: endISOString
           });
           
           query = query
-            .gte('data_uso', filters.startDate)
-            .lte('data_uso', filters.endDate);
+            .gte('data_uso', startISOString)
+            .lte('data_uso', endISOString);
         }
 
         // Filtro de empresa
