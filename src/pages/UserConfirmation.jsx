@@ -42,22 +42,11 @@ const UserConfirmation = () => {
         mealType,
         mealName,
         voucherCode,
-        cpf
+        cpf,
+        turnoId: location.state.userTurno
       });
 
-      // Buscar o turno usando o ID diretamente
-      const { data: turnoData, error: turnoError } = await supabase
-        .from('turnos')
-        .select('id')
-        .eq('id', location.state.userTurno)
-        .single();
-
-      if (turnoError) {
-        logger.error('Erro ao buscar turno:', turnoError);
-        throw new Error('Erro ao buscar dados do turno');
-      }
-
-      // Validar voucher usando o UUID do tipo de refeição e turno
+      // Validar voucher usando o UUID do tipo de refeição
       const { data: validationResult, error: validationError } = await supabase
         .rpc('validate_and_use_voucher', {
           p_codigo: voucherCode,
@@ -76,11 +65,11 @@ const UserConfirmation = () => {
       // Limpar dados do localStorage
       localStorage.removeItem('commonVoucher');
       
-      // Navegar para página de sucesso
+      // Navegar para página de sucesso usando o turno ID diretamente
       navigate('/bom-apetite', { 
         state: { 
           userName: location.state.userName,
-          turno: turnoData.id
+          turno: location.state.userTurno // Usando o ID do turno diretamente
         } 
       });
 
