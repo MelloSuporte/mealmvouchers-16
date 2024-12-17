@@ -37,7 +37,7 @@ export const useVouchers = () => {
             )
           `, { count: 'exact' })
           .eq('usado', false)
-          .lte('data_expiracao', now.toISOString())
+          .gte('data_expiracao', now.toISOString())  // Alterado de lte para gte
           .order('data_expiracao', { ascending: true });
 
         if (error) {
