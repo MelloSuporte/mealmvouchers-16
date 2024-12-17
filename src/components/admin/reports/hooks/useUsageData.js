@@ -14,27 +14,37 @@ export const useUsageData = (filters) => {
           .select('*');
 
         if (filters.company && filters.company !== 'all') {
+          console.log('Aplicando filtro de empresa:', filters.company);
           query = query.eq('empresa_id', filters.company);
         }
         
         if (filters.startDate) {
-          query = query.gte('data_uso', filters.startDate.toISOString());
+          const startDate = new Date(filters.startDate);
+          startDate.setUTCHours(0, 0, 0, 0);
+          console.log('Aplicando filtro de data inicial:', startDate.toISOString());
+          query = query.gte('data_uso', startDate.toISOString());
         }
         
         if (filters.endDate) {
-          query = query.lte('data_uso', filters.endDate.toISOString());
+          const endDate = new Date(filters.endDate);
+          endDate.setUTCHours(23, 59, 59, 999);
+          console.log('Aplicando filtro de data final:', endDate.toISOString());
+          query = query.lte('data_uso', endDate.toISOString());
         }
 
         if (filters.shift && filters.shift !== 'all') {
-          query = query.eq('turno', filters.shift);
+          console.log('Aplicando filtro de turno:', filters.shift);
+          query = query.eq('turno_id', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
+          console.log('Aplicando filtro de setor:', filters.sector);
           query = query.eq('setor_id', filters.sector);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
-          query = query.eq('tipo_refeicao', filters.mealType);
+          console.log('Aplicando filtro de tipo de refeição:', filters.mealType);
+          query = query.eq('tipo_refeicao_id', filters.mealType);
         }
 
         console.log('Executando consulta...');
@@ -53,6 +63,8 @@ export const useUsageData = (filters) => {
         toast.error('Erro ao carregar dados');
         throw error;
       }
-    }
+    },
+    retry: 1,
+    staleTime: 30000
   });
 };

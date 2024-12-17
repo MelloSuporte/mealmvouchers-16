@@ -7,7 +7,9 @@ export const useMetricsCalculation = (usageData) => {
     console.log('Calculando métricas com dados:', usageData);
 
     const totalCost = usageData.reduce((sum, item) => {
-      return sum + (parseFloat(item.valor_refeicao) || 0);
+      const valor = parseFloat(item.valor || 0);
+      console.log('Valor sendo somado:', valor, 'do item:', item);
+      return sum + valor;
     }, 0);
     
     const averageCost = usageData.length > 0 ? totalCost / usageData.length : 0;
