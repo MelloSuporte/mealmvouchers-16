@@ -7,7 +7,7 @@ ALTER TABLE usuarios ADD COLUMN turno_id_uuid UUID;
 -- Atualizar a nova coluna com os UUIDs correspondentes dos turnos
 UPDATE usuarios u
 SET turno_id_uuid = (
-    SELECT id 
+    SELECT id::uuid
     FROM turnos t 
     WHERE t.tipo_turno = (
         CASE u.turno_id::integer
