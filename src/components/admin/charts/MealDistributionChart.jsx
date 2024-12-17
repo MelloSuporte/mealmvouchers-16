@@ -25,14 +25,13 @@ const MealDistributionChart = ({ data }) => {
           label={(entry) => entry.nome}
         >
           {chartData.map((entry) => {
-            const normalizedName = normalizeMealName(entry.nome);
-            console.log('Nome original:', entry.nome);
-            console.log('Nome normalizado:', normalizedName);
-            console.log('Cor aplicada:', COLORS[normalizedName]);
+            const color = COLORS[entry.nome] || COLORS.EXTRA;
+            console.log('Nome da refeição:', entry.nome);
+            console.log('Cor aplicada:', color);
             return (
               <Cell 
                 key={`cell-${entry.nome}`} 
-                fill={COLORS[normalizedName]} 
+                fill={color}
               />
             );
           })}
