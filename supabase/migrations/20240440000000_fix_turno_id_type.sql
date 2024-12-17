@@ -1,6 +1,10 @@
 -- Primeiro, remover a constraint existente
 ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS fk_usuarios_turnos;
 
+-- Alterar o tipo da coluna id na tabela turnos para UUID
+ALTER TABLE turnos 
+ALTER COLUMN id TYPE UUID USING id::text::uuid;
+
 -- Adicionar uma coluna temporária para fazer a migração
 ALTER TABLE usuarios ADD COLUMN turno_id_uuid UUID;
 
@@ -13,15 +17,15 @@ FROM turnos;
 
 -- Atualizar a nova coluna com os UUIDs correspondentes dos turnos
 UPDATE usuarios u
-SET turno_id_uuid = m.new_uuid::uuid
+SET turno_id_uuid = m.new_uuid
 FROM turno_id_mapping m
-WHERE CAST(m.old_id AS INTEGER) = CAST(u.turno_id AS INTEGER);
+WHERE CAST(m.old_id AS TEXT)::UUID = u.turno_id::TEXT::UUID;
 
 -- Atualizar os IDs na tabela turnos
 UPDATE turnos t
-SET id = m.new_uuid::uuid
+SET id = m.new_uuid
 FROM turno_id_mapping m
-WHERE CAST(t.id AS INTEGER) = CAST(m.old_id AS INTEGER);
+WHERE t.id = m.old_id;
 
 -- Remover a tabela temporária
 DROP TABLE turno_id_mapping;
