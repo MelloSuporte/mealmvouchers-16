@@ -1,49 +1,83 @@
--- Primeiro, remover a constraint existente
+-- Primeiro, remover as policies que dependem da coluna id
+DROP POLICY IF EXISTS "uso_voucher_insert_policy" ON uso_voucher;
+DROP POLICY IF EXISTS "uso_voucher_select_policy" ON uso_voucher;
+
+-- Remover a constraint existente
 ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS fk_usuarios_turnos;
 
 -- Remover o valor padrão da coluna id antes de alterar o tipo
 ALTER TABLE turnos ALTER COLUMN id DROP DEFAULT;
 
 -- Alterar o tipo da coluna id na tabela turnos para UUID
-ALTER TABLE turnos 
-ALTER COLUMN id TYPE UUID USING id::text::uuid;
+ALTER TABLE turnos
+ADD COLUMN id_uuid UUID;
 
--- Adicionar uma coluna temporária para fazer a migração
-ALTER TABLE usuarios ADD COLUMN turno_id_uuid UUID;
-
--- Criar uma tabela temporária para mapear os IDs antigos com novos UUIDs
-CREATE TEMP TABLE turno_id_mapping AS
-SELECT 
-    id AS old_id,
-    uuid_generate_v4() AS new_uuid
+-- Criar uma tabela temporária para mapear IDs antigos a novos UUIDs
+CREATE TEMP TABLE id_mapping AS
+SELECT id, gen_random_uuid() as new_uuid
 FROM turnos;
 
--- Atualizar a nova coluna com os UUIDs correspondentes dos turnos
-UPDATE usuarios u
-SET turno_id_uuid = m.new_uuid
-FROM turno_id_mapping m
-WHERE CAST(m.old_id AS TEXT)::UUID = u.turno_id::TEXT::UUID;
-
--- Atualizar os IDs na tabela turnos
+-- Atualizar a nova coluna com os UUIDs correspondentes
 UPDATE turnos t
-SET id = m.new_uuid
-FROM turno_id_mapping m
-WHERE t.id = m.old_id;
+SET id_uuid = m.new_uuid
+FROM id_mapping m
+WHERE t.id = m.id;
 
--- Remover a tabela temporária
-DROP TABLE turno_id_mapping;
+-- Atualizar a referência na tabela usuarios
+UPDATE usuarios u
+SET turno_id = t.id_uuid
+FROM turnos t
+WHERE u.turno_id::text = t.id::text;
 
--- Remover a coluna antiga
-ALTER TABLE usuarios DROP COLUMN turno_id;
+-- Remover a coluna antiga e renomear a nova
+ALTER TABLE turnos DROP COLUMN id;
+ALTER TABLE turnos RENAME COLUMN id_uuid TO id;
 
--- Renomear a nova coluna
-ALTER TABLE usuarios RENAME COLUMN turno_id_uuid TO turno_id;
+-- Adicionar a constraint de primary key na nova coluna
+ALTER TABLE turnos ADD PRIMARY KEY (id);
 
--- Adicionar a nova foreign key constraint
+-- Recriar a foreign key constraint
 ALTER TABLE usuarios
 ADD CONSTRAINT fk_usuarios_turnos
 FOREIGN KEY (turno_id)
 REFERENCES turnos(id);
 
--- Adicionar índice para melhorar performance
+-- Criar índice para melhorar performance
 CREATE INDEX IF NOT EXISTS idx_usuarios_turno_id ON usuarios(turno_id);
+
+-- Recriar as policies
+CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
+    FOR INSERT TO authenticated
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            JOIN turnos t ON t.id = u.turno_id
+            JOIN tipos_refeicao tr ON tr.id = tipo_refeicao_id
+            WHERE u.id = usuario_id
+            AND t.ativo = true
+            AND tr.ativo = true
+            AND CURRENT_TIME BETWEEN t.horario_inicio AND t.horario_fim
+            AND CURRENT_TIME BETWEEN tr.horario_inicio 
+                AND tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL
+        )
+    );
+
+CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
+    FOR SELECT TO authenticated
+    USING (
+        usuario_id = auth.uid()
+        OR
+        EXISTS (
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND au.permissoes->>'gerenciar_usuarios' = 'true'
+            AND NOT au.suspenso
+        )
+    );
+
+-- Adicionar comentários explicativos
+COMMENT ON POLICY "uso_voucher_insert_policy" ON uso_voucher 
+IS 'Controla inserção de registros de uso de vouchers com validação de horários';
+
+COMMENT ON POLICY "uso_voucher_select_policy" ON uso_voucher 
+IS 'Controla visualização do histórico de uso de vouchers';
