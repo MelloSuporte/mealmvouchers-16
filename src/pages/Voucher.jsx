@@ -58,7 +58,7 @@ const Voucher = () => {
         `)
         .eq('voucher', voucherCode)
         .eq('suspenso', false)
-        .single();
+        .maybeSingle();
 
       if (users) {
         console.log('Voucher comum encontrado:', users);
@@ -80,15 +80,15 @@ const Voucher = () => {
           tipos_refeicao (
             id,
             nome,
-            hora_inicio,
-            hora_fim,
+            horario_inicio,
+            horario_fim,
             minutos_tolerancia,
             ativo
           )
         `)
         .eq('codigo', voucherCode)
         .eq('usado', false)
-        .single();
+        .maybeSingle();
 
       if (descartaveis) {
         console.log('Voucher descartável encontrado:', descartaveis);
@@ -111,7 +111,7 @@ const Voucher = () => {
         .select('*')
         .eq('codigo', voucherCode)
         .eq('usado', false)
-        .single();
+        .maybeSingle();
 
       if (extraVouchers) {
         console.log('Voucher extra encontrado:', extraVouchers);
