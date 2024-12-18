@@ -46,24 +46,28 @@ const UserConfirmation = () => {
         turnoId: location.state.userTurno
       });
 
-      const { data: validationResult, error: validationError } = await supabase
+      const { data, error } = await supabase
         .rpc('validate_and_use_voucher', {
           p_codigo: voucherCode,
           p_tipo_refeicao_id: mealType
         });
 
-      if (validationError) {
-        logger.error('Erro na validação:', validationError);
-        throw new Error(validationError.message || 'Erro ao validar voucher');
+      if (error) {
+        logger.error('Erro na validação:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw new Error(error.message || 'Erro ao validar voucher');
       }
 
-      if (!validationResult?.success) {
-        throw new Error(validationResult?.error || 'Erro ao validar voucher');
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao validar voucher');
       }
 
       localStorage.removeItem('commonVoucher');
       
-      // Corrigindo o redirecionamento para /bom-apetite
       navigate('/bom-apetite', { 
         state: { 
           userName: location.state.userName,
