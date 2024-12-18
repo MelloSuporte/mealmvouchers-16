@@ -1,29 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { useNavigate } from 'react-router-dom';
-import { Coffee, Utensils, Moon, Plus, Sandwich } from 'lucide-react';
-import { toast } from "sonner";
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../config/supabase';
-import { useQuery } from '@tanstack/react-query';
-import logger from '../config/logger';
+import { toast } from "sonner";
 
 const SelfServices = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [meals, setMeals] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [backgroundImage, setBackgroundImage] = useState('');
 
-  const { data: meals, isLoading, error } = useQuery({
-    queryKey: ['tipos_refeicao'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tipos_refeicao')
-        .select('id, nome, ativo')
-        .eq('ativo', true)
-        .order('nome');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+  // Extrair vouchers do localStorage
+  const disposableVoucher = JSON.parse(localStorage.getItem('disposableVoucher') || '{}');
+  const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
+  const extraVoucher = JSON.parse(localStorage.getItem('extraVoucher') || '{}');
 
   useEffect(() => {
     const fetchBackgroundImage = async () => {
@@ -31,11 +21,15 @@ const SelfServices = () => {
         const { data, error } = await supabase
           .from('background_images')
           .select('image_url')
-          .eq('page', 'userConfirmation')
+          .eq('page', 'selfServices')
           .eq('is_active', true)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao buscar imagem de fundo:', error);
+          return;
+        }
+        
         if (data?.image_url) {
           setBackgroundImage(data.image_url);
         }
@@ -45,24 +39,39 @@ const SelfServices = () => {
     };
 
     fetchBackgroundImage();
+  }, []);
 
-    // Verifica se existe um voucher no localStorage
-    const disposableVoucher = localStorage.getItem('disposableVoucher');
-    const commonVoucher = localStorage.getItem('commonVoucher');
-    
-    if (!disposableVoucher && !commonVoucher) {
+  useEffect(() => {
+    const fetchMeals = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tipos_refeicao')
+          .select('*')
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        setMeals(data || []);
+      } catch (error) {
+        console.error('Erro ao buscar refeições:', error);
+        toast.error('Erro ao carregar refeições');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMeals();
+  }, []);
+
+  const handleMealSelection = (meal) => {
+    // Se não houver voucher, redirecionar para a página de voucher
+    if (!disposableVoucher.code && !commonVoucher.code && !extraVoucher.code) {
       toast.error('Nenhum voucher válido encontrado');
       navigate('/voucher');
+      return;
     }
-  }, [navigate]);
 
-  const handleMealSelection = async (meal) => {
     try {
-      const disposableVoucher = JSON.parse(localStorage.getItem('disposableVoucher') || '{}');
-      const commonVoucher = JSON.parse(localStorage.getItem('commonVoucher') || '{}');
-      
-      logger.info('Selecionando refeição:', { mealId: meal.id, mealName: meal.nome });
-
       // Se for voucher descartável
       if (disposableVoucher.code) {
         navigate('/bom-apetite', { 
@@ -72,87 +81,56 @@ const SelfServices = () => {
             userName: 'Visitante'
           }
         });
-      } 
+      }
       // Se for voucher comum ou extra
-      else if (commonVoucher.code) {
-        // Buscar o turno_id (que é UUID) do usuário
-        const { data: userData, error: userError } = await supabase
-          .from('usuarios')
-          .select('turno_id')
-          .eq('cpf', commonVoucher.cpf)
-          .single();
-
-        if (userError) {
-          logger.error('Erro ao buscar turno do usuário:', userError);
-          toast.error('Erro ao buscar dados do usuário');
-          return;
-        }
-
-        navigate('/user-confirmation', { 
-          state: { 
-            userName: commonVoucher.userName,
-            userTurno: userData.turno_id,
+      else if (commonVoucher.code || extraVoucher.code) {
+        navigate('/user-confirmation', {
+          state: {
             mealType: meal.id,
             mealName: meal.nome,
-            voucherCode: commonVoucher.code,
-            cpf: commonVoucher.cpf
+            voucherType: commonVoucher.code ? 'common' : 'extra'
           }
         });
-      } else {
-        toast.error('Tipo de voucher inválido');
-        navigate('/voucher');
       }
     } catch (error) {
-      logger.error('Erro ao processar seleção de refeição:', error);
-      toast.error('Erro ao processar voucher');
-      navigate('/voucher');
+      console.error('Erro ao processar seleção de refeição:', error);
+      toast.error('Erro ao processar seleção');
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    toast.error('Erro ao carregar refeições');
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-600">Erro ao carregar refeições. Por favor, tente novamente.</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-start p-4 relative bg-blue-600 bg-cover bg-center bg-no-repeat"
+      className="min-h-screen bg-cover bg-center bg-no-repeat p-4"
       style={{
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'linear-gradient(to bottom, #9b87f5, #7E69AB)',
+        backgroundColor: '#9b87f5'
       }}
     >
-      <div className="absolute top-0 right-0 w-full h-1/3 bg-blue-600 rounded-bl-[30%] flex items-start justify-center pt-8">
-        <h2 className="text-3xl font-bold text-white">Escolha sua refeição</h2>
-      </div>
-      
-      <div className="z-10 w-full max-w-md space-y-8 mt-32 flex flex-col items-center">
-        <div className="grid grid-cols-2 gap-8 bg-white/90 p-8 rounded-lg shadow-lg backdrop-blur-sm">
-          {meals && meals.map((meal) => (
-            <Button
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-white text-center mb-8">
+          Selecione o Tipo de Refeição
+        </h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {meals.map((meal) => (
+            <button
               key={meal.id}
               onClick={() => handleMealSelection(meal)}
-              className="w-full h-32 bg-transparent hover:bg-gray-100 text-gray-800 font-semibold py-6 px-4 border border-gray-500 hover:border-transparent rounded-lg transition-all duration-300 flex flex-col items-center justify-center"
+              className="bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg hover:bg-white/95 transition-all duration-300 flex flex-col items-center justify-center min-h-[200px]"
             >
-              {meal.nome.toLowerCase().includes('almoço') && <Utensils className="h-12 w-12 mb-2" />}
-              {meal.nome.toLowerCase().includes('café') && <Coffee className="h-12 w-12 mb-2" />}
-              {meal.nome.toLowerCase().includes('lanche') && <Sandwich className="h-12 w-12 mb-2" />}
-              {meal.nome.toLowerCase().includes('jantar') && <Moon className="h-12 w-12 mb-2" />}
-              {meal.nome.toLowerCase().includes('ceia') && <Moon className="h-12 w-12 mb-2" />}
-              {meal.nome.toLowerCase().includes('extra') && <Plus className="h-12 w-12 mb-2" />}
-              {meal.nome}
-            </Button>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">{meal.nome}</h2>
+              {meal.descricao && (
+                <p className="text-gray-600 text-center">{meal.descricao}</p>
+              )}
+            </button>
           ))}
         </div>
       </div>
