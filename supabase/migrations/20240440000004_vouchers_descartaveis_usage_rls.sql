@@ -1,3 +1,6 @@
+-- Habilitar a extensão pg_cron (deve ser executado como superusuário)
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
 -- Remover políticas existentes se existirem
 DROP POLICY IF EXISTS "allow_voucher_descartavel_use" ON vouchers_descartaveis;
 DROP POLICY IF EXISTS "prevent_voucher_reuse" ON vouchers_descartaveis;
@@ -88,11 +91,11 @@ BEGIN
 END;
 $$;
 
--- Criar um trabalho agendado para executar a limpeza todos os dias à meia-noite
+-- Agendar a execução da limpeza usando pg_cron
 SELECT cron.schedule(
-    'cleanup-expired-vouchers',  -- nome do trabalho cron
+    'cleanup-expired-vouchers',  -- nome do trabalho
     '0 0 * * *',                -- executar à meia-noite todos os dias
-    'SELECT cleanup_expired_vouchers()'
+    $$SELECT cleanup_expired_vouchers()$$
 );
 
 -- Política para permitir que o sistema exclua vouchers expirados
@@ -109,7 +112,7 @@ GRANT SELECT, UPDATE, DELETE ON vouchers_descartaveis TO authenticated;
 GRANT EXECUTE ON FUNCTION check_meal_time_for_voucher TO authenticated;
 GRANT EXECUTE ON FUNCTION cleanup_expired_vouchers TO authenticated;
 
--- Adicionar comentários úteis
+-- Comentários em português
 COMMENT ON POLICY "allow_voucher_descartavel_use" ON vouchers_descartaveis IS 
 'Permite que usuários autenticados visualizem e usem vouchers válidos e não utilizados durante os horários de refeição';
 
