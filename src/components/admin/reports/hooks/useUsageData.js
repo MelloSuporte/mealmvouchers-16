@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { toast } from "sonner";
+import { startOfDay, endOfDay } from 'date-fns';
 
 const buildQuery = (filters) => {
   console.log('Construindo query com filtros:', JSON.stringify(filters, null, 2));
@@ -25,15 +26,13 @@ const buildQuery = (filters) => {
     .order('data_uso', { ascending: false });
 
   if (filters.startDate) {
-    const startDate = new Date(filters.startDate);
-    startDate.setUTCHours(0, 0, 0, 0);
+    const startDate = startOfDay(new Date(filters.startDate));
     query = query.gte('data_uso', startDate.toISOString());
     console.log('Filtro data inicial:', startDate.toISOString());
   }
 
   if (filters.endDate) {
-    const endDate = new Date(filters.endDate);
-    endDate.setUTCHours(23, 59, 59, 999);
+    const endDate = endOfDay(new Date(filters.endDate));
     query = query.lte('data_uso', endDate.toISOString());
     console.log('Filtro data final:', endDate.toISOString());
   }
@@ -78,6 +77,10 @@ export const useUsageData = (filters) => {
         }
 
         console.log('Dados recuperados:', data?.length || 0, 'registros');
+        if (data?.length === 0) {
+          console.log('Nenhum registro encontrado com os filtros aplicados');
+        }
+
         return data || [];
       } catch (error) {
         console.error('Erro na query:', error);
