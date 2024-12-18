@@ -1,6 +1,9 @@
 -- Create extension if not exists
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
+-- Drop existing policy if exists
+DROP POLICY IF EXISTS "expired_voucher_cleanup" ON vouchers_descartaveis;
+
 -- Create cleanup function
 CREATE OR REPLACE FUNCTION cleanup_expired_vouchers()
 RETURNS void
