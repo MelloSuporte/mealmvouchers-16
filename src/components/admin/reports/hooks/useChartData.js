@@ -29,7 +29,7 @@ export const useChartData = (tiposRefeicao) => {
         const diaObj = { dia };
         if (tiposRefeicao) {
           tiposRefeicao.forEach(tipo => {
-            diaObj[tipo] = 0;
+            diaObj[tipo.nome] = 0;
           });
         }
         return diaObj;

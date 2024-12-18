@@ -11,7 +11,8 @@ export const useUsageData = (filters) => {
         
         let query = supabase
           .from('relatorio_uso_voucher')
-          .select('*');
+          .select('*')
+          .order('data_uso', { ascending: false });
 
         // Filtro de data
         if (filters.startDate && filters.endDate) {
@@ -52,8 +53,6 @@ export const useUsageData = (filters) => {
           query = query.eq('tipo_refeicao', filters.mealType);
         }
 
-        console.log('Query final:', query);
-        
         const { data, error } = await query;
 
         if (error) {
@@ -69,7 +68,6 @@ export const useUsageData = (filters) => {
         toast.error('Erro ao carregar dados do relatório');
         throw error;
       }
-    },
-    enabled: !!filters
+    }
   });
 };
