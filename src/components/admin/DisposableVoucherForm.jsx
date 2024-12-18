@@ -93,7 +93,7 @@ const DisposableVoucherForm = () => {
             <Button 
               onClick={handleGenerateVouchers}
               disabled={!selectedMealTypes.length || quantity < 1 || !selectedDates.length || isGenerating}
-              className="w-full md:w-auto px-8 py-2 text-sm bg-blue-600 hover:bg-blue-700"
+              className="w-full md:w-auto px-8 py-2 text-sm"
             >
               {isGenerating ? 'Gerando...' : 'Gerar Vouchers Descartáveis'}
             </Button>
