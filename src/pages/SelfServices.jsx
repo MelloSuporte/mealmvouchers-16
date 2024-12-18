@@ -1,42 +1,59 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Utensils, Coffee, Moon, Home, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { useToast } from '../components/ui/use-toast';
 
 const SelfServices = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
 
-  const handleConfirm = () => {
-    // Navega diretamente para bom-apetite com os dados necessários
+  const handleConfirm = (mealType) => {
     navigate('/bom-apetite', {
       state: {
-        userName: location.state?.userName,
-        userTurno: location.state?.userTurno
+        ...location.state,
+        mealType
       }
     });
   };
 
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-            Self Service
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Confirme sua escolha para prosseguir
-          </p>
-        </div>
+  const meals = [
+    { id: 'almoco', name: 'Almoço', icon: Utensils },
+    { id: 'cafe-1', name: 'Café 04:00 às 05:00', icon: Coffee },
+    { id: 'cafe-2', name: 'Café 06:00 às 06:30', icon: Coffee },
+    { id: 'cafe-3', name: 'Café 08:00 às 08:30', icon: Coffee },
+    { id: 'ceia', name: 'Ceia', icon: Moon },
+    { id: 'jantar', name: 'Jantar', icon: Moon },
+    { id: 'lanche', name: 'Lanche', icon: Home },
+    { id: 'extra', name: 'Refeição Extra', icon: Plus },
+  ];
 
-        <div className="mt-8 space-y-4">
-          <Button
-            onClick={handleConfirm}
-            className="w-full"
-          >
-            Confirmar
-          </Button>
+  return (
+    <div 
+      className="min-h-screen p-4 bg-[#ea384c]"
+      style={{
+        backgroundImage: `url('/lovable-uploads/89645f31-8b98-461b-b03b-facf1756032b.png')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white/90 rounded-lg p-6 shadow-lg">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {meals.map((meal) => {
+              const Icon = meal.icon;
+              return (
+                <Button
+                  key={meal.id}
+                  onClick={() => handleConfirm(meal.id)}
+                  variant="outline"
+                  className="h-auto py-6 flex flex-col items-center gap-2 bg-white hover:bg-gray-50"
+                >
+                  <Icon className="h-8 w-8" />
+                  <span className="text-sm text-center">{meal.name}</span>
+                </Button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
