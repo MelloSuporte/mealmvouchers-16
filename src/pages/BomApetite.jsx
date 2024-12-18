@@ -8,10 +8,20 @@ const BomApetite = () => {
   const location = useLocation();
   const [countdown, setCountdown] = useState(5);
   const [backgroundImage, setBackgroundImage] = useState('');
+  
+  // Extrair dados do state com valores padrão
   const userName = location.state?.userName || 'Visitante';
   const turno = location.state?.turno || '';
 
   useEffect(() => {
+    // Verificar se tem dados necessários
+    if (!location.state) {
+      console.log('Redirecionando para /voucher - Dados ausentes');
+      toast.error("Dados inválidos. Redirecionando...");
+      navigate('/voucher');
+      return;
+    }
+
     const fetchBackgroundImage = async () => {
       try {
         const { data, error } = await supabase
@@ -36,19 +46,12 @@ const BomApetite = () => {
 
     fetchBackgroundImage();
 
-    // Verifica se tem userName
-    if (!location.state?.userName) {
-      console.log('Redirecionando para /voucher - Dados inválidos:', { userName: location.state?.userName });
-      toast.error("Dados inválidos. Redirecionando...");
-      navigate('/voucher');
-      return;
-    }
-
-    // Limpa todos os vouchers do localStorage
+    // Limpar vouchers do localStorage
     localStorage.removeItem('disposableVoucher');
     localStorage.removeItem('commonVoucher');
     localStorage.removeItem('extraVoucher');
 
+    // Iniciar countdown
     const timer = setInterval(() => {
       setCountdown((prevCount) => {
         if (prevCount <= 1) {
@@ -63,7 +66,7 @@ const BomApetite = () => {
 
     return () => {
       clearInterval(timer);
-      // Garante que o localStorage está limpo mesmo se o componente for desmontado
+      // Garantir limpeza do localStorage
       localStorage.removeItem('disposableVoucher');
       localStorage.removeItem('commonVoucher');
       localStorage.removeItem('extraVoucher');
