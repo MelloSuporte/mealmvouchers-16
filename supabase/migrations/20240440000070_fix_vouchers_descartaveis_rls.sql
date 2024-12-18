@@ -1,13 +1,12 @@
-# Políticas RLS para Vouchers Descartáveis
+-- Drop existing policies
+DROP POLICY IF EXISTS "vouchers_descartaveis_select_policy" ON vouchers_descartaveis;
+DROP POLICY IF EXISTS "vouchers_descartaveis_update_policy" ON vouchers_descartaveis;
+DROP POLICY IF EXISTS "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis;
 
-## Overview
-Políticas específicas para vouchers descartáveis.
-
-```sql
 -- Enable RLS
 ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
 
--- Select policy
+-- Create select policy with proper validation
 CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
     FOR SELECT TO authenticated
     USING (
@@ -24,7 +23,7 @@ CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
         )
     );
 
--- Update policy (apenas para marcar como usado)
+-- Create update policy to allow marking as used
 CREATE POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis
     FOR UPDATE TO authenticated
     USING (
@@ -46,7 +45,7 @@ CREATE POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis
         AND NEW.data_expiracao = OLD.data_expiracao
     );
 
--- Insert policy (admins and managers)
+-- Create insert policy for admins and managers
 CREATE POLICY "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis
     FOR INSERT TO authenticated
     WITH CHECK (
@@ -57,4 +56,16 @@ CREATE POLICY "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis
             AND NOT u.suspenso
         )
     );
-```
+
+-- Grant necessary permissions
+GRANT SELECT, UPDATE ON vouchers_descartaveis TO authenticated;
+
+-- Add helpful comments
+COMMENT ON POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis IS 
+'Permite visualizar apenas vouchers válidos, não utilizados e dentro do horário permitido';
+
+COMMENT ON POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis IS 
+'Permite apenas marcar vouchers como usados quando dentro do horário permitido';
+
+COMMENT ON POLICY "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis IS
+'Permite apenas administradores e gestores criarem novos vouchers';
