@@ -13,22 +13,34 @@ export const useReportFilters = () => {
   });
 
   const handleFilterChange = (filterType, value) => {
-    console.log('Alterando filtro:', filterType, 'para:', value);
-    
-    // Se o valor for undefined ou null, não atualiza o filtro
-    if (value === undefined || value === null) {
-      console.error(`Valor inválido para ${filterType}:`, value);
-      return;
-    }
+    try {
+      console.log(`Alterando filtro ${filterType}:`, value);
+      
+      if (value === undefined || value === null) {
+        console.warn(`Valor inválido para ${filterType}`);
+        return;
+      }
 
-    setFilters(prev => {
-      const newFilters = {
-        ...prev,
-        [filterType]: value
-      };
-      console.log('Novos filtros:', newFilters);
-      return newFilters;
-    });
+      // Validação específica para datas
+      if (filterType === 'startDate' || filterType === 'endDate') {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) {
+          console.error('Data inválida:', value);
+          toast.error('Data inválida');
+          return;
+        }
+        value = date;
+      }
+
+      setFilters(prev => {
+        const newFilters = { ...prev, [filterType]: value };
+        console.log('Novos filtros:', newFilters);
+        return newFilters;
+      });
+    } catch (error) {
+      console.error('Erro ao alterar filtro:', error);
+      toast.error('Erro ao atualizar filtro');
+    }
   };
 
   return { 

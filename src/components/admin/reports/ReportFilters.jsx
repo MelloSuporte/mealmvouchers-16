@@ -17,33 +17,40 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
   const { data: filterOptions, isLoading, error } = useFilterOptions();
 
   const handleDateChange = (type, date) => {
-    console.log(`Alterando data ${type}:`, date);
-    
-    // Validação básica da data
-    if (!date || isNaN(date.getTime())) {
-      toast.error("Data inválida");
-      return;
-    }
+    try {
+      console.log(`Alterando data ${type}:`, date);
+      
+      if (!date || isNaN(date.getTime())) {
+        toast.error("Data inválida");
+        return;
+      }
 
-    // Validações específicas
-    if (type === 'startDate') {
-      if (endDate && isAfter(date, endDate)) {
+      // Validações específicas
+      if (type === 'startDate' && endDate && isAfter(date, endDate)) {
         toast.error("Data inicial não pode ser maior que a data final");
         return;
       }
-    } else if (type === 'endDate') {
-      if (startDate && isBefore(date, startDate)) {
+
+      if (type === 'endDate' && startDate && isBefore(date, startDate)) {
         toast.error("Data final não pode ser menor que a data inicial");
         return;
       }
-    }
 
-    onFilterChange(type, date);
+      onFilterChange(type, date);
+    } catch (error) {
+      console.error('Erro ao alterar data:', error);
+      toast.error('Erro ao atualizar data');
+    }
   };
 
   const handleFilterChange = (type, value) => {
-    console.log(`Alterando filtro: ${type} para:`, value);
-    onFilterChange(type, value);
+    try {
+      console.log(`Alterando filtro ${type}:`, value);
+      onFilterChange(type, value);
+    } catch (error) {
+      console.error('Erro ao alterar filtro:', error);
+      toast.error('Erro ao atualizar filtro');
+    }
   };
 
   if (isLoading) {
@@ -66,7 +73,6 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
     );
   }
 
-  // Verificar se há dados em todas as listas
   const hasNoData = (!filterOptions?.empresas?.length && !filterOptions?.turnos?.length && !filterOptions?.tiposRefeicao?.length && !filterOptions?.setores?.length);
   
   if (hasNoData) {
