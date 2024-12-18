@@ -1,55 +1,43 @@
 import { useMemo } from 'react';
 
+const calculateTotalCost = (data) => {
+  return data.reduce((sum, item) => {
+    const valor = parseFloat(item.valor || 0);
+    return sum + valor;
+  }, 0);
+};
+
+const calculateAverageCost = (totalCost, totalItems) => {
+  return totalItems > 0 ? totalCost / totalItems : 0;
+};
+
+const groupByField = (data, field, defaultValue = 'Não especificado') => {
+  return data.reduce((acc, curr) => {
+    const key = curr[field] || defaultValue;
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+};
+
 export const useMetricsCalculation = (usageData) => {
   return useMemo(() => {
     if (!usageData) return null;
 
     console.log('Calculando métricas com dados:', usageData);
 
-    const totalCost = usageData.reduce((sum, item) => {
-      const valor = parseFloat(item.valor || 0);
-      return sum + valor;
-    }, 0);
-    
-    const averageCost = usageData.length > 0 ? totalCost / usageData.length : 0;
+    const totalCost = calculateTotalCost(usageData);
+    const averageCost = calculateAverageCost(totalCost, usageData.length);
 
-    // Agrupamento por empresa
-    const byCompany = usageData.reduce((acc, curr) => {
-      const empresa = curr.nome_empresa || 'Não especificado';
-      acc[empresa] = (acc[empresa] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Agrupamento por turno
-    const byShift = usageData.reduce((acc, curr) => {
-      const turno = curr.turno || 'Não especificado';
-      acc[turno] = (acc[turno] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Agrupamento por tipo de refeição
-    const byMealType = usageData.reduce((acc, curr) => {
-      const tipo = curr.tipo_refeicao || 'Não especificado';
-      acc[tipo] = (acc[tipo] || 0) + 1;
-      return acc;
-    }, {});
-
-    console.log('Métricas calculadas:', {
+    const metrics = {
       totalCost,
       averageCost,
-      totalItems: usageData.length,
-      byCompany,
-      byShift,
-      byMealType
-    });
-
-    return {
-      totalCost,
-      averageCost,
-      byCompany,
-      byShift,
-      byMealType,
+      byCompany: groupByField(usageData, 'nome_empresa'),
+      byShift: groupByField(usageData, 'turno'),
+      byMealType: groupByField(usageData, 'tipo_refeicao'),
       data: usageData
     };
+
+    console.log('Métricas calculadas:', metrics);
+    return metrics;
   }, [usageData]);
 };
