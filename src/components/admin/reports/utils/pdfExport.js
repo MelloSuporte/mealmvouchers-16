@@ -48,9 +48,9 @@ export const exportToPDF = async (metrics, filters) => {
       item.nome_usuario || '-',
       item.cpf || '-',
       item.nome_empresa || '-',
-      item.nome_tipo_refeicao || '-', // Atualizado para usar nome_tipo_refeicao
-      formatCurrency(item.valor),
-      item.nome_turno || '-', // Atualizado para usar nome_turno
+      item.tipo_refeicao || '-',
+      formatCurrency(item.valor_refeicao),
+      item.turno || '-',
       item.nome_setor || '-'
     ]);
 
@@ -85,6 +85,7 @@ export const exportToPDF = async (metrics, filters) => {
     console.log('Salvando arquivo:', fileName);
     doc.save(fileName);
     
+    toast.success("Relatório exportado com sucesso!");
     return fileName;
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);

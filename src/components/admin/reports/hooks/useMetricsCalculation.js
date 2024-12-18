@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 const calculateTotalCost = (data) => {
   return data.reduce((sum, item) => {
-    const valor = parseFloat(item.valor || 0);
+    const valor = parseFloat(item.valor_refeicao || 0);
     return sum + valor;
   }, 0);
 };
