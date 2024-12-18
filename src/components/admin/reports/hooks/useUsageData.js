@@ -7,21 +7,7 @@ const buildQuery = (filters) => {
   
   let query = supabase
     .from('relatorio_uso_voucher')
-    .select(`
-      id,
-      data_uso,
-      usuario_id,
-      nome_usuario,
-      cpf,
-      empresa_id,
-      nome_empresa,
-      turno,
-      setor_id,
-      nome_setor,
-      tipo_refeicao,
-      valor,
-      observacao
-    `)
+    .select('*')
     .order('data_uso', { ascending: false });
 
   if (filters.startDate) {
@@ -73,6 +59,7 @@ export const useUsageData = (filters) => {
 
         if (error) {
           console.error('Erro na consulta:', error);
+          toast.error('Erro ao carregar dados do relatório');
           throw error;
         }
 

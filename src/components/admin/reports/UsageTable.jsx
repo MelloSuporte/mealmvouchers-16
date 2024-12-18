@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { supabase } from '../../../config/supabase';
+import { supabase } from '@/config/supabase';
 
 const UsageTable = ({ searchTerm }) => {
   const { data: usageData, isLoading, error } = useQuery({
