@@ -57,7 +57,13 @@ const Voucher = () => {
         `)
         .eq('codigo', voucherCode)
         .eq('usado', false)
-        .single();
+        .maybeSingle();
+
+      if (descartavelError) {
+        console.error('Erro ao buscar voucher descartável:', descartavelError);
+        toast.error('Erro ao verificar voucher');
+        return;
+      }
 
       if (descartaveis) {
         console.log('Voucher descartável encontrado:', descartaveis);
