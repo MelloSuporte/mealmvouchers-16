@@ -45,10 +45,14 @@ const ReportMetrics = () => {
       
       {isLoadingUsage ? (
         <LoadingMetrics />
-      ) : usageData?.length === 0 ? (
-        <Alert className="bg-gray-50 border-gray-200">
+      ) : !usageData?.length ? (
+        <Alert>
           <AlertDescription className="text-gray-600 text-center py-4">
             Nenhum dado encontrado para o período e filtros selecionados.
+            <br />
+            <span className="text-sm">
+              Tente ajustar os filtros ou selecione um período diferente.
+            </span>
           </AlertDescription>
         </Alert>
       ) : (

@@ -8,10 +8,16 @@ const buildQuery = (filters) => {
     .select('*')
     .order('data_uso', { ascending: false });
 
-  if (filters.startDate && filters.endDate) {
-    query = query
-      .gte('data_uso', filters.startDate.toISOString())
-      .lte('data_uso', filters.endDate.toISOString());
+  if (filters.startDate) {
+    const startDate = new Date(filters.startDate);
+    startDate.setHours(0, 0, 0, 0);
+    query = query.gte('data_uso', startDate.toISOString());
+  }
+
+  if (filters.endDate) {
+    const endDate = new Date(filters.endDate);
+    endDate.setHours(23, 59, 59, 999);
+    query = query.lte('data_uso', endDate.toISOString());
   }
 
   if (filters.company && filters.company !== 'all') {
@@ -38,7 +44,7 @@ export const useUsageData = (filters) => {
     queryKey: ['usage-data', filters],
     queryFn: async () => {
       try {
-        console.log('Buscando dados com filtros:', filters);
+        console.log('Buscando dados com filtros:', JSON.stringify(filters, null, 2));
         
         const query = buildQuery(filters);
         const { data, error } = await query;
@@ -50,6 +56,8 @@ export const useUsageData = (filters) => {
         }
 
         console.log('Dados recuperados:', data?.length || 0, 'registros');
+        console.log('Amostra dos dados:', data?.slice(0, 2));
+        
         return data || [];
       } catch (error) {
         console.error('Erro na query:', error);
