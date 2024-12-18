@@ -4,6 +4,7 @@ import { Settings } from 'lucide-react';
 import AdminLoginDialog from '../components/AdminLoginDialog';
 import VoucherValidationForm from '../components/voucher/VoucherValidationForm';
 import { supabase } from '../config/supabase';
+import { toast } from "sonner";
 
 const Voucher = () => {
   const [backgroundImage, setBackgroundImage] = useState('');
@@ -12,19 +13,39 @@ const Voucher = () => {
   useEffect(() => {
     const fetchBackgroundImage = async () => {
       try {
+        console.log('Iniciando busca da imagem de fundo...');
+        
         const { data, error } = await supabase
           .from('background_images')
           .select('image_url')
           .eq('page', 'voucher')
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao buscar imagem de fundo:', {
+            error,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          throw error;
+        }
+
+        console.log('Resultado da busca da imagem:', data);
+        
         if (data?.image_url) {
           setBackgroundImage(data.image_url);
         }
       } catch (error) {
-        console.error('Erro ao buscar imagem de fundo:', error);
+        console.error('Erro ao buscar imagem de fundo:', {
+          message: error.message,
+          details: error.stack,
+          hint: error.hint || '',
+          code: error.code || ''
+        });
+        toast.error('Erro ao carregar imagem de fundo');
       }
     };
 
