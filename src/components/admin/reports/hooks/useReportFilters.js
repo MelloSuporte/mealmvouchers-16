@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { startOfMonth, endOfDay } from 'date-fns';
+import { startOfMonth, endOfDay, isAfter, isBefore, parseISO } from 'date-fns';
 import { toast } from "sonner";
 
 export const useReportFilters = () => {
@@ -15,20 +15,30 @@ export const useReportFilters = () => {
   const handleFilterChange = (filterType, value) => {
     console.log('Alterando filtro:', filterType, 'para:', value);
     
-    if (filterType === 'startDate' && value > filters.endDate) {
-      toast.error("Data inicial não pode ser maior que a data final");
-      return;
+    if (filterType === 'startDate') {
+      const startDate = value instanceof Date ? value : parseISO(value);
+      if (isAfter(startDate, filters.endDate)) {
+        toast.error("Data inicial não pode ser maior que a data final");
+        return;
+      }
     }
     
-    if (filterType === 'endDate' && value < filters.startDate) {
-      toast.error("Data final não pode ser menor que a data inicial");
-      return;
+    if (filterType === 'endDate') {
+      const endDate = value instanceof Date ? value : parseISO(value);
+      if (isBefore(endDate, filters.startDate)) {
+        toast.error("Data final não pode ser menor que a data inicial");
+        return;
+      }
     }
 
-    setFilters(prev => ({
-      ...prev,
-      [filterType]: value
-    }));
+    setFilters(prev => {
+      const newFilters = {
+        ...prev,
+        [filterType]: value
+      };
+      console.log('Novos filtros:', newFilters);
+      return newFilters;
+    });
   };
 
   return { 

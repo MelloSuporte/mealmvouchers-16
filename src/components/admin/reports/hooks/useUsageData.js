@@ -3,6 +3,8 @@ import { supabase } from '@/config/supabase';
 import { toast } from "sonner";
 
 const buildQuery = (filters) => {
+  console.log('Construindo query com filtros:', filters);
+  
   let query = supabase
     .from('relatorio_uso_voucher')
     .select('*')
@@ -10,30 +12,36 @@ const buildQuery = (filters) => {
 
   if (filters.startDate) {
     const startDate = new Date(filters.startDate);
-    startDate.setHours(0, 0, 0, 0);
+    startDate.setUTCHours(0, 0, 0, 0);
     query = query.gte('data_uso', startDate.toISOString());
+    console.log('Filtro data inicial:', startDate.toISOString());
   }
 
   if (filters.endDate) {
     const endDate = new Date(filters.endDate);
-    endDate.setHours(23, 59, 59, 999);
+    endDate.setUTCHours(23, 59, 59, 999);
     query = query.lte('data_uso', endDate.toISOString());
+    console.log('Filtro data final:', endDate.toISOString());
   }
 
   if (filters.company && filters.company !== 'all') {
     query = query.eq('empresa_id', filters.company);
+    console.log('Filtro empresa:', filters.company);
   }
 
   if (filters.shift && filters.shift !== 'all') {
     query = query.eq('turno', filters.shift);
+    console.log('Filtro turno:', filters.shift);
   }
 
   if (filters.sector && filters.sector !== 'all') {
     query = query.eq('setor_id', filters.sector);
+    console.log('Filtro setor:', filters.sector);
   }
 
   if (filters.mealType && filters.mealType !== 'all') {
     query = query.eq('tipo_refeicao', filters.mealType);
+    console.log('Filtro tipo refeição:', filters.mealType);
   }
 
   return query;
@@ -44,7 +52,7 @@ export const useUsageData = (filters) => {
     queryKey: ['usage-data', filters],
     queryFn: async () => {
       try {
-        console.log('Buscando dados com filtros:', JSON.stringify(filters, null, 2));
+        console.log('Iniciando busca de dados com filtros:', JSON.stringify(filters, null, 2));
         
         const query = buildQuery(filters);
         const { data, error } = await query;
@@ -56,7 +64,11 @@ export const useUsageData = (filters) => {
         }
 
         console.log('Dados recuperados:', data?.length || 0, 'registros');
-        console.log('Amostra dos dados:', data?.slice(0, 2));
+        if (data?.length > 0) {
+          console.log('Primeiro registro:', data[0]);
+        } else {
+          console.log('Nenhum dado encontrado com os filtros aplicados');
+        }
         
         return data || [];
       } catch (error) {
