@@ -48,9 +48,9 @@ export const exportToPDF = async (metrics, filters) => {
       item.nome_usuario || '-',
       item.cpf || '-',
       item.nome_empresa || '-',
-      item.tipo_refeicao || '-',
+      item.nome_tipo_refeicao || '-', // Atualizado para usar nome_tipo_refeicao
       formatCurrency(item.valor),
-      item.turno || '-',
+      item.nome_turno || '-', // Atualizado para usar nome_turno
       item.nome_setor || '-'
     ]);
 
