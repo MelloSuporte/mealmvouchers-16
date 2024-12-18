@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import AdminLoginDialog from '../components/AdminLoginDialog';
 import VoucherForm from '../components/voucher/VoucherForm';
 import { supabase } from '../config/supabase';
-import { validateDisposableVoucherRules } from '../utils/voucherValidations';
 
 const Voucher = () => {
   const [voucherCode, setVoucherCode] = useState('');
@@ -42,7 +41,70 @@ const Voucher = () => {
     try {
       console.log('Verificando voucher:', voucherCode);
       
-      // Primeiro verifica se é um voucher comum
+      // Primeiro verifica se é um voucher descartável
+      const { data: descartaveis, error: descartavelError } = await supabase
+        .from('vouchers_descartaveis')
+        .select(`
+          *,
+          tipos_refeicao (
+            id,
+            nome,
+            horario_inicio,
+            horario_fim,
+            minutos_tolerancia,
+            ativo
+          )
+        `)
+        .eq('codigo', voucherCode)
+        .eq('usado', false)
+        .single();
+
+      if (descartaveis) {
+        console.log('Voucher descartável encontrado:', descartaveis);
+        
+        // Validar data de expiração
+        const expirationDate = new Date(descartaveis.data_expiracao);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        expirationDate.setHours(0, 0, 0, 0);
+
+        if (expirationDate < today) {
+          toast.error('Este voucher está expirado');
+          return;
+        }
+
+        if (expirationDate > today) {
+          const formattedDate = expirationDate.toLocaleDateString('pt-BR');
+          toast.error(`Este voucher é válido apenas para ${formattedDate}`);
+          return;
+        }
+
+        // Validar horário da refeição
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes(); // Converter para minutos
+        const startTime = descartaveis.tipos_refeicao.horario_inicio.split(':');
+        const endTime = descartaveis.tipos_refeicao.horario_fim.split(':');
+        const toleranceMinutes = descartaveis.tipos_refeicao.minutos_tolerancia || 0;
+
+        const startMinutes = parseInt(startTime[0]) * 60 + parseInt(startTime[1]);
+        const endMinutes = parseInt(endTime[0]) * 60 + parseInt(endTime[1]) + toleranceMinutes;
+
+        if (currentTime < startMinutes || currentTime > endMinutes) {
+          toast.error(`Esta refeição só pode ser utilizada entre ${descartaveis.tipos_refeicao.horario_inicio} e ${descartaveis.tipos_refeicao.horario_fim}`);
+          return;
+        }
+
+        localStorage.setItem('disposableVoucher', JSON.stringify({
+          code: voucherCode,
+          mealTypeId: descartaveis.tipo_refeicao_id,
+          mealType: descartaveis.tipos_refeicao.nome
+        }));
+
+        navigate('/self-services');
+        return;
+      }
+
+      // Se não for voucher descartável, verifica se é um voucher comum
       const { data: users, error: userError } = await supabase
         .from('usuarios')
         .select(`
@@ -72,39 +134,6 @@ const Voucher = () => {
         return;
       }
 
-      // Se não for voucher comum, verifica se é um voucher descartável
-      const { data: descartaveis, error: descartavelError } = await supabase
-        .from('vouchers_descartaveis')
-        .select(`
-          *,
-          tipos_refeicao (
-            id,
-            nome,
-            horario_inicio,
-            horario_fim,
-            minutos_tolerancia,
-            ativo
-          )
-        `)
-        .eq('codigo', voucherCode)
-        .eq('usado', false)
-        .maybeSingle();
-
-      if (descartaveis) {
-        console.log('Voucher descartável encontrado:', descartaveis);
-        
-        await validateDisposableVoucherRules(descartaveis, supabase);
-
-        localStorage.setItem('disposableVoucher', JSON.stringify({
-          code: voucherCode,
-          mealTypeId: descartaveis.tipo_refeicao_id,
-          mealType: descartaveis.tipos_refeicao.nome
-        }));
-
-        navigate('/self-services');
-        return;
-      }
-
       // Se não for nem comum nem descartável, verifica se é um voucher extra
       const { data: extraVouchers, error: extraError } = await supabase
         .from('vouchers_extras')
@@ -117,13 +146,12 @@ const Voucher = () => {
         console.log('Voucher extra encontrado:', extraVouchers);
         localStorage.setItem('extraVoucher', JSON.stringify({
           code: voucherCode,
-          cpf: extraVouchers.usuario_id // Usando o ID do usuário como referência
+          cpf: extraVouchers.usuario_id
         }));
         navigate('/self-services');
         return;
       }
 
-      // Se chegou aqui, o voucher é inválido
       console.log('Nenhum voucher válido encontrado');
       toast.error("Voucher inválido ou já utilizado");
       
