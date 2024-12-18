@@ -1,77 +1,78 @@
-import { supabase } from '../config/database.js';
-import logger from '../config/logger.js';
+import { supabase } from '../config/supabase';
+import { toast } from "sonner";
 
-export const validateVoucherCode = async (code) => {
-  if (!code) {
-    throw new Error('Código do voucher é obrigatório');
-  }
+export const validateDisposableVoucher = async (code) => {
+  try {
+    console.log('Validando voucher descartável:', code);
+    
+    const { data: voucher, error } = await supabase
+      .from('vouchers_descartaveis')
+      .select(`
+        *,
+        tipos_refeicao (
+          id,
+          nome,
+          horario_inicio,
+          horario_fim,
+          minutos_tolerancia,
+          ativo
+        )
+      `)
+      .eq('codigo', code)
+      .eq('usado', false)
+      .maybeSingle();
 
-  const { data: vouchers, error } = await supabase
-    .from('disposable_vouchers')
-    .select(`
-      *,
-      meal_types (
-        name
-      )
-    `)
-    .eq('code', code)
-    .eq('is_used', false);
-
-  if (error || vouchers.length === 0) {
-    return { exists: false, message: 'Voucher não encontrado ou já utilizado' };
-  }
-
-  return { 
-    exists: true, 
-    voucher: vouchers[0],
-    message: 'Voucher válido'
-  };
-};
-
-export const validateMealType = async (mealTypeId) => {
-  const { data: mealTypes, error } = await supabase
-    .from('meal_types')
-    .select()
-    .eq('id', mealTypeId)
-    .eq('is_active', true);
-
-  if (error || mealTypes.length === 0) {
-    throw new Error('Tipo de refeição inválido ou inativo');
-  }
-
-  return mealTypes[0];
-};
-
-export const validateExistingVoucher = async (code, mealTypeId) => {
-  const { data: vouchers, error } = await supabase
-    .from('disposable_vouchers')
-    .select(`
-      *,
-      meal_types (
-        name,
-        start_time,
-        end_time
-      )
-    `)
-    .eq('code', code)
-    .eq('is_used', false);
-
-  if (error || vouchers.length === 0) {
-    throw new Error('Voucher não encontrado ou já utilizado');
-  }
-
-  const voucher = vouchers[0];
-
-  if (voucher.meal_type_id !== parseInt(mealTypeId)) {
-    throw new Error('Tipo de refeição não corresponde ao voucher');
-  }
-
-  if (voucher.expired_at) {
-    const expirationDate = new Date(voucher.expired_at);
-    if (expirationDate < new Date()) {
-      throw new Error('Voucher expirado');
+    if (error) {
+      console.error('Erro ao validar voucher descartável:', error);
+      return { success: false, error: 'Erro ao validar voucher' };
     }
-  }
 
-  return voucher;
+    if (!voucher) {
+      console.log('Voucher descartável não encontrado ou já utilizado');
+      return { success: false, error: 'Voucher inválido ou já utilizado' };
+    }
+
+    return { success: true, voucher };
+  } catch (error) {
+    console.error('Erro inesperado ao validar voucher:', error);
+    return { success: false, error: 'Erro ao validar voucher' };
+  }
+};
+
+export const validateCommonVoucher = async (code) => {
+  try {
+    console.log('Validando voucher comum:', code);
+    
+    const { data: user, error } = await supabase
+      .from('usuarios')
+      .select(`
+        *,
+        empresas (
+          id,
+          nome
+        ),
+        turnos (
+          id,
+          tipo_turno
+        )
+      `)
+      .eq('voucher', code)
+      .eq('suspenso', false)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Erro ao validar voucher comum:', error);
+      return { success: false, error: 'Erro ao validar voucher' };
+    }
+
+    if (!user) {
+      console.log('Usuário não encontrado ou suspenso');
+      return { success: false, error: 'Voucher inválido ou já utilizado' };
+    }
+
+    return { success: true, user };
+  } catch (error) {
+    console.error('Erro inesperado ao validar voucher comum:', error);
+    return { success: false, error: 'Erro ao validar voucher' };
+  }
 };
