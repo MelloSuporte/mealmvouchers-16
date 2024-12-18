@@ -1,4 +1,7 @@
--- Create validation function
+-- Drop existing function
+DROP FUNCTION IF EXISTS validate_and_use_voucher;
+
+-- Create function to validate and use voucher
 CREATE OR REPLACE FUNCTION validate_and_use_voucher(
     p_codigo VARCHAR(4),
     p_tipo_refeicao_id UUID
@@ -18,6 +21,9 @@ BEGIN
     -- Set validation flag
     PERFORM set_config('voucher.validated', 'true', true);
 
+    -- Log início da validação
+    RAISE NOTICE 'Iniciando validação do voucher: %', p_codigo;
+
     -- Verificar se o tipo de refeição existe e está ativo
     SELECT * INTO v_tipo_refeicao
     FROM tipos_refeicao
@@ -25,23 +31,11 @@ BEGIN
     AND ativo = true;
 
     IF NOT FOUND THEN
+        RAISE NOTICE 'Tipo de refeição inválido ou inativo: %', p_tipo_refeicao_id;
         PERFORM set_config('voucher.validated', 'false', true);
         RETURN jsonb_build_object(
             'success', false,
             'error', 'Tipo de refeição inválido ou inativo'
-        );
-    END IF;
-
-    -- Verificar horário da refeição
-    IF NOT (CURRENT_TIME BETWEEN v_tipo_refeicao.horario_inicio 
-        AND (v_tipo_refeicao.horario_fim + (v_tipo_refeicao.minutos_tolerancia || ' minutes')::INTERVAL)) THEN
-        PERFORM set_config('voucher.validated', 'false', true);
-        RETURN jsonb_build_object(
-            'success', false,
-            'error', format('Esta refeição só pode ser utilizada entre %s e %s',
-                v_tipo_refeicao.horario_inicio::TEXT,
-                v_tipo_refeicao.horario_fim::TEXT
-            )
         );
     END IF;
 
@@ -52,10 +46,27 @@ BEGIN
     WHERE vd.codigo = p_codigo
     AND vd.tipo_refeicao_id = p_tipo_refeicao_id
     AND NOT vd.usado
-    AND CURRENT_DATE <= vd.data_expiracao::date;
+    AND CURRENT_DATE <= vd.data_expiracao::date
+    FOR UPDATE SKIP LOCKED;  -- Prevenir condições de corrida
 
     -- Se encontrou um voucher descartável válido
     IF FOUND THEN
+        RAISE NOTICE 'Voucher descartável encontrado: %', v_voucher_descartavel.id;
+
+        -- Verificar horário da refeição
+        IF NOT (CURRENT_TIME BETWEEN v_tipo_refeicao.horario_inicio 
+            AND (v_tipo_refeicao.horario_fim + (v_tipo_refeicao.minutos_tolerancia || ' minutes')::INTERVAL)) THEN
+            RAISE NOTICE 'Fora do horário permitido: % - %', v_tipo_refeicao.horario_inicio, v_tipo_refeicao.horario_fim;
+            PERFORM set_config('voucher.validated', 'false', true);
+            RETURN jsonb_build_object(
+                'success', false,
+                'error', format('Esta refeição só pode ser utilizada entre %s e %s',
+                    v_tipo_refeicao.horario_inicio::TEXT,
+                    v_tipo_refeicao.horario_fim::TEXT
+                )
+            );
+        END IF;
+
         -- Marcar voucher como usado
         UPDATE vouchers_descartaveis
         SET 
@@ -65,6 +76,7 @@ BEGIN
         AND NOT usado;  -- Garantir que não foi usado entre a verificação e o update
 
         IF NOT FOUND THEN
+            RAISE NOTICE 'Voucher já foi utilizado entre a verificação e atualização';
             PERFORM set_config('voucher.validated', 'false', true);
             RETURN jsonb_build_object(
                 'success', false,
@@ -81,7 +93,7 @@ BEGIN
             CURRENT_TIMESTAMP
         );
 
-        -- Reset validation flag
+        RAISE NOTICE 'Voucher descartável validado com sucesso';
         PERFORM set_config('voucher.validated', 'false', true);
 
         RETURN jsonb_build_object(
@@ -100,13 +112,29 @@ BEGIN
         SELECT 1 FROM empresas e
         WHERE e.id = u.empresa_id
         AND e.ativo = true
-    );
+    )
+    FOR UPDATE SKIP LOCKED;  -- Prevenir condições de corrida
 
     IF NOT FOUND THEN
+        RAISE NOTICE 'Voucher comum não encontrado ou usuário suspenso';
         PERFORM set_config('voucher.validated', 'false', true);
         RETURN jsonb_build_object(
             'success', false,
             'error', 'Voucher inválido ou usuário suspenso'
+        );
+    END IF;
+
+    -- Verificar horário da refeição para voucher comum
+    IF NOT (CURRENT_TIME BETWEEN v_tipo_refeicao.horario_inicio 
+        AND (v_tipo_refeicao.horario_fim + (v_tipo_refeicao.minutos_tolerancia || ' minutes')::INTERVAL)) THEN
+        RAISE NOTICE 'Fora do horário permitido: % - %', v_tipo_refeicao.horario_inicio, v_tipo_refeicao.horario_fim;
+        PERFORM set_config('voucher.validated', 'false', true);
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', format('Esta refeição só pode ser utilizada entre %s e %s',
+                v_tipo_refeicao.horario_inicio::TEXT,
+                v_tipo_refeicao.horario_fim::TEXT
+            )
         );
     END IF;
 
@@ -121,7 +149,7 @@ BEGIN
         CURRENT_TIMESTAMP
     );
 
-    -- Reset validation flag
+    RAISE NOTICE 'Voucher comum validado com sucesso';
     PERFORM set_config('voucher.validated', 'false', true);
 
     RETURN jsonb_build_object(
@@ -132,6 +160,7 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         -- Ensure flag is reset on error
+        RAISE NOTICE 'Erro ao validar voucher: %', SQLERRM;
         PERFORM set_config('voucher.validated', 'false', true);
         RETURN jsonb_build_object(
             'success', false,
