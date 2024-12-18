@@ -10,7 +10,7 @@ SELECT
     e.nome as nome_empresa,
     t.tipo_turno as turno,
     s.id as id_setor,
-    s.nome as nome_setor,
+    s.nome_setor,
     tr.nome as tipo_refeicao,
     tr.valor as valor_refeicao,
     uv.observacao
