@@ -7,15 +7,19 @@ import { validateDisposableVoucher, validateCommonVoucher } from '../../services
 const VoucherValidationForm = () => {
   const navigate = useNavigate();
   const [voucherCode, setVoucherCode] = React.useState('');
+  const [isValidating, setIsValidating] = React.useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isValidating) return;
     
     try {
-      console.log('Verificando voucher:', voucherCode);
+      setIsValidating(true);
+      console.log('Iniciando validação do voucher:', voucherCode);
       
       // Primeiro tenta validar como voucher descartável
       const disposableResult = await validateDisposableVoucher(voucherCode);
+      console.log('Resultado validação voucher descartável:', disposableResult);
       
       if (disposableResult.success) {
         const { voucher } = disposableResult;
@@ -30,6 +34,7 @@ const VoucherValidationForm = () => {
 
       // Se não for descartável, tenta como voucher comum
       const commonResult = await validateCommonVoucher(voucherCode);
+      console.log('Resultado validação voucher comum:', commonResult);
       
       if (commonResult.success) {
         const { user } = commonResult;
@@ -45,10 +50,13 @@ const VoucherValidationForm = () => {
 
       // Se chegou aqui, nenhum voucher válido foi encontrado
       toast.error(disposableResult.error || commonResult.error || "Voucher inválido ou já utilizado");
+      console.error('Falha na validação:', { disposableResult, commonResult });
       
     } catch (error) {
       console.error('Erro ao validar voucher:', error);
       toast.error(error.message || "Erro ao validar o voucher");
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -58,6 +66,7 @@ const VoucherValidationForm = () => {
       onSubmit={handleSubmit}
       onNumpadClick={(num) => setVoucherCode(prev => prev.length < 4 ? prev + num : prev)}
       onBackspace={() => setVoucherCode(prev => prev.slice(0, -1))}
+      isValidating={isValidating}
     />
   );
 };

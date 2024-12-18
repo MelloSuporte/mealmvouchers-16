@@ -1,5 +1,4 @@
 import { supabase } from '../config/supabase';
-import { toast } from "sonner";
 
 export const validateDisposableVoucher = async (code) => {
   try {
@@ -32,6 +31,21 @@ export const validateDisposableVoucher = async (code) => {
       return { success: false, error: 'Voucher inválido ou já utilizado' };
     }
 
+    // Verificar se o tipo de refeição está ativo
+    if (!voucher.tipos_refeicao?.ativo) {
+      return { success: false, error: 'Tipo de refeição inativo' };
+    }
+
+    // Verificar data de expiração
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expirationDate = new Date(voucher.data_expiracao);
+    expirationDate.setHours(0, 0, 0, 0);
+
+    if (expirationDate < today) {
+      return { success: false, error: 'Voucher expirado' };
+    }
+
     return { success: true, voucher };
   } catch (error) {
     console.error('Erro inesperado ao validar voucher:', error);
@@ -49,7 +63,8 @@ export const validateCommonVoucher = async (code) => {
         *,
         empresas (
           id,
-          nome
+          nome,
+          ativo
         ),
         turnos (
           id,
@@ -67,7 +82,12 @@ export const validateCommonVoucher = async (code) => {
 
     if (!user) {
       console.log('Usuário não encontrado ou suspenso');
-      return { success: false, error: 'Voucher inválido ou já utilizado' };
+      return { success: false, error: 'Voucher inválido ou usuário suspenso' };
+    }
+
+    // Verificar se a empresa está ativa
+    if (!user.empresas?.ativo) {
+      return { success: false, error: 'Empresa inativa' };
     }
 
     return { success: true, user };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 
-const VoucherNumpad = ({ onNumpadClick, onBackspace, voucherCode }) => {
+const VoucherNumpad = ({ onNumpadClick, onBackspace, voucherCode, disabled }) => {
   const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
 
   return (
@@ -12,7 +12,7 @@ const VoucherNumpad = ({ onNumpadClick, onBackspace, voucherCode }) => {
           type="button"
           onClick={() => onNumpadClick(num)}
           className="bg-gray-200 text-black hover:bg-gray-300 text-xl py-4"
-          disabled={voucherCode.length >= 4}
+          disabled={voucherCode.length >= 4 || disabled}
         >
           {num}
         </Button>
@@ -21,6 +21,7 @@ const VoucherNumpad = ({ onNumpadClick, onBackspace, voucherCode }) => {
         type="button"
         onClick={onBackspace} 
         className="bg-red-500 hover:bg-red-600 text-white col-span-2"
+        disabled={disabled}
       >
         Backspace
       </Button>
