@@ -73,7 +73,6 @@ export const useUsageData = (filters) => {
 
         if (error) {
           console.error('Erro na consulta:', error);
-          toast.error(`Erro ao carregar dados: ${error.message}`);
           throw error;
         }
 
