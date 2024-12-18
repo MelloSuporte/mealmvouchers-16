@@ -69,7 +69,7 @@ const SelfServices = () => {
           state: { 
             mealType: meal.id,
             mealName: meal.nome,
-            userName: 'Usuario'
+            userName: 'Visitante'
           }
         });
       } 
