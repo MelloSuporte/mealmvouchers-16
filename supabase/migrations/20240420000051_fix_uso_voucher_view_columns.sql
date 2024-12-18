@@ -15,7 +15,7 @@ SELECT
     s.id as setor_id,
     s.nome_setor,
     tr.nome as tipo_refeicao,
-    tr.valor,
+    tr.valor as valor_refeicao,
     uv.observacao
 FROM uso_voucher uv
 LEFT JOIN usuarios u ON uv.usuario_id = u.id

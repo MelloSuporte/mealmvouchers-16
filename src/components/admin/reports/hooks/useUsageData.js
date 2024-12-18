@@ -10,6 +10,7 @@ const buildQuery = (filters) => {
     .select(`
       id,
       data_uso,
+      usuario_id,
       nome_usuario,
       cpf,
       empresa_id,
