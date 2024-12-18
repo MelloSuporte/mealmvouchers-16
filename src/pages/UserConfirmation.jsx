@@ -46,24 +46,24 @@ const UserConfirmation = () => {
         turnoId: location.state.userTurno
       });
 
-      const { data, error } = await supabase
+      const response = await supabase
         .rpc('validate_and_use_voucher', {
           p_codigo: voucherCode,
           p_tipo_refeicao_id: mealType
         });
 
-      if (error) {
+      if (response.error) {
         logger.error('Erro na validação:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
+          message: response.error.message,
+          details: response.error.details,
+          hint: response.error.hint,
+          code: response.error.code
         });
-        throw new Error(error.message || 'Erro ao validar voucher');
+        throw new Error(response.error.message || 'Erro ao validar voucher');
       }
 
-      if (!data?.success) {
-        throw new Error(data?.error || 'Erro ao validar voucher');
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || 'Erro ao validar voucher');
       }
 
       localStorage.removeItem('commonVoucher');
