@@ -80,16 +80,22 @@ export const useUsageData = (filters) => {
         return data || [];
       } catch (error) {
         console.error('Erro na query:', error);
-        toast.error('Erro ao carregar dados do relatório');
+        toast.error('Erro ao carregar dados do relatório. Por favor, tente novamente.');
         throw error;
       }
     },
+    retry: 3, // Aumenta o número de tentativas
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     staleTime: 30000,
     refetchOnWindowFocus: false,
-    retry: 2,
     meta: {
       onError: (error) => {
-        console.error('Erro na query:', error);
+        console.error('Erro detalhado na query:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         toast.error(`Erro ao carregar dados: ${error.message}`);
       }
     }
