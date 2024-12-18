@@ -46,7 +46,6 @@ const UserConfirmation = () => {
         turnoId: location.state.userTurno
       });
 
-      // Validar voucher usando o UUID do tipo de refeição
       const { data: validationResult, error: validationError } = await supabase
         .rpc('validate_and_use_voucher', {
           p_codigo: voucherCode,
@@ -62,14 +61,13 @@ const UserConfirmation = () => {
         throw new Error(validationResult?.error || 'Erro ao validar voucher');
       }
 
-      // Limpar dados do localStorage
       localStorage.removeItem('commonVoucher');
       
-      // Navegar para página de sucesso usando o turno ID diretamente
+      // Corrigindo o redirecionamento para /bom-apetite
       navigate('/bom-apetite', { 
         state: { 
           userName: location.state.userName,
-          turno: location.state.userTurno // Usando o ID do turno diretamente
+          turno: location.state.userTurno
         } 
       });
 
