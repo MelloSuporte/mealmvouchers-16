@@ -84,8 +84,8 @@ export const useUsageData = (filters) => {
         throw error;
       }
     },
-    retry: 3, // Aumenta o número de tentativas
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 30000,
     refetchOnWindowFocus: false,
     meta: {
