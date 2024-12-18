@@ -1,6 +1,7 @@
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "allow_voucher_descartavel_use" ON vouchers_descartaveis;
 DROP POLICY IF EXISTS "prevent_voucher_reuse" ON vouchers_descartaveis;
+DROP POLICY IF EXISTS "expired_voucher_cleanup" ON vouchers_descartaveis;
 
 -- Enable RLS
 ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
@@ -75,9 +76,40 @@ CREATE POLICY "prevent_voucher_reuse" ON vouchers_descartaveis
         AND NEW.data_expiracao = data_expiracao
     );
 
+-- Create function to cleanup expired vouchers
+CREATE OR REPLACE FUNCTION cleanup_expired_vouchers()
+RETURNS void
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM vouchers_descartaveis
+    WHERE NOT usado 
+    AND data_expiracao < CURRENT_DATE;
+END;
+$$;
+
+-- Create a scheduled job to run cleanup every day at midnight
+SELECT cron.schedule(
+    'cleanup-expired-vouchers',  -- name of the cron job
+    '0 0 * * *',                -- run at midnight every day
+    'SELECT cleanup_expired_vouchers()'
+);
+
+-- Policy to allow system to delete expired vouchers
+CREATE POLICY "expired_voucher_cleanup" ON vouchers_descartaveis
+    FOR DELETE
+    TO authenticated
+    USING (
+        data_expiracao < CURRENT_DATE
+        AND NOT usado
+    );
+
 -- Grant necessary permissions
-GRANT SELECT, UPDATE ON vouchers_descartaveis TO authenticated;
+GRANT SELECT, UPDATE, DELETE ON vouchers_descartaveis TO authenticated;
 GRANT EXECUTE ON FUNCTION check_meal_time_for_voucher TO authenticated;
+GRANT EXECUTE ON FUNCTION cleanup_expired_vouchers TO authenticated;
 
 -- Add helpful comments
 COMMENT ON POLICY "allow_voucher_descartavel_use" ON vouchers_descartaveis IS 
@@ -86,5 +118,11 @@ COMMENT ON POLICY "allow_voucher_descartavel_use" ON vouchers_descartaveis IS
 COMMENT ON POLICY "prevent_voucher_reuse" ON vouchers_descartaveis IS 
 'Prevents voucher reuse by only allowing update to mark as used';
 
+COMMENT ON POLICY "expired_voucher_cleanup" ON vouchers_descartaveis IS 
+'Allows system to automatically delete expired and unused vouchers';
+
 COMMENT ON FUNCTION check_meal_time_for_voucher IS 
 'Validates if current time is within allowed meal time range including tolerance';
+
+COMMENT ON FUNCTION cleanup_expired_vouchers IS 
+'Removes expired and unused vouchers from the database';
