@@ -65,9 +65,9 @@ const SelfServices = () => {
 
       // Se for voucher descartável
       if (disposableVoucher.code) {
-        navigate(`/bom-apetite/Usuario`, { 
+        navigate('/bom-apetite', { 
           state: { 
-            mealType: meal.id, // Já é UUID do banco
+            mealType: meal.id,
             mealName: meal.nome,
             userName: 'Usuario'
           }
