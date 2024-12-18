@@ -7,7 +7,21 @@ const buildQuery = (filters) => {
   
   let query = supabase
     .from('relatorio_uso_voucher')
-    .select('*')
+    .select(`
+      id,
+      data_uso,
+      nome_usuario,
+      cpf,
+      nome_empresa,
+      turno,
+      nome_setor,
+      tipo_refeicao,
+      valor,
+      codigo_voucher,
+      tipo_voucher,
+      valor_refeicao,
+      observacao
+    `)
     .order('data_uso', { ascending: false });
 
   if (filters.startDate) {
@@ -30,7 +44,7 @@ const buildQuery = (filters) => {
   }
 
   if (filters.shift && filters.shift !== 'all') {
-    query = query.eq('turno_id', filters.shift);
+    query = query.eq('turno', filters.shift);
     console.log('Filtro turno:', filters.shift);
   }
 
@@ -40,7 +54,7 @@ const buildQuery = (filters) => {
   }
 
   if (filters.mealType && filters.mealType !== 'all') {
-    query = query.eq('tipo_refeicao_id', filters.mealType);
+    query = query.eq('tipo_refeicao', filters.mealType);
     console.log('Filtro tipo refeição:', filters.mealType);
   }
 
