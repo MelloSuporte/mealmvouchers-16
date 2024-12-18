@@ -78,13 +78,6 @@ export const useUsageData = (filters) => {
         }
 
         console.log('Dados recuperados:', data?.length || 0, 'registros');
-        if (data?.length > 0) {
-          console.log('Primeiro registro:', data[0]);
-        } else {
-          console.log('Nenhum dado encontrado com os filtros aplicados');
-          return [];
-        }
-        
         return data || [];
       } catch (error) {
         console.error('Erro na query:', error);

@@ -12,7 +12,7 @@ SELECT
     u.empresa_id,
     e.nome as nome_empresa,
     t.tipo_turno as turno,
-    s.id as setor_id,
+    u.setor_id,  -- Changed to reference setor_id directly from usuarios table
     s.nome_setor,
     tr.nome as tipo_refeicao,
     tr.valor as valor_refeicao,
@@ -26,3 +26,6 @@ LEFT JOIN tipos_refeicao tr ON uv.tipo_refeicao_id = tr.id;
 
 -- Grant permissions
 GRANT SELECT ON vw_uso_voucher_detalhado TO authenticated;
+
+-- Add comment to the view
+COMMENT ON VIEW vw_uso_voucher_detalhado IS 'View detalhada do uso de vouchers incluindo informações de setor';
