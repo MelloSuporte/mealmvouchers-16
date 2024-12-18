@@ -10,9 +10,9 @@ const UsageTable = ({ searchTerm }) => {
     queryKey: ['usage-data', searchTerm],
     queryFn: async () => {
       let query = supabase
-        .from('vw_uso_voucher_detalhado')
+        .from('relatorio_uso_voucher')
         .select('*')
-        .order('usado_em', { ascending: false });
+        .order('data_uso', { ascending: false });
       
       if (searchTerm) {
         query = query.ilike('nome_usuario', `%${searchTerm}%`);
@@ -72,24 +72,24 @@ const UsageTable = ({ searchTerm }) => {
           <TableHead>Data/Hora</TableHead>
           <TableHead>Usuário</TableHead>
           <TableHead>CPF</TableHead>
-          <TableHead>Voucher</TableHead>
           <TableHead>Empresa</TableHead>
           <TableHead>Refeição</TableHead>
           <TableHead>Valor</TableHead>
           <TableHead>Turno</TableHead>
+          <TableHead>Setor</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {safeUsageData.map((item) => (
           <TableRow key={item.id}>
-            <TableCell>{formatDateTime(item.usado_em)}</TableCell>
+            <TableCell>{formatDateTime(item.data_uso)}</TableCell>
             <TableCell>{item.nome_usuario}</TableCell>
             <TableCell>{item.cpf}</TableCell>
-            <TableCell>{item.voucher}</TableCell>
-            <TableCell>{item.empresa}</TableCell>
+            <TableCell>{item.nome_empresa}</TableCell>
             <TableCell>{item.tipo_refeicao}</TableCell>
-            <TableCell>{formatCurrency(item.valor_refeicao)}</TableCell>
+            <TableCell>{formatCurrency(item.valor)}</TableCell>
             <TableCell>{item.turno}</TableCell>
+            <TableCell>{item.nome_setor}</TableCell>
           </TableRow>
         ))}
       </TableBody>

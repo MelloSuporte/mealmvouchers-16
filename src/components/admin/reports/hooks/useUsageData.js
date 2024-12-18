@@ -6,7 +6,7 @@ const buildQuery = (filters) => {
   console.log('Construindo query com filtros:', filters);
   
   let query = supabase
-    .from('vw_uso_voucher_detalhado')
+    .from('relatorio_uso_voucher')
     .select(`
       id,
       data_uso,
@@ -19,7 +19,7 @@ const buildQuery = (filters) => {
       setor_id,
       nome_setor,
       tipo_refeicao,
-      valor_refeicao,
+      valor,
       observacao
     `)
     .order('data_uso', { ascending: false });

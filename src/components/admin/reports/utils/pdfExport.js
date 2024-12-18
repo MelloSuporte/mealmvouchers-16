@@ -55,7 +55,7 @@ export const exportToPDF = async (metrics, filters) => {
       item.cpf || '-',
       item.nome_empresa || '-',
       item.tipo_refeicao || '-',
-      formatCurrency(item.valor_refeicao),
+      formatCurrency(item.valor),
       item.turno || '-',
       item.nome_setor || '-'
     ]);
