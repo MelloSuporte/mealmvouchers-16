@@ -1,40 +1,26 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { toast } from "sonner";
-import { startOfDay, endOfDay } from 'date-fns';
+import { format } from 'date-fns';
 
 const buildQuery = (filters) => {
   console.log('Construindo query com filtros:', JSON.stringify(filters, null, 2));
   
   let query = supabase
     .from('relatorio_uso_voucher')
-    .select(`
-      id,
-      data_uso,
-      nome_usuario,
-      cpf,
-      nome_empresa,
-      turno,
-      nome_setor,
-      tipo_refeicao,
-      valor,
-      codigo_voucher,
-      tipo_voucher,
-      valor_refeicao,
-      observacao
-    `)
+    .select('*')
     .order('data_uso', { ascending: false });
 
   if (filters.startDate) {
-    const startDate = startOfDay(new Date(filters.startDate));
-    query = query.gte('data_uso', startDate.toISOString());
-    console.log('Filtro data inicial:', startDate.toISOString());
+    const formattedStartDate = format(new Date(filters.startDate), "yyyy-MM-dd'T'00:00:00'Z'");
+    query = query.gte('data_uso', formattedStartDate);
+    console.log('Filtro data inicial:', formattedStartDate);
   }
 
   if (filters.endDate) {
-    const endDate = endOfDay(new Date(filters.endDate));
-    query = query.lte('data_uso', endDate.toISOString());
-    console.log('Filtro data final:', endDate.toISOString());
+    const formattedEndDate = format(new Date(filters.endDate), "yyyy-MM-dd'T'23:59:59.999'Z'");
+    query = query.lte('data_uso', formattedEndDate);
+    console.log('Filtro data final:', formattedEndDate);
   }
 
   if (filters.company && filters.company !== 'all') {
@@ -79,6 +65,8 @@ export const useUsageData = (filters) => {
         console.log('Dados recuperados:', data?.length || 0, 'registros');
         if (data?.length === 0) {
           console.log('Nenhum registro encontrado com os filtros aplicados');
+        } else {
+          console.log('Primeiro registro:', data[0]);
         }
 
         return data || [];
@@ -88,20 +76,8 @@ export const useUsageData = (filters) => {
         throw error;
       }
     },
-    retry: 3,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 30000,
+    retry: 1,
+    staleTime: 0, // Desabilita o cache para sempre buscar dados frescos
     refetchOnWindowFocus: false,
-    meta: {
-      onError: (error) => {
-        console.error('Erro detalhado na query:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        toast.error(`Erro ao carregar dados: ${error.message}`);
-      }
-    }
   });
 };
