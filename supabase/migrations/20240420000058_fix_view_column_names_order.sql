@@ -17,8 +17,7 @@ SELECT
     tr.nome as tipo_refeicao,
     tr.valor as valor_refeicao,
     uv.observacao,
-    uv.created_at,
-    uv.updated_at
+    uv.created_at
 FROM uso_voucher uv
 LEFT JOIN usuarios u ON uv.usuario_id = u.id
 LEFT JOIN empresas e ON u.empresa_id = e.id
