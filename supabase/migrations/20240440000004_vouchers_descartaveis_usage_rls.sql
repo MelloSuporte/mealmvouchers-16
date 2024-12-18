@@ -58,22 +58,20 @@ CREATE POLICY "allow_voucher_descartavel_use" ON vouchers_descartaveis
         check_meal_time_for_voucher(tipo_refeicao_id)
     );
 
--- Policy to prevent voucher reuse (corrigida)
+-- Policy to prevent voucher reuse
 CREATE POLICY "prevent_voucher_reuse" ON vouchers_descartaveis
     FOR UPDATE
     TO authenticated
-    USING (
-        -- Voucher must not be used yet
-        NOT usado
+    USING (NOT usado)
+    WITH CHECK (
+        -- Only allow marking as used
+        usado = true
         AND
-        -- Check if the update is marking as used
-        NEW.usado = true
-        AND
-        -- All other fields must remain unchanged
-        NEW.id = id
-        AND NEW.tipo_refeicao_id = tipo_refeicao_id
-        AND NEW.codigo = codigo
-        AND NEW.data_expiracao = data_expiracao
+        -- Ensure other fields remain unchanged
+        id = id
+        AND tipo_refeicao_id = tipo_refeicao_id
+        AND codigo = codigo
+        AND data_expiracao = data_expiracao
     );
 
 -- Create function to cleanup expired vouchers
