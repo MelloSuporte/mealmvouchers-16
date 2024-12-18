@@ -46,7 +46,6 @@ const UserConfirmation = () => {
         turnoId: location.state.userTurno
       });
 
-      // Primeiro tenta validar como voucher comum
       const { data, error } = await supabase.rpc('validate_and_use_voucher', {
         p_codigo: voucherCode,
         p_tipo_refeicao_id: mealType
