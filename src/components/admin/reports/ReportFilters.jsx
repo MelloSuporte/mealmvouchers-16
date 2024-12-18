@@ -28,6 +28,11 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
     onFilterChange(type, date);
   };
 
+  const handleFilterChange = (type, value) => {
+    console.log(`Alterando filtro: ${type} para:`, value);
+    onFilterChange(type, value);
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
@@ -65,7 +70,7 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
     <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
       <div>
         <Label className="text-sm font-medium mb-2 block">Empresa</Label>
-        <Select onValueChange={(value) => onFilterChange('company', value)}>
+        <Select onValueChange={(value) => handleFilterChange('company', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione a empresa" />
           </SelectTrigger>
@@ -98,7 +103,7 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
 
       <div>
         <Label className="text-sm font-medium mb-2 block">Turno</Label>
-        <Select onValueChange={(value) => onFilterChange('shift', value)}>
+        <Select onValueChange={(value) => handleFilterChange('shift', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione o turno" />
           </SelectTrigger>
@@ -115,7 +120,7 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
 
       <div>
         <Label className="text-sm font-medium mb-2 block">Setor</Label>
-        <Select onValueChange={(value) => onFilterChange('sector', value)}>
+        <Select onValueChange={(value) => handleFilterChange('sector', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione o setor" />
           </SelectTrigger>
@@ -132,7 +137,7 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
 
       <div>
         <Label className="text-sm font-medium mb-2 block">Tipo de Refeição</Label>
-        <Select onValueChange={(value) => onFilterChange('mealType', value)}>
+        <Select onValueChange={(value) => handleFilterChange('mealType', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione o tipo" />
           </SelectTrigger>

@@ -3,7 +3,7 @@ import { supabase } from '@/config/supabase';
 import { toast } from "sonner";
 
 const buildQuery = (filters) => {
-  console.log('Construindo query com filtros:', filters);
+  console.log('Construindo query com filtros:', JSON.stringify(filters, null, 2));
   
   let query = supabase
     .from('relatorio_uso_voucher')
@@ -30,7 +30,7 @@ const buildQuery = (filters) => {
   }
 
   if (filters.shift && filters.shift !== 'all') {
-    query = query.eq('turno', filters.shift);
+    query = query.eq('turno_id', filters.shift);
     console.log('Filtro turno:', filters.shift);
   }
 
@@ -40,7 +40,7 @@ const buildQuery = (filters) => {
   }
 
   if (filters.mealType && filters.mealType !== 'all') {
-    query = query.eq('tipo_refeicao', filters.mealType);
+    query = query.eq('tipo_refeicao_id', filters.mealType);
     console.log('Filtro tipo refeição:', filters.mealType);
   }
 
