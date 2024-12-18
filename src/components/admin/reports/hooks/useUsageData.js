@@ -6,7 +6,7 @@ const buildQuery = (filters) => {
   console.log('Construindo query com filtros:', filters);
   
   let query = supabase
-    .from('relatorio_uso_voucher')
+    .from('vw_uso_voucher_detalhado') // Alterado para usar a view correta
     .select('*')
     .order('data_uso', { ascending: false });
 
@@ -30,7 +30,7 @@ const buildQuery = (filters) => {
   }
 
   if (filters.shift && filters.shift !== 'all') {
-    query = query.eq('turno', filters.shift);
+    query = query.eq('turno_id', filters.shift); // Alterado para usar turno_id
     console.log('Filtro turno:', filters.shift);
   }
 
@@ -40,7 +40,7 @@ const buildQuery = (filters) => {
   }
 
   if (filters.mealType && filters.mealType !== 'all') {
-    query = query.eq('tipo_refeicao', filters.mealType);
+    query = query.eq('tipo_refeicao_id', filters.mealType); // Alterado para usar tipo_refeicao_id
     console.log('Filtro tipo refeição:', filters.mealType);
   }
 
@@ -77,7 +77,7 @@ export const useUsageData = (filters) => {
         throw error;
       }
     },
-    staleTime: 30000, // Cache por 30 segundos
+    staleTime: 30000,
     refetchOnWindowFocus: false
   });
 };
