@@ -13,9 +13,37 @@ DECLARE
     v_empresa_id UUID;
     v_result JSONB;
     v_voucher_descartavel RECORD;
+    v_tipo_refeicao RECORD;
 BEGIN
     -- Set validation flag
     PERFORM set_config('voucher.validated', 'true', true);
+
+    -- Verificar se o tipo de refeição existe e está ativo
+    SELECT * INTO v_tipo_refeicao
+    FROM tipos_refeicao
+    WHERE id = p_tipo_refeicao_id
+    AND ativo = true;
+
+    IF NOT FOUND THEN
+        PERFORM set_config('voucher.validated', 'false', true);
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Tipo de refeição inválido ou inativo'
+        );
+    END IF;
+
+    -- Verificar horário da refeição
+    IF NOT (CURRENT_TIME BETWEEN v_tipo_refeicao.horario_inicio 
+        AND (v_tipo_refeicao.horario_fim + (v_tipo_refeicao.minutos_tolerancia || ' minutes')::INTERVAL)) THEN
+        PERFORM set_config('voucher.validated', 'false', true);
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', format('Esta refeição só pode ser utilizada entre %s e %s',
+                v_tipo_refeicao.horario_inicio::TEXT,
+                v_tipo_refeicao.horario_fim::TEXT
+            )
+        );
+    END IF;
 
     -- Primeiro tenta encontrar um voucher descartável válido
     SELECT *
@@ -24,14 +52,7 @@ BEGIN
     WHERE vd.codigo = p_codigo
     AND vd.tipo_refeicao_id = p_tipo_refeicao_id
     AND NOT vd.usado
-    AND CURRENT_DATE <= vd.data_expiracao::date
-    AND EXISTS (
-        SELECT 1 FROM tipos_refeicao tr
-        WHERE tr.id = vd.tipo_refeicao_id
-        AND tr.ativo = true
-        AND CURRENT_TIME BETWEEN tr.horario_inicio 
-        AND (tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL)
-    );
+    AND CURRENT_DATE <= vd.data_expiracao::date;
 
     -- Se encontrou um voucher descartável válido
     IF FOUND THEN
@@ -40,7 +61,16 @@ BEGIN
         SET 
             usado = true,
             data_uso = CURRENT_TIMESTAMP
-        WHERE id = v_voucher_descartavel.id;
+        WHERE id = v_voucher_descartavel.id
+        AND NOT usado;  -- Garantir que não foi usado entre a verificação e o update
+
+        IF NOT FOUND THEN
+            PERFORM set_config('voucher.validated', 'false', true);
+            RETURN jsonb_build_object(
+                'success', false,
+                'error', 'Este voucher já foi utilizado'
+            );
+        END IF;
 
         -- Registrar uso
         INSERT INTO uso_voucher (
@@ -76,22 +106,7 @@ BEGIN
         PERFORM set_config('voucher.validated', 'false', true);
         RETURN jsonb_build_object(
             'success', false,
-            'error', 'Voucher inválido ou já utilizado'
-        );
-    END IF;
-
-    -- Verificar horário da refeição
-    IF NOT EXISTS (
-        SELECT 1 FROM tipos_refeicao tr
-        WHERE tr.id = p_tipo_refeicao_id
-        AND tr.ativo = true
-        AND CURRENT_TIME BETWEEN tr.horario_inicio 
-        AND (tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL)
-    ) THEN
-        PERFORM set_config('voucher.validated', 'false', true);
-        RETURN jsonb_build_object(
-            'success', false,
-            'error', 'Fora do horário permitido para esta refeição'
+            'error', 'Voucher inválido ou usuário suspenso'
         );
     END IF;
 
@@ -126,8 +141,7 @@ END;
 $$;
 
 -- Grant permissions
-REVOKE ALL ON FUNCTION set_config(text, text, boolean) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION set_config(text, text, boolean) TO authenticated;
+REVOKE ALL ON FUNCTION validate_and_use_voucher FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION validate_and_use_voucher TO authenticated;
 GRANT EXECUTE ON FUNCTION validate_and_use_voucher TO anon;
 
