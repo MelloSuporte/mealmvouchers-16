@@ -7,7 +7,20 @@ const buildQuery = (filters) => {
   
   let query = supabase
     .from('vw_uso_voucher_detalhado')
-    .select('*')
+    .select(`
+      id,
+      data_uso,
+      nome_usuario,
+      cpf,
+      empresa_id,
+      nome_empresa,
+      turno,
+      setor_id,
+      nome_setor,
+      tipo_refeicao,
+      valor_refeicao,
+      observacao
+    `)
     .order('data_uso', { ascending: false });
 
   if (filters.startDate) {
@@ -30,7 +43,7 @@ const buildQuery = (filters) => {
   }
 
   if (filters.shift && filters.shift !== 'all') {
-    query = query.eq('turno_id', filters.shift);
+    query = query.eq('turno', filters.shift);
     console.log('Filtro turno:', filters.shift);
   }
 
@@ -40,7 +53,7 @@ const buildQuery = (filters) => {
   }
 
   if (filters.mealType && filters.mealType !== 'all') {
-    query = query.eq('tipo_refeicao_id', filters.mealType);
+    query = query.eq('tipo_refeicao', filters.mealType);
     console.log('Filtro tipo refeição:', filters.mealType);
   }
 
@@ -55,12 +68,17 @@ export const useUsageData = (filters) => {
         console.log('Iniciando busca de dados com filtros:', JSON.stringify(filters, null, 2));
         
         const query = buildQuery(filters);
-        const { data, error } = await query;
+        const { data, error, status } = await query;
 
         if (error) {
-          console.error('Erro ao buscar dados:', error);
-          toast.error('Erro ao carregar dados do relatório');
+          console.error('Erro na consulta:', error);
+          toast.error(`Erro ao carregar dados: ${error.message}`);
           throw error;
+        }
+
+        if (status === 404) {
+          console.warn('Nenhum dado encontrado');
+          return [];
         }
 
         console.log('Dados recuperados:', data?.length || 0, 'registros');
@@ -78,6 +96,11 @@ export const useUsageData = (filters) => {
       }
     },
     staleTime: 30000,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    retry: 2,
+    onError: (error) => {
+      console.error('Erro na query:', error);
+      toast.error(`Erro ao carregar dados: ${error.message}`);
+    }
   });
 };

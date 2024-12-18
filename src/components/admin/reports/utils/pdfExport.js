@@ -5,15 +5,21 @@ import 'jspdf-autotable';
 import { toast } from "sonner";
 
 const formatCurrency = (value) => {
+  if (!value || isNaN(value)) return 'R$ 0,00';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
-  }).format(value || 0);
+  }).format(value);
 };
 
 const formatDate = (date) => {
   if (!date) return '-';
-  return format(new Date(date), 'dd/MM/yyyy HH:mm', { locale: ptBR });
+  try {
+    return format(new Date(date), 'dd/MM/yyyy HH:mm', { locale: ptBR });
+  } catch (error) {
+    console.error('Erro ao formatar data:', error);
+    return '-';
+  }
 };
 
 export const exportToPDF = async (metrics, filters) => {

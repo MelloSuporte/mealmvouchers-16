@@ -1,43 +1,64 @@
 import { useMemo } from 'react';
 
-const calculateTotalCost = (data) => {
-  return data.reduce((sum, item) => {
-    const valor = parseFloat(item.valor_refeicao || 0);
-    return sum + valor;
-  }, 0);
-};
-
-const calculateAverageCost = (totalCost, totalItems) => {
-  return totalItems > 0 ? totalCost / totalItems : 0;
-};
-
-const groupByField = (data, field, defaultValue = 'Não especificado') => {
-  return data.reduce((acc, curr) => {
-    const key = curr[field] || defaultValue;
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-};
-
-export const useMetricsCalculation = (usageData) => {
+export const useMetricsCalculation = (data = []) => {
   return useMemo(() => {
-    if (!usageData) return null;
+    console.log('Calculando métricas com dados:', data);
 
-    console.log('Calculando métricas com dados:', usageData);
+    if (!Array.isArray(data) || data.length === 0) {
+      console.log('Métricas calculadas:', {
+        totalCost: 0,
+        averageCost: 0,
+        byCompany: {},
+        byShift: {},
+        byMealType: {},
+        data: []
+      });
+      
+      return {
+        totalCost: 0,
+        averageCost: 0,
+        byCompany: {},
+        byShift: {},
+        byMealType: {},
+        data: []
+      };
+    }
 
-    const totalCost = calculateTotalCost(usageData);
-    const averageCost = calculateAverageCost(totalCost, usageData.length);
+    const totalCost = data.reduce((sum, item) => {
+      const valor = parseFloat(item.valor_refeicao || 0);
+      return sum + (isNaN(valor) ? 0 : valor);
+    }, 0);
 
-    const metrics = {
+    const averageCost = totalCost / data.length;
+
+    const byCompany = data.reduce((acc, curr) => {
+      const empresa = curr.nome_empresa || 'Não especificado';
+      acc[empresa] = (acc[empresa] || 0) + 1;
+      return acc;
+    }, {});
+
+    const byShift = data.reduce((acc, curr) => {
+      const turno = curr.turno || 'Não especificado';
+      acc[turno] = (acc[turno] || 0) + 1;
+      return acc;
+    }, {});
+
+    const byMealType = data.reduce((acc, curr) => {
+      const tipo = curr.tipo_refeicao || 'Não especificado';
+      acc[tipo] = (acc[tipo] || 0) + 1;
+      return acc;
+    }, {});
+
+    const result = {
       totalCost,
       averageCost,
-      byCompany: groupByField(usageData, 'nome_empresa'),
-      byShift: groupByField(usageData, 'turno'),
-      byMealType: groupByField(usageData, 'tipo_refeicao'),
-      data: usageData
+      byCompany,
+      byShift,
+      byMealType,
+      data
     };
 
-    console.log('Métricas calculadas:', metrics);
-    return metrics;
-  }, [usageData]);
+    console.log('Métricas calculadas:', result);
+    return result;
+  }, [data]);
 };
