@@ -68,12 +68,7 @@ const Voucher = () => {
           turno: users.turnos?.tipo_turno,
           cpf: users.cpf
         }));
-        navigate('/self-services', { 
-          state: { 
-            userName: users.nome,
-            turno: users.turnos?.tipo_turno 
-          }
-        });
+        navigate('/self-services');
         return;
       }
 
@@ -106,12 +101,7 @@ const Voucher = () => {
           mealType: descartaveis.tipos_refeicao.nome
         }));
 
-        navigate('/self-services', {
-          state: {
-            userName: 'Visitante',
-            mealType: descartaveis.tipos_refeicao.nome
-          }
-        });
+        navigate('/self-services');
         return;
       }
 
@@ -127,14 +117,9 @@ const Voucher = () => {
         console.log('Voucher extra encontrado:', extraVouchers);
         localStorage.setItem('extraVoucher', JSON.stringify({
           code: voucherCode,
-          cpf: extraVouchers.usuario_id
+          cpf: extraVouchers.usuario_id // Usando o ID do usuário como referência
         }));
-        navigate('/self-services', {
-          state: {
-            userName: 'Visitante Extra',
-            voucherType: 'extra'
-          }
-        });
+        navigate('/self-services');
         return;
       }
 
