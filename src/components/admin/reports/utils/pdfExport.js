@@ -12,6 +12,7 @@ const formatCurrency = (value) => {
 };
 
 const formatDate = (date) => {
+  if (!date) return '-';
   return format(new Date(date), 'dd/MM/yyyy HH:mm', { locale: ptBR });
 };
 
