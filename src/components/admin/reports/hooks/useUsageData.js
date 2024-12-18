@@ -68,7 +68,7 @@ export const useUsageData = (filters) => {
         console.log('Iniciando busca de dados com filtros:', JSON.stringify(filters, null, 2));
         
         const query = buildQuery(filters);
-        const { data, error, status } = await query;
+        const { data, error } = await query;
 
         if (error) {
           console.error('Erro na consulta:', error);
@@ -76,16 +76,12 @@ export const useUsageData = (filters) => {
           throw error;
         }
 
-        if (status === 404) {
-          console.warn('Nenhum dado encontrado');
-          return [];
-        }
-
         console.log('Dados recuperados:', data?.length || 0, 'registros');
         if (data?.length > 0) {
           console.log('Primeiro registro:', data[0]);
         } else {
           console.log('Nenhum dado encontrado com os filtros aplicados');
+          return [];
         }
         
         return data || [];
@@ -98,9 +94,11 @@ export const useUsageData = (filters) => {
     staleTime: 30000,
     refetchOnWindowFocus: false,
     retry: 2,
-    onError: (error) => {
-      console.error('Erro na query:', error);
-      toast.error(`Erro ao carregar dados: ${error.message}`);
+    meta: {
+      onError: (error) => {
+        console.error('Erro na query:', error);
+        toast.error(`Erro ao carregar dados: ${error.message}`);
+      }
     }
   });
 };
