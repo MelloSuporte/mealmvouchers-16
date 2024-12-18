@@ -9,6 +9,16 @@ ADD COLUMN IF NOT EXISTS valor_refeicao DECIMAL(10,2);
 -- Atualiza as políticas RLS
 ALTER TABLE relatorio_uso_voucher ENABLE ROW LEVEL SECURITY;
 
+-- Remove a política existente se ela existir
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "Usuários podem ver registros de sua empresa" ON relatorio_uso_voucher;
+EXCEPTION
+    WHEN undefined_object THEN
+        NULL;
+END $$;
+
+-- Cria a política novamente
 CREATE POLICY "Usuários podem ver registros de sua empresa"
     ON relatorio_uso_voucher
     FOR SELECT
