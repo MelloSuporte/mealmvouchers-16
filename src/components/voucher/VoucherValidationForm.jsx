@@ -49,7 +49,7 @@ const VoucherValidationForm = () => {
       }
 
       // Se chegou aqui, nenhum voucher válido foi encontrado
-      toast.error(disposableResult.error || commonResult.error || "Voucher inválido ou já utilizado");
+      toast.error(disposableResult.error || commonResult.error || "Voucher inválido");
       console.error('Falha na validação:', { disposableResult, commonResult });
       
     } catch (error) {
