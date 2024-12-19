@@ -6,6 +6,7 @@ import UserFormMain from '@/components/admin/UserFormMain';
 import CompanyForm from '@/components/admin/CompanyForm';
 import MealTypeForm from '@/components/admin/meal-type/MealTypeForm';
 import ReportForm from '@/components/admin/ReportForm';
+import ReportsTForm from '@/components/admin/reports-t/ReportsTForm';
 import RLSForm from '@/components/admin/RLSForm';
 import DisposableVoucherForm from '@/components/admin/DisposableVoucherForm';
 import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
@@ -45,6 +46,7 @@ const Admin = () => {
             <TabsTrigger value="companies">Empresas</TabsTrigger>
             <TabsTrigger value="meal-types">Tipos de Refeição</TabsTrigger>
             <TabsTrigger value="reports">Relatórios</TabsTrigger>
+            <TabsTrigger value="reports-t">Relatórios (T)</TabsTrigger>
             <TabsTrigger value="rls">Vouchers Extras</TabsTrigger>
             <TabsTrigger value="disposable-vouchers">Vouchers Descartáveis</TabsTrigger>
             <TabsTrigger value="background-images">Imagens de Fundo</TabsTrigger>
@@ -69,6 +71,11 @@ const Admin = () => {
           <TabsContent value="reports">
             <Card>
               <ReportForm />
+            </Card>
+          </TabsContent>
+          <TabsContent value="reports-t">
+            <Card>
+              <ReportsTForm />
             </Card>
           </TabsContent>
           <TabsContent value="rls">
