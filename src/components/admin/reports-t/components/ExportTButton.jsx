@@ -47,17 +47,17 @@ const ExportTButton = ({ filters }) => {
       doc.text(`Tipo de Refeição: ${filters.mealType === 'all' ? 'Todos' : data[0]?.tipo_refeicao || '-'}`, 14, 75);
 
       // Valor total
-      const totalValue = data.reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);
+      const totalValue = data.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0);
       doc.text(`Valor Total: ${formatCurrency(totalValue)}`, 14, 85);
 
       // Dados detalhados
       const tableData = data.map(item => [
         format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
         item.nome_usuario || '-',
-        item.cpf || '-',
+        item.cpf_usuario || '-',
         item.nome_empresa || '-',
         item.tipo_refeicao || '-',
-        formatCurrency(item.valor || 0),
+        formatCurrency(item.valor_refeicao || 0),
         item.turno || '-',
         item.nome_setor || '-'
       ]);

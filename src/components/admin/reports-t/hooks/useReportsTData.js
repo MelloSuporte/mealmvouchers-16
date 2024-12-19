@@ -16,7 +16,7 @@ export const useReportsTData = (filters) => {
         }
 
         let query = supabase
-          .from('vw_uso_voucher_detalhado')
+          .from('relatorio_uso_voucher')
           .select('*');
 
         // Formatar datas para o início e fim do dia
@@ -37,7 +37,7 @@ export const useReportsTData = (filters) => {
 
         if (filters.shift && filters.shift !== 'all') {
           console.log('Filtrando por turno:', filters.shift);
-          query = query.eq('turno_id', filters.shift);
+          query = query.eq('turno', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
@@ -47,7 +47,7 @@ export const useReportsTData = (filters) => {
 
         if (filters.mealType && filters.mealType !== 'all') {
           console.log('Filtrando por tipo refeição:', filters.mealType);
-          query = query.eq('tipo_refeicao_id', filters.mealType);
+          query = query.eq('tipo_refeicao', filters.mealType);
         }
 
         console.log('Query final:', query);
