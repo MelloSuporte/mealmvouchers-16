@@ -50,6 +50,9 @@ export const useReportsTData = (filters) => {
           query = query.eq('tipo_refeicao', filters.mealType);
         }
 
+        // Ordenar por data de uso
+        query = query.order('data_uso', { ascending: false });
+
         console.log('Query final:', query);
         const { data, error } = await query;
 
@@ -63,6 +66,7 @@ export const useReportsTData = (filters) => {
         
         if (data?.length === 0) {
           console.log('Nenhum registro encontrado com os filtros aplicados');
+          toast.warning('Nenhum registro encontrado para o período selecionado');
         }
 
         return data || [];
@@ -73,7 +77,8 @@ export const useReportsTData = (filters) => {
       }
     },
     retry: 1,
-    staleTime: 30000,
-    cacheTime: 60000,
+    staleTime: 0, // Sempre buscar dados frescos
+    cacheTime: 0, // Não manter cache
+    refetchOnWindowFocus: false,
   });
 };
