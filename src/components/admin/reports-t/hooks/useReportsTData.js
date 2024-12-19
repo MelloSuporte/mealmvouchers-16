@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { startOfDay, endOfDay } from 'date-fns';
-import { fromZonedTime } from 'date-fns-tz';
+import { formatInTimeZone } from 'date-fns-tz';
 import { toast } from "sonner";
 
 export const useReportsTData = (filters) => {
@@ -34,18 +34,18 @@ export const useReportsTData = (filters) => {
 
         // Ajusta o fuso horário para UTC
         const timeZone = 'America/Sao_Paulo';
-        const start = fromZonedTime(startOfDay(new Date(filters.startDate)), timeZone);
-        const end = fromZonedTime(endOfDay(new Date(filters.endDate)), timeZone);
+        const startUtc = formatInTimeZone(startOfDay(new Date(filters.startDate)), timeZone, "yyyy-MM-dd'T'HH:mm:ss'Z'");
+        const endUtc = formatInTimeZone(endOfDay(new Date(filters.endDate)), timeZone, "yyyy-MM-dd'T'HH:mm:ss'Z'");
         
         console.log('Data início (local):', filters.startDate);
         console.log('Data fim (local):', filters.endDate);
-        console.log('Data início (UTC):', start.toISOString());
-        console.log('Data fim (UTC):', end.toISOString());
+        console.log('Data início (UTC):', startUtc);
+        console.log('Data fim (UTC):', endUtc);
         
         // Adiciona filtros de data
         query = query
-          .gte('data_uso', start.toISOString())
-          .lte('data_uso', end.toISOString());
+          .gte('data_uso', startUtc)
+          .lte('data_uso', endUtc);
 
         if (filters.company && filters.company !== 'all') {
           console.log('Filtrando por empresa:', filters.company);
