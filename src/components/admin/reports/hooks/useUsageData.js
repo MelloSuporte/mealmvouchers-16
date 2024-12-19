@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
+import { startOfDay, endOfDay } from 'date-fns';
 import { toast } from "sonner";
-import { format, startOfDay, endOfDay } from 'date-fns';
 
 export const useUsageData = (filters) => {
   return useQuery({
@@ -20,7 +20,7 @@ export const useUsageData = (filters) => {
           .from('vw_uso_voucher_detalhado')
           .select('*');
 
-        // Formatar datas corretamente para o Supabase
+        // Formatar datas para o início e fim do dia
         const start = startOfDay(new Date(filters.startDate));
         const end = endOfDay(new Date(filters.endDate));
         
