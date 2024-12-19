@@ -17,7 +17,7 @@ export const useUsageData = (filters) => {
 
         // Construir query base
         let query = supabase
-          .from('relatorio_uso_voucher')
+          .from('vw_uso_voucher_detalhado')
           .select('*');
 
         // Formatar datas corretamente para o Supabase
