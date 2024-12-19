@@ -39,19 +39,37 @@ export const exportToPDF = async (metrics, filters) => {
     doc.setFontSize(16);
     doc.text("Relatório de Uso de Vouchers", 14, 15);
     
+    // Informações dos filtros
     doc.setFontSize(10);
+    doc.text("Informações do Relatório:", 14, 25);
+    
+    // Empresa
+    const empresaNome = metrics?.data?.[0]?.nome_empresa || 'Todas as Empresas';
+    doc.text(`Empresa: ${empresaNome}`, 14, 35);
+    
+    // Período
     const startDate = filters.startDate ? formatDate(filters.startDate) : '-';
     const endDate = filters.endDate ? formatDate(filters.endDate) : '-';
-    doc.text(`Período: ${startDate} a ${endDate}`, 14, 25);
-
-    // Métricas resumidas
-    doc.text("Resumo:", 14, 35);
-    doc.text(`Total Gasto: ${formatCurrency(metrics.totalCost)}`, 14, 45);
-    doc.text(`Custo Médio por Refeição: ${formatCurrency(metrics.averageCost)}`, 14, 55);
-    doc.text(`Total de Refeições: ${metrics.data?.length || 0}`, 14, 65);
+    doc.text(`Período: ${startDate} a ${endDate}`, 14, 45);
+    
+    // Turno
+    const turnoNome = metrics?.data?.[0]?.turno || 'Todos os Turnos';
+    doc.text(`Turno: ${turnoNome}`, 14, 55);
+    
+    // Setor
+    const setorNome = metrics?.data?.[0]?.nome_setor || 'Todos os Setores';
+    doc.text(`Setor: ${setorNome}`, 14, 65);
+    
+    // Tipo de Refeição
+    const tipoRefeicao = metrics?.data?.[0]?.tipo_refeicao || 'Todos os Tipos';
+    doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, 75);
+    
+    // Valor Total
+    const valorTotal = formatCurrency(metrics?.totalCost || 0);
+    doc.text(`Valor Total: ${valorTotal}`, 14, 85);
 
     // Se houver dados, adiciona a tabela detalhada
-    if (metrics.data && metrics.data.length > 0) {
+    if (metrics?.data && metrics.data.length > 0) {
       logger.info('Processando dados para tabela:', { 
         quantidade: metrics.data.length 
       });
@@ -73,7 +91,7 @@ export const exportToPDF = async (metrics, filters) => {
       });
 
       doc.autoTable({
-        startY: 75,
+        startY: 95,
         head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor']],
         body: tableData,
         theme: 'grid',
@@ -100,7 +118,7 @@ export const exportToPDF = async (metrics, filters) => {
     } else {
       logger.info('Nenhum dado encontrado para o período');
       // Mensagem quando não há dados
-      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 75);
+      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 95);
     }
 
     const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
