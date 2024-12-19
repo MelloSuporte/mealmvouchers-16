@@ -13,9 +13,15 @@ const ExportButton = ({ metrics, filters, isLoading }) => {
         metrics
       });
 
-      // Verifica se há dados válidos para exportar
+      // Mesmo sem dados, permitimos a exportação
       if (!metrics?.data || metrics.data.length === 0) {
-        toast.error("Não há dados para exportar no período selecionado");
+        const doc = await exportToPDF({
+          ...metrics,
+          data: [], // Garante que data é um array vazio
+          totalCost: 0,
+          averageCost: 0
+        }, filters);
+        toast.success("Relatório exportado com sucesso!");
         return;
       }
 
@@ -27,14 +33,10 @@ const ExportButton = ({ metrics, filters, isLoading }) => {
     }
   };
 
-  // Habilita o botão quando houver dados disponíveis
-  const isDisabled = isLoading || !metrics?.data || metrics.data.length === 0;
-
   return (
     <Button 
       onClick={handleExportClick}
       className="ml-4 bg-primary hover:bg-primary/90"
-      disabled={isDisabled}
     >
       <FileDown className="mr-2 h-4 w-4" />
       Exportar Relatório

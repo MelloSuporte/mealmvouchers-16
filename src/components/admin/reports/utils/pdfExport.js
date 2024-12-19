@@ -2,7 +2,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { toast } from "sonner";
 
 const formatCurrency = (value) => {
   if (!value || isNaN(value)) return 'R$ 0,00';
@@ -26,10 +25,6 @@ export const exportToPDF = async (metrics, filters) => {
   try {
     console.log('Iniciando exportação com dados:', { metrics, filters });
 
-    if (!metrics?.data || metrics.data.length === 0) {
-      throw new Error("Não há dados disponíveis para exportar no período selecionado");
-    }
-
     const doc = new jsPDF();
     
     // Cabeçalho
@@ -47,43 +42,48 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text(`Custo Médio por Refeição: ${formatCurrency(metrics.averageCost)}`, 14, 55);
     doc.text(`Total de Refeições: ${metrics.data?.length || 0}`, 14, 65);
 
-    // Dados detalhados em tabela
-    const tableData = metrics.data.map(item => [
-      formatDate(item.data_uso),
-      item.nome_usuario || '-',
-      item.cpf || '-',
-      item.nome_empresa || '-',
-      item.tipo_refeicao || '-',
-      formatCurrency(item.valor),
-      item.turno || '-',
-      item.nome_setor || '-'
-    ]);
+    // Se houver dados, adiciona a tabela detalhada
+    if (metrics.data && metrics.data.length > 0) {
+      const tableData = metrics.data.map(item => [
+        formatDate(item.data_uso),
+        item.nome_usuario || '-',
+        item.cpf || '-',
+        item.nome_empresa || '-',
+        item.tipo_refeicao || '-',
+        formatCurrency(item.valor),
+        item.turno || '-',
+        item.nome_setor || '-'
+      ]);
 
-    doc.autoTable({
-      startY: 75,
-      head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor']],
-      body: tableData,
-      theme: 'grid',
-      styles: { 
-        fontSize: 8,
-        cellPadding: 2
-      },
-      headStyles: { 
-        fillColor: [66, 66, 66],
-        textColor: [255, 255, 255],
-        fontStyle: 'bold'
-      },
-      columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 20 },
-        7: { cellWidth: 20 }
-      }
-    });
+      doc.autoTable({
+        startY: 75,
+        head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor']],
+        body: tableData,
+        theme: 'grid',
+        styles: { 
+          fontSize: 8,
+          cellPadding: 2
+        },
+        headStyles: { 
+          fillColor: [66, 66, 66],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 25 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 20 },
+          7: { cellWidth: 20 }
+        }
+      });
+    } else {
+      // Mensagem quando não há dados
+      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 75);
+    }
 
     const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
     
