@@ -4,26 +4,54 @@ import { FileDown } from 'lucide-react';
 import { toast } from "sonner";
 import { exportToPDF } from '../utils/pdfExport';
 import logger from '@/config/logger';
+import { useAdmin } from '@/contexts/AdminContext';
 
-const ExportButton = ({ filters, userName }) => {
+const ExportButton = ({ metrics, filters, isLoading }) => {
+  const { user } = useAdmin();
+
   const handleExportClick = async () => {
     try {
-      logger.info('Iniciando exportação com filtros:', filters);
+      logger.info('Iniciando exportação com dados:', {
+        metricsLength: metrics?.data?.length,
+        filters,
+        totalCost: metrics?.totalCost,
+        averageCost: metrics?.averageCost
+      });
 
+      // Adiciona o nome do usuário aos filtros
       const filtersWithUser = {
         ...filters,
-        userName: userName || 'Usuário do Sistema'
+        userName: user?.email || 'Usuário do Sistema'
       };
 
-      await exportToPDF({
-        data: [], 
-        totalCost: 0,
-        averageCost: 0
-      }, filtersWithUser);
+      // Mesmo sem dados, permitimos a exportação
+      if (!metrics?.data || metrics.data.length === 0) {
+        logger.info('Exportando relatório vazio');
+        const doc = await exportToPDF({
+          ...metrics,
+          data: [], // Garante que data é um array vazio
+          totalCost: 0,
+          averageCost: 0
+        }, filtersWithUser);
+        logger.info('Relatório vazio exportado com sucesso');
+        toast.success("Relatório exportado com sucesso!");
+        return;
+      }
 
+      logger.info('Exportando relatório com dados:', {
+        registros: metrics.data.length,
+        primeiroRegistro: metrics.data[0],
+        ultimoRegistro: metrics.data[metrics.data.length - 1]
+      });
+
+      await exportToPDF(metrics, filtersWithUser);
       toast.success("Relatório exportado com sucesso!");
     } catch (error) {
-      logger.error('Erro ao exportar:', error);
+      logger.error('Erro ao exportar:', error, {
+        stack: error.stack,
+        metrics,
+        filters
+      });
       toast.error("Erro ao exportar relatório: " + error.message);
     }
   };
@@ -31,7 +59,7 @@ const ExportButton = ({ filters, userName }) => {
   return (
     <Button 
       onClick={handleExportClick}
-      className="bg-primary hover:bg-primary/90"
+      className="ml-4 bg-primary hover:bg-primary/90"
     >
       <FileDown className="mr-2 h-4 w-4" />
       Exportar Relatório
