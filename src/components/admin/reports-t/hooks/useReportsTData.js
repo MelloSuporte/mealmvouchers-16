@@ -41,7 +41,7 @@ export const useReportsTData = (filters) => {
               turno_id,
               setor_id
             ),
-            tipos_refeicao (
+            tipos_refeicao!inner (
               id,
               nome,
               valor
