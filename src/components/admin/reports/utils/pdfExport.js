@@ -26,9 +26,8 @@ export const exportToPDF = async (metrics, filters) => {
   try {
     console.log('Iniciando exportação com dados:', { metrics, filters });
 
-    if (!metrics?.data?.length) {
-      toast.error("Não há dados para exportar");
-      throw new Error("Não há dados para exportar");
+    if (!metrics?.data || metrics.data.length === 0) {
+      throw new Error("Não há dados disponíveis para exportar no período selecionado");
     }
 
     const doc = new jsPDF();
@@ -91,11 +90,9 @@ export const exportToPDF = async (metrics, filters) => {
     console.log('Salvando arquivo:', fileName);
     doc.save(fileName);
     
-    toast.success("Relatório exportado com sucesso!");
     return fileName;
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
-    toast.error("Erro ao gerar PDF: " + error.message);
     throw error;
   }
 };

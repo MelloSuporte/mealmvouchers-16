@@ -7,16 +7,17 @@ import { exportToPDF } from '../utils/pdfExport';
 const ExportButton = ({ metrics, filters, isLoading }) => {
   const handleExportClick = async () => {
     try {
-      if (!metrics?.data) {
-        toast.error("Não há dados para exportar no período selecionado");
-        return;
-      }
-
       console.log('Iniciando exportação com dados:', {
         dataLength: metrics?.data?.length,
         filters,
         metrics
       });
+
+      // Verifica se há dados válidos para exportar
+      if (!metrics?.data || metrics.data.length === 0) {
+        toast.error("Não há dados para exportar no período selecionado");
+        return;
+      }
 
       await exportToPDF(metrics, filters);
       toast.success("Relatório exportado com sucesso!");
@@ -26,8 +27,8 @@ const ExportButton = ({ metrics, filters, isLoading }) => {
     }
   };
 
-  // Modificado para habilitar o botão quando houver dados
-  const isDisabled = isLoading || !metrics?.data;
+  // Habilita o botão quando houver dados disponíveis
+  const isDisabled = isLoading || !metrics?.data || metrics.data.length === 0;
 
   return (
     <Button 
