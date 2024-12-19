@@ -26,7 +26,7 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
 # Expor porta
-EXPOSE 3000
+EXPOSE 80
 
 # Comando para iniciar a aplicação
 CMD ["npm", "run", "preview"]
