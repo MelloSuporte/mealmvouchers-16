@@ -63,8 +63,6 @@ export const useReportsTData = (filters) => {
         
         if (data?.length === 0) {
           console.log('Nenhum registro encontrado com os filtros aplicados');
-        } else {
-          console.log('Primeiro registro:', data[0]);
         }
 
         return data || [];
