@@ -15,6 +15,18 @@ export const useReportsTData = (filters) => {
           return [];
         }
 
+        // Primeiro, vamos verificar se há dados na tabela
+        const { count, error: countError } = await supabase
+          .from('relatorio_uso_voucher')
+          .select('*', { count: 'exact', head: true });
+
+        console.log('Total de registros na tabela:', count);
+
+        if (countError) {
+          console.error('Erro ao verificar registros:', countError);
+          throw countError;
+        }
+
         let query = supabase
           .from('relatorio_uso_voucher')
           .select('*');
@@ -26,9 +38,13 @@ export const useReportsTData = (filters) => {
         console.log('Data início formatada:', start.toISOString());
         console.log('Data fim formatada:', end.toISOString());
         
+        // Adicionar filtros de data
         query = query
           .gte('data_uso', start.toISOString())
           .lte('data_uso', end.toISOString());
+
+        // Log da query antes de adicionar outros filtros
+        console.log('Query após filtros de data:', query);
 
         if (filters.company && filters.company !== 'all') {
           console.log('Filtrando por empresa:', filters.company);
@@ -54,6 +70,8 @@ export const useReportsTData = (filters) => {
         query = query.order('data_uso', { ascending: false });
 
         console.log('Query final:', query);
+        
+        // Executar a query
         const { data, error } = await query;
 
         if (error) {
@@ -62,7 +80,8 @@ export const useReportsTData = (filters) => {
           throw error;
         }
 
-        console.log(`Encontrados ${data?.length || 0} registros`);
+        console.log(`Encontrados ${data?.length || 0} registros após aplicar filtros`);
+        console.log('Primeiros registros:', data?.slice(0, 3));
         
         if (data?.length === 0) {
           console.log('Nenhum registro encontrado com os filtros aplicados');
