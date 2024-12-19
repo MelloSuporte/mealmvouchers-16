@@ -7,7 +7,7 @@ import { exportToPDF } from '../utils/pdfExport';
 const ExportButton = ({ metrics, filters, isLoading }) => {
   const handleExportClick = async () => {
     try {
-      if (!metrics?.data?.length) {
+      if (!metrics?.data) {
         toast.error("Não há dados para exportar no período selecionado");
         return;
       }
@@ -26,11 +26,14 @@ const ExportButton = ({ metrics, filters, isLoading }) => {
     }
   };
 
+  // Modificado para habilitar o botão quando houver dados
+  const isDisabled = isLoading || !metrics?.data;
+
   return (
     <Button 
       onClick={handleExportClick}
-      className="ml-4"
-      disabled={!metrics?.data?.length || isLoading}
+      className="ml-4 bg-primary hover:bg-primary/90"
+      disabled={isDisabled}
     >
       <FileDown className="mr-2 h-4 w-4" />
       Exportar Relatório
