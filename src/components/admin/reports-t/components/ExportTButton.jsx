@@ -21,6 +21,8 @@ const ExportTButton = ({ filters }) => {
 
   const handleExport = async () => {
     try {
+      console.log('Iniciando exportação com dados:', { data, filters });
+
       if (!data?.length) {
         toast.error("Não há dados para exportar");
         return;
@@ -45,7 +47,7 @@ const ExportTButton = ({ filters }) => {
       doc.text(`Tipo de Refeição: ${filters.mealType === 'all' ? 'Todos' : data[0]?.tipo_refeicao || '-'}`, 14, 75);
 
       // Valor total
-      const totalValue = data.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0);
+      const totalValue = data.reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);
       doc.text(`Valor Total: ${formatCurrency(totalValue)}`, 14, 85);
 
       // Dados detalhados
@@ -55,17 +57,22 @@ const ExportTButton = ({ filters }) => {
         item.cpf || '-',
         item.nome_empresa || '-',
         item.tipo_refeicao || '-',
-        formatCurrency(item.valor_refeicao || 0),
+        formatCurrency(item.valor || 0),
         item.turno || '-',
         item.nome_setor || '-'
       ]);
+
+      console.log('Dados formatados para tabela:', tableData[0]); // Log primeiro item para debug
 
       doc.autoTable({
         startY: 95,
         head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor']],
         body: tableData,
         theme: 'grid',
-        styles: { fontSize: 8, cellPadding: 2 },
+        styles: { 
+          fontSize: 8,
+          cellPadding: 2
+        },
         headStyles: { 
           fillColor: [66, 66, 66],
           textColor: [255, 255, 255],
@@ -84,9 +91,10 @@ const ExportTButton = ({ filters }) => {
       });
 
       const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
+      
+      console.log('Salvando arquivo:', fileName);
       doc.save(fileName);
       
-      console.log('PDF exportado com sucesso:', fileName);
       toast.success("Relatório exportado com sucesso!");
     } catch (error) {
       console.error('Erro ao exportar:', error);
