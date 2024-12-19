@@ -34,8 +34,8 @@ export const useReportsTData = (filters) => {
 
         // Ajusta o fuso horário para UTC
         const timeZone = 'America/Sao_Paulo';
-        const startUtc = formatInTimeZone(startOfDay(new Date(filters.startDate)), timeZone, "yyyy-MM-dd'T'HH:mm:ss'Z'");
-        const endUtc = formatInTimeZone(endOfDay(new Date(filters.endDate)), timeZone, "yyyy-MM-dd'T'HH:mm:ss'Z'");
+        const startUtc = formatInTimeZone(startOfDay(filters.startDate), timeZone, "yyyy-MM-dd'T'HH:mm:ss'Z'");
+        const endUtc = formatInTimeZone(endOfDay(filters.endDate), timeZone, "yyyy-MM-dd'T'HH:mm:ss'Z'");
         
         console.log('Data início (local):', filters.startDate);
         console.log('Data fim (local):', filters.endDate);
@@ -81,15 +81,15 @@ export const useReportsTData = (filters) => {
           throw error;
         }
 
-        if (data) {
-          console.log(`Encontrados ${data.length} registros após aplicar filtros`);
-          console.log('Primeiros registros:', data.slice(0, 3));
-        } else {
+        if (!data || data.length === 0) {
           console.log('Nenhum registro encontrado com os filtros aplicados');
-          toast.warning('Nenhum registro encontrado para o período selecionado');
+          return [];
         }
 
-        return data || [];
+        console.log(`Encontrados ${data.length} registros`);
+        console.log('Primeiros registros:', data.slice(0, 3));
+
+        return data;
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
         toast.error('Falha ao carregar dados: ' + error.message);

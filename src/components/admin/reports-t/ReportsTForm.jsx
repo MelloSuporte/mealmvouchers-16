@@ -5,10 +5,25 @@ import { useReportsTFilters } from './hooks/useReportsTFilters';
 import ExportTButton from './components/ExportTButton';
 
 const ReportsTForm = () => {
-  const { filters, handleFilterChange, data } = useReportsTFilters();
+  const { filters, handleFilterChange, data, isLoading, error } = useReportsTFilters();
 
-  if (data === undefined || !data) {
-    return <div>Carregando dados...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-500">Erro ao carregar dados: {error.message}</p>
+      </div>
+    );
   }
 
   return (
@@ -19,9 +34,13 @@ const ReportsTForm = () => {
       </div>
       <ReportsTFilters onFilterChange={handleFilterChange} filters={filters} />
       <ReportsTCharts filters={filters} />
-      <div className="text-red-500">
-        {filters.startDate && filters.endDate && !data.length && <p>Nenhum registro encontrado para o período selecionado.</p>}
-      </div>
+      {filters.startDate && filters.endDate && (!data || data.length === 0) && (
+        <div className="text-center p-4 text-gray-500">
+          Nenhum registro encontrado para o período selecionado.
+          <br />
+          Tente ajustar os filtros ou selecione um período diferente.
+        </div>
+      )}
     </div>
   );
 };
