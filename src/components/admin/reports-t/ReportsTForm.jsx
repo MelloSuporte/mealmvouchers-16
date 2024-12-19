@@ -13,7 +13,7 @@ const ReportsTForm = () => {
         <h2 className="text-lg font-semibold">Filtros</h2>
         <ExportTButton filters={filters} />
       </div>
-      <ReportsTFilters onFilterChange={handleFilterChange} />
+      <ReportsTFilters onFilterChange={handleFilterChange} filters={filters} />
       <ReportsTCharts filters={filters} />
     </div>
   );

@@ -5,7 +5,7 @@ import { supabase } from '../../../config/supabase';
 import { toast } from 'sonner';
 import logger from '../../../config/logger';
 
-const TurnoSelect = ({ value, onValueChange }) => {
+const TurnoSelect = ({ value, onValueChange, includeAllOption = false }) => {
   const { data: turnos, isLoading } = useQuery({
     queryKey: ['turnos'],
     queryFn: async () => {
@@ -53,6 +53,9 @@ const TurnoSelect = ({ value, onValueChange }) => {
         <SelectValue placeholder={isLoading ? "Carregando turnos..." : "Selecione o turno"} />
       </SelectTrigger>
       <SelectContent>
+        {includeAllOption && (
+          <SelectItem value="all">Todos</SelectItem>
+        )}
         {turnos && turnos.length > 0 ? (
           turnos
             .filter(turno => turno.ativo)

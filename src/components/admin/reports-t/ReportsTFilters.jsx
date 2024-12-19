@@ -7,7 +7,7 @@ import SetorSelect from '../user/SetorSelect';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMealTypes } from '@/hooks/useMealTypes';
 
-const ReportsTFilters = ({ onFilterChange }) => {
+const ReportsTFilters = ({ onFilterChange, filters }) => {
   const { data: mealTypes } = useMealTypes();
 
   return (
@@ -16,6 +16,7 @@ const ReportsTFilters = ({ onFilterChange }) => {
         <Label className="text-sm font-medium mb-2 block">Empresa</Label>
         <CompanySelect 
           includeAllOption={true}
+          value={filters?.company}
           onValueChange={(value) => onFilterChange('company', value)} 
         />
       </div>
@@ -23,6 +24,7 @@ const ReportsTFilters = ({ onFilterChange }) => {
       <div>
         <Label className="text-sm font-medium mb-2 block">Data Inicial</Label>
         <DatePicker
+          date={filters?.startDate}
           onDateChange={(date) => onFilterChange('startDate', date)}
         />
       </div>
@@ -30,6 +32,7 @@ const ReportsTFilters = ({ onFilterChange }) => {
       <div>
         <Label className="text-sm font-medium mb-2 block">Data Final</Label>
         <DatePicker
+          date={filters?.endDate}
           onDateChange={(date) => onFilterChange('endDate', date)}
         />
       </div>
@@ -37,6 +40,8 @@ const ReportsTFilters = ({ onFilterChange }) => {
       <div>
         <Label className="text-sm font-medium mb-2 block">Turno</Label>
         <TurnoSelect 
+          includeAllOption={true}
+          value={filters?.shift}
           onValueChange={(value) => onFilterChange('shift', value)}
         />
       </div>
@@ -44,13 +49,18 @@ const ReportsTFilters = ({ onFilterChange }) => {
       <div>
         <Label className="text-sm font-medium mb-2 block">Setor</Label>
         <SetorSelect 
+          includeAllOption={true}
+          value={filters?.sector}
           onValueChange={(value) => onFilterChange('sector', value)}
         />
       </div>
 
       <div>
         <Label className="text-sm font-medium mb-2 block">Tipo de Refeição</Label>
-        <Select onValueChange={(value) => onFilterChange('mealType', value)}>
+        <Select 
+          value={filters?.mealType} 
+          onValueChange={(value) => onFilterChange('mealType', value)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Selecione o tipo" />
           </SelectTrigger>

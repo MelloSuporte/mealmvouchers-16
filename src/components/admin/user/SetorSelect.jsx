@@ -11,7 +11,7 @@ import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
 import { toast } from 'sonner';
 
-const SetorSelect = ({ value, onValueChange }) => {
+const SetorSelect = ({ value, onValueChange, includeAllOption = false }) => {
   const { data: setores, isLoading } = useQuery({
     queryKey: ['setores'],
     queryFn: async () => {
@@ -49,6 +49,9 @@ const SetorSelect = ({ value, onValueChange }) => {
         <SelectValue placeholder="Selecione o setor" />
       </SelectTrigger>
       <SelectContent>
+        {includeAllOption && (
+          <SelectItem value="all">Todos</SelectItem>
+        )}
         {setores?.map((setor) => (
           <SelectItem key={setor.id} value={setor.id.toString()}>
             {setor.nome_setor}
