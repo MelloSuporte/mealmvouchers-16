@@ -106,9 +106,8 @@ const ExportTButton = ({ filters }) => {
     <Button 
       onClick={handleExport}
       disabled={isLoading || !data?.length}
-      variant="outline"
+      className="bg-primary hover:bg-primary/90 text-white"
       size="sm"
-      className="h-8 px-4 text-xs"
     >
       <FileDown className="mr-2 h-4 w-4" />
       Exportar Relatório
