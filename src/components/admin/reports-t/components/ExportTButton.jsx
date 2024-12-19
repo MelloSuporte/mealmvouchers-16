@@ -23,8 +23,8 @@ const ExportTButton = ({ filters }) => {
     try {
       console.log('Iniciando exportação com dados:', { data, filters });
 
-      if (!data?.length) {
-        toast.error("Não há dados para exportar");
+      if (!data) {
+        toast.error("Não há dados para exportar no período selecionado");
         return;
       }
 
@@ -102,10 +102,13 @@ const ExportTButton = ({ filters }) => {
     }
   };
 
+  // Modificado para habilitar o botão quando houver dados
+  const isDisabled = isLoading || !data;
+
   return (
     <Button 
       onClick={handleExport}
-      disabled={isLoading || !data?.length}
+      disabled={isDisabled}
       className="bg-primary hover:bg-primary/90 text-white"
       size="sm"
     >
