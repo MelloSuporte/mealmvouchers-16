@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import logger from '@/config/logger';
 
 const formatCurrency = (value) => {
   if (!value || isNaN(value)) return 'R$ 0,00';
@@ -16,14 +17,21 @@ const formatDate = (date) => {
   try {
     return format(new Date(date), 'dd/MM/yyyy HH:mm', { locale: ptBR });
   } catch (error) {
-    console.error('Erro ao formatar data:', error);
+    logger.error('Erro ao formatar data:', error, { date });
     return '-';
   }
 };
 
 export const exportToPDF = async (metrics, filters) => {
   try {
-    console.log('Iniciando exportação com dados:', { metrics, filters });
+    logger.info('Iniciando geração do PDF:', { 
+      metrics: {
+        totalRegistros: metrics?.data?.length,
+        totalCost: metrics?.totalCost,
+        averageCost: metrics?.averageCost
+      }, 
+      filters 
+    });
 
     const doc = new jsPDF();
     
@@ -44,6 +52,10 @@ export const exportToPDF = async (metrics, filters) => {
 
     // Se houver dados, adiciona a tabela detalhada
     if (metrics.data && metrics.data.length > 0) {
+      logger.info('Processando dados para tabela:', { 
+        quantidade: metrics.data.length 
+      });
+
       const tableData = metrics.data.map(item => [
         formatDate(item.data_uso),
         item.nome_usuario || '-',
@@ -54,6 +66,11 @@ export const exportToPDF = async (metrics, filters) => {
         item.turno || '-',
         item.nome_setor || '-'
       ]);
+
+      logger.info('Dados formatados para tabela:', { 
+        linhas: tableData.length,
+        primeiraLinha: tableData[0]
+      });
 
       doc.autoTable({
         startY: 75,
@@ -81,18 +98,23 @@ export const exportToPDF = async (metrics, filters) => {
         }
       });
     } else {
+      logger.info('Nenhum dado encontrado para o período');
       // Mensagem quando não há dados
       doc.text("Nenhum registro encontrado para o período selecionado.", 14, 75);
     }
 
     const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
     
-    console.log('Salvando arquivo:', fileName);
+    logger.info('Salvando arquivo:', { fileName });
     doc.save(fileName);
     
     return fileName;
   } catch (error) {
-    console.error('Erro ao gerar PDF:', error);
+    logger.error('Erro ao gerar PDF:', error, {
+      stack: error.stack,
+      metrics,
+      filters
+    });
     throw error;
   }
 };
