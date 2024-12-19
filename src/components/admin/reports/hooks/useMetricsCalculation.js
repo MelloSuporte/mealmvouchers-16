@@ -14,7 +14,7 @@ export const useMetricsCalculation = (usageData) => {
   console.log('Calculando métricas com', usageData.length, 'registros');
 
   const totalCost = usageData.reduce((sum, item) => {
-    const valor = parseFloat(item.valor || item.valor_refeicao || 0);
+    const valor = parseFloat(item.valor_refeicao || 0);
     return sum + valor;
   }, 0);
 
