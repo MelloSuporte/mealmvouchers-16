@@ -42,7 +42,7 @@ export const useReportsTData = (filters) => {
 
         if (filters.sector && filters.sector !== 'all') {
           console.log('Filtrando por setor:', filters.sector);
-          query = query.eq('setor_id', filters.sector);
+          query = query.eq('setor_id', parseInt(filters.sector));
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
