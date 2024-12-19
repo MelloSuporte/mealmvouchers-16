@@ -9,71 +9,48 @@ export const useReportsTData = (filters) => {
     queryKey: ['reports-t-data', filters],
     queryFn: async () => {
       try {
-        console.log('Iniciando busca com filtros:', filters);
-        
         if (!filters?.startDate || !filters?.endDate) {
           console.log('Datas não fornecidas');
           return [];
         }
 
-        // Primeiro, vamos verificar se há dados na tabela
-        const { count, error: countError } = await supabase
-          .from('relatorio_uso_voucher')
-          .select('*', { count: 'exact', head: true });
-
-        console.log('Total de registros na tabela:', count);
-
-        if (countError) {
-          console.error('Erro ao verificar registros:', countError);
-          throw countError;
-        }
+        // Ajusta o fuso horário para UTC
+        const timeZone = 'America/Sao_Paulo';
+        const startUtc = formatInTimeZone(startOfDay(filters.startDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssX");
+        const endUtc = formatInTimeZone(endOfDay(filters.endDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssX");
+        
+        console.log('Buscando dados com filtros:', {
+          startDate: startUtc,
+          endDate: endUtc,
+          company: filters.company,
+          shift: filters.shift,
+          sector: filters.sector,
+          mealType: filters.mealType
+        });
 
         let query = supabase
           .from('relatorio_uso_voucher')
-          .select('*');
-
-        // Ajusta o fuso horário para UTC
-        const timeZone = 'America/Sao_Paulo';
-        const startUtc = formatInTimeZone(startOfDay(filters.startDate), timeZone, "yyyy-MM-dd'T'HH:mm:ss'Z'");
-        const endUtc = formatInTimeZone(endOfDay(filters.endDate), timeZone, "yyyy-MM-dd'T'HH:mm:ss'Z'");
-        
-        console.log('Data início (local):', filters.startDate);
-        console.log('Data fim (local):', filters.endDate);
-        console.log('Data início (UTC):', startUtc);
-        console.log('Data fim (UTC):', endUtc);
-        
-        // Adiciona filtros de data
-        query = query
+          .select('*')
           .gte('data_uso', startUtc)
           .lte('data_uso', endUtc);
 
         if (filters.company && filters.company !== 'all') {
-          console.log('Filtrando por empresa:', filters.company);
           query = query.eq('empresa_id', filters.company);
         }
 
         if (filters.shift && filters.shift !== 'all') {
-          console.log('Filtrando por turno:', filters.shift);
           query = query.eq('turno', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
-          console.log('Filtrando por setor:', filters.sector);
-          query = query.eq('setor_id', parseInt(filters.sector));
+          query = query.eq('setor_id', filters.sector);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
-          console.log('Filtrando por tipo refeição:', filters.mealType);
           query = query.eq('tipo_refeicao', filters.mealType);
         }
 
-        // Ordenar por data de uso
-        query = query.order('data_uso', { ascending: false });
-
-        console.log('Query final:', query);
-        
-        // Executar a query
-        const { data, error } = await query;
+        const { data, error, count } = await query;
 
         if (error) {
           console.error('Erro na consulta:', error);
@@ -81,13 +58,12 @@ export const useReportsTData = (filters) => {
           throw error;
         }
 
+        console.log(`Encontrados ${data?.length || 0} registros`);
+        
         if (!data || data.length === 0) {
           console.log('Nenhum registro encontrado com os filtros aplicados');
           return [];
         }
-
-        console.log(`Encontrados ${data.length} registros`);
-        console.log('Primeiros registros:', data.slice(0, 3));
 
         return data;
       } catch (error) {
@@ -97,8 +73,8 @@ export const useReportsTData = (filters) => {
       }
     },
     retry: 1,
-    staleTime: 0, // Sempre buscar dados frescos
-    cacheTime: 0, // Não manter cache
+    staleTime: 0,
+    cacheTime: 0,
     refetchOnWindowFocus: false,
   });
 };

@@ -3,6 +3,8 @@ import ReportsTFilters from './ReportsTFilters';
 import ReportsTCharts from './ReportsTCharts';
 import { useReportsTFilters } from './hooks/useReportsTFilters';
 import ExportTButton from './components/ExportTButton';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const ReportsTForm = () => {
   const { filters, handleFilterChange, data, isLoading, error } = useReportsTFilters();
@@ -20,11 +22,18 @@ const ReportsTForm = () => {
 
   if (error) {
     return (
-      <div className="p-8 text-center">
-        <p className="text-red-500">Erro ao carregar dados: {error.message}</p>
+      <div className="p-8">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Erro ao carregar dados: {error.message}
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
+
+  const showNoDataMessage = filters.startDate && filters.endDate && (!data || data.length === 0);
 
   return (
     <div className="space-y-6 p-4">
@@ -32,14 +41,20 @@ const ReportsTForm = () => {
         <h2 className="text-lg font-semibold">Filtros</h2>
         <ExportTButton filters={filters} />
       </div>
+      
       <ReportsTFilters onFilterChange={handleFilterChange} filters={filters} />
-      <ReportsTCharts filters={filters} />
-      {filters.startDate && filters.endDate && (!data || data.length === 0) && (
-        <div className="text-center p-4 text-gray-500">
-          Nenhum registro encontrado para o período selecionado.
-          <br />
-          Tente ajustar os filtros ou selecione um período diferente.
-        </div>
+      
+      {showNoDataMessage ? (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Nenhum registro encontrado para o período selecionado.
+            <br />
+            Tente ajustar os filtros ou selecione um período diferente.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <ReportsTCharts filters={filters} />
       )}
     </div>
   );
