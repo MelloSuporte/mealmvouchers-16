@@ -17,6 +17,12 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       locale={ptBR}
+      formatters={{
+        formatCaption: (date, options) => {
+          const month = ptBR.localize.month(date.getMonth());
+          return `${month.charAt(0).toUpperCase() + month.slice(1)} ${date.getFullYear()}`;
+        }
+      }}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
