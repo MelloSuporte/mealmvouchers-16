@@ -1,57 +1,75 @@
-import express from 'express';
-import empresasRoutes from './empresas.js';
-import usuariosRoutes from './usuarios.js';
-import turnosRoutes from './turnos.js';
-import refeicaoRoutes from './refeicoes.js';
-import usuariosAdminRoutes from './usuariosAdmin.js';
-import vouchersRoutes from './vouchers.js';
-import vouchersExtraRoutes from './vouchersExtra.js';
-import vouchersDescartaveisRoutes from './vouchersDescartaveis.js';
-import imagensFundoRoutes from './imagensFundo.js';
-import relatoriosRoutes from './relatorios.js';
-import reportsRoutes from './reports.js';
-import healthRoutes from './health.js';
-import logger from '../config/logger.js';
+import { createBrowserRouter } from "react-router-dom";
+import App from "@/App";
+import ErrorPage from "@/pages/ErrorPage";
+import LoginPage from "@/pages/LoginPage";
+import HomePage from "@/pages/HomePage";
+import AdminPage from "@/pages/AdminPage";
+import UsersPage from "@/pages/UsersPage";
+import CompaniesPage from "@/pages/CompaniesPage";
+import VouchersPage from "@/pages/VouchersPage";
+import ReportsPage from "@/pages/ReportsPage";
+import ReportsT from '@/pages/ReportsT';
+import BomApetitePage from "@/pages/BomApetitePage";
+import ValidatePage from "@/pages/ValidatePage";
+import SettingsPage from "@/pages/SettingsPage";
+import ProfilePage from "@/pages/ProfilePage";
 
-const router = express.Router();
+const routes = [
+  {
+    path: "/",
+    element: <App />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/",
+        element: <HomePage />,
+      },
+      {
+        path: "/login",
+        element: <LoginPage />,
+      },
+      {
+        path: "/admin",
+        element: <AdminPage />,
+      },
+      {
+        path: "/admin/users",
+        element: <UsersPage />,
+      },
+      {
+        path: "/admin/companies",
+        element: <CompaniesPage />,
+      },
+      {
+        path: "/admin/vouchers",
+        element: <VouchersPage />,
+      },
+      {
+        path: "/admin/reports",
+        element: <ReportsPage />,
+      },
+      {
+        path: '/admin/reports-t',
+        element: <ReportsT />,
+      },
+      {
+        path: "/bom-apetite",
+        element: <BomApetitePage />,
+      },
+      {
+        path: "/validate",
+        element: <ValidatePage />,
+      },
+      {
+        path: "/settings",
+        element: <SettingsPage />,
+      },
+      {
+        path: "/profile",
+        element: <ProfilePage />,
+      },
+    ],
+  },
+];
 
-// Middleware de logging para todas as rotas
-router.use((req, res, next) => {
-  logger.info(`Rota acessada: ${req.method} ${req.baseUrl}${req.path}`);
-  next();
-});
-
-// Montagem das rotas
-router.use('/empresas', empresasRoutes);
-router.use('/usuarios', usuariosRoutes);
-router.use('/turnos', turnosRoutes);
-router.use('/refeicoes', refeicaoRoutes);
-router.use('/usuarios-admin', usuariosAdminRoutes);
-router.use('/vouchers', vouchersRoutes);
-router.use('/vouchers-extra', vouchersExtraRoutes);
-router.use('/vouchers-descartaveis', vouchersDescartaveisRoutes);
-router.use('/imagens-fundo', imagensFundoRoutes);
-router.use('/relatorios', relatoriosRoutes);
-router.use('/reports', reportsRoutes);
-router.use('/health', healthRoutes);
-
-// Adicionar middleware para tratar rotas não encontradas
-router.use((req, res) => {
-  logger.warn(`Rota não encontrada: ${req.method} ${req.baseUrl}${req.path}`);
-  res.status(404).json({
-    error: 'Rota não encontrada',
-    path: `${req.baseUrl}${req.path}`,
-    method: req.method
-  });
-});
-
-// Middleware de tratamento de erros
-router.use((err, req, res, next) => {
-  logger.error('Erro na aplicação:', err);
-  res.status(500).json({
-    error: 'Erro interno do servidor',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Um erro inesperado ocorreu'
-  });
-});
-
-export default router;
+export const router = createBrowserRouter(routes);
