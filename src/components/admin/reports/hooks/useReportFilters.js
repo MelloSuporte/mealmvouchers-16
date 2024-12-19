@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { startOfMonth, endOfDay } from 'date-fns';
+import { startOfMonth, endOfDay, isAfter, isBefore, startOfDay } from 'date-fns';
 import { toast } from "sonner";
 
 export const useReportFilters = () => {
@@ -29,7 +29,24 @@ export const useReportFilters = () => {
           toast.error('Data inválida');
           return;
         }
-        value = date;
+
+        // Ajusta para início/fim do dia
+        const adjustedDate = filterType === 'startDate' 
+          ? startOfDay(date)
+          : endOfDay(date);
+
+        // Validações adicionais para datas
+        if (filterType === 'startDate' && filters.endDate && isAfter(adjustedDate, filters.endDate)) {
+          toast.error('Data inicial não pode ser maior que a data final');
+          return;
+        }
+
+        if (filterType === 'endDate' && filters.startDate && isBefore(adjustedDate, filters.startDate)) {
+          toast.error('Data final não pode ser menor que a data inicial');
+          return;
+        }
+
+        value = adjustedDate;
       }
 
       setFilters(prev => {

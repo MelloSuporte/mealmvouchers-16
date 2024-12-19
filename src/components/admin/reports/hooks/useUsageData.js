@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { startOfDay, endOfDay } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { toast } from "sonner";
 
 export const useUsageData = (filters) => {
@@ -15,47 +16,56 @@ export const useUsageData = (filters) => {
           return [];
         }
 
-        // Construir query base
+        // Ajusta o fuso horário para UTC-3 (Brasil)
+        const timeZone = 'America/Sao_Paulo';
+        const startUtc = formatInTimeZone(startOfDay(filters.startDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssX");
+        const endUtc = formatInTimeZone(endOfDay(filters.endDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssX");
+        
+        console.log('Data início formatada:', startUtc);
+        console.log('Data fim formatada:', endUtc);
+
         let query = supabase
-          .from('vw_uso_voucher_detalhado')
-          .select('*');
+          .from('uso_voucher')
+          .select(`
+            id,
+            usado_em,
+            usuarios!uso_voucher_usuario_id_fkey (
+              id,
+              nome,
+              cpf,
+              empresa_id,
+              turno_id,
+              setor_id
+            ),
+            tipos_refeicao!inner (
+              id,
+              nome,
+              valor
+            )
+          `)
+          .gte('usado_em', startUtc)
+          .lte('usado_em', endUtc);
 
-        // Formatar datas para o início e fim do dia
-        const start = startOfDay(new Date(filters.startDate));
-        const end = endOfDay(new Date(filters.endDate));
-        
-        console.log('Data início formatada:', start.toISOString());
-        console.log('Data fim formatada:', end.toISOString());
-        
-        query = query
-          .gte('data_uso', start.toISOString())
-          .lte('data_uso', end.toISOString());
-
-        // Aplicar outros filtros se fornecidos
         if (filters.company && filters.company !== 'all') {
           console.log('Filtrando por empresa:', filters.company);
-          query = query.eq('empresa_id', filters.company);
+          query = query.eq('usuarios.empresa_id', filters.company);
         }
 
         if (filters.shift && filters.shift !== 'all') {
           console.log('Filtrando por turno:', filters.shift);
-          query = query.eq('turno', filters.shift);
+          query = query.eq('usuarios.turno_id', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
           console.log('Filtrando por setor:', filters.sector);
-          query = query.eq('setor_id', filters.sector);
+          query = query.eq('usuarios.setor_id', filters.sector);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
           console.log('Filtrando por tipo refeição:', filters.mealType);
-          query = query.eq('tipo_refeicao', filters.mealType);
+          query = query.eq('tipo_refeicao_id', filters.mealType);
         }
 
-        // Ordenar por data de uso
-        query = query.order('data_uso', { ascending: false });
-
-        // Executar query
         const { data, error } = await query;
 
         if (error) {
@@ -66,9 +76,9 @@ export const useUsageData = (filters) => {
 
         console.log(`Encontrados ${data?.length || 0} registros`);
         
-        if (data?.length === 0) {
+        if (!data || data.length === 0) {
           console.log('Nenhum registro encontrado com os filtros aplicados');
-          toast.warning('Nenhum registro encontrado para o período selecionado');
+          toast.warning('Nenhum registro encontrado para o período selecionado. Tente ajustar os filtros.');
         }
 
         return data || [];

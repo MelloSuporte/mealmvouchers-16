@@ -14,7 +14,7 @@ export const useMetricsCalculation = (usageData) => {
   console.log('Calculando métricas com', usageData.length, 'registros');
 
   const totalCost = usageData.reduce((sum, item) => {
-    const valor = parseFloat(item.valor_refeicao || 0);
+    const valor = parseFloat(item.tipos_refeicao?.valor || 0);
     return sum + valor;
   }, 0);
 
@@ -25,21 +25,21 @@ export const useMetricsCalculation = (usageData) => {
 
   // Agrupar por empresa
   const byCompany = usageData.reduce((acc, curr) => {
-    const empresa = curr.nome_empresa || 'Não especificado';
+    const empresa = curr.usuarios?.nome || 'Não especificado';
     acc[empresa] = (acc[empresa] || 0) + 1;
     return acc;
   }, {});
 
   // Agrupar por turno
   const byShift = usageData.reduce((acc, curr) => {
-    const turno = curr.turno || 'Não especificado';
+    const turno = curr.usuarios?.turno_id || 'Não especificado';
     acc[turno] = (acc[turno] || 0) + 1;
     return acc;
   }, {});
 
   // Agrupar por tipo de refeição
   const byMealType = usageData.reduce((acc, curr) => {
-    const tipo = curr.tipo_refeicao || 'Não especificado';
+    const tipo = curr.tipos_refeicao?.nome || 'Não especificado';
     acc[tipo] = (acc[tipo] || 0) + 1;
     return acc;
   }, {});
