@@ -50,6 +50,7 @@ export const useReportsTData = (filters) => {
           query = query.eq('tipo_refeicao_id', filters.mealType);
         }
 
+        console.log('Query final:', query);
         const { data, error } = await query;
 
         if (error) {
@@ -62,6 +63,8 @@ export const useReportsTData = (filters) => {
         
         if (data?.length === 0) {
           console.log('Nenhum registro encontrado com os filtros aplicados');
+        } else {
+          console.log('Primeiro registro:', data[0]);
         }
 
         return data || [];
@@ -70,6 +73,9 @@ export const useReportsTData = (filters) => {
         toast.error('Falha ao carregar dados: ' + error.message);
         throw error;
       }
-    }
+    },
+    retry: 1,
+    staleTime: 30000,
+    cacheTime: 60000,
   });
 };
