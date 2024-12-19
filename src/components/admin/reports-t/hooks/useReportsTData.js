@@ -33,7 +33,7 @@ export const useReportsTData = (filters) => {
           .select(`
             id,
             usado_em,
-            usuarios (
+            usuarios!uso_voucher_usuario_id_fkey (
               id,
               nome,
               cpf,
