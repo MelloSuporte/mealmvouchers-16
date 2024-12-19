@@ -15,6 +15,8 @@ export const useReportsTData = (filters) => {
           return [];
         }
 
+        console.log('Filtros atuais:', filters);
+
         // Primeiro, vamos verificar se há dados na tabela
         const { count, error: countError } = await supabase
           .from('relatorio_uso_voucher')
@@ -37,11 +39,15 @@ export const useReportsTData = (filters) => {
         
         console.log('Data início formatada:', start.toISOString());
         console.log('Data fim formatada:', end.toISOString());
+        console.log('Data início formatada (Date):', start);
+        console.log('Data fim formatada (Date):', end);
         
         // Adicionar filtros de data
         query = query
           .gte('data_uso', start.toISOString())
           .lte('data_uso', end.toISOString());
+          
+        console.log('Query final com filtros de data:', query);
 
         // Log da query antes de adicionar outros filtros
         console.log('Query após filtros de data:', query);
@@ -77,13 +83,13 @@ export const useReportsTData = (filters) => {
         if (error) {
           console.error('Erro na consulta:', error);
           toast.error('Erro ao buscar dados: ' + error.message);
-          throw error;
+          return [];
         }
 
-        console.log(`Encontrados ${data?.length || 0} registros após aplicar filtros`);
-        console.log('Primeiros registros:', data?.slice(0, 3));
-        
-        if (data?.length === 0) {
+        if (data) {
+          console.log(`Encontrados ${data.length} registros após aplicar filtros`);
+          console.log('Primeiros registros:', data.slice(0, 3));
+        } else {
           console.log('Nenhum registro encontrado com os filtros aplicados');
           toast.warning('Nenhum registro encontrado para o período selecionado');
         }

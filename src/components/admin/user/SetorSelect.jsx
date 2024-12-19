@@ -23,9 +23,9 @@ const SetorSelect = ({ value, onValueChange, includeAllOption = false }) => {
         .order('nome_setor');
 
       if (error) {
-        logger.error('Erro ao carregar setores:', error);
+        console.error('Erro ao carregar setores:', error);
         toast.error('Erro ao carregar setores');
-        throw error;
+        return;
       }
 
       logger.info(`${data?.length || 0} setores encontrados`);

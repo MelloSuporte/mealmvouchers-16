@@ -13,13 +13,12 @@ const TurnoSelect = ({ value, onValueChange, includeAllOption = false }) => {
       const { data, error } = await supabase
         .from('turnos')
         .select('*')
-        .eq('ativo', true)
-        .order('id');
 
       if (error) {
         logger.error('Erro ao carregar turnos:', error);
+        console.error('Erro ao carregar turnos:', error);
         toast.error('Erro ao carregar turnos');
-        throw error;
+        return;
       }
 
       logger.info(`${data?.length || 0} turnos encontrados`);

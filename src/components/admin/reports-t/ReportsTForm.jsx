@@ -5,7 +5,11 @@ import { useReportsTFilters } from './hooks/useReportsTFilters';
 import ExportTButton from './components/ExportTButton';
 
 const ReportsTForm = () => {
-  const { filters, handleFilterChange } = useReportsTFilters();
+  const { filters, handleFilterChange, data } = useReportsTFilters();
+
+  if (data === undefined || !data) {
+    return <div>Carregando dados...</div>;
+  }
 
   return (
     <div className="space-y-6 p-4">
@@ -15,6 +19,9 @@ const ReportsTForm = () => {
       </div>
       <ReportsTFilters onFilterChange={handleFilterChange} filters={filters} />
       <ReportsTCharts filters={filters} />
+      <div className="text-red-500">
+        {filters.startDate && filters.endDate && !data.length && <p>Nenhum registro encontrado para o período selecionado.</p>}
+      </div>
     </div>
   );
 };
