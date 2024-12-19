@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { startOfDay, endOfDay } from 'date-fns';
-import { zonedTimeToUtc } from 'date-fns-tz';
+import { fromZonedTime } from 'date-fns-tz';
 import { toast } from "sonner";
 
 export const useReportsTData = (filters) => {
@@ -34,8 +34,8 @@ export const useReportsTData = (filters) => {
 
         // Ajusta o fuso horário para UTC
         const timeZone = 'America/Sao_Paulo';
-        const start = zonedTimeToUtc(startOfDay(new Date(filters.startDate)), timeZone);
-        const end = zonedTimeToUtc(endOfDay(new Date(filters.endDate)), timeZone);
+        const start = fromZonedTime(startOfDay(new Date(filters.startDate)), timeZone);
+        const end = fromZonedTime(endOfDay(new Date(filters.endDate)), timeZone);
         
         console.log('Data início (local):', filters.startDate);
         console.log('Data fim (local):', filters.endDate);
