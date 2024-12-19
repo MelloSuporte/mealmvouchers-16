@@ -1,5 +1,6 @@
 export const useMetricsCalculation = (usageData) => {
   if (!usageData || !Array.isArray(usageData)) {
+    console.log('Dados inválidos para cálculo de métricas:', usageData);
     return {
       totalCost: 0,
       averageCost: 0,
@@ -10,8 +11,17 @@ export const useMetricsCalculation = (usageData) => {
     };
   }
 
-  const totalCost = usageData.reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);
+  console.log('Calculando métricas com', usageData.length, 'registros');
+
+  const totalCost = usageData.reduce((sum, item) => {
+    const valor = parseFloat(item.valor || item.valor_refeicao || 0);
+    return sum + valor;
+  }, 0);
+
   const averageCost = usageData.length > 0 ? totalCost / usageData.length : 0;
+
+  console.log('Custo total calculado:', totalCost);
+  console.log('Custo médio calculado:', averageCost);
 
   // Agrupar por empresa
   const byCompany = usageData.reduce((acc, curr) => {

@@ -10,7 +10,6 @@ export const useUsageData = (filters) => {
       try {
         console.log('Iniciando busca com filtros:', filters);
         
-        // Validação básica dos filtros
         if (!filters?.startDate || !filters?.endDate) {
           console.log('Datas não fornecidas');
           return [];
@@ -21,12 +20,12 @@ export const useUsageData = (filters) => {
           .from('relatorio_uso_voucher')
           .select('*');
 
-        // Aplicar filtro de data
+        // Formatar datas corretamente para o Supabase
         const start = startOfDay(new Date(filters.startDate));
         const end = endOfDay(new Date(filters.endDate));
         
-        console.log('Data início:', start.toISOString());
-        console.log('Data fim:', end.toISOString());
+        console.log('Data início formatada:', start.toISOString());
+        console.log('Data fim formatada:', end.toISOString());
         
         query = query
           .gte('data_uso', start.toISOString())
@@ -53,12 +52,15 @@ export const useUsageData = (filters) => {
           query = query.eq('tipo_refeicao', filters.mealType);
         }
 
+        // Ordenar por data de uso
+        query = query.order('data_uso', { ascending: false });
+
         // Executar query
         const { data, error } = await query;
 
         if (error) {
           console.error('Erro na consulta:', error);
-          toast.error('Erro ao buscar dados');
+          toast.error('Erro ao buscar dados: ' + error.message);
           throw error;
         }
 
@@ -66,12 +68,13 @@ export const useUsageData = (filters) => {
         
         if (data?.length === 0) {
           console.log('Nenhum registro encontrado com os filtros aplicados');
+          toast.warning('Nenhum registro encontrado para o período selecionado');
         }
 
         return data || [];
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
-        toast.error('Falha ao carregar dados');
+        toast.error('Falha ao carregar dados: ' + error.message);
         throw error;
       }
     },
