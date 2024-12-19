@@ -37,7 +37,7 @@ export const useReportsTData = (filters) => {
 
         if (filters.shift && filters.shift !== 'all') {
           console.log('Filtrando por turno:', filters.shift);
-          query = query.eq('turno', filters.shift);
+          query = query.eq('turno_id', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
