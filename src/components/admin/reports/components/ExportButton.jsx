@@ -4,8 +4,11 @@ import { FileDown } from 'lucide-react';
 import { toast } from "sonner";
 import { exportToPDF } from '../utils/pdfExport';
 import logger from '@/config/logger';
+import { useAdmin } from '@/contexts/AdminContext';
 
 const ExportButton = ({ metrics, filters, isLoading }) => {
+  const { user } = useAdmin();
+
   const handleExportClick = async () => {
     try {
       logger.info('Iniciando exportação com dados:', {
@@ -15,6 +18,12 @@ const ExportButton = ({ metrics, filters, isLoading }) => {
         averageCost: metrics?.averageCost
       });
 
+      // Adiciona o nome do usuário aos filtros
+      const filtersWithUser = {
+        ...filters,
+        userName: user?.email || 'Usuário do Sistema'
+      };
+
       // Mesmo sem dados, permitimos a exportação
       if (!metrics?.data || metrics.data.length === 0) {
         logger.info('Exportando relatório vazio');
@@ -23,7 +32,7 @@ const ExportButton = ({ metrics, filters, isLoading }) => {
           data: [], // Garante que data é um array vazio
           totalCost: 0,
           averageCost: 0
-        }, filters);
+        }, filtersWithUser);
         logger.info('Relatório vazio exportado com sucesso');
         toast.success("Relatório exportado com sucesso!");
         return;
@@ -35,7 +44,7 @@ const ExportButton = ({ metrics, filters, isLoading }) => {
         ultimoRegistro: metrics.data[metrics.data.length - 1]
       });
 
-      await exportToPDF(metrics, filters);
+      await exportToPDF(metrics, filtersWithUser);
       toast.success("Relatório exportado com sucesso!");
     } catch (error) {
       logger.error('Erro ao exportar:', error, {
