@@ -5,14 +5,18 @@ import { toast } from "sonner";
 export const useReportFilters = () => {
   const [filters, setFilters] = useState({
     company: 'all',
+    companyName: '',
     startDate: startOfMonth(new Date()),
     endDate: endOfDay(new Date()),
     shift: 'all',
+    shiftName: '',
     sector: 'all',
-    mealType: 'all'
+    sectorName: '',
+    mealType: 'all',
+    mealTypeName: ''
   });
 
-  const handleFilterChange = (filterType, value) => {
+  const handleFilterChange = (filterType, value, itemName = '') => {
     try {
       console.log(`Alterando filtro ${filterType}:`, value);
       
@@ -50,7 +54,15 @@ export const useReportFilters = () => {
       }
 
       setFilters(prev => {
-        const newFilters = { ...prev, [filterType]: value };
+        const newFilters = { 
+          ...prev, 
+          [filterType]: value,
+          // Adiciona o nome do item quando relevante
+          ...(filterType === 'company' && { companyName: itemName }),
+          ...(filterType === 'shift' && { shiftName: itemName }),
+          ...(filterType === 'sector' && { sectorName: itemName }),
+          ...(filterType === 'mealType' && { mealTypeName: itemName })
+        };
         console.log('Novos filtros:', newFilters);
         return newFilters;
       });

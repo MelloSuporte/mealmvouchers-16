@@ -46,7 +46,28 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
   const handleFilterChange = (type, value) => {
     try {
       console.log(`Alterando filtro ${type}:`, value);
-      onFilterChange(type, value);
+      
+      // Encontra o nome do item selecionado
+      let itemName = '';
+      if (value !== 'all') {
+        switch (type) {
+          case 'company':
+            itemName = filterOptions?.empresas?.find(e => e.id === value)?.nome;
+            break;
+          case 'shift':
+            itemName = filterOptions?.turnos?.find(t => t.id === value)?.tipo_turno;
+            break;
+          case 'sector':
+            itemName = filterOptions?.setores?.find(s => s.id === value)?.nome_setor;
+            break;
+          case 'mealType':
+            itemName = filterOptions?.tiposRefeicao?.find(tr => tr.id === value)?.nome;
+            break;
+        }
+      }
+
+      // Passa tanto o valor quanto o nome para o filtro
+      onFilterChange(type, value, itemName);
     } catch (error) {
       console.error('Erro ao alterar filtro:', error);
       toast.error('Erro ao atualizar filtro');

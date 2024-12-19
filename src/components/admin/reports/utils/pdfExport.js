@@ -50,7 +50,7 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text("Informações do Relatório:", 14, 30);
     
     // Empresa
-    const empresaNome = metrics?.data?.[0]?.nome_empresa || 'Todas as Empresas';
+    const empresaNome = filters.companyName || (filters.company === 'all' ? 'Todas as Empresas' : 'Empresa não especificada');
     doc.text(`Empresa: ${empresaNome}`, 14, 40);
     
     // Período
@@ -59,15 +59,15 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text(`Período: ${startDate} a ${endDate}`, 14, 50);
     
     // Turno
-    const turnoNome = metrics?.data?.[0]?.turno || 'Todos os Turnos';
+    const turnoNome = filters.shiftName || (filters.shift === 'all' ? 'Todos os Turnos' : 'Turno não especificado');
     doc.text(`Turno: ${turnoNome}`, 14, 60);
     
     // Setor
-    const setorNome = metrics?.data?.[0]?.nome_setor || 'Todos os Setores';
+    const setorNome = filters.sectorName || (filters.sector === 'all' ? 'Todos os Setores' : 'Setor não especificado');
     doc.text(`Setor: ${setorNome}`, 14, 70);
     
     // Tipo de Refeição
-    const tipoRefeicao = metrics?.data?.[0]?.tipo_refeicao || 'Todos os Tipos';
+    const tipoRefeicao = filters.mealTypeName || (filters.mealType === 'all' ? 'Todos os Tipos' : 'Tipo não especificado');
     doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, 80);
     
     // Valor Total
