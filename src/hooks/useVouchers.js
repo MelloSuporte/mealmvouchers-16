@@ -16,8 +16,7 @@ export const useVouchers = () => {
             codigo,
             tipo_refeicao_id,
             data_expiracao,
-            usado,
-            data_uso,
+            usado_em,
             data_criacao,
             tipos_refeicao (
               id,
@@ -25,7 +24,7 @@ export const useVouchers = () => {
               valor
             )
           `, { count: 'exact' })
-          .eq('usado', false)
+          .is('usado_em', null)
           .gte('data_expiracao', new Date().toISOString().split('T')[0]);
 
         if (error) {
