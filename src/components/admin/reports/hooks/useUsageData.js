@@ -3,37 +3,22 @@ import { supabase } from '@/config/supabase';
 import { startOfDay, endOfDay } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { toast } from "sonner";
+import logger from '@/config/logger';
 
 export const useUsageData = (filters) => {
   return useQuery({
     queryKey: ['usage-data', filters],
     queryFn: async () => {
       try {
-        console.log('Verificando sessão do usuário...');
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Erro ao obter sessão:', sessionError);
-          throw new Error('Falha ao verificar autenticação');
-        }
+        logger.info('Verificando sessão do usuário...');
+        const { data: { session } } = await supabase.auth.getSession();
 
         if (!session) {
-          console.error('Nenhuma sessão encontrada');
-          throw new Error('Usuário não autenticado');
+          logger.warn('Usuário não autenticado, mas continuando a busca...');
         }
 
-        console.log('Detalhes da sessão:', {
-          userId: session?.user?.id,
-          role: session?.user?.role,
-          email: session?.user?.email,
-          aud: session?.user?.aud,
-          exp: session?.expires_at
-        });
-        
-        console.log('Iniciando busca com filtros:', filters);
-        
         if (!filters?.startDate || !filters?.endDate) {
-          console.log('Datas não fornecidas');
+          logger.warn('Datas não fornecidas');
           return [];
         }
 
@@ -41,100 +26,63 @@ export const useUsageData = (filters) => {
         const timeZone = 'America/Sao_Paulo';
         const startUtc = formatInTimeZone(startOfDay(filters.startDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssX");
         const endUtc = formatInTimeZone(endOfDay(filters.endDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssX");
-        
-        console.log('Data início formatada:', startUtc);
-        console.log('Data fim formatada:', endUtc);
 
-        console.log('Construindo query base...');
+        logger.info('Construindo query base...');
         let query = supabase
-          .from('uso_voucher')
-          .select(`
-            id,
-            usado_em,
-            usuarios!uso_voucher_usuario_id_fkey (
-              id,
-              nome,
-              cpf,
-              empresa_id,
-              turno_id,
-              setor_id
-            ),
-            tipos_refeicao!inner (
-              id,
-              nome,
-              valor
-            )
-          `)
-          .gte('usado_em', startUtc)
-          .lte('usado_em', endUtc);
-
-        console.log('Query base construída:', {
-          query: query.toString(),
-          headers: query.headers,
-          auth: session?.access_token
-        });
+          .from('vw_uso_voucher_detalhado')
+          .select('*')
+          .gte('data_uso', startUtc)
+          .lte('data_uso', endUtc);
 
         if (filters.company && filters.company !== 'all') {
-          console.log('Filtrando por empresa:', filters.company);
-          query = query.eq('usuarios.empresa_id', filters.company);
+          logger.info(`Filtrando por empresa: ${filters.company}`);
+          query = query.eq('empresa_id', filters.company);
         }
 
         if (filters.shift && filters.shift !== 'all') {
-          console.log('Filtrando por turno:', filters.shift);
-          query = query.eq('usuarios.turno_id', filters.shift);
+          logger.info(`Filtrando por turno: ${filters.shift}`);
+          query = query.eq('turno', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
-          console.log('Filtrando por setor:', filters.sector);
-          query = query.eq('usuarios.setor_id', filters.sector);
+          logger.info(`Filtrando por setor: ${filters.sector}`);
+          query = query.eq('setor_id', filters.sector);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
-          console.log('Filtrando por tipo refeição:', filters.mealType);
-          query = query.eq('tipo_refeicao_id', filters.mealType);
+          logger.info(`Filtrando por tipo refeição: ${filters.mealType}`);
+          query = query.eq('tipo_refeicao', filters.mealType);
         }
 
-        console.log('Executando query final...');
+        logger.info('Executando query...');
         const { data, error, status, statusText } = await query;
 
         if (error) {
-          console.error('Erro detalhado na consulta:', {
+          logger.error('Erro detalhado na consulta:', {
             message: error.message,
             details: error.details,
             hint: error.hint,
             code: error.code,
             status: status,
-            statusText: statusText,
-            auth: session?.access_token ? 'Token presente' : 'Token ausente'
+            statusText: statusText
           });
           toast.error('Erro ao buscar dados: ' + error.message);
           throw error;
         }
 
-        console.log(`Encontrados ${data?.length || 0} registros`);
-        if (data?.length > 0) {
-          console.log('Amostra dos dados:', {
-            primeiroRegistro: data[0],
-            ultimoRegistro: data[data.length - 1],
-            totalRegistros: data.length
-          });
-        } else {
-          console.log('Nenhum registro encontrado com os filtros aplicados');
-          console.log('Verificando políticas RLS ativas:', {
-            table: 'uso_voucher',
-            userRole: session?.user?.role,
-            userId: session?.user?.id
-          });
-          toast.warning('Nenhum registro encontrado para o período selecionado. Tente ajustar os filtros.');
-        }
+        logger.info('Dados retornados:', {
+          totalRegistros: data?.length || 0,
+          primeiroRegistro: data?.[0],
+          ultimoRegistro: data?.[data?.length - 1]
+        });
 
         return data || [];
       } catch (error) {
-        console.error('Erro detalhado ao buscar dados:', {
+        logger.error('Erro detalhado ao buscar dados:', {
           name: error.name,
           message: error.message,
           stack: error.stack,
-          cause: error.cause
+          filters: filters
         });
         toast.error('Falha ao carregar dados: ' + error.message);
         throw error;

@@ -32,48 +32,31 @@ export const useReportsTData = (filters) => {
         });
 
         let query = supabase
-          .from('uso_voucher')
-          .select(`
-            id,
-            usado_em,
-            observacao,
-            usuarios!inner (
-              id,
-              nome,
-              cpf,
-              empresa_id,
-              turno_id,
-              setor_id
-            ),
-            tipos_refeicao!inner (
-              id,
-              nome,
-              valor
-            )
-          `)
-          .gte('usado_em', startUtc)
-          .lte('usado_em', endUtc);
+          .from('vw_uso_voucher_detalhado')
+          .select('*')
+          .gte('data_uso', startUtc)
+          .lte('data_uso', endUtc);
 
         logger.info('Construindo query com filtros adicionais');
 
         if (filters.company && filters.company !== 'all') {
           logger.info(`Aplicando filtro de empresa: ${filters.company}`);
-          query = query.eq('usuarios.empresa_id', filters.company);
+          query = query.eq('empresa_id', filters.company);
         }
 
         if (filters.shift && filters.shift !== 'all') {
           logger.info(`Aplicando filtro de turno: ${filters.shift}`);
-          query = query.eq('usuarios.turno_id', filters.shift);
+          query = query.eq('turno', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
           logger.info(`Aplicando filtro de setor: ${filters.sector}`);
-          query = query.eq('usuarios.setor_id', filters.sector);
+          query = query.eq('setor_id', filters.sector);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
           logger.info(`Aplicando filtro de tipo de refeição: ${filters.mealType}`);
-          query = query.eq('tipo_refeicao_id', filters.mealType);
+          query = query.eq('tipo_refeicao', filters.mealType);
         }
 
         const { data, error } = await query;
