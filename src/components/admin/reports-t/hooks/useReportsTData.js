@@ -12,9 +12,41 @@ export const useReportsTData = (filters) => {
       try {
         logger.info('Iniciando busca de dados do relatório T com filtros:', filters);
 
+        // Primeiro, vamos verificar se existem registros na view
+        const { count, error: countError } = await supabase
+          .from('vw_uso_voucher_detalhado')
+          .select('*', { count: 'exact', head: true });
+
+        if (countError) {
+          logger.error('Erro ao verificar registros na view:', {
+            error: countError.message,
+            code: countError.code,
+            details: countError.details
+          });
+          throw countError;
+        }
+
+        logger.info(`Total de registros na view: ${count}`);
+
+        if (count === 0) {
+          logger.warn('A view vw_uso_voucher_detalhado está vazia');
+          return [];
+        }
+
+        // Se não houver filtros de data, vamos buscar todos os registros
         if (!filters?.startDate || !filters?.endDate) {
           logger.warn('Datas não fornecidas para o relatório T');
-          return [];
+          
+          const { data: allData, error: allError } = await supabase
+            .from('vw_uso_voucher_detalhado')
+            .select('*')
+            .order('data_uso', { ascending: false })
+            .limit(100);
+
+          if (allError) throw allError;
+
+          logger.info(`Busca sem filtros de data retornou ${allData?.length || 0} registros`);
+          return allData || [];
         }
 
         // Ajusta o fuso horário para UTC-3 (Brasil)
