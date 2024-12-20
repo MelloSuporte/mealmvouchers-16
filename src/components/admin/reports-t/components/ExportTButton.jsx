@@ -40,12 +40,12 @@ const ExportTButton = ({ filters }) => {
       doc.text("Informações do Relatório:", 14, 35);
 
       // Empresa
-      const empresaNome = filters.company === 'all' ? 'Empresa não especificada' : data?.[0]?.nome_empresa || 'Empresa não especificada';
+      const empresaNome = filters.company === 'all' ? 'Todas as Empresas' : data?.[0]?.nome_empresa || 'Empresa não especificada';
       doc.text(`Empresa: ${empresaNome}`, 14, 45);
 
       // Período
-      const startDate = filters.startDate ? format(new Date(filters.startDate), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-';
-      const endDate = filters.endDate ? format(new Date(filters.endDate), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-';
+      const startDate = filters.startDate ? format(new Date(filters.startDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
+      const endDate = filters.endDate ? format(new Date(filters.endDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
       doc.text(`Período: ${startDate} a ${endDate}`, 14, 55);
 
       // Turno
@@ -68,7 +68,10 @@ const ExportTButton = ({ filters }) => {
       if (!data || data.length === 0) {
         doc.text("Nenhum registro encontrado para o período selecionado.", 14, 115);
       } else {
-        // Tabela de dados quando houver registros
+        // Tabela de Vouchers Usados
+        doc.setFontSize(14);
+        doc.text("Vouchers Utilizados", 14, 115);
+        
         const tableData = data.map(item => [
           format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
           item.nome_usuario || '-',
@@ -103,6 +106,39 @@ const ExportTButton = ({ filters }) => {
             5: { cellWidth: 20 },
             6: { cellWidth: 20 },
             7: { cellWidth: 20 }
+          }
+        });
+
+        // Tabela de Vouchers Descartáveis
+        const currentY = doc.lastAutoTable.finalY + 20;
+        doc.setFontSize(14);
+        doc.text("Vouchers Descartáveis", 14, currentY);
+
+        // Dados dos vouchers descartáveis
+        const vouchersDescartaveisData = data
+          .filter(item => item.tipo_voucher === 'descartavel')
+          .map(item => [
+            item.codigo || '-',
+            item.tipo_refeicao || '-',
+            format(new Date(item.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+            item.data_uso ? format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
+            format(new Date(item.data_expiracao), 'dd/MM/yyyy', { locale: ptBR }),
+            item.usado ? 'Sim' : 'Não'
+          ]);
+
+        doc.autoTable({
+          startY: currentY + 10,
+          head: [['Código', 'Tipo Refeição', 'Data Criação', 'Data Uso', 'Data Expiração', 'Usado']],
+          body: vouchersDescartaveisData,
+          theme: 'grid',
+          styles: { 
+            fontSize: 8,
+            cellPadding: 2
+          },
+          headStyles: { 
+            fillColor: [66, 66, 66],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold'
           }
         });
       }
