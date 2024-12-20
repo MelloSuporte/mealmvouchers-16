@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/config/supabase";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useTurnosActions } from "@/components/admin/turnos/useTurnosActions";
 import NovoTurnoDialog from "@/components/admin/turnos/NovoTurnoDialog";
 import EditarTurnoDialog from "@/components/admin/turnos/EditarTurnoDialog";
@@ -120,13 +120,6 @@ const TurnosForm = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <Button onClick={() => setDialogoAberto(true)} size="sm" className="bg-primary hover:bg-primary/90">
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Turno
-        </Button>
-      </div>
-
       <div className="rounded-md border shadow-sm">
         <Table>
           <TableHeader>
