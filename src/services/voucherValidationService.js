@@ -4,7 +4,6 @@ export const validateDisposableVoucher = async (code) => {
   try {
     console.log('Iniciando validação detalhada do voucher descartável:', code);
     
-    // Buscar voucher com joins e condições explícitas
     const { data: voucher, error } = await supabase
       .from('vouchers_descartaveis')
       .select(`
@@ -19,7 +18,7 @@ export const validateDisposableVoucher = async (code) => {
         )
       `)
       .eq('codigo', code)
-      .eq('usado', false)
+      .is('usado_em', null)
       .gte('data_expiracao', new Date().toISOString().split('T')[0])
       .maybeSingle();
 
