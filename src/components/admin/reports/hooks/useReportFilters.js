@@ -1,13 +1,12 @@
-import { useState } from 'react';
-import { startOfMonth, endOfDay, isAfter, isBefore, startOfDay } from 'date-fns';
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/config/supabase';
 
 export const useReportFilters = () => {
   const [filters, setFilters] = useState({
+    startDate: null,
+    endDate: null,
     company: 'all',
     companyName: '',
-    startDate: startOfMonth(new Date()),
-    endDate: endOfDay(new Date()),
     shift: 'all',
     shiftName: '',
     sector: 'all',
@@ -16,64 +15,93 @@ export const useReportFilters = () => {
     mealTypeName: ''
   });
 
-  const handleFilterChange = (filterType, value, itemName = '') => {
-    try {
-      console.log(`Alterando filtro ${filterType}:`, value);
-      
-      if (value === undefined || value === null) {
-        console.warn(`Valor inválido para ${filterType}`);
-        return;
+  const [filterOptions, setFilterOptions] = useState({
+    empresas: [],
+    turnos: [],
+    setores: [],
+    tiposRefeicao: []
+  });
+
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      console.log('Iniciando busca de opções de filtro...');
+      try {
+        // Buscar empresas
+        const { data: empresas, error: empresasError } = await supabase
+          .from('empresas')
+          .select('id, nome')
+          .eq('ativo', true)
+          .order('nome');
+
+        if (empresasError) throw empresasError;
+        console.log('[INFO]', empresas?.length || 0, 'empresas encontradas');
+
+        // Buscar setores
+        console.log('[INFO] Iniciando busca de setores...');
+        const { data: setores, error: setoresError } = await supabase
+          .from('setores')
+          .select('id, nome_setor')
+          .eq('ativo', true)
+          .order('nome_setor');
+
+        if (setoresError) throw setoresError;
+        console.log('[INFO]', setores?.length || 0, 'setores encontrados');
+
+        // Buscar turnos
+        console.log('[INFO] Buscando turnos ativos...');
+        const { data: turnos, error: turnosError } = await supabase
+          .from('turnos')
+          .select('id, tipo_turno')
+          .eq('ativo', true)
+          .order('tipo_turno');
+
+        if (turnosError) throw turnosError;
+        console.log('[INFO]', turnos?.length || 0, 'turnos encontrados');
+
+        // Buscar tipos de refeição
+        const { data: tiposRefeicao, error: tiposRefeicaoError } = await supabase
+          .from('tipos_refeicao')
+          .select('id, nome')
+          .eq('ativo', true)
+          .order('nome');
+
+        if (tiposRefeicaoError) throw tiposRefeicaoError;
+        console.log('[INFO]', tiposRefeicao?.length || 0, 'tipos de refeição encontrados');
+
+        setFilterOptions({
+          empresas: empresas || [],
+          turnos: turnos || [],
+          setores: setores || [],
+          tiposRefeicao: tiposRefeicao || []
+        });
+
+        console.log('Dados dos filtros carregados com sucesso:', {
+          empresas,
+          turnos,
+          setores,
+          tiposRefeicao
+        });
+
+      } catch (error) {
+        console.error('Erro ao carregar opções de filtro:', error);
       }
+    };
 
-      // Validação específica para datas
-      if (filterType === 'startDate' || filterType === 'endDate') {
-        const date = new Date(value);
-        if (isNaN(date.getTime())) {
-          console.error('Data inválida:', value);
-          toast.error('Data inválida');
-          return;
-        }
+    loadFilterOptions();
+  }, []);
 
-        // Ajusta para início/fim do dia
-        const adjustedDate = filterType === 'startDate' 
-          ? startOfDay(date)
-          : endOfDay(date);
-
-        // Validações adicionais para datas
-        if (filterType === 'startDate' && filters.endDate && isAfter(adjustedDate, filters.endDate)) {
-          toast.error('Data inicial não pode ser maior que a data final');
-          return;
-        }
-
-        if (filterType === 'endDate' && filters.startDate && isBefore(adjustedDate, filters.startDate)) {
-          toast.error('Data final não pode ser menor que a data inicial');
-          return;
-        }
-
-        value = adjustedDate;
-      }
-
-      setFilters(prev => {
-        const newFilters = { 
-          ...prev, 
-          [filterType]: value,
-          // Adiciona o nome do item quando relevante
-          ...(filterType === 'company' && { companyName: itemName }),
-          ...(filterType === 'shift' && { shiftName: itemName }),
-          ...(filterType === 'sector' && { sectorName: itemName }),
-          ...(filterType === 'mealType' && { mealTypeName: itemName })
-        };
-        console.log('Novos filtros:', newFilters);
-        return newFilters;
-      });
-    } catch (error) {
-      console.error('Erro ao alterar filtro:', error);
-      toast.error('Erro ao atualizar filtro');
-    }
+  const handleFilterChange = (filterName, value, displayName = '') => {
+    console.log('Alterando filtro:', { filterName, value, displayName });
+    setFilters(prev => ({
+      ...prev,
+      [filterName]: value,
+      [`${filterName}Name`]: displayName
+    }));
   };
 
-  return { 
-    filters, 
-    handleFilterChange
+  return {
+    filters,
+    handleFilterChange,
+    filterOptions
   };
 };
