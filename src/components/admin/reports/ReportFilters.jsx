@@ -1,64 +1,19 @@
 import React from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
 import { useFilterOptions } from './hooks/useFilterOptions';
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+import CompanyDateFilters from './filters/CompanyDateFilters';
+import ShiftSectorFilters from './filters/ShiftSectorFilters';
+import MealTypeFilter from './filters/MealTypeFilter';
 
 const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
   const { data: filterOptions, isLoading, error } = useFilterOptions();
 
-  const handleDateChange = (type, date) => {
+  const handleFilterChange = (type, value, displayName = '') => {
     try {
-      console.log(`Alterando data ${type}:`, date);
-      
-      if (!date || isNaN(date.getTime())) {
-        toast.error("Data inválida");
-        return;
-      }
-
-      onFilterChange(type, date);
-    } catch (error) {
-      console.error('Erro ao alterar data:', error);
-      toast.error('Erro ao atualizar data');
-    }
-  };
-
-  const handleFilterChange = (type, value) => {
-    try {
-      console.log(`Alterando filtro ${type}:`, value);
-      
-      // Encontra o nome do item selecionado
-      let itemName = '';
-      if (value !== 'all') {
-        switch (type) {
-          case 'company':
-            itemName = filterOptions?.empresas?.find(e => e.id === value)?.nome;
-            break;
-          case 'shift':
-            itemName = filterOptions?.turnos?.find(t => t.id === value)?.tipo_turno;
-            break;
-          case 'sector':
-            itemName = filterOptions?.setores?.find(s => s.id === value)?.nome_setor;
-            break;
-          case 'mealType':
-            itemName = filterOptions?.tiposRefeicao?.find(tr => tr.id === value)?.nome;
-            break;
-        }
-      }
-
-      // Passa tanto o valor quanto o nome para o filtro
-      onFilterChange(type, value, itemName);
+      console.log('Alterando filtro:', { type, value, displayName });
+      onFilterChange(type, value, displayName);
     } catch (error) {
       console.error('Erro ao alterar filtro:', error);
-      toast.error('Erro ao atualizar filtro');
     }
   };
 
@@ -96,89 +51,20 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
-      <div>
-        <Label className="text-sm font-medium mb-2 block">Empresa</Label>
-        <Select onValueChange={(value) => handleFilterChange('company', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a empresa" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            {filterOptions?.empresas?.map((empresa) => (
-              <SelectItem key={empresa.id} value={empresa.id}>
-                {empresa.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label className="text-sm font-medium mb-2 block">Data Inicial</Label>
-        <DatePicker
-          date={startDate}
-          onDateChange={(date) => handleDateChange('startDate', date)}
-        />
-      </div>
-
-      <div>
-        <Label className="text-sm font-medium mb-2 block">Data Final</Label>
-        <DatePicker
-          date={endDate}
-          onDateChange={(date) => handleDateChange('endDate', date)}
-        />
-      </div>
-
-      <div>
-        <Label className="text-sm font-medium mb-2 block">Turno</Label>
-        <Select onValueChange={(value) => handleFilterChange('shift', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o turno" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            {filterOptions?.turnos?.map((turno) => (
-              <SelectItem key={turno.id} value={turno.id}>
-                {turno.tipo_turno}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label className="text-sm font-medium mb-2 block">Setor</Label>
-        <Select onValueChange={(value) => handleFilterChange('sector', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o setor" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            {filterOptions?.setores?.map((setor) => (
-              <SelectItem key={setor.id} value={setor.id}>
-                {setor.nome_setor}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label className="text-sm font-medium mb-2 block">Tipo de Refeição</Label>
-        <Select onValueChange={(value) => handleFilterChange('mealType', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            {filterOptions?.tiposRefeicao?.map((tipo) => (
-              <SelectItem key={tipo.id} value={tipo.id}>
-                {tipo.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <CompanyDateFilters 
+        filterOptions={filterOptions}
+        handleFilterChange={handleFilterChange}
+        startDate={startDate}
+        endDate={endDate}
+      />
+      <ShiftSectorFilters 
+        filterOptions={filterOptions}
+        handleFilterChange={handleFilterChange}
+      />
+      <MealTypeFilter 
+        filterOptions={filterOptions}
+        handleFilterChange={handleFilterChange}
+      />
     </div>
   );
 };
