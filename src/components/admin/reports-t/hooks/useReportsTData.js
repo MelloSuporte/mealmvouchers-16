@@ -12,7 +12,22 @@ export const useReportsTData = (filters) => {
       try {
         logger.info('Iniciando busca de dados do relatório T com filtros:', filters);
 
-        // Primeiro, vamos verificar se existem registros na view
+        // Primeiro, vamos verificar se existem registros na tabela base
+        const { count: baseCount, error: baseError } = await supabase
+          .from('uso_voucher')
+          .select('*', { count: 'exact', head: true });
+
+        if (baseError) {
+          logger.error('Erro ao verificar registros na tabela base:', {
+            error: baseError.message,
+            code: baseError.code,
+            details: baseError.details
+          });
+        } else {
+          logger.info(`Total de registros na tabela base uso_voucher: ${baseCount}`);
+        }
+
+        // Verificar registros na view
         const { count, error: countError } = await supabase
           .from('vw_uso_voucher_detalhado')
           .select('*', { count: 'exact', head: true });
@@ -29,7 +44,23 @@ export const useReportsTData = (filters) => {
         logger.info(`Total de registros na view: ${count}`);
 
         if (count === 0) {
-          logger.warn('A view vw_uso_voucher_detalhado está vazia');
+          logger.warn('A view vw_uso_voucher_detalhado está vazia. Verificando possíveis causas...');
+          
+          // Verificar se há registros recentes
+          const { data: recentData, error: recentError } = await supabase
+            .from('uso_voucher')
+            .select('created_at')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (recentError) {
+            logger.error('Erro ao verificar registros recentes:', recentError);
+          } else if (recentData && recentData.length > 0) {
+            logger.info(`Último registro encontrado em: ${recentData[0].created_at}`);
+          } else {
+            logger.warn('Nenhum registro recente encontrado na tabela base');
+          }
+          
           return [];
         }
 
@@ -81,8 +112,7 @@ export const useReportsTData = (filters) => {
             observacao
           `)
           .gte('data_uso', startUtc)
-          .lte('data_uso', endUtc)
-          .order('data_uso', { ascending: true });
+          .lte('data_uso', endUtc);
 
         logger.info('Construindo query com filtros adicionais');
 
@@ -121,7 +151,8 @@ export const useReportsTData = (filters) => {
 
         if (!data || data.length === 0) {
           logger.warn('Nenhum registro encontrado com os filtros aplicados', {
-            filters: filters
+            filters: filters,
+            query: query.toString() // Log da query construída
           });
           return [];
         }
