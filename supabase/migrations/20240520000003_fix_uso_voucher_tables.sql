@@ -71,9 +71,113 @@ CREATE INDEX IF NOT EXISTS idx_relatorio_uso_data ON relatorio_uso_voucher(data_
 CREATE INDEX IF NOT EXISTS idx_relatorio_uso_empresa ON relatorio_uso_voucher(empresa_id);
 CREATE INDEX IF NOT EXISTS idx_relatorio_uso_usuario ON relatorio_uso_voucher(usuario_id);
 
--- Set RLS policies
+-- Enable RLS
 ALTER TABLE uso_voucher ENABLE ROW LEVEL SECURITY;
 ALTER TABLE relatorio_uso_voucher ENABLE ROW LEVEL SECURITY;
+
+-- Políticas para uso_voucher
+CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
+    FOR SELECT TO authenticated
+    USING (
+        -- Usuários podem ver seus próprios registros
+        usuario_id = auth.uid()
+        OR 
+        -- Admins podem ver todos os registros
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+    );
+
+CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
+    FOR INSERT TO authenticated
+    WITH CHECK (
+        -- Apenas admins podem inserir
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+    );
+
+CREATE POLICY "uso_voucher_update_policy" ON uso_voucher
+    FOR UPDATE TO authenticated
+    USING (
+        -- Apenas admins podem atualizar
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+    );
+
+CREATE POLICY "uso_voucher_delete_policy" ON uso_voucher
+    FOR DELETE TO authenticated
+    USING (
+        -- Apenas admins podem deletar
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+    );
+
+-- Políticas para relatorio_uso_voucher
+CREATE POLICY "relatorio_uso_voucher_select_policy" ON relatorio_uso_voucher
+    FOR SELECT TO authenticated
+    USING (
+        -- Usuários podem ver seus próprios relatórios
+        usuario_id = auth.uid()
+        OR 
+        -- Admins podem ver todos os relatórios
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+    );
+
+CREATE POLICY "relatorio_uso_voucher_insert_policy" ON relatorio_uso_voucher
+    FOR INSERT TO authenticated
+    WITH CHECK (
+        -- Apenas admins podem inserir
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+    );
+
+CREATE POLICY "relatorio_uso_voucher_update_policy" ON relatorio_uso_voucher
+    FOR UPDATE TO authenticated
+    USING (
+        -- Apenas admins podem atualizar
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+    );
+
+CREATE POLICY "relatorio_uso_voucher_delete_policy" ON relatorio_uso_voucher
+    FOR DELETE TO authenticated
+    USING (
+        -- Apenas admins podem deletar
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            WHERE u.id = auth.uid()
+            AND u.role = 'admin'
+            AND NOT u.suspenso
+        )
+    );
 
 -- Grant permissions
 GRANT SELECT ON uso_voucher TO authenticated;
@@ -84,3 +188,11 @@ GRANT SELECT ON vw_uso_voucher_detalhado TO authenticated;
 COMMENT ON TABLE uso_voucher IS 'Registros de uso de vouchers';
 COMMENT ON TABLE relatorio_uso_voucher IS 'Relatório desnormalizado de uso de vouchers';
 COMMENT ON VIEW vw_uso_voucher_detalhado IS 'Visão detalhada do uso de vouchers';
+COMMENT ON POLICY "uso_voucher_select_policy" ON uso_voucher IS 'Controla quem pode visualizar registros de uso de voucher';
+COMMENT ON POLICY "uso_voucher_insert_policy" ON uso_voucher IS 'Controla quem pode inserir registros de uso de voucher';
+COMMENT ON POLICY "uso_voucher_update_policy" ON uso_voucher IS 'Controla quem pode atualizar registros de uso de voucher';
+COMMENT ON POLICY "uso_voucher_delete_policy" ON uso_voucher IS 'Controla quem pode deletar registros de uso de voucher';
+COMMENT ON POLICY "relatorio_uso_voucher_select_policy" ON relatorio_uso_voucher IS 'Controla quem pode visualizar relatórios de uso de voucher';
+COMMENT ON POLICY "relatorio_uso_voucher_insert_policy" ON relatorio_uso_voucher IS 'Controla quem pode inserir relatórios de uso de voucher';
+COMMENT ON POLICY "relatorio_uso_voucher_update_policy" ON relatorio_uso_voucher IS 'Controla quem pode atualizar relatórios de uso de voucher';
+COMMENT ON POLICY "relatorio_uso_voucher_delete_policy" ON relatorio_uso_voucher IS 'Controla quem pode deletar relatórios de uso de voucher';
