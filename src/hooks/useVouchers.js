@@ -7,39 +7,29 @@ export const useVouchers = () => {
     queryKey: ['disposableVouchers'],
     queryFn: async () => {
       try {
-        // Cria data com timezone de São Paulo
-        const now = new Date();
-        const saoPauloDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-        saoPauloDate.setHours(0, 0, 0, 0); // Início do dia
-        
         console.log('Iniciando busca de vouchers...');
-        console.log('Data atual (São Paulo):', saoPauloDate.toISOString());
-
-        // Query com os filtros corretos
+        
         const { data, error, count } = await supabase
           .from('vouchers_descartaveis')
           .select(`
-            *,
+            id,
+            codigo,
+            tipo_refeicao_id,
+            data_expiracao,
+            usado,
+            data_uso,
+            data_criacao,
             tipos_refeicao (
               id,
               nome,
-              valor,
-              horario_inicio,
-              horario_fim,
-              minutos_tolerancia
+              valor
             )
           `, { count: 'exact' })
           .eq('usado', false)
-          .gte('data_expiracao', saoPauloDate.toISOString().split('T')[0])
-          .order('data_criacao', { ascending: false });
+          .gte('data_expiracao', new Date().toISOString().split('T')[0]);
 
         if (error) {
-          console.error('Erro detalhado ao buscar vouchers:', {
-            error,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          });
+          console.error('Erro ao buscar vouchers:', error);
           toast.error(`Erro ao buscar vouchers: ${error.message}`);
           throw error;
         }
@@ -52,11 +42,7 @@ export const useVouchers = () => {
 
         return data || [];
       } catch (error) {
-        console.error('Erro ao buscar vouchers:', {
-          error,
-          message: error.message,
-          stack: error.stack
-        });
+        console.error('Erro ao buscar vouchers:', error);
         toast.error(`Erro ao buscar vouchers: ${error.message}`);
         return [];
       }
