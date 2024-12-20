@@ -2,21 +2,19 @@
 DROP POLICY IF EXISTS "vouchers_descartaveis_select_policy" ON vouchers_descartaveis;
 DROP POLICY IF EXISTS "vouchers_descartaveis_update_policy" ON vouchers_descartaveis;
 
--- Rename column if it exists
+-- Ensure usado_em column exists with correct type
 DO $$ 
 BEGIN
+    -- Drop usado column if it exists
     IF EXISTS (
         SELECT FROM information_schema.columns 
         WHERE table_name = 'vouchers_descartaveis' 
         AND column_name = 'usado'
     ) THEN
-        ALTER TABLE vouchers_descartaveis RENAME COLUMN usado TO usado_em;
+        ALTER TABLE vouchers_descartaveis DROP COLUMN usado;
     END IF;
-END $$;
 
--- Add usado_em column if it doesn't exist
-DO $$ 
-BEGIN
+    -- Add usado_em column if it doesn't exist
     IF NOT EXISTS (
         SELECT FROM information_schema.columns 
         WHERE table_name = 'vouchers_descartaveis' 
@@ -58,10 +56,10 @@ CREATE POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis
     )
     WITH CHECK (
         usado_em IS NOT NULL
-        AND id = id
-        AND tipo_refeicao_id = tipo_refeicao_id
-        AND codigo = codigo
-        AND data_expiracao = data_expiracao
+        AND NEW.id = OLD.id
+        AND NEW.tipo_refeicao_id = OLD.tipo_refeicao_id
+        AND NEW.codigo = OLD.codigo
+        AND NEW.data_expiracao = OLD.data_expiracao
     );
 
 -- Add helpful comments

@@ -12,7 +12,7 @@ CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
     FOR SELECT TO authenticated
     USING (
         -- Voucher não usado e dentro da validade
-        NOT usado 
+        usado_em IS NULL 
         AND CURRENT_DATE <= data_expiracao::date
         AND codigo IS NOT NULL
         AND EXISTS (
@@ -28,7 +28,7 @@ CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
 CREATE POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis
     FOR UPDATE TO authenticated
     USING (
-        NOT usado 
+        usado_em IS NULL 
         AND CURRENT_DATE <= data_expiracao::date
         AND EXISTS (
             SELECT 1 FROM tipos_refeicao tr
@@ -39,7 +39,7 @@ CREATE POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis
         )
     )
     WITH CHECK (
-        usado = true
+        usado_em IS NOT NULL
         AND NEW.id = OLD.id
         AND NEW.tipo_refeicao_id = OLD.tipo_refeicao_id
         AND NEW.codigo = OLD.codigo
