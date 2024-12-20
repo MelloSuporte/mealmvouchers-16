@@ -9,6 +9,14 @@ export const useUsageData = (filters) => {
     queryKey: ['usage-data', filters],
     queryFn: async () => {
       try {
+        console.log('Verificando sessão do usuário...');
+        const { data: session } = await supabase.auth.getSession();
+        console.log('Sessão atual:', {
+          userId: session?.user?.id,
+          role: session?.user?.role,
+          email: session?.user?.email
+        });
+        
         console.log('Iniciando busca com filtros:', filters);
         
         if (!filters?.startDate || !filters?.endDate) {
@@ -24,6 +32,7 @@ export const useUsageData = (filters) => {
         console.log('Data início formatada:', startUtc);
         console.log('Data fim formatada:', endUtc);
 
+        console.log('Construindo query base...');
         let query = supabase
           .from('uso_voucher')
           .select(`
@@ -46,6 +55,8 @@ export const useUsageData = (filters) => {
           .gte('usado_em', startUtc)
           .lte('usado_em', endUtc);
 
+        console.log('Query base construída:', query);
+
         if (filters.company && filters.company !== 'all') {
           console.log('Filtrando por empresa:', filters.company);
           query = query.eq('usuarios.empresa_id', filters.company);
@@ -66,15 +77,27 @@ export const useUsageData = (filters) => {
           query = query.eq('tipo_refeicao_id', filters.mealType);
         }
 
-        const { data, error } = await query;
+        console.log('Executando query final...');
+        const { data, error, status, statusText } = await query;
 
         if (error) {
-          console.error('Erro na consulta:', error);
+          console.error('Erro detalhado na consulta:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+            status: status,
+            statusText: statusText
+          });
           toast.error('Erro ao buscar dados: ' + error.message);
           throw error;
         }
 
         console.log(`Encontrados ${data?.length || 0} registros`);
+        console.log('Amostra dos dados:', {
+          primeiroRegistro: data?.[0],
+          ultimoRegistro: data?.[data?.length - 1]
+        });
         
         if (!data || data.length === 0) {
           console.log('Nenhum registro encontrado com os filtros aplicados');
@@ -83,7 +106,12 @@ export const useUsageData = (filters) => {
 
         return data || [];
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro detalhado ao buscar dados:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          cause: error.cause
+        });
         toast.error('Falha ao carregar dados: ' + error.message);
         throw error;
       }
