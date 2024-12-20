@@ -1,5 +1,7 @@
+-- Drop existing view if it exists
 DROP VIEW IF EXISTS vouchers_extras_view;
 
+-- Create a new view with proper security context
 CREATE OR REPLACE VIEW vouchers_extras_view
 WITH (security_barrier = true, security_invoker = true)
 AS
@@ -10,7 +12,6 @@ SELECT
     ve.autorizado_por,
     ve.codigo,
     ve.valido_ate,
-    ve.usado_em IS NOT NULL as usado,
     ve.usado_em,
     ve.observacao,
     ve.criado_em,
