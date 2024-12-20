@@ -36,6 +36,7 @@ export const useReportsTData = (filters) => {
           .select(`
             id,
             usado_em,
+            observacao,
             usuarios!uso_voucher_usuario_id_fkey (
               id,
               nome,
