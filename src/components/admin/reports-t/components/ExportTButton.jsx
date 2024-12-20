@@ -23,78 +23,92 @@ const ExportTButton = ({ filters }) => {
     try {
       console.log('Iniciando exportação com dados:', { data, filters });
 
-      if (!data) {
-        toast.error("Não há dados para exportar no período selecionado");
-        return;
-      }
-
       const doc = new jsPDF();
       
-      // Cabeçalho
+      // Título
       doc.setFontSize(16);
       doc.text("Relatório de Uso de Vouchers", 14, 15);
       
+      // Informações do usuário que exportou
       doc.setFontSize(10);
-      const startDate = filters.startDate ? format(new Date(filters.startDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
-      const endDate = filters.endDate ? format(new Date(filters.endDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
-      doc.text(`Período: ${startDate} a ${endDate}`, 14, 25);
+      const currentUser = "Sistema"; // TODO: Pegar nome do usuário logado
+      const exportDate = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+      doc.text(`Exportado por: ${currentUser} em ${exportDate}`, 14, 25);
 
-      // Filtros aplicados
-      doc.text("Filtros aplicados:", 14, 35);
-      doc.text(`Empresa: ${filters.company === 'all' ? 'Todas' : data[0]?.nome_empresa || '-'}`, 14, 45);
-      doc.text(`Turno: ${filters.shift === 'all' ? 'Todos' : data[0]?.turno || '-'}`, 14, 55);
-      doc.text(`Setor: ${filters.sector === 'all' ? 'Todos' : data[0]?.nome_setor || '-'}`, 14, 65);
-      doc.text(`Tipo de Refeição: ${filters.mealType === 'all' ? 'Todos' : data[0]?.tipo_refeicao || '-'}`, 14, 75);
+      // Informações do Relatório
+      doc.setFontSize(12);
+      doc.text("Informações do Relatório:", 14, 35);
 
-      // Valor total
-      const totalValue = data.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0);
-      doc.text(`Valor Total: ${formatCurrency(totalValue)}`, 14, 85);
+      // Empresa
+      const empresaNome = filters.company === 'all' ? 'Empresa não especificada' : data?.[0]?.nome_empresa || 'Empresa não especificada';
+      doc.text(`Empresa: ${empresaNome}`, 14, 45);
 
-      // Dados detalhados
-      const tableData = data.map(item => [
-        format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-        item.nome_usuario || '-',
-        item.cpf_usuario || '-',
-        item.nome_empresa || '-',
-        item.tipo_refeicao || '-',
-        formatCurrency(item.valor_refeicao || 0),
-        item.turno || '-',
-        item.nome_setor || '-'
-      ]);
+      // Período
+      const startDate = filters.startDate ? format(new Date(filters.startDate), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-';
+      const endDate = filters.endDate ? format(new Date(filters.endDate), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-';
+      doc.text(`Período: ${startDate} a ${endDate}`, 14, 55);
 
-      console.log('Dados formatados para tabela:', tableData[0]); // Log primeiro item para debug
+      // Turno
+      const turnoNome = filters.shift === 'all' ? 'Todos os Turnos' : data?.[0]?.turno || 'Turno não especificado';
+      doc.text(`Turno: ${turnoNome}`, 14, 65);
 
-      doc.autoTable({
-        startY: 95,
-        head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor']],
-        body: tableData,
-        theme: 'grid',
-        styles: { 
-          fontSize: 8,
-          cellPadding: 2
-        },
-        headStyles: { 
-          fillColor: [66, 66, 66],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold'
-        },
-        columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 25 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 20 },
-          5: { cellWidth: 20 },
-          6: { cellWidth: 20 },
-          7: { cellWidth: 20 }
-        }
-      });
+      // Setor
+      const setorNome = filters.sector === 'all' ? 'Todos os Setores' : data?.[0]?.nome_setor || 'Setor não especificado';
+      doc.text(`Setor: ${setorNome}`, 14, 75);
+
+      // Tipo de Refeição
+      const tipoRefeicao = filters.mealType === 'all' ? 'Todos os Tipos' : data?.[0]?.tipo_refeicao || 'Tipo não especificado';
+      doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, 85);
+
+      // Valor Total
+      const totalValue = data?.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0) || 0;
+      doc.text(`Valor Total: ${formatCurrency(totalValue)}`, 14, 95);
+
+      // Mensagem quando não há dados
+      if (!data || data.length === 0) {
+        doc.text("Nenhum registro encontrado para o período selecionado.", 14, 115);
+      } else {
+        // Tabela de dados quando houver registros
+        const tableData = data.map(item => [
+          format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+          item.nome_usuario || '-',
+          item.cpf || '-',
+          item.nome_empresa || '-',
+          item.tipo_refeicao || '-',
+          formatCurrency(item.valor_refeicao || 0),
+          item.turno || '-',
+          item.nome_setor || '-'
+        ]);
+
+        doc.autoTable({
+          startY: 125,
+          head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor']],
+          body: tableData,
+          theme: 'grid',
+          styles: { 
+            fontSize: 8,
+            cellPadding: 2
+          },
+          headStyles: { 
+            fillColor: [66, 66, 66],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold'
+          },
+          columnStyles: {
+            0: { cellWidth: 25 },
+            1: { cellWidth: 35 },
+            2: { cellWidth: 25 },
+            3: { cellWidth: 25 },
+            4: { cellWidth: 20 },
+            5: { cellWidth: 20 },
+            6: { cellWidth: 20 },
+            7: { cellWidth: 20 }
+          }
+        });
+      }
 
       const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
-      
-      console.log('Salvando arquivo:', fileName);
       doc.save(fileName);
-      
       toast.success("Relatório exportado com sucesso!");
     } catch (error) {
       console.error('Erro ao exportar:', error);
@@ -102,13 +116,10 @@ const ExportTButton = ({ filters }) => {
     }
   };
 
-  // Modificado para habilitar o botão quando houver dados
-  const isDisabled = isLoading || !data;
-
   return (
     <Button 
       onClick={handleExport}
-      disabled={isDisabled}
+      disabled={isLoading}
       className="bg-primary hover:bg-primary/90 text-white"
       size="sm"
     >
