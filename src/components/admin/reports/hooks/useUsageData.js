@@ -10,11 +10,24 @@ export const useUsageData = (filters) => {
     queryFn: async () => {
       try {
         console.log('Verificando sessão do usuário...');
-        const { data: session } = await supabase.auth.getSession();
-        console.log('Sessão atual:', {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Erro ao obter sessão:', sessionError);
+          throw new Error('Falha ao verificar autenticação');
+        }
+
+        if (!session) {
+          console.error('Nenhuma sessão encontrada');
+          throw new Error('Usuário não autenticado');
+        }
+
+        console.log('Detalhes da sessão:', {
           userId: session?.user?.id,
           role: session?.user?.role,
-          email: session?.user?.email
+          email: session?.user?.email,
+          aud: session?.user?.aud,
+          exp: session?.expires_at
         });
         
         console.log('Iniciando busca com filtros:', filters);
@@ -55,7 +68,11 @@ export const useUsageData = (filters) => {
           .gte('usado_em', startUtc)
           .lte('usado_em', endUtc);
 
-        console.log('Query base construída:', query);
+        console.log('Query base construída:', {
+          query: query.toString(),
+          headers: query.headers,
+          auth: session?.access_token
+        });
 
         if (filters.company && filters.company !== 'all') {
           console.log('Filtrando por empresa:', filters.company);
@@ -87,20 +104,27 @@ export const useUsageData = (filters) => {
             hint: error.hint,
             code: error.code,
             status: status,
-            statusText: statusText
+            statusText: statusText,
+            auth: session?.access_token ? 'Token presente' : 'Token ausente'
           });
           toast.error('Erro ao buscar dados: ' + error.message);
           throw error;
         }
 
         console.log(`Encontrados ${data?.length || 0} registros`);
-        console.log('Amostra dos dados:', {
-          primeiroRegistro: data?.[0],
-          ultimoRegistro: data?.[data?.length - 1]
-        });
-        
-        if (!data || data.length === 0) {
+        if (data?.length > 0) {
+          console.log('Amostra dos dados:', {
+            primeiroRegistro: data[0],
+            ultimoRegistro: data[data.length - 1],
+            totalRegistros: data.length
+          });
+        } else {
           console.log('Nenhum registro encontrado com os filtros aplicados');
+          console.log('Verificando políticas RLS ativas:', {
+            table: 'uso_voucher',
+            userRole: session?.user?.role,
+            userId: session?.user?.id
+          });
           toast.warning('Nenhum registro encontrado para o período selecionado. Tente ajustar os filtros.');
         }
 
