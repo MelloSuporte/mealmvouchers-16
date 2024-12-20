@@ -37,7 +37,7 @@ CREATE POLICY "vouchers_extras_select_policy" ON vouchers_extras
         )
     );
 
-CREATE POLICY "vouchers_extras_update_policy" ON vouchers_extras
+CREATE POLICY "vouchers_extras_update_policy" ON vouchers_extras AS PERMISSIVE
     FOR UPDATE TO authenticated
     USING (
         usuario_id = auth.uid()
@@ -45,11 +45,15 @@ CREATE POLICY "vouchers_extras_update_policy" ON vouchers_extras
         AND CURRENT_DATE <= valido_ate
     )
     WITH CHECK (
-        usuario_id = auth.uid()
-        AND NEW.id = OLD.id
-        AND NEW.tipo_refeicao_id = OLD.tipo_refeicao_id
-        AND NEW.valido_ate = OLD.valido_ate
-        AND NEW.usado_em IS NOT NULL
+        EXISTS (
+            SELECT 1
+            FROM vouchers_extras
+            WHERE id = vouchers_extras.id
+            AND usuario_id = auth.uid()
+            AND tipo_refeicao_id = vouchers_extras.tipo_refeicao_id
+            AND valido_ate = vouchers_extras.valido_ate
+            AND usado_em IS NULL
+        )
     );
 
 -- Add helpful comments
