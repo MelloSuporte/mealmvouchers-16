@@ -150,6 +150,14 @@ const ExportTButton = ({ filters }) => {
             fillColor: [66, 66, 66],
             textColor: [255, 255, 255],
             fontStyle: 'bold'
+          },
+          columnStyles: {
+            0: { cellWidth: 20 },
+            1: { cellWidth: 30 },
+            2: { cellWidth: 35 },
+            3: { cellWidth: 35 },
+            4: { cellWidth: 35 },
+            5: { cellWidth: 20 }
           }
         });
       }
