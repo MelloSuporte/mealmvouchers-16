@@ -15,14 +15,7 @@ export const useVouchers = () => {
         console.log('Iniciando busca de vouchers...');
         console.log('Data atual (São Paulo):', saoPauloDate.toISOString());
 
-        // Debug: Verificar todos os vouchers
-        const { data: allVouchers, error: debugError } = await supabase
-          .from('vouchers_descartaveis')
-          .select('*');
-          
-        console.log('Todos os vouchers na tabela:', allVouchers);
-
-        // Query com os filtros
+        // Query com os filtros corretos
         const { data, error, count } = await supabase
           .from('vouchers_descartaveis')
           .select(`
@@ -37,7 +30,8 @@ export const useVouchers = () => {
             )
           `, { count: 'exact' })
           .eq('usado', false)
-          .gte('data_expiracao', saoPauloDate.toISOString().split('T')[0]);
+          .gte('data_expiracao', saoPauloDate.toISOString().split('T')[0])
+          .order('data_criacao', { ascending: false });
 
         if (error) {
           console.error('Erro detalhado ao buscar vouchers:', {
@@ -50,7 +44,7 @@ export const useVouchers = () => {
           throw error;
         }
 
-        console.log('Resultado da query filtrada:', {
+        console.log('Resultado da query:', {
           total: count,
           vouchers: data,
           primeiroVoucher: data?.[0]

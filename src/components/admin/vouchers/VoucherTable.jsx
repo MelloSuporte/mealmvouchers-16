@@ -35,7 +35,7 @@ const VoucherTable = ({ vouchers = [] }) => {
       parsed: date,
       isValid: isValid(date)
     });
-    return isValid(date) ? format(date, "dd/MM/yyyy", { locale: ptBR }) : '-';
+    return isValid(date) ? format(date, "dd/MM/yyyy HH:mm", { locale: ptBR }) : '-';
   };
 
   const downloadPDF = () => {
@@ -54,11 +54,12 @@ const VoucherTable = ({ vouchers = [] }) => {
         voucher.codigo || '-',
         voucher.tipos_refeicao?.nome || '-',
         formatDate(voucher.data_criacao),
+        formatDate(voucher.data_uso),
         formatDate(voucher.data_expiracao)
       ]);
 
       autoTable(doc, {
-        head: [['Código', 'Tipo Refeição', 'Data Criação', 'Data Expiração']],
+        head: [['Código', 'Tipo Refeição', 'Data Criação', 'Data Uso', 'Data Expiração']],
         body: tableData,
         startY: 25,
         theme: 'grid',
@@ -100,6 +101,7 @@ const VoucherTable = ({ vouchers = [] }) => {
                 <TableHead className="text-sm font-medium text-gray-700">Código</TableHead>
                 <TableHead className="text-sm font-medium text-gray-700">Tipo Refeição</TableHead>
                 <TableHead className="text-sm font-medium text-gray-700">Data Criação</TableHead>
+                <TableHead className="text-sm font-medium text-gray-700">Data Uso</TableHead>
                 <TableHead className="text-sm font-medium text-gray-700">Data Expiração</TableHead>
               </TableRow>
             </TableHeader>
@@ -110,12 +112,13 @@ const VoucherTable = ({ vouchers = [] }) => {
                     <TableCell className="text-sm">{voucher.codigo || '-'}</TableCell>
                     <TableCell className="text-sm">{voucher.tipos_refeicao?.nome || '-'}</TableCell>
                     <TableCell className="text-sm">{formatDate(voucher.data_criacao)}</TableCell>
+                    <TableCell className="text-sm">{formatDate(voucher.data_uso)}</TableCell>
                     <TableCell className="text-sm">{formatDate(voucher.data_expiracao)}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-sm text-gray-500 py-8">
+                  <TableCell colSpan={5} className="text-center text-sm text-gray-500 py-8">
                     Nenhum voucher ativo encontrado
                   </TableCell>
                 </TableRow>
