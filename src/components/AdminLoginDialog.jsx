@@ -20,10 +20,11 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
     
     try {
       setIsSubmitting(true);
-      logger.info('Tentando login com email:', formData.email);
+      logger.info('Iniciando processo de login admin:', { email: formData.email });
 
       // Admin master hardcoded
       if (formData.password === '0001000') {
+        logger.info('Login master admin detectado');
         localStorage.setItem('adminToken', 'master-admin-token');
         localStorage.setItem('adminType', 'master');
         localStorage.setItem('adminPermissions', JSON.stringify({
@@ -39,6 +40,8 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
       }
 
       // Login gerente
+      logger.info('Buscando admin_user na tabela:', { email: formData.email });
+      
       const { data: admin, error } = await supabase
         .from('admin_users')
         .select('*')
@@ -48,26 +51,41 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         .single();
 
       if (error) {
-        logger.error('Erro ao buscar admin:', error);
+        logger.error('Erro ao buscar admin:', { error, details: error.details });
+        console.error('Detalhes completos do erro:', error);
         toast.error("Email ou senha incorretos");
         return;
       }
 
       if (admin) {
-        logger.info('Admin encontrado:', { id: admin.id, nome: admin.nome });
+        logger.info('Admin encontrado com sucesso:', { 
+          id: admin.id, 
+          nome: admin.nome,
+          permissoes: admin.permissoes 
+        });
+        
         localStorage.setItem('adminToken', 'admin-token-' + admin.id);
         localStorage.setItem('adminType', 'manager');
         localStorage.setItem('adminId', admin.id);
         localStorage.setItem('adminPermissions', JSON.stringify(admin.permissoes));
         
+        // Log do estado final da autenticação
+        logger.info('Estado final da autenticação:', {
+          adminId: admin.id,
+          adminType: 'manager',
+          permissoes: admin.permissoes
+        });
+        
         onClose();
         navigate('/admin');
         toast.success("Login realizado com sucesso!");
       } else {
+        logger.warn('Nenhum admin encontrado com as credenciais fornecidas');
         toast.error("Email ou senha incorretos");
       }
     } catch (error) {
-      logger.error('Erro no login:', error);
+      logger.error('Erro crítico no login:', error);
+      console.error('Erro completo:', error);
       toast.error("Erro ao realizar login");
     } finally {
       setIsSubmitting(false);

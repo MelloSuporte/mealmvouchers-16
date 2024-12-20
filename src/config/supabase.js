@@ -9,7 +9,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Variáveis de ambiente do Supabase não estão configuradas');
 }
 
-console.log('Tentando conectar ao Supabase com:', {
+logger.info('Configurando cliente Supabase:', {
   url: supabaseUrl,
   keyLength: supabaseAnonKey?.length || 0
 });
@@ -31,32 +31,48 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Verificar conexão
+// Verificar conexão e políticas RLS
 const checkConnection = async () => {
   try {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) {
-      logger.error('Erro ao verificar sessão Supabase:', error.message);
-      throw error;
+    logger.info('Verificando conexão com Supabase...');
+    
+    const { data: session, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      logger.error('Erro ao verificar sessão:', sessionError);
+      throw sessionError;
     }
-    logger.info('Conexão com Supabase verificada com sucesso');
-    console.log('Conexão Supabase bem-sucedida:', {
-      url: supabaseUrl,
-      authenticated: !!data.session,
-      headers: supabase.rest.headers
+    
+    logger.info('Sessão atual:', {
+      hasSession: !!session?.session,
+      user: session?.session?.user?.email
     });
+
+    // Testar acesso à tabela admin_users
+    const { data: adminTest, error: adminError } = await supabase
+      .from('admin_users')
+      .select('count')
+      .limit(1)
+      .single();
+
+    if (adminError) {
+      logger.error('Erro ao acessar admin_users:', adminError);
+    } else {
+      logger.info('Acesso à tabela admin_users OK');
+    }
+
+    logger.info('Conexão Supabase verificada com sucesso');
     return true;
   } catch (error) {
-    logger.error('Erro ao conectar com Supabase:', error);
-    console.error('Falha na conexão Supabase:', error);
+    logger.error('Erro ao verificar conexão:', error);
+    console.error('Detalhes completos do erro:', error);
     throw error;
   }
 };
 
 // Inicializar conexão
 checkConnection().catch(error => {
-  logger.error('Falha ao inicializar conexão com Supabase:', error);
-  console.error('Erro de inicialização Supabase:', error);
+  logger.error('Falha ao inicializar conexão:', error);
+  console.error('Erro completo:', error);
 });
 
 export default supabase;
