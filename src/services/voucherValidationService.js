@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import logger from '../config/logger';
 
 export const validateDisposableVoucher = async (code) => {
   try {
@@ -38,17 +39,6 @@ export const validateDisposableVoucher = async (code) => {
     if (!voucher.tipos_refeicao?.ativo) {
       console.log('Tipo de refeição inativo:', voucher.tipos_refeicao);
       return { success: false, error: 'Tipo de refeição inativo' };
-    }
-
-    // Verificar data de expiração
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const expirationDate = new Date(voucher.data_expiracao);
-    expirationDate.setHours(0, 0, 0, 0);
-
-    if (expirationDate < today) {
-      console.log('Voucher expirado:', { expirationDate, today });
-      return { success: false, error: 'Voucher expirado' };
     }
 
     console.log('Voucher válido:', voucher);
