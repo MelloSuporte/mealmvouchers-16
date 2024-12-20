@@ -65,6 +65,15 @@ export const AdminProvider = ({ children }) => {
         return false;
       }
     },
+    canRevert: () => {
+      if (adminType === 'master') return true;
+      try {
+        const permissions = JSON.parse(localStorage.getItem('adminPermissions') || '{}');
+        return permissions.gerenciar_reversoes === true;
+      } catch {
+        return false;
+      }
+    },
     logout,
     checkAuth
   };

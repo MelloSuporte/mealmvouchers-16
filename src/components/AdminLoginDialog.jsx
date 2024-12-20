@@ -31,7 +31,8 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
           gerenciar_vouchers_extra: true,
           gerenciar_vouchers_descartaveis: true,
           gerenciar_usuarios: true,
-          gerenciar_relatorios: true
+          gerenciar_relatorios: true,
+          gerenciar_reversoes: true // Nova permissão para gerenciar reversões
         }));
         onClose();
         navigate('/admin');
@@ -64,16 +65,22 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
           permissoes: admin.permissoes 
         });
         
+        // Adiciona permissão de reversão apenas para admins com permissão específica
+        const permissions = {
+          ...admin.permissoes,
+          gerenciar_reversoes: admin.permissoes?.gerenciar_reversoes || false
+        };
+        
         localStorage.setItem('adminToken', 'admin-token-' + admin.id);
         localStorage.setItem('adminType', 'manager');
         localStorage.setItem('adminId', admin.id);
-        localStorage.setItem('adminPermissions', JSON.stringify(admin.permissoes));
+        localStorage.setItem('adminPermissions', JSON.stringify(permissions));
         
         // Log do estado final da autenticação
         logger.info('Estado final da autenticação:', {
           adminId: admin.id,
           adminType: 'manager',
-          permissoes: admin.permissoes
+          permissoes: permissions
         });
         
         onClose();
