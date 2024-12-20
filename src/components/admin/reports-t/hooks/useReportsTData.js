@@ -5,32 +5,32 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { toast } from "sonner";
 import logger from '@/config/logger';
 
-const checkBackupRecords = async () => {
+const checkRecords = async () => {
   const { count, error } = await supabase
-    .from('uso_voucher_backup')
+    .from('uso_voucher')  // Alterado de uso_voucher_backup para uso_voucher
     .select('*', { count: 'exact', head: true });
 
   if (error) {
-    logger.error('Erro ao verificar registros na tabela backup:', {
+    logger.error('Erro ao verificar registros na tabela:', {
       error: error.message,
       code: error.code,
       details: error.details
     });
   } else {
-    logger.info(`Total de registros na tabela backup uso_voucher_backup: ${count}`);
+    logger.info(`Total de registros na tabela uso_voucher: ${count}`);
   }
 
   return count;
 };
 
-const mapBackupData = (data) => {
+const mapData = (data) => {
   return data?.map(item => ({
     id: item.id,
-    data_uso: item.data_uso || item.usado_em,
+    data_uso: item.usado_em,
     usuario_id: item.usuario_id,
     nome_usuario: item.nome_usuario || 'Usuário Teste',
     cpf: item.cpf || '000.000.000-00',
-    empresa: item.empresa || null, // Changed from empresa_id to empresa
+    empresa: item.empresa_id,
     nome_empresa: item.nome_empresa || 'Empresa Teste',
     turno: item.turno || 'Turno Teste',
     setor_id: item.setor_id || 1,
@@ -43,33 +43,59 @@ const mapBackupData = (data) => {
 
 const fetchAllData = async () => {
   const { data, error } = await supabase
-    .from('uso_voucher_backup')
-    .select('*')
-    .order('data_uso', { ascending: false })
+    .from('uso_voucher')  // Alterado de uso_voucher_backup para uso_voucher
+    .select(`
+      *,
+      usuarios (
+        nome,
+        cpf,
+        empresa_id,
+        turno_id,
+        setor_id
+      ),
+      tipos_refeicao (
+        nome,
+        valor
+      )
+    `)
+    .order('usado_em', { ascending: false })
     .limit(100);
 
   if (error) throw error;
 
   logger.info(`Busca sem filtros de data retornou ${data?.length || 0} registros`);
-  return mapBackupData(data);
+  return mapData(data);
 };
 
 const fetchFilteredData = async (startUtc, endUtc, filters) => {
   let query = supabase
-    .from('uso_voucher_backup')
-    .select('*')
-    .gte('data_uso', startUtc)
-    .lte('data_uso', endUtc);
+    .from('uso_voucher')  // Alterado de uso_voucher_backup para uso_voucher
+    .select(`
+      *,
+      usuarios (
+        nome,
+        cpf,
+        empresa_id,
+        turno_id,
+        setor_id
+      ),
+      tipos_refeicao (
+        nome,
+        valor
+      )
+    `)
+    .gte('usado_em', startUtc)
+    .lte('usado_em', endUtc);
 
   if (filters.company && filters.company !== 'all') {
     logger.info(`Aplicando filtro de empresa: ${filters.company}`);
-    query = query.eq('empresa', filters.company); // Changed from empresa_id to empresa
+    query = query.eq('usuarios.empresa_id', filters.company);
   }
 
   const { data, error } = await query;
 
   if (error) {
-    logger.error('Erro na consulta do relatório T:', {
+    logger.error('Erro na consulta do relatório:', {
       error: error.message,
       code: error.code,
       details: error.hint
@@ -87,7 +113,7 @@ const fetchFilteredData = async (startUtc, endUtc, filters) => {
   }
 
   logger.info(`Consulta concluída. Registros encontrados: ${data.length}`);
-  return mapBackupData(data);
+  return mapData(data);
 };
 
 export const useReportsTData = (filters) => {
@@ -95,12 +121,12 @@ export const useReportsTData = (filters) => {
     queryKey: ['reports-t-data', filters],
     queryFn: async () => {
       try {
-        logger.info('Iniciando busca de dados do relatório T com filtros:', filters);
+        logger.info('Iniciando busca de dados do relatório com filtros:', filters);
 
-        await checkBackupRecords();
+        await checkRecords();
 
         if (!filters?.startDate || !filters?.endDate) {
-          logger.warn('Datas não fornecidas para o relatório T');
+          logger.warn('Datas não fornecidas para o relatório');
           return fetchAllData();
         }
 
@@ -128,7 +154,7 @@ export const useReportsTData = (filters) => {
         return fetchFilteredData(startUtc, endUtc, filters);
 
       } catch (error) {
-        logger.error('Erro ao buscar dados do relatório T:', {
+        logger.error('Erro ao buscar dados do relatório:', {
           error: error.message,
           stack: error.stack,
           filters: filters
