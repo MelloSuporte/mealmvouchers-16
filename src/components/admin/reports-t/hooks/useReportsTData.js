@@ -19,8 +19,8 @@ export const useReportsTData = (filters) => {
 
         // Ajusta o fuso horário para UTC-3 (Brasil)
         const timeZone = 'America/Sao_Paulo';
-        const startUtc = formatInTimeZone(startOfDay(filters.startDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssX");
-        const endUtc = formatInTimeZone(endOfDay(filters.endDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssX");
+        const startUtc = formatInTimeZone(startOfDay(filters.startDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+        const endUtc = formatInTimeZone(endOfDay(filters.endDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX");
         
         logger.info('Parâmetros de consulta:', {
           startDate: startUtc,
@@ -33,9 +33,24 @@ export const useReportsTData = (filters) => {
 
         let query = supabase
           .from('vw_uso_voucher_detalhado')
-          .select('*')
+          .select(`
+            id,
+            data_uso,
+            usuario_id,
+            nome_usuario,
+            cpf,
+            empresa_id,
+            nome_empresa,
+            turno,
+            setor_id,
+            nome_setor,
+            tipo_refeicao,
+            valor_refeicao,
+            observacao
+          `)
           .gte('data_uso', startUtc)
-          .lte('data_uso', endUtc);
+          .lte('data_uso', endUtc)
+          .order('data_uso', { ascending: true });
 
         logger.info('Construindo query com filtros adicionais');
 
@@ -72,8 +87,6 @@ export const useReportsTData = (filters) => {
           throw error;
         }
 
-        logger.info(`Consulta concluída. Registros encontrados: ${data?.length || 0}`);
-        
         if (!data || data.length === 0) {
           logger.warn('Nenhum registro encontrado com os filtros aplicados', {
             filters: filters
@@ -81,7 +94,9 @@ export const useReportsTData = (filters) => {
           return [];
         }
 
+        logger.info(`Consulta concluída. Registros encontrados: ${data.length}`);
         return data;
+
       } catch (error) {
         logger.error('Erro ao buscar dados do relatório T:', {
           error: error.message,
