@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { useFilterOptions } from './hooks/useFilterOptions';
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { isAfter, isBefore } from 'date-fns';
 
 const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
   const { data: filterOptions, isLoading, error } = useFilterOptions();
@@ -22,17 +21,6 @@ const ReportFilters = ({ onFilterChange, startDate, endDate }) => {
       
       if (!date || isNaN(date.getTime())) {
         toast.error("Data inválida");
-        return;
-      }
-
-      // Validações específicas
-      if (type === 'startDate' && endDate && isAfter(date, endDate)) {
-        toast.error("Data inicial não pode ser maior que a data final");
-        return;
-      }
-
-      if (type === 'endDate' && startDate && isBefore(date, startDate)) {
-        toast.error("Data final não pode ser menor que a data inicial");
         return;
       }
 
