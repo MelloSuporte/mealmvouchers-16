@@ -12,6 +12,7 @@ SELECT
     ve.autorizado_por,
     ve.codigo,
     ve.valido_ate,
+    ve.usado_em IS NOT NULL as usado,
     ve.usado_em,
     ve.observacao,
     ve.criado_em,
