@@ -3,14 +3,17 @@ import { supabase } from '@/config/supabase';
 import { startOfDay, endOfDay } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { toast } from "sonner";
+import logger from '@/config/logger';
 
 export const useReportsTData = (filters) => {
   return useQuery({
     queryKey: ['reports-t-data', filters],
     queryFn: async () => {
       try {
+        logger.info('Iniciando busca de dados do relatório T com filtros:', filters);
+
         if (!filters?.startDate || !filters?.endDate) {
-          console.log('Datas não fornecidas');
+          logger.warn('Datas não fornecidas para o relatório T');
           return [];
         }
 
@@ -19,7 +22,7 @@ export const useReportsTData = (filters) => {
         const startUtc = formatInTimeZone(startOfDay(filters.startDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssX");
         const endUtc = formatInTimeZone(endOfDay(filters.endDate), timeZone, "yyyy-MM-dd'T'HH:mm:ssX");
         
-        console.log('Iniciando consulta com filtros:', {
+        logger.info('Parâmetros de consulta:', {
           startDate: startUtc,
           endDate: endUtc,
           company: filters.company,
@@ -56,40 +59,67 @@ export const useReportsTData = (filters) => {
           .gte('usado_em', startUtc)
           .lte('usado_em', endUtc);
 
+        logger.info('Construindo query com filtros adicionais');
+
         if (filters.company && filters.company !== 'all') {
+          logger.info(`Aplicando filtro de empresa: ${filters.company}`);
           query = query.eq('usuarios.empresa_id', filters.company);
         }
 
         if (filters.shift && filters.shift !== 'all') {
+          logger.info(`Aplicando filtro de turno: ${filters.shift}`);
           query = query.eq('usuarios.turno_id', filters.shift);
         }
 
         if (filters.sector && filters.sector !== 'all') {
+          logger.info(`Aplicando filtro de setor: ${filters.sector}`);
           query = query.eq('usuarios.setor_id', filters.sector);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
+          logger.info(`Aplicando filtro de tipo de refeição: ${filters.mealType}`);
           query = query.eq('tipo_refeicao_id', filters.mealType);
         }
 
         const { data, error } = await query;
 
         if (error) {
-          console.error('Erro na consulta:', error);
+          logger.error('Erro na consulta do relatório T:', {
+            error: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint
+          });
           toast.error('Erro ao buscar dados: ' + error.message);
           throw error;
         }
 
-        console.log(`Dados retornados da consulta:`, data);
+        logger.info(`Consulta concluída. Registros encontrados: ${data?.length || 0}`);
         
         if (!data || data.length === 0) {
-          console.log('Nenhum registro encontrado com os filtros aplicados');
+          logger.warn('Nenhum registro encontrado com os filtros aplicados', {
+            filters: filters
+          });
           return [];
         }
 
+        // Log de amostra dos dados retornados (primeiros 2 registros)
+        logger.info('Amostra dos dados retornados:', {
+          sample: data.slice(0, 2).map(item => ({
+            id: item.id,
+            usado_em: item.usado_em,
+            tipo_voucher: item.tipo_voucher,
+            usuario: item.usuarios?.nome
+          }))
+        });
+
         return data;
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        logger.error('Erro ao buscar dados do relatório T:', {
+          error: error.message,
+          stack: error.stack,
+          filters: filters
+        });
         toast.error('Falha ao carregar dados: ' + error.message);
         throw error;
       }

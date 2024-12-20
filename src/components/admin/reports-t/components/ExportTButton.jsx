@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import logger from '@/config/logger';
 
 const ExportTButton = ({ filters }) => {
   const { data, isLoading } = useReportsTData(filters);
@@ -21,7 +22,10 @@ const ExportTButton = ({ filters }) => {
 
   const handleExport = async () => {
     try {
-      console.log('Iniciando exportação com dados:', { data, filters });
+      logger.info('Iniciando exportação do relatório T', {
+        filters,
+        recordCount: data?.length || 0
+      });
 
       const doc = new jsPDF();
       
@@ -36,6 +40,7 @@ const ExportTButton = ({ filters }) => {
       doc.text(`Exportado por: ${currentUser} em ${exportDate}`, 14, 25);
 
       // Informações do Relatório
+      logger.info('Adicionando informações do relatório ao PDF');
       doc.setFontSize(12);
       doc.text("Informações do Relatório:", 14, 35);
 
@@ -62,12 +67,16 @@ const ExportTButton = ({ filters }) => {
 
       // Valor Total
       const totalValue = data?.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0) || 0;
+      logger.info(`Valor total calculado: ${totalValue}`);
       doc.text(`Valor Total: ${formatCurrency(totalValue)}`, 14, 95);
 
       // Mensagem quando não há dados
       if (!data || data.length === 0) {
+        logger.warn('Nenhum dado encontrado para exportação');
         doc.text("Nenhum registro encontrado para o período selecionado.", 14, 115);
       } else {
+        logger.info('Gerando tabelas do relatório');
+        
         // Tabela de Vouchers Usados
         doc.setFontSize(14);
         doc.text("Vouchers Utilizados", 14, 115);
@@ -82,6 +91,8 @@ const ExportTButton = ({ filters }) => {
           item.turno || '-',
           item.nome_setor || '-'
         ]);
+
+        logger.info(`Processados ${tableData.length} registros para a tabela de vouchers usados`);
 
         doc.autoTable({
           startY: 125,
@@ -110,21 +121,21 @@ const ExportTButton = ({ filters }) => {
         });
 
         // Tabela de Vouchers Descartáveis
+        const vouchersDescartaveis = data.filter(item => item.tipo_voucher === 'descartavel');
+        logger.info(`Encontrados ${vouchersDescartaveis.length} vouchers descartáveis`);
+
         const currentY = doc.lastAutoTable.finalY + 20;
         doc.setFontSize(14);
         doc.text("Vouchers Descartáveis", 14, currentY);
 
-        // Dados dos vouchers descartáveis
-        const vouchersDescartaveisData = data
-          .filter(item => item.tipo_voucher === 'descartavel')
-          .map(item => [
-            item.codigo || '-',
-            item.tipo_refeicao || '-',
-            format(new Date(item.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-            item.data_uso ? format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
-            format(new Date(item.data_expiracao), 'dd/MM/yyyy', { locale: ptBR }),
-            item.usado ? 'Sim' : 'Não'
-          ]);
+        const vouchersDescartaveisData = vouchersDescartaveis.map(item => [
+          item.codigo || '-',
+          item.tipo_refeicao || '-',
+          format(new Date(item.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+          item.data_uso ? format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
+          format(new Date(item.data_expiracao), 'dd/MM/yyyy', { locale: ptBR }),
+          item.usado ? 'Sim' : 'Não'
+        ]);
 
         doc.autoTable({
           startY: currentY + 10,
@@ -145,9 +156,15 @@ const ExportTButton = ({ filters }) => {
 
       const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
       doc.save(fileName);
+      
+      logger.info('Relatório exportado com sucesso', { fileName });
       toast.success("Relatório exportado com sucesso!");
     } catch (error) {
-      console.error('Erro ao exportar:', error);
+      logger.error('Erro ao exportar relatório:', {
+        error: error.message,
+        stack: error.stack,
+        filters: filters
+      });
       toast.error("Erro ao exportar relatório: " + error.message);
     }
   };
