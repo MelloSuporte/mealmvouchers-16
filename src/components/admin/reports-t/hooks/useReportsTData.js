@@ -37,7 +37,7 @@ export const useReportsTData = (filters) => {
             id,
             usado_em,
             observacao,
-            usuarios!uso_voucher_usuario_id_fkey (
+            usuarios!inner (
               id,
               nome,
               cpf,
@@ -97,15 +97,6 @@ export const useReportsTData = (filters) => {
           });
           return [];
         }
-
-        // Log de amostra dos dados retornados (primeiros 2 registros)
-        logger.info('Amostra dos dados retornados:', {
-          sample: data.slice(0, 2).map(item => ({
-            id: item.id,
-            usado_em: item.usado_em,
-            usuario: item.usuarios?.nome
-          }))
-        });
 
         return data;
       } catch (error) {
