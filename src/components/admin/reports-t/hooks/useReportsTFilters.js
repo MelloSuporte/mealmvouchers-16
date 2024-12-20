@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { startOfMonth, endOfDay } from 'date-fns';
+import { startOfMonth, endOfDay, subDays } from 'date-fns';
 import { toast } from "sonner";
 
 export const useReportsTFilters = () => {
   const [filters, setFilters] = useState({
     company: 'all',
-    startDate: startOfMonth(new Date()),
+    startDate: subDays(new Date(), 7), // Últimos 7 dias como padrão
     endDate: endOfDay(new Date()),
     shift: 'all',
     sector: 'all',
