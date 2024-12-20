@@ -73,7 +73,7 @@ const ExportButton = ({ metrics, filters }) => {
           item.userName || '-',
           item.company || '-',
           item.mealType || '-',
-          formatCurrency(item.cost || 0)
+          formatCurrency(item.cost)
         ]);
 
         logger.info(`Processados ${tableData.length} registros para a tabela`);
