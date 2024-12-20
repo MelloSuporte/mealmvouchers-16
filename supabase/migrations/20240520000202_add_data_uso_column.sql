@@ -36,7 +36,10 @@ SELECT
     ve.autorizado_por,
     ve.codigo,
     ve.valido_ate,
-    ve.usado,
+    CASE 
+        WHEN ve.usado_em IS NOT NULL THEN true 
+        ELSE false 
+    END as usado,
     ve.usado_em,
     ve.data_uso,
     ve.observacao,
