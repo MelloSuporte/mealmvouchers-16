@@ -6,71 +6,31 @@ DROP POLICY IF EXISTS "vouchers_descartaveis_insert_policy" ON vouchers_descarta
 -- Enable RLS
 ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
 
--- Create select policy with proper validation
+-- Create select policy with no restrictions
 CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
     FOR SELECT TO authenticated
-    USING (
-        -- Voucher não usado e dentro da validade
-        NOT usado 
-        AND CURRENT_DATE <= data_expiracao::date
-        AND codigo IS NOT NULL
-        AND EXISTS (
-            SELECT 1 FROM tipos_refeicao tr
-            WHERE tr.id = tipo_refeicao_id
-            AND tr.ativo = true
-            AND CURRENT_TIME BETWEEN tr.horario_inicio 
-            AND (tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL)
-        )
-    );
+    USING (true);
 
--- Create update policy to allow marking as used
+-- Create update policy with no restrictions
 CREATE POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis
     FOR UPDATE TO authenticated
-    USING (
-        NOT usado 
-        AND CURRENT_DATE <= data_expiracao::date
-        AND EXISTS (
-            SELECT 1 FROM tipos_refeicao tr
-            WHERE tr.id = tipo_refeicao_id
-            AND tr.ativo = true
-            AND CURRENT_TIME BETWEEN tr.horario_inicio 
-            AND (tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL)
-        )
-    )
-    WITH CHECK (
-        usado = true
-        AND NEW.id = OLD.id
-        AND NEW.tipo_refeicao_id = OLD.tipo_refeicao_id
-        AND NEW.codigo = OLD.codigo
-        AND NEW.data_expiracao = OLD.data_expiracao
-    );
+    USING (true)
+    WITH CHECK (true);
 
--- Create insert policy for admins and managers
+-- Create insert policy with no restrictions
 CREATE POLICY "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis
     FOR INSERT TO authenticated
-    WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM usuarios u
-            WHERE u.id = auth.uid()
-            AND u.role IN ('admin', 'gestor')
-            AND NOT u.suspenso
-        )
-    );
+    WITH CHECK (true);
 
 -- Grant necessary permissions
-GRANT SELECT, UPDATE ON vouchers_descartaveis TO authenticated;
-
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_vouchers_descartaveis_codigo ON vouchers_descartaveis(codigo);
-CREATE INDEX IF NOT EXISTS idx_vouchers_descartaveis_data_expiracao ON vouchers_descartaveis(data_expiracao);
-CREATE INDEX IF NOT EXISTS idx_vouchers_descartaveis_usado ON vouchers_descartaveis(usado);
+GRANT ALL ON vouchers_descartaveis TO authenticated;
 
 -- Add helpful comments
 COMMENT ON POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis IS 
-'Permite visualizar apenas vouchers válidos, não utilizados e dentro do horário permitido';
+'Permite que qualquer usuário autenticado visualize vouchers descartáveis';
 
 COMMENT ON POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis IS 
-'Permite apenas marcar vouchers como usados quando dentro do horário permitido';
+'Permite que qualquer usuário autenticado atualize vouchers descartáveis';
 
 COMMENT ON POLICY "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis IS
-'Permite apenas administradores e gestores criarem novos vouchers';
+'Permite que qualquer usuário autenticado crie vouchers descartáveis';
