@@ -37,11 +37,8 @@ CREATE POLICY "public_vouchers_descartaveis_update_policy" ON vouchers_descartav
         )
     )
     WITH CHECK (
+        -- Permitir apenas marcar como usado sem alterar outros campos
         usado = true
-        AND NEW.id = OLD.id
-        AND NEW.tipo_refeicao_id = OLD.tipo_refeicao_id
-        AND NEW.codigo = OLD.codigo
-        AND NEW.data_expiracao = OLD.data_expiracao
     );
 
 -- Adicionar comentários explicativos
