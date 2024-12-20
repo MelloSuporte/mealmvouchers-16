@@ -8,4 +8,4 @@ COMMENT ON COLUMN vouchers_extras.data_uso IS 'Data e hora em que o voucher extr
 -- Atualizar registros existentes usando o nome correto da coluna
 UPDATE vouchers_extras 
 SET data_uso = usado_em 
-WHERE usado = true AND data_uso IS NULL;
+WHERE usado_em IS NOT NULL AND data_uso IS NULL;
