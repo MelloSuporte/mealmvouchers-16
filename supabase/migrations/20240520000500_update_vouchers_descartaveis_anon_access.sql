@@ -39,13 +39,6 @@ CREATE POLICY "anon_vouchers_descartaveis_update_policy_v2" ON vouchers_descarta
             AND CURRENT_TIME BETWEEN tr.horario_inicio 
             AND (tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL)
         )
-    )
-    WITH CHECK (
-        usado_em IS NOT NULL
-        AND NEW.id = OLD.id
-        AND NEW.tipo_refeicao_id = OLD.tipo_refeicao_id
-        AND NEW.codigo = OLD.codigo
-        AND NEW.data_expiracao = OLD.data_expiracao
     );
 
 -- Grant necessary permissions to anonymous users
