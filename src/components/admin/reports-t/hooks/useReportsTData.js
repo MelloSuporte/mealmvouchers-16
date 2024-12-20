@@ -36,12 +36,6 @@ export const useReportsTData = (filters) => {
           .select(`
             id,
             usado_em,
-            tipo_voucher,
-            codigo,
-            data_criacao,
-            data_uso,
-            data_expiracao,
-            usado,
             usuarios!uso_voucher_usuario_id_fkey (
               id,
               nome,
@@ -108,7 +102,6 @@ export const useReportsTData = (filters) => {
           sample: data.slice(0, 2).map(item => ({
             id: item.id,
             usado_em: item.usado_em,
-            tipo_voucher: item.tipo_voucher,
             usuario: item.usuarios?.nome
           }))
         });
