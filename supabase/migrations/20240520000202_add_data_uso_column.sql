@@ -25,7 +25,7 @@ UPDATE vouchers_extras
 SET data_uso = usado_em 
 WHERE usado_em IS NOT NULL AND data_uso IS NULL;
 
--- Recriar a view com a nova coluna
+-- Recriar a view com a nova coluna e estrutura correta
 CREATE OR REPLACE VIEW vouchers_extras_view
 WITH (security_barrier = true, security_invoker = true)
 AS
@@ -36,10 +36,7 @@ SELECT
     ve.autorizado_por,
     ve.codigo,
     ve.valido_ate,
-    CASE 
-        WHEN ve.usado_em IS NOT NULL THEN true 
-        ELSE false 
-    END as usado,
+    ve.usado_em IS NOT NULL as usado,
     ve.usado_em,
     ve.data_uso,
     ve.observacao,
