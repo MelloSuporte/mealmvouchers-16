@@ -26,8 +26,7 @@ CREATE POLICY "uso_voucher_insert_voucher_descartaveis_policy" ON uso_voucher
                 JOIN tipos_refeicao tr ON tr.id = tipo_refeicao_id
                 WHERE vd.id = voucher_descartavel_id
                 -- Garantir que o voucher não foi usado
-                AND NOT vd.usado
-                AND vd.data_uso IS NULL
+                AND vd.usado_em IS NULL
                 -- Garantir que o código existe
                 AND vd.codigo IS NOT NULL
                 -- Verificar validade
