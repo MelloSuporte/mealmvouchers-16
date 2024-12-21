@@ -6,7 +6,7 @@ DROP POLICY IF EXISTS "uso_voucher_select_policy" ON uso_voucher;
 ALTER TABLE uso_voucher ENABLE ROW LEVEL SECURITY;
 
 -- Create unified insert policy with proper validation for disposable vouchers
-CREATE POLICY "uso_voucher_insert_voucher_descartaveis_policy" ON uso_voucher AS PERMISSIVE
+CREATE POLICY "uso_voucher_insert_voucher_descartaveis_policy" ON uso_voucher AS RESTRICTIVE
     FOR INSERT TO authenticated, anon
     WITH CHECK (
         -- Allow system to register voucher usage
@@ -20,6 +20,8 @@ CREATE POLICY "uso_voucher_insert_voucher_descartaveis_policy" ON uso_voucher AS
         OR
         -- Allow anonymous users to register disposable voucher usage with strict validation
         (
+            voucher_descartavel_id IS NOT NULL
+            AND
             EXISTS (
                 SELECT 1 
                 FROM vouchers_descartaveis vd
