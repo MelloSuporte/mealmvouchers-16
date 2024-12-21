@@ -48,9 +48,13 @@ CREATE POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis AS 
         AND data_expiracao = data_expiracao
     );
 
-/* Create function to validate voucher update */
+/* Create function to validate voucher update with proper security settings */
 CREATE OR REPLACE FUNCTION validate_voucher_update()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
 BEGIN
     /* Verificar se o voucher já foi usado */
     IF EXISTS (
@@ -79,7 +83,7 @@ BEGIN
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 /* Create trigger for validation */
 DROP TRIGGER IF EXISTS validate_voucher_update_trigger ON vouchers_descartaveis;
@@ -87,6 +91,11 @@ CREATE TRIGGER validate_voucher_update_trigger
     BEFORE UPDATE ON vouchers_descartaveis
     FOR EACH ROW
     EXECUTE FUNCTION validate_voucher_update();
+
+/* Set proper function ownership and permissions */
+ALTER FUNCTION validate_voucher_update() OWNER TO postgres;
+REVOKE ALL ON FUNCTION validate_voucher_update() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION validate_voucher_update() TO authenticated;
 
 /* Grant necessary permissions */
 GRANT SELECT, UPDATE ON vouchers_descartaveis TO anon;
