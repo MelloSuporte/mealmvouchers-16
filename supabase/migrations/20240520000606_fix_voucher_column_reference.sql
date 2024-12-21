@@ -1,15 +1,15 @@
--- Remover políticas existentes
+--Remover políticas existentes
 DROP POLICY IF EXISTS "uso_voucher_insert_policy" ON uso_voucher;
 DROP POLICY IF EXISTS "uso_voucher_select_policy" ON uso_voucher;
 
--- Habilitar RLS
+--Habilitar RLS
 ALTER TABLE uso_voucher ENABLE ROW LEVEL SECURITY;
 
--- Criar política de inserção unificada
+--Criar política de inserção unificada
 CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
     FOR INSERT TO authenticated, anon
     WITH CHECK (
-        -- Permitir sistema registrar uso de voucher
+        --Permitir sistema registrar uso de voucher
         (
             EXISTS (
                 SELECT 1 FROM admin_users au
@@ -18,7 +18,7 @@ CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
             )
         )
         OR
-        -- Permitir usuários anônimos registrarem uso de voucher descartável
+        --Permitir usuários anônimos registrarem uso de voucher descartável
         (
             EXISTS (
                 SELECT 1 FROM vouchers_descartaveis vd
@@ -36,14 +36,14 @@ CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
         )
     );
 
--- Criar política de seleção
+--Criar política de seleção
 CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
     FOR SELECT TO authenticated, anon
     USING (
-        -- Usuários autenticados podem ver seus próprios registros
+        --Usuários autenticados podem ver seus próprios registros
         (auth.uid() IS NOT NULL AND usuario_id = auth.uid())
         OR
-        -- Admins podem ver todos os registros
+        --Admins podem ver todos os registros
         (
             EXISTS (
                 SELECT 1 FROM admin_users au
@@ -53,19 +53,19 @@ CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
             )
         )
         OR
-        -- Usuários anônimos podem ver uso de voucher descartável
+        --Usuários anônimos podem ver uso de voucher descartável
         (
             auth.uid() IS NULL 
             AND voucher_descartavel_id IS NOT NULL
         )
     );
 
--- Conceder permissões necessárias
+--Conceder permissões necessárias
 GRANT SELECT, INSERT ON uso_voucher TO anon;
 GRANT SELECT ON tipos_refeicao TO anon;
 GRANT SELECT ON vouchers_descartaveis TO anon;
 
--- Adicionar comentários explicativos
+--Adicionar comentários explicativos
 COMMENT ON POLICY "uso_voucher_insert_policy" ON uso_voucher IS 
 'Permite que o sistema e usuários anônimos registrem uso de vouchers com validações específicas';
 
