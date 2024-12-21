@@ -6,7 +6,7 @@ DROP POLICY IF EXISTS "uso_voucher_select_policy" ON uso_voucher;
 ALTER TABLE uso_voucher ENABLE ROW LEVEL SECURITY;
 
 -- Create unified insert policy with proper validation for disposable vouchers
-CREATE POLICY "uso_voucher_insert_voucher_descartaveis_policy" ON uso_voucher
+CREATE POLICY "uso_voucher_insert_voucher_descartaveis_policy" ON uso_voucher AS PERMISSIVE
     FOR INSERT TO authenticated, anon
     WITH CHECK (
         -- Allow system to register voucher usage
@@ -24,7 +24,7 @@ CREATE POLICY "uso_voucher_insert_voucher_descartaveis_policy" ON uso_voucher
                 SELECT 1 
                 FROM vouchers_descartaveis vd
                 JOIN tipos_refeicao tr ON tr.id = vd.tipo_refeicao_id
-                WHERE vd.id = NEW.voucher_descartavel_id
+                WHERE vd.id = voucher_descartavel_id
                 -- Garantir que o voucher não foi usado
                 AND vd.usado_em IS NULL
                 -- Garantir que o código existe
@@ -37,7 +37,7 @@ CREATE POLICY "uso_voucher_insert_voucher_descartaveis_policy" ON uso_voucher
                 AND CURRENT_TIME BETWEEN tr.horario_inicio 
                 AND (tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL)
                 -- Garantir que o tipo de refeição é o mesmo para o qual o voucher foi gerado
-                AND vd.tipo_refeicao_id = NEW.tipo_refeicao_id
+                AND vd.tipo_refeicao_id = tipo_refeicao_id
                 -- Verificar se não existe uso anterior deste voucher
                 AND NOT EXISTS (
                     SELECT 1 
@@ -49,7 +49,7 @@ CREATE POLICY "uso_voucher_insert_voucher_descartaveis_policy" ON uso_voucher
     );
 
 -- Create select policy
-CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
+CREATE POLICY "uso_voucher_select_policy" ON uso_voucher AS PERMISSIVE
     FOR SELECT TO authenticated, anon
     USING (
         -- Authenticated users can see their own records
