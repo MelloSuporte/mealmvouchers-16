@@ -1,4 +1,7 @@
--- Drop existing function if it exists
+-- Drop trigger first
+DROP TRIGGER IF EXISTS update_relatorio_uso_voucher_timestamp ON relatorio_uso_voucher;
+
+-- Then drop the function
 DROP FUNCTION IF EXISTS update_relatorio_uso_voucher_timestamp();
 
 -- Recreate function with fixed search path
@@ -18,6 +21,12 @@ $$;
 ALTER FUNCTION update_relatorio_uso_voucher_timestamp() OWNER TO postgres;
 REVOKE ALL ON FUNCTION update_relatorio_uso_voucher_timestamp() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION update_relatorio_uso_voucher_timestamp() TO authenticated;
+
+-- Recreate the trigger
+CREATE TRIGGER update_relatorio_uso_voucher_timestamp
+    BEFORE UPDATE ON relatorio_uso_voucher
+    FOR EACH ROW
+    EXECUTE FUNCTION update_relatorio_uso_voucher_timestamp();
 
 -- Add helpful comment
 COMMENT ON FUNCTION update_relatorio_uso_voucher_timestamp() IS 
