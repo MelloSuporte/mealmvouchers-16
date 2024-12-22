@@ -1,11 +1,11 @@
--- Drop existing policies
+--Drop existing policies
 DROP POLICY IF EXISTS "vouchers_descartaveis_select_policy" ON vouchers_descartaveis;
 DROP POLICY IF EXISTS "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis;
 
--- Enable RLS
+--Enable RLS
 ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
 
--- Select policy with meal type validation
+--Select policy with meal type validation
 CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
     FOR SELECT TO authenticated, anon
     USING (
@@ -20,7 +20,7 @@ CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
         )
     );
 
--- Insert policy for admins/managers
+--Insert policy for admins/managers
 CREATE POLICY "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis
     FOR INSERT TO authenticated
     WITH CHECK (
