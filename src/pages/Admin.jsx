@@ -13,6 +13,7 @@ import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
 import AdminList from '@/components/admin/managers/AdminList';
 import TurnosForm from '@/components/admin/TurnosForm';
+import AdminInfo from '@/components/admin/AdminInfo';
 import { LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +41,9 @@ const Admin = () => {
             <LogOut className="h-5 w-5" />
           </Button>
         </div>
+        
+        <AdminInfo />
+        
         <Tabs defaultValue="users" className="mt-4">
           <TabsList>
             <TabsTrigger value="users">Usuários</TabsTrigger>
