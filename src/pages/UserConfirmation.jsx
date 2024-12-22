@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -60,7 +60,7 @@ const UserConfirmation = () => {
         throw new Error(result?.error || 'Erro ao validar voucher');
       }
 
-      // Register voucher usage
+      // Register voucher usage with correct column name usado_em
       const { error: usageError } = await supabase
         .from('uso_voucher')
         .insert({
