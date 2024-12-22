@@ -1,39 +1,30 @@
-# Políticas RLS para Relatórios
+# Políticas RLS para Uso de Vouchers
 
 ## Visão Geral
 
-As políticas de RLS (Row Level Security) para relatórios garantem que:
+As políticas de RLS (Row Level Security) para uso de vouchers garantem que:
 
 ### Leitura (SELECT)
-- Usuários podem ver apenas seus próprios relatórios
-- Administradores podem ver todos os relatórios
-- Usuários anônimos e autenticados podem acessar métricas e gráficos
+- Todos os usuários (autenticados e anônimos) podem ver todos os registros de uso
+- Acesso total a métricas e gráficos
 
 ### Inserção (INSERT)
-- Apenas administradores podem inserir novos relatórios
+- Apenas administradores podem inserir novos registros
 
 ### Atualização (UPDATE)
-- Apenas administradores podem atualizar relatórios
+- Apenas administradores podem atualizar registros
 
 ### Exclusão (DELETE)
-- Apenas administradores podem excluir relatórios
+- Apenas administradores podem excluir registros
 
 ## Implementação
 
 ```sql
 -- Exemplo de política SELECT
-CREATE POLICY "Relatórios - Select for users"
-ON relatorio_uso_voucher FOR SELECT
+CREATE POLICY "uso_voucher_select_policy"
+ON uso_voucher FOR SELECT
 TO authenticated, anon
-USING (
-    auth.uid() = usuario_id OR
-    EXISTS (
-        SELECT 1 FROM admin_users au
-        WHERE au.id = auth.uid()
-        AND au.permissoes->>'admin' = 'true'
-        AND NOT au.suspenso
-    )
-);
+USING (true);
 ```
 
 ## Notas Importantes
@@ -41,4 +32,4 @@ USING (
 1. Todas as operações verificam se o usuário não está suspenso
 2. Métricas e gráficos são acessíveis a todos os usuários
 3. O service_role tem acesso total à tabela
-4. Usuários anônimos têm acesso somente leitura
+4. Usuários anônimos têm acesso total para visualização
