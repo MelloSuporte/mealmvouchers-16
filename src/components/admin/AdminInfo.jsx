@@ -5,9 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 const AdminInfo = () => {
   const { adminType, hasPermission } = useAdmin();
   
-  // Recupera o nome do admin do localStorage
+  // Recupera o nome do admin do localStorage com fallback mais descritivo
   const adminId = localStorage.getItem('adminId');
-  const adminName = adminId === 'master' ? 'Administrador Master' : localStorage.getItem('adminName') || 'Nome não disponível';
+  const adminName = localStorage.getItem('adminName') || 'Usuário não identificado';
   
   const permissions = {
     gerenciar_vouchers_extra: hasPermission('gerenciar_vouchers_extra'),
