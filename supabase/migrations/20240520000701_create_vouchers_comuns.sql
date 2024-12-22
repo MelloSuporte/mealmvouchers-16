@@ -11,7 +11,11 @@ CREATE TABLE IF NOT EXISTS vouchers_comuns (
     atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index for better performance
+-- Drop existing indexes if they exist
+DROP INDEX IF EXISTS idx_vouchers_comuns_codigo;
+DROP INDEX IF EXISTS idx_vouchers_comuns_usuario;
+
+-- Create indexes for better performance
 CREATE INDEX idx_vouchers_comuns_codigo ON vouchers_comuns(codigo);
 CREATE INDEX idx_vouchers_comuns_usuario ON vouchers_comuns(usuario_id);
 
