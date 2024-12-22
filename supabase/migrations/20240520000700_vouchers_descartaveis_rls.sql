@@ -44,9 +44,14 @@ CREATE POLICY "vouchers_descartaveis_usage_policy" ON vouchers_descartaveis
         -- Garantir que apenas o status de uso seja alterado
         usado_em IS NOT NULL
         AND data_uso IS NOT NULL
-        AND tipo_refeicao_id = OLD.tipo_refeicao_id
-        AND codigo = OLD.codigo
-        AND data_expiracao = OLD.data_expiracao
+        AND EXISTS (
+            SELECT 1 
+            FROM vouchers_descartaveis v 
+            WHERE v.id = id
+            AND v.tipo_refeicao_id = tipo_refeicao_id
+            AND v.codigo = codigo
+            AND v.data_expiracao = data_expiracao
+        )
     );
 
 -- Grant necessary permissions
