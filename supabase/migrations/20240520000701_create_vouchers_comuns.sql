@@ -1,10 +1,10 @@
 -- Create vouchers_comuns table
 CREATE TABLE IF NOT EXISTS vouchers_comuns (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     codigo VARCHAR(4) NOT NULL UNIQUE,
-    usuario_id INTEGER REFERENCES usuarios(id),
-    tipo_refeicao_id INTEGER REFERENCES tipos_refeicao(id),
-    turno_id INTEGER REFERENCES turnos(id),
+    usuario_id UUID REFERENCES usuarios(id),
+    tipo_refeicao_id UUID REFERENCES tipos_refeicao(id),
+    turno_id UUID REFERENCES turnos(id),
     usado BOOLEAN DEFAULT FALSE,
     usado_em TIMESTAMP WITH TIME ZONE,
     criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
