@@ -41,12 +41,12 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         return;
       }
 
-      // Login gerente
+      // Login gerente - Busca completa na tabela admin_users
       logger.info('Buscando admin_user na tabela:', { email: formData.email });
       
       const { data: admin, error } = await supabase
         .from('admin_users')
-        .select('*')
+        .select('*, empresas(id, nome)')
         .eq('email', formData.email)
         .eq('senha', formData.password)
         .eq('suspenso', false)
@@ -63,6 +63,7 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         logger.info('Admin encontrado com sucesso:', { 
           id: admin.id, 
           nome: admin.nome,
+          empresa: admin.empresas?.nome,
           permissoes: admin.permissoes 
         });
         
@@ -72,11 +73,13 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         localStorage.setItem('adminId', admin.id);
         localStorage.setItem('adminName', admin.nome || 'Usuário Gerente');
         localStorage.setItem('adminPermissions', JSON.stringify(admin.permissoes));
+        localStorage.setItem('adminEmpresa', admin.empresas?.nome || '');
         
         logger.info('Estado final da autenticação:', {
           adminId: admin.id,
           adminType: 'manager',
           adminName: admin.nome,
+          empresa: admin.empresas?.nome,
           permissoes: admin.permissoes
         });
         
