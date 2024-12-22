@@ -60,6 +60,20 @@ const UserConfirmation = () => {
         throw new Error(result?.error || 'Erro ao validar voucher');
       }
 
+      // Register voucher usage
+      const { error: usageError } = await supabase
+        .from('uso_voucher')
+        .insert({
+          usuario_id: location.state.userId,
+          tipo_refeicao_id: mealType,
+          usado_em: new Date().toISOString(),
+          observacao: `Voucher ${voucherCode} utilizado para ${mealName}`
+        });
+
+      if (usageError) {
+        throw new Error(usageError.message || 'Erro ao registrar uso do voucher');
+      }
+
       localStorage.removeItem('commonVoucher');
       
       navigate('/bom-apetite', { 
