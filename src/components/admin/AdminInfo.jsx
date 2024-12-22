@@ -22,11 +22,11 @@ const AdminInfo = () => {
       <CardContent className="pt-6">
         <h3 className="text-[0.5rem] font-semibold mb-2">Informações do Usuário</h3>
         <div className="space-y-2">
-          <p><span className="font-medium">Nome:</span> {adminName}</p>
-          <p><span className="font-medium">Empresa:</span> {adminEmpresa}</p>
-          <p><span className="font-medium">Tipo de Admin:</span> {adminType === 'master' ? 'Administrador Master' : 'Gerente'}</p>
+          <p><span className="text-[0.5rem] font-medium">Nome:</span> {adminName}</p>
+          <p><span className="text-[0.5rem] font-medium">Empresa:</span> {adminEmpresa}</p>
+          <p><span className="text-[0.5rem] font-medium">Tipo de Admin:</span> {adminType === 'master' ? 'Administrador Master' : 'Gerente'}</p>
           <div>
-            <p className="font-medium mb-1">Permissões:</p>
+            <p className="text-[0.5rem] font-medium mb-1">Permissões:</p>
             <ul className="list-disc pl-5 space-y-1">
               {Object.entries(permissions).map(([key, value]) => (
                 <li key={key} className={value ? 'text-green-600' : 'text-red-600'}>
