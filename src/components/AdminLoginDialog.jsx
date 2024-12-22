@@ -27,6 +27,7 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         logger.info('Login master admin detectado');
         localStorage.setItem('adminToken', 'master-admin-token');
         localStorage.setItem('adminType', 'master');
+        localStorage.setItem('adminName', 'Administrador Master');
         localStorage.setItem('adminPermissions', JSON.stringify({
           gerenciar_vouchers_extra: true,
           gerenciar_vouchers_descartaveis: true,
@@ -67,6 +68,7 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         localStorage.setItem('adminToken', 'admin-token-' + admin.id);
         localStorage.setItem('adminType', 'manager');
         localStorage.setItem('adminId', admin.id);
+        localStorage.setItem('adminName', admin.nome);
         localStorage.setItem('adminPermissions', JSON.stringify(admin.permissoes));
         
         logger.info('Estado final da autenticação:', {

@@ -5,6 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 const AdminInfo = () => {
   const { adminType, hasPermission } = useAdmin();
   
+  // Recupera o nome do admin do localStorage
+  const adminId = localStorage.getItem('adminId');
+  const adminName = adminId === 'master' ? 'Administrador Master' : localStorage.getItem('adminName') || 'Nome não disponível';
+  
   const permissions = {
     gerenciar_vouchers_extra: hasPermission('gerenciar_vouchers_extra'),
     gerenciar_vouchers_descartaveis: hasPermission('gerenciar_vouchers_descartaveis'),
@@ -17,6 +21,7 @@ const AdminInfo = () => {
       <CardContent className="pt-6">
         <h3 className="text-lg font-semibold mb-2">Informações do Usuário</h3>
         <div className="space-y-2">
+          <p><span className="font-medium">Nome:</span> {adminName}</p>
           <p><span className="font-medium">Tipo de Admin:</span> {adminType || 'Não logado'}</p>
           <div>
             <p className="font-medium mb-1">Permissões:</p>
