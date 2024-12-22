@@ -109,16 +109,30 @@ COMMENT ON POLICY "voucher_comum_insert_policy" ON vouchers_comuns IS
 COMMENT ON POLICY "voucher_comum_update_policy" ON vouchers_comuns IS
 'Permite sistema e admins atualizarem vouchers comuns com validação de turno e tipo de refeição';
 
--- Create trigger to update atualizado_em
+-- Create trigger to update atualizado_em with proper security settings
 CREATE OR REPLACE FUNCTION update_voucher_comum_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql AS $$
 BEGIN
     NEW.atualizado_em = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
+-- Set proper function ownership and permissions
+ALTER FUNCTION update_voucher_comum_updated_at() OWNER TO postgres;
+REVOKE ALL ON FUNCTION update_voucher_comum_updated_at() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION update_voucher_comum_updated_at() TO authenticated;
+
+-- Create trigger
+DROP TRIGGER IF EXISTS update_vouchers_comuns_timestamp ON vouchers_comuns;
 CREATE TRIGGER update_vouchers_comuns_timestamp
     BEFORE UPDATE ON vouchers_comuns
     FOR EACH ROW
     EXECUTE FUNCTION update_voucher_comum_updated_at();
+
+-- Grant proper permissions
+GRANT SELECT, INSERT, UPDATE ON vouchers_comuns TO authenticated;
+GRANT ALL ON vouchers_comuns TO service_role;
