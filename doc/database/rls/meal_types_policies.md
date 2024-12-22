@@ -2,6 +2,8 @@
 
 ## Tabela: tipos_refeicao
 
+### Políticas de Acesso
+
 ```sql
 -- Enable RLS
 ALTER TABLE tipos_refeicao ENABLE ROW LEVEL SECURITY;
@@ -25,10 +27,7 @@ CREATE POLICY "tipos_refeicao_insert_policy" ON tipos_refeicao
         EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND (
-                au.permissoes->>'gerenciar_vouchers_extra' = 'true'
-                OR au.permissoes->>'gerenciar_vouchers_descartaveis' = 'true'
-            )
+            AND au.permissoes->>'gerenciar_refeicoes' = 'true'
             AND NOT au.suspenso
         )
     );
@@ -47,10 +46,7 @@ CREATE POLICY "tipos_refeicao_update_policy" ON tipos_refeicao
         EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND (
-                au.permissoes->>'gerenciar_vouchers_extra' = 'true'
-                OR au.permissoes->>'gerenciar_vouchers_descartaveis' = 'true'
-            )
+            AND au.permissoes->>'gerenciar_refeicoes' = 'true'
             AND NOT au.suspenso
         )
     );
@@ -69,16 +65,37 @@ CREATE POLICY "tipos_refeicao_delete_policy" ON tipos_refeicao
         EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
-            AND (
-                au.permissoes->>'gerenciar_vouchers_extra' = 'true'
-                OR au.permissoes->>'gerenciar_vouchers_descartaveis' = 'true'
-            )
+            AND au.permissoes->>'gerenciar_refeicoes' = 'true'
             AND NOT au.suspenso
         )
     );
 ```
 
-## Permissões
+### Regras de Negócio
+
+1. **Acesso à Leitura**
+   - Qualquer usuário (autenticado ou anônimo) pode visualizar os tipos de refeição
+
+2. **Inserção de Dados**
+   - Apenas administradores podem inserir novos tipos de refeição
+   - Gestores com permissões específicas também podem inserir
+
+3. **Atualização de Dados**
+   - Apenas administradores podem atualizar tipos de refeição
+   - Gestores com permissões específicas também podem atualizar
+
+4. **Exclusão de Dados**
+   - Apenas administradores podem excluir tipos de refeição
+   - Gestores com permissões específicas também podem excluir
+
+5. **Regras de Uso de Vouchers**
+   - As faixas de horários devem ser respeitadas durante o uso dos vouchers
+   - Cada usuário pode usar somente um voucher por tipo de refeição
+   - Limite de dois vouchers por tipos de refeição diferentes por turno
+   - Vouchers extras podem ser usados independentemente dos outros vouchers
+
+### Permissões
+
 ```sql
 -- Grant necessary permissions
 GRANT ALL ON tipos_refeicao TO authenticated;
