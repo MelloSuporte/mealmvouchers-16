@@ -9,7 +9,7 @@ ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
     FOR SELECT TO authenticated, anon
     USING (
-        NOT usado
+        usado_em IS NULL
         AND CURRENT_DATE <= data_expiracao::date
         AND EXISTS (
             SELECT 1 FROM tipos_refeicao tr
