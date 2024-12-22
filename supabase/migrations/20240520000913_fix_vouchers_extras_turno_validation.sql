@@ -1,12 +1,12 @@
--- Drop existing policies
+--Drop existing policies
 DROP POLICY IF EXISTS "vouchers_extras_select_policy" ON vouchers_extras;
 DROP POLICY IF EXISTS "vouchers_extras_insert_policy" ON vouchers_extras;
 DROP POLICY IF EXISTS "vouchers_extras_update_policy" ON vouchers_extras;
 
--- Enable RLS
+--Enable RLS
 ALTER TABLE vouchers_extras ENABLE ROW LEVEL SECURITY;
 
--- Select policy with meal type validation
+--Select policy with meal type validation
 CREATE POLICY "vouchers_extras_select_policy" ON vouchers_extras
     FOR SELECT TO authenticated, anon
     USING (
@@ -38,7 +38,7 @@ CREATE POLICY "vouchers_extras_select_policy" ON vouchers_extras
         )
     );
 
--- Insert policy with validations
+--Insert policy with validations
 CREATE POLICY "vouchers_extras_insert_policy" ON vouchers_extras
     FOR INSERT TO authenticated
     WITH CHECK (
