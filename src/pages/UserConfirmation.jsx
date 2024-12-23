@@ -68,7 +68,7 @@ const UserConfirmation = () => {
           usuario_id: location.state.userId,
           tipo_refeicao_id: mealType,
           usado_em: new Date().toISOString(),
-          observacao: `Voucher utilizado para ${mealName}`
+          observacao: `Refeição: ${mealName}`
         });
 
       if (usageError) {
