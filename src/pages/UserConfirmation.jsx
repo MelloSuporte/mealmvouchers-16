@@ -46,28 +46,29 @@ const UserConfirmation = () => {
         turnoId: location.state.userTurno
       });
 
-      const { data: result, error } = await supabase.rpc('validate_and_use_voucher', {
+      // First validate the voucher
+      const { data: validationResult, error: validationError } = await supabase.rpc('validate_and_use_voucher', {
         p_codigo: voucherCode,
         p_tipo_refeicao_id: mealType
       });
 
-      if (error) {
-        logger.error('Erro na validação:', error);
-        throw new Error(error.message || 'Erro ao validar voucher');
+      if (validationError) {
+        logger.error('Erro na validação:', validationError);
+        throw new Error(validationError.message || 'Erro ao validar voucher');
       }
 
-      if (!result?.success) {
-        throw new Error(result?.error || 'Erro ao validar voucher');
+      if (!validationResult?.success) {
+        throw new Error(validationResult?.error || 'Erro ao validar voucher');
       }
 
-      // Register voucher usage with correct column name usado_em
+      // Register voucher usage
       const { error: usageError } = await supabase
         .from('uso_voucher')
         .insert({
           usuario_id: location.state.userId,
           tipo_refeicao_id: mealType,
           usado_em: new Date().toISOString(),
-          observacao: `Voucher ${voucherCode} utilizado para ${mealName}`
+          observacao: `Voucher utilizado para ${mealName}`
         });
 
       if (usageError) {
