@@ -95,7 +95,7 @@ $$;
 -- Agendar a execução da limpeza usando pg_cron
 SELECT cron.schedule(
     'cleanup-expired-vouchers',  -- nome do trabalho
-    '0 0 * * *',                -- executar à meia-noite todos os dias
+    '3 0 * * *',                -- executar às 00:03 todos os dias
     $$SELECT cleanup_expired_vouchers()$$
 );
 
