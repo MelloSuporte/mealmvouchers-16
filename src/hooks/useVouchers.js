@@ -8,8 +8,6 @@ export const useVouchers = () => {
     queryFn: async () => {
       try {
         console.log('Iniciando busca de vouchers...');
-        const currentDate = new Date().toISOString();
-        console.log('Data atual:', currentDate);
         
         const { data, error, count } = await supabase
           .from('vouchers_descartaveis')
@@ -27,9 +25,7 @@ export const useVouchers = () => {
               valor
             )
           `, { count: 'exact' })
-          .or('usado_em.is.null,usado_em.is.null')
-          .lte('data_criacao', currentDate)
-          .gte('data_expiracao', currentDate)
+          .is('usado_em', null)
           .order('data_criacao', { ascending: false });
 
         if (error) {
@@ -37,13 +33,6 @@ export const useVouchers = () => {
           toast.error(`Erro ao buscar vouchers: ${error.message}`);
           throw error;
         }
-
-        console.log('Query executada:', {
-          conditions: {
-            dataAtual: currentDate,
-            filtros: 'usado_em IS NULL AND data_expiracao >= current_date'
-          }
-        });
 
         console.log('Resultado da query:', {
           total: count,
