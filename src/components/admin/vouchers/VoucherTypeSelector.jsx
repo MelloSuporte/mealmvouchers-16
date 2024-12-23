@@ -25,7 +25,7 @@ const VoucherTypeSelector = ({ mealTypes, selectedMealTypes, onMealTypeToggle })
                 htmlFor={`meal-type-${mealType.id}`}
                 className="text-xs text-gray-700 cursor-pointer"
               >
-                {mealType.nome} - R$ {mealType.valor.toFixed(2)}
+                {mealType.nome} - R$ {(mealType.valor ?? 0).toFixed(2)}
               </Label>
             </div>
           ))}
