@@ -50,8 +50,8 @@ CREATE POLICY "allow_voucher_descartavel_use" ON vouchers_descartaveis
         -- Voucher não deve estar usado
         NOT usado
         AND
-        -- Voucher deve ser válido para hoje
-        CURRENT_DATE <= data_expiracao::date
+        -- Voucher deve ser válido até 23:59:59 do dia de expiração
+        CURRENT_TIMESTAMP <= (data_expiracao::date + INTERVAL '1 day - 1 second')
         AND
         -- Código do voucher deve ter 4 dígitos
         length(codigo) = 4
@@ -85,9 +85,10 @@ SET search_path = public
 LANGUAGE plpgsql
 AS $$
 BEGIN
+    -- Remove vouchers não usados que expiraram (após 23:59:59 do dia de expiração)
     DELETE FROM vouchers_descartaveis
     WHERE NOT usado 
-    AND data_expiracao < CURRENT_DATE;
+    AND CURRENT_TIMESTAMP > (data_expiracao::date + INTERVAL '1 day - 1 second');
 END;
 $$;
 
@@ -103,7 +104,7 @@ CREATE POLICY "expired_voucher_cleanup" ON vouchers_descartaveis
     FOR DELETE
     TO authenticated
     USING (
-        data_expiracao < CURRENT_DATE
+        CURRENT_TIMESTAMP > (data_expiracao::date + INTERVAL '1 day - 1 second')
         AND NOT usado
     );
 
