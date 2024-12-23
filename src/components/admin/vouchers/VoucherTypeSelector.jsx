@@ -4,6 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 
 const VoucherTypeSelector = ({ mealTypes, selectedMealTypes, onMealTypeToggle }) => {
+  console.log('Tipos de refeição recebidos:', mealTypes); // Debug log
+
   if (!mealTypes || mealTypes.length === 0) {
     return <div className="text-sm text-gray-500">Nenhum tipo de refeição disponível</div>;
   }
