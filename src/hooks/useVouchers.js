@@ -9,6 +9,14 @@ export const useVouchers = () => {
       try {
         console.log('Iniciando busca de vouchers...');
         
+        // Primeiro, vamos verificar se a tabela existe e tem registros
+        const { count: totalCount } = await supabase
+          .from('vouchers_descartaveis')
+          .select('*', { count: 'exact', head: true });
+          
+        console.log('Total de registros na tabela:', totalCount);
+
+        // Agora fazemos a consulta principal
         const { data, error, count } = await supabase
           .from('vouchers_descartaveis')
           .select(`
@@ -24,7 +32,7 @@ export const useVouchers = () => {
               nome,
               valor
             )
-          `, { count: 'exact' })
+          `)
           .is('usado_em', null)
           .order('data_criacao', { ascending: false });
 
@@ -34,10 +42,12 @@ export const useVouchers = () => {
           throw error;
         }
 
-        console.log('Resultado da query:', {
-          total: count,
-          vouchers: data,
-          primeiroVoucher: data?.[0]
+        // Log detalhado dos resultados
+        console.log('Detalhes da consulta:', {
+          totalRegistros: totalCount,
+          registrosRetornados: data?.length || 0,
+          primeiroRegistro: data?.[0] || null,
+          erro: error
         });
 
         return data || [];
