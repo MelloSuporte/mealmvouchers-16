@@ -17,6 +17,7 @@ export const useVouchers = () => {
             tipo_refeicao_id,
             data_expiracao,
             usado_em,
+            data_uso,
             data_criacao,
             tipos_refeicao (
               id,
@@ -25,7 +26,9 @@ export const useVouchers = () => {
             )
           `, { count: 'exact' })
           .is('usado_em', null)
-          .gte('data_expiracao', new Date().toISOString().split('T')[0]);
+          .is('data_uso', null)
+          .gte('data_expiracao', new Date().toISOString().split('T')[0])
+          .order('data_criacao', { ascending: false });
 
         if (error) {
           console.error('Erro ao buscar vouchers:', error);
