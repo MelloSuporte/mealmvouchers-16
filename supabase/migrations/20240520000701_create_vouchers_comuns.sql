@@ -47,16 +47,10 @@ CREATE POLICY "voucher_comum_select_policy" ON vouchers_comuns
         )
     );
 
--- Insert policy for system only
+-- Insert policy for all users (authenticated and anonymous)
 CREATE POLICY "voucher_comum_insert_policy" ON vouchers_comuns
-    FOR INSERT TO authenticated
+    FOR INSERT TO authenticated, anon
     WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM admin_users au
-            WHERE au.id = auth.uid()
-            AND au.permissoes->>'sistema' = 'true'
-        )
-        AND
         EXISTS (
             SELECT 1 FROM tipos_refeicao tr
             WHERE tr.id = tipo_refeicao_id
@@ -70,18 +64,20 @@ CREATE POLICY "voucher_comum_insert_policy" ON vouchers_comuns
         )
     );
 
--- Update policy for system and admins
+-- Update policy for all users (authenticated and anonymous)
 CREATE POLICY "voucher_comum_update_policy" ON vouchers_comuns
-    FOR UPDATE TO authenticated
+    FOR UPDATE TO authenticated, anon
     USING (
         EXISTS (
-            SELECT 1 FROM admin_users au
-            WHERE au.id = auth.uid()
-            AND (
-                au.permissoes->>'sistema' = 'true'
-                OR au.permissoes->>'gerenciar_vouchers' = 'true'
-            )
-            AND NOT au.suspenso
+            SELECT 1 FROM tipos_refeicao tr
+            WHERE tr.id = tipo_refeicao_id
+            AND tr.ativo = true
+        )
+        AND
+        EXISTS (
+            SELECT 1 FROM turnos t
+            WHERE t.id = turno_id
+            AND t.ativo = true
         )
     )
     WITH CHECK (
@@ -108,35 +104,7 @@ COMMENT ON POLICY "voucher_comum_select_policy" ON vouchers_comuns IS
 'Permite visualizar vouchers comuns apenas dentro do horário permitido do turno e tipo de refeição';
 
 COMMENT ON POLICY "voucher_comum_insert_policy" ON vouchers_comuns IS
-'Permite apenas o sistema criar vouchers comuns com validação de turno e tipo de refeição';
+'Permite que qualquer usuário (autenticado ou anônimo) crie vouchers comuns com validação de turno e tipo de refeição';
 
 COMMENT ON POLICY "voucher_comum_update_policy" ON vouchers_comuns IS
-'Permite sistema e admins atualizarem vouchers comuns com validação de turno e tipo de refeição';
-
--- Create trigger to update atualizado_em with proper security settings
-CREATE OR REPLACE FUNCTION update_voucher_comum_updated_at()
-RETURNS TRIGGER
-SECURITY DEFINER
-SET search_path = public
-LANGUAGE plpgsql AS $$
-BEGIN
-    NEW.atualizado_em = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$;
-
--- Set proper function ownership and permissions
-ALTER FUNCTION update_voucher_comum_updated_at() OWNER TO postgres;
-REVOKE ALL ON FUNCTION update_voucher_comum_updated_at() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_voucher_comum_updated_at() TO authenticated;
-
--- Create trigger
-DROP TRIGGER IF EXISTS update_vouchers_comuns_timestamp ON vouchers_comuns;
-CREATE TRIGGER update_vouchers_comuns_timestamp
-    BEFORE UPDATE ON vouchers_comuns
-    FOR EACH ROW
-    EXECUTE FUNCTION update_voucher_comum_updated_at();
-
--- Grant proper permissions
-GRANT SELECT, INSERT, UPDATE ON vouchers_comuns TO authenticated;
-GRANT ALL ON vouchers_comuns TO service_role;
+'Permite que qualquer usuário (autenticado ou anônimo) atualize vouchers comuns com validação de turno e tipo de refeição';
