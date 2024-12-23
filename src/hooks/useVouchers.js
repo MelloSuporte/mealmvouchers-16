@@ -27,7 +27,8 @@ export const useVouchers = () => {
               valor
             )
           `, { count: 'exact' })
-          .or('usado_em.is.null,data_uso.is.null')
+          .or('usado_em.is.null,usado_em.is.null')
+          .lte('data_criacao', currentDate)
           .gte('data_expiracao', currentDate)
           .order('data_criacao', { ascending: false });
 
@@ -40,7 +41,7 @@ export const useVouchers = () => {
         console.log('Query executada:', {
           conditions: {
             dataAtual: currentDate,
-            filtros: 'usado_em IS NULL OR data_uso IS NULL AND data_expiracao >= current_date'
+            filtros: 'usado_em IS NULL AND data_expiracao >= current_date'
           }
         });
 
