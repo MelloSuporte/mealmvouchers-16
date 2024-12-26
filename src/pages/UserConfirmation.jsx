@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
+import { validateVoucher, registerVoucherUsage } from '../components/voucher/VoucherValidation';
+import { logSystemEvent, LOG_TYPES } from '../utils/systemLogs';
 
 const UserConfirmation = () => {
   const navigate = useNavigate();
@@ -38,71 +40,18 @@ const UserConfirmation = () => {
     try {
       const { mealType, mealName, voucherCode, cpf } = location.state;
       
-      // Primeiro registra a tentativa de validação
-      const { error: logError } = await supabase.rpc('insert_log_sistema', {
-        p_tipo: 'VALIDACAO_VOUCHER',
-        p_mensagem: `Tentativa de validação de voucher: ${voucherCode}`,
-        p_detalhes: JSON.stringify({
-          mealType,
-          mealName,
-          voucherCode,
-          cpf,
-          turnoId: location.state.userTurno
-        }),
-        p_nivel: 'info'
+      await validateVoucher({
+        voucherCode,
+        mealType,
+        mealName,
+        cpf,
+        turnoId: location.state.userTurno
       });
 
-      if (logError) {
-        logger.error('Erro ao registrar log:', logError);
-      }
-
-      // Valida o voucher
-      const { data: validationResult, error: validationError } = await supabase.rpc('validate_and_use_voucher', {
-        p_codigo: voucherCode,
-        p_tipo_refeicao_id: mealType
-      });
-
-      if (validationError) {
-        logger.error('Erro na validação:', validationError);
-        throw new Error(validationError.message || 'Erro ao validar voucher');
-      }
-
-      if (!validationResult?.success) {
-        throw new Error(validationResult?.error || 'Erro ao validar voucher');
-      }
-
-      // Registra uso do voucher
-      const { error: usageError } = await supabase
-        .from('uso_voucher')
-        .insert({
-          usuario_id: location.state.userId,
-          tipo_refeicao_id: mealType,
-          usado_em: new Date().toISOString(),
-          observacao: `Refeição: ${mealName}`
-        });
-
-      if (usageError) {
-        // Registra o erro com tipo específico
-        await supabase.rpc('insert_log_sistema', {
-          p_tipo: 'ERRO_USO_VOUCHER',
-          p_mensagem: 'Erro ao registrar uso do voucher',
-          p_detalhes: JSON.stringify({ error: usageError.message }),
-          p_nivel: 'error'
-        });
-        
-        throw new Error(usageError.message || 'Erro ao registrar uso do voucher');
-      }
-
-      // Registra uso bem-sucedido com tipo específico
-      await supabase.rpc('insert_log_sistema', {
-        p_tipo: 'USO_VOUCHER',
-        p_mensagem: `Voucher ${voucherCode} utilizado com sucesso`,
-        p_detalhes: JSON.stringify({
-          mealType,
-          mealName,
-          userId: location.state.userId
-        }),
-        p_nivel: 'info'
+      await registerVoucherUsage({
+        userId: location.state.userId,
+        mealType,
+        mealName
       });
 
       localStorage.removeItem('commonVoucher');
@@ -118,12 +67,11 @@ const UserConfirmation = () => {
       logger.error('Erro na validação:', error);
       toast.error(error.message || 'Erro ao validar voucher');
       
-      // Registra o erro com tipo específico
-      await supabase.rpc('insert_log_sistema', {
-        p_tipo: 'ERRO_VALIDACAO_VOUCHER',
-        p_mensagem: error.message || 'Erro ao validar voucher',
-        p_detalhes: JSON.stringify({ error: error.message }),
-        p_nivel: 'error'
+      await logSystemEvent({
+        tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
+        mensagem: error.message || 'Erro ao validar voucher',
+        detalhes: JSON.stringify({ error: error.message }),
+        nivel: 'error'
       });
     } finally {
       setIsLoading(false);
