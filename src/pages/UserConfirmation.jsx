@@ -38,7 +38,7 @@ const UserConfirmation = () => {
     try {
       const { mealType, mealName, voucherCode, cpf } = location.state;
       
-      // Primeiro registra a tentativa
+      // Primeiro registra a tentativa de validação
       const { error: logError } = await supabase.rpc('insert_log_sistema', {
         p_tipo: 'VALIDACAO_VOUCHER',
         p_mensagem: `Tentativa de validação de voucher: ${voucherCode}`,
