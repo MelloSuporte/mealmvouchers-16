@@ -8,6 +8,11 @@ export const logSystemEvent = async ({
   nivel = 'info'
 }) => {
   try {
+    if (!tipo) {
+      logger.error('Tipo de log não especificado');
+      throw new Error('Tipo de log é obrigatório');
+    }
+
     const { error } = await supabase.rpc('insert_log_sistema', {
       p_tipo: tipo,
       p_mensagem: mensagem,

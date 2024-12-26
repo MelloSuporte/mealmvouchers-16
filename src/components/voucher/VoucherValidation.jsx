@@ -10,11 +10,12 @@ export const validateVoucher = async ({
   turnoId
 }) => {
   try {
-    // Log da tentativa de validação
+    // Log da tentativa de validação com tipo explícito
     await logSystemEvent({
       tipo: LOG_TYPES.VALIDACAO_VOUCHER,
       mensagem: `Tentativa de validação de voucher: ${voucherCode}`,
-      detalhes: JSON.stringify({ mealType, mealName, voucherCode, cpf, turnoId })
+      detalhes: JSON.stringify({ mealType, mealName, voucherCode, cpf, turnoId }),
+      nivel: 'info'
     });
 
     // Valida o voucher
@@ -35,6 +36,12 @@ export const validateVoucher = async ({
     }
 
     if (!validationResult?.success) {
+      await logSystemEvent({
+        tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
+        mensagem: validationResult?.error || 'Erro ao validar voucher',
+        detalhes: JSON.stringify({ result: validationResult }),
+        nivel: 'error'
+      });
       throw new Error(validationResult?.error || 'Erro ao validar voucher');
     }
 
@@ -73,7 +80,8 @@ export const registerVoucherUsage = async ({
     await logSystemEvent({
       tipo: LOG_TYPES.USO_VOUCHER,
       mensagem: `Voucher utilizado com sucesso`,
-      detalhes: JSON.stringify({ mealType, mealName, userId })
+      detalhes: JSON.stringify({ mealType, mealName, userId }),
+      nivel: 'info'
     });
   } catch (error) {
     logger.error('Erro ao registrar uso:', error);
