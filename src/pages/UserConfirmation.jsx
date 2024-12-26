@@ -82,7 +82,7 @@ const UserConfirmation = () => {
         });
 
       if (usageError) {
-        // Registra o erro
+        // Registra o erro com tipo específico
         await supabase.rpc('insert_log_sistema', {
           p_tipo: 'ERRO_USO_VOUCHER',
           p_mensagem: 'Erro ao registrar uso do voucher',
@@ -93,7 +93,7 @@ const UserConfirmation = () => {
         throw new Error(usageError.message || 'Erro ao registrar uso do voucher');
       }
 
-      // Registra uso bem-sucedido
+      // Registra uso bem-sucedido com tipo específico
       await supabase.rpc('insert_log_sistema', {
         p_tipo: 'USO_VOUCHER',
         p_mensagem: `Voucher ${voucherCode} utilizado com sucesso`,
@@ -117,6 +117,14 @@ const UserConfirmation = () => {
     } catch (error) {
       logger.error('Erro na validação:', error);
       toast.error(error.message || 'Erro ao validar voucher');
+      
+      // Registra o erro com tipo específico
+      await supabase.rpc('insert_log_sistema', {
+        p_tipo: 'ERRO_VALIDACAO_VOUCHER',
+        p_mensagem: error.message || 'Erro ao validar voucher',
+        p_detalhes: JSON.stringify({ error: error.message }),
+        p_nivel: 'error'
+      });
     } finally {
       setIsLoading(false);
     }
