@@ -28,7 +28,7 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
     // Buscar dados do voucher
     let voucher = null;
     let userId = null;
-    let turnoId = null;
+    let voucherId = null;
 
     switch (tipoVoucher) {
       case 'comum':
@@ -38,7 +38,6 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
         }
         voucher = resultComum.user;
         userId = voucher?.id;
-        turnoId = voucher?.turno_id;
         break;
         
       case 'extra':
@@ -48,7 +47,7 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
         }
         voucher = resultExtra.voucher;
         userId = voucher?.usuario_id;
-        turnoId = voucher?.turno_id;
+        voucherId = voucher?.id;
         break;
         
       case 'descartavel':
@@ -57,6 +56,7 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
           return resultDescartavel;
         }
         voucher = resultDescartavel.voucher;
+        voucherId = voucher?.id;
         break;
     }
 
@@ -64,15 +64,34 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       throw new Error('Voucher não encontrado ou já utilizado');
     }
 
-    // Validar horário se não for descartável
-    if (tipoVoucher !== 'descartavel') {
-      const timeValid = await validateVoucherTime(tipoRefeicaoId, turnoId);
-      if (!timeValid) {
-        throw new Error('Horário não permitido para esta refeição');
-      }
+    // Registrar uso do voucher
+    const { error: usageError } = await supabase
+      .from('uso_voucher')
+      .insert({
+        usuario_id: userId,
+        tipo_refeicao_id: tipoRefeicaoId,
+        tipo_voucher: tipoVoucher,
+        voucher_extra_id: tipoVoucher === 'extra' ? voucherId : null,
+        voucher_descartavel_id: tipoVoucher === 'descartavel' ? voucherId : null,
+        usado_em: new Date().toISOString()
+      });
 
-      // Validar regras de uso
-      await validateVoucherUsage(userId, tipoRefeicaoId);
+    if (usageError) {
+      logger.error('Erro ao registrar uso:', usageError);
+      throw usageError;
+    }
+
+    // Atualizar status do voucher se for extra ou descartável
+    if (tipoVoucher === 'extra') {
+      await supabase
+        .from('vouchers_extras')
+        .update({ usado_em: new Date().toISOString() })
+        .eq('id', voucherId);
+    } else if (tipoVoucher === 'descartavel') {
+      await supabase
+        .from('vouchers_descartaveis')
+        .update({ usado_em: new Date().toISOString() })
+        .eq('id', voucherId);
     }
 
     return { 
