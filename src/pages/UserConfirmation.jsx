@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
 import logger from '../config/logger';
-import { validateVoucher, registerVoucherUsage } from '../components/voucher/VoucherValidation';
+import { validateVoucher } from '../components/voucher/VoucherValidation';
 import ConfirmationHeader from '../components/confirmation/ConfirmationHeader';
 import UserDataDisplay from '../components/confirmation/UserDataDisplay';
 import ConfirmationActions from '../components/confirmation/ConfirmationActions';
@@ -13,6 +13,8 @@ const UserConfirmation = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirm = async () => {
+    if (isLoading) return;
+    
     setIsLoading(true);
     try {
       const { mealType, mealName, voucherCode } = location.state;
@@ -28,15 +30,6 @@ const UserConfirmation = () => {
       if (!validationResult.success) {
         throw new Error(validationResult.error || 'Erro ao validar voucher');
       }
-
-      const { voucher, tipoVoucher, userId } = validationResult;
-
-      await registerVoucherUsage(
-        userId,
-        mealType,
-        tipoVoucher,
-        voucherCode
-      );
 
       localStorage.removeItem('commonVoucher');
       
