@@ -11,10 +11,16 @@ export const validateVoucher = async ({
 }) => {
   try {
     // Log inicial da tentativa de validação
-    logSystemEvent({
+    await logSystemEvent({
       tipo: LOG_TYPES.VALIDACAO_VOUCHER,
       mensagem: `Tentativa de validação de voucher: ${voucherCode}`,
-      detalhes: JSON.stringify({ mealType, mealName, voucherCode, cpf, turnoId }),
+      detalhes: {
+        mealType,
+        mealName,
+        voucherCode,
+        cpf,
+        turnoId
+      },
       nivel: 'info'
     });
 
@@ -28,10 +34,10 @@ export const validateVoucher = async ({
       const errorMessage = validationError.message || 'Erro ao validar voucher';
       logger.error('Erro na validação:', validationError);
       
-      logSystemEvent({
+      await logSystemEvent({
         tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
         mensagem: errorMessage,
-        detalhes: JSON.stringify({ error: validationError }),
+        detalhes: { error: validationError },
         nivel: 'error'
       });
       
@@ -41,10 +47,10 @@ export const validateVoucher = async ({
     if (!data?.success) {
       const errorMessage = data?.error || 'Erro ao validar voucher';
       
-      logSystemEvent({
+      await logSystemEvent({
         tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
         mensagem: errorMessage,
-        detalhes: JSON.stringify({ result: data }),
+        detalhes: { result: data },
         nivel: 'error'
       });
       
@@ -76,20 +82,20 @@ export const registerVoucherUsage = async ({
     if (usageError) {
       const errorMessage = usageError.message || 'Erro ao registrar uso do voucher';
       
-      logSystemEvent({
+      await logSystemEvent({
         tipo: LOG_TYPES.ERRO_USO_VOUCHER,
         mensagem: errorMessage,
-        detalhes: JSON.stringify({ error: usageError }),
+        detalhes: { error: usageError },
         nivel: 'error'
       });
       
       throw new Error(errorMessage);
     }
 
-    logSystemEvent({
+    await logSystemEvent({
       tipo: LOG_TYPES.USO_VOUCHER,
       mensagem: `Voucher utilizado com sucesso`,
-      detalhes: JSON.stringify({ mealType, mealName, userId }),
+      detalhes: { mealType, mealName, userId },
       nivel: 'info'
     });
   } catch (error) {

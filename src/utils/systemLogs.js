@@ -1,5 +1,4 @@
 import { supabase } from '../config/supabase';
-import logger from '../config/logger';
 
 export const LOG_TYPES = {
   VALIDACAO_VOUCHER: 'VALIDACAO_VOUCHER',
@@ -20,22 +19,15 @@ export const logSystemEvent = async ({
   }
 
   try {
-    const logData = {
-      tipo,
-      mensagem: mensagem || 'Sem mensagem',
-      detalhes: detalhes || '{}',
-      nivel,
-      criado_em: new Date().toISOString()
-    };
-
-    const { error } = await supabase
-      .from('logs_sistema')
-      .insert([logData])
-      .single();
+    const { error } = await supabase.rpc('insert_system_log', {
+      p_tipo: tipo,
+      p_mensagem: mensagem || 'Sem mensagem',
+      p_detalhes: typeof detalhes === 'string' ? JSON.parse(detalhes) : detalhes || {},
+      p_nivel: nivel
+    });
 
     if (error) {
       console.error('Erro ao registrar log:', error);
-      return;
     }
   } catch (error) {
     console.error('Erro ao registrar log:', error);
