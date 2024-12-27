@@ -1,22 +1,22 @@
 import { supabase } from '../../config/supabase';
 import logger from '../../config/logger';
-import { LOG_TYPES, logSystemEvent } from '../../utils/systemLogs';
+import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
 
-export const registerVoucherUsage = async (
+export const registerVoucherUsage = async ({
   userId,
   tipoRefeicaoId,
   tipoVoucher,
   voucherDescartavelId = null
-) => {
+}) => {
   try {
-    await logSystemEvent({
-      tipo: LOG_TYPES.TENTATIVA_VALIDACAO,
-      mensagem: 'Iniciando registro de uso do voucher',
-      detalhes: { userId, tipoRefeicaoId, tipoVoucher },
-      nivel: 'info'
+    logger.info('Registrando uso de voucher:', {
+      userId,
+      tipoRefeicaoId,
+      tipoVoucher,
+      voucherDescartavelId
     });
 
-    // Check for existing usage of this meal type today
+    // Check if meal type was already used today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -32,22 +32,27 @@ export const registerVoucherUsage = async (
       throw checkError;
     }
 
-    if (existingUsage && existingUsage.length > 0) {
+    if (existingUsage?.length > 0) {
+      logger.info('Tipo de refeição já utilizado hoje:', {
+        userId,
+        tipoRefeicaoId,
+        existingUsage
+      });
+
       await logSystemEvent({
         tipo: LOG_TYPES.ERRO_USO_VOUCHER,
         mensagem: 'Tipo de refeição já utilizado hoje',
         detalhes: {
           userId,
           tipoRefeicaoId,
-          tipoVoucher,
-          existingUsage
+          tipoVoucher
         },
-        nivel: 'error'
+        nivel: 'warning'
       });
-      
-      return { 
-        success: false, 
-        error: 'Tipo de refeição já utilizado hoje' 
+
+      return {
+        success: false,
+        error: 'Tipo de refeição já utilizado hoje'
       };
     }
 
@@ -81,13 +86,14 @@ export const registerVoucherUsage = async (
         hint: error.hint,
         code: error.code
       });
-      
-      return { success: false, error: 'Erro ao registrar uso do voucher' };
+
+      throw new Error('Erro ao registrar uso do voucher');
     }
 
+    // Log successful usage
     await logSystemEvent({
       tipo: LOG_TYPES.USO_VOUCHER,
-      mensagem: 'Uso do voucher registrado com sucesso',
+      mensagem: 'Voucher utilizado com sucesso',
       detalhes: {
         userId,
         tipoRefeicaoId,
@@ -103,14 +109,18 @@ export const registerVoucherUsage = async (
       mensagem: 'Erro ao registrar uso do voucher',
       detalhes: {
         error: error.message,
-        userId,
-        tipoRefeicaoId,
-        tipoVoucher
+        stack: error.stack
       },
       nivel: 'error'
     });
 
-    logger.error('Erro ao registrar uso do voucher:', error);
-    return { success: false, error: 'Erro ao registrar uso do voucher' };
+    logger.error('Erro ao registrar uso do voucher:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    });
+
+    throw error;
   }
 };
