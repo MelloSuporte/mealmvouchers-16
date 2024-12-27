@@ -28,6 +28,7 @@ export const registerVoucherUsage = async (
       .gte('usado_em', today.toISOString());
 
     if (checkError) {
+      logger.error('Erro ao verificar uso existente:', checkError);
       throw checkError;
     }
 
@@ -50,7 +51,8 @@ export const registerVoucherUsage = async (
       };
     }
 
-    const { data, error } = await supabase
+    // Register new usage
+    const { error } = await supabase
       .from('uso_voucher')
       .insert({
         usuario_id: userId,
@@ -58,9 +60,7 @@ export const registerVoucherUsage = async (
         tipo_voucher: tipoVoucher,
         voucher_descartavel_id: voucherDescartavelId,
         usado_em: new Date().toISOString()
-      })
-      .select()
-      .maybeSingle();
+      });
 
     if (error) {
       await logSystemEvent({
@@ -91,13 +91,12 @@ export const registerVoucherUsage = async (
       detalhes: {
         userId,
         tipoRefeicaoId,
-        tipoVoucher,
-        data
+        tipoVoucher
       },
       nivel: 'info'
     });
 
-    return { success: true, data };
+    return { success: true };
   } catch (error) {
     await logSystemEvent({
       tipo: LOG_TYPES.ERRO_USO_VOUCHER,
