@@ -42,22 +42,18 @@ const UserConfirmation = () => {
       const { mealType, mealName, voucherCode, cpf } = location.state;
       
       // Garantir que voucherCode seja uma string
-      const validationResult = await validateVoucher({
-        voucherCode: String(voucherCode),
-        mealType,
-        mealName,
-        cpf,
-        turnoId: location.state.userTurno
-      });
+      const validationResult = await validateVoucher(String(voucherCode), mealType);
 
       if (!validationResult.success) {
         throw new Error(validationResult.error || 'Erro ao validar voucher');
       }
 
       await registerVoucherUsage({
-        userId: validationResult.user.id,
+        userId: validationResult.user?.id,
         mealType,
-        mealName
+        mealName,
+        voucherType: 'comum', // Será atualizado conforme o tipo identificado
+        voucherId: validationResult.voucher?.id
       });
 
       localStorage.removeItem('commonVoucher');

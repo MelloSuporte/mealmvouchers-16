@@ -1,14 +1,20 @@
 import { supabase } from '../../config/supabase';
 import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
 import logger from '../../config/logger';
+import { validateCommonVoucher } from './validators/commonVoucherValidator';
+import { validateExtraVoucher } from './validators/extraVoucherValidator';
+import { validateDisposableVoucher } from './validators/disposableVoucherValidator';
 
 const identifyVoucherType = async (codigo) => {
   try {
+    // Garantir que o código seja uma string
+    const voucherCode = String(codigo);
+    
     // Primeiro tenta encontrar como voucher comum
     const { data: usuario } = await supabase
       .from('usuarios')
       .select('voucher')
-      .eq('voucher', codigo)
+      .eq('voucher', voucherCode)
       .single();
 
     if (usuario) {
@@ -19,7 +25,7 @@ const identifyVoucherType = async (codigo) => {
     const { data: voucherExtra } = await supabase
       .from('vouchers_extras')
       .select('*')
-      .eq('codigo', codigo)
+      .eq('codigo', voucherCode)
       .single();
 
     if (voucherExtra) {
@@ -30,7 +36,7 @@ const identifyVoucherType = async (codigo) => {
     const { data: voucherDescartavel } = await supabase
       .from('vouchers_descartaveis')
       .select('*')
-      .eq('codigo', codigo)
+      .eq('codigo', voucherCode)
       .single();
 
     if (voucherDescartavel) {
@@ -68,13 +74,13 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       return { success: false, error: 'Voucher inválido' };
     }
 
-    logger.info(`Tipo de voucher identificado: ${tipoVoucher}`);
+    logger.info(`Validando voucher ${tipoVoucher}:`, voucherCode);
 
     switch (tipoVoucher) {
       case 'comum':
-        return await validateCommonVoucher(voucherCode, tipoRefeicaoId);
+        return await validateCommonVoucher(voucherCode);
       case 'extra':
-        return await validateExtraVoucher(voucherCode, tipoRefeicaoId);
+        return await validateExtraVoucher(voucherCode);
       case 'descartavel':
         return await validateDisposableVoucher(voucherCode, tipoRefeicaoId);
       default:
@@ -92,83 +98,6 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
   }
 };
 
-const validateCommonVoucher = async (codigo, tipoRefeicaoId) => {
-  const { data: usuario, error: errorUsuario } = await supabase
-    .from('usuarios')
-    .select('*, empresas(*), turnos(*)')
-    .eq('voucher', codigo)
-    .single();
-
-  if (errorUsuario || !usuario) {
-    return { success: false, error: 'Voucher comum inválido' };
-  }
-
-  // Verificar se o usuário está suspenso
-  if (usuario.suspenso) {
-    return { success: false, error: 'Usuário suspenso' };
-  }
-
-  // Verificar se a empresa está ativa
-  if (!usuario.empresas?.ativo) {
-    return { success: false, error: 'Empresa inativa' };
-  }
-
-  return { success: true, user: usuario };
-};
-
-const validateExtraVoucher = async (codigo, tipoRefeicaoId) => {
-  const { data: voucher, error } = await supabase
-    .from('vouchers_extras')
-    .select('*, usuarios(*)')
-    .eq('codigo', codigo)
-    .single();
-
-  if (error || !voucher) {
-    return { success: false, error: 'Voucher extra inválido' };
-  }
-
-  // Verificar se já foi usado
-  if (voucher.usado) {
-    return { success: false, error: 'Voucher extra já utilizado' };
-  }
-
-  // Verificar validade
-  if (new Date(voucher.valido_ate) < new Date()) {
-    return { success: false, error: 'Voucher extra expirado' };
-  }
-
-  return { success: true, voucher };
-};
-
-const validateDisposableVoucher = async (codigo, tipoRefeicaoId) => {
-  const { data: voucher, error } = await supabase
-    .from('vouchers_descartaveis')
-    .select('*, tipos_refeicao(*)')
-    .eq('codigo', codigo)
-    .single();
-
-  if (error || !voucher) {
-    return { success: false, error: 'Voucher descartável inválido' };
-  }
-
-  // Verificar se já foi usado
-  if (voucher.usado) {
-    return { success: false, error: 'Voucher descartável já utilizado' };
-  }
-
-  // Verificar validade
-  if (new Date(voucher.data_expiracao) < new Date()) {
-    return { success: false, error: 'Voucher descartável expirado' };
-  }
-
-  // Verificar tipo de refeição
-  if (voucher.tipo_refeicao_id !== tipoRefeicaoId) {
-    return { success: false, error: 'Tipo de refeição inválido para este voucher' };
-  }
-
-  return { success: true, voucher };
-};
-
 export const registerVoucherUsage = async ({
   userId,
   mealType,
@@ -184,7 +113,6 @@ export const registerVoucherUsage = async ({
       observacao: `Refeição: ${mealName} (${voucherType})`
     };
 
-    // Adicionar campos específicos baseado no tipo de voucher
     if (voucherType === 'extra') {
       usageData.voucher_extra_id = voucherId;
     } else if (voucherType === 'descartavel') {
@@ -209,7 +137,7 @@ export const registerVoucherUsage = async ({
     } else if (voucherType === 'descartavel') {
       await supabase
         .from('vouchers_descartaveis')
-        .update({ usado: true, data_uso: new Date().toISOString() })
+        .update({ usado: true, usado_em: new Date().toISOString() })
         .eq('id', voucherId);
     }
   } catch (error) {
