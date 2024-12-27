@@ -16,6 +16,40 @@ export const registerVoucherUsage = async (
       nivel: 'info'
     });
 
+    // Check for existing usage of this meal type today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { data: existingUsage, error: checkError } = await supabase
+      .from('uso_voucher')
+      .select('*')
+      .eq('usuario_id', userId)
+      .eq('tipo_refeicao_id', tipoRefeicaoId)
+      .gte('usado_em', today.toISOString());
+
+    if (checkError) {
+      throw checkError;
+    }
+
+    if (existingUsage && existingUsage.length > 0) {
+      await logSystemEvent({
+        tipo: LOG_TYPES.ERRO_USO_VOUCHER,
+        mensagem: 'Tipo de refeição já utilizado hoje',
+        detalhes: {
+          userId,
+          tipoRefeicaoId,
+          tipoVoucher,
+          existingUsage
+        },
+        nivel: 'error'
+      });
+      
+      return { 
+        success: false, 
+        error: 'Tipo de refeição já utilizado hoje' 
+      };
+    }
+
     const { data, error } = await supabase
       .from('uso_voucher')
       .insert({

@@ -41,7 +41,7 @@ export const validateVoucher = async (voucherCode, mealType) => {
       );
 
       if (!usageResult.success) {
-        throw new Error(usageResult.error);
+        throw new Error(usageResult.error || 'Erro ao registrar uso do voucher');
       }
 
       return { success: true };
@@ -61,7 +61,7 @@ export const validateVoucher = async (voucherCode, mealType) => {
       );
 
       if (!usageResult.success) {
-        throw new Error(usageResult.error);
+        throw new Error(usageResult.error || 'Erro ao registrar uso do voucher');
       }
 
       return { success: true };
