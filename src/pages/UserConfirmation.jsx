@@ -17,7 +17,13 @@ const UserConfirmation = () => {
     try {
       const { mealType, mealName, voucherCode } = location.state;
       
-      const validationResult = await validateVoucher(String(voucherCode), mealType);
+      logger.info('Iniciando confirmação com dados:', {
+        mealType,
+        mealName,
+        voucherCode
+      });
+
+      const validationResult = await validateVoucher(voucherCode, mealType);
 
       if (!validationResult.success) {
         throw new Error(validationResult.error || 'Erro ao validar voucher');
@@ -29,7 +35,7 @@ const UserConfirmation = () => {
         userId,
         mealType,
         tipoVoucher,
-        voucher.id
+        voucherCode
       );
 
       localStorage.removeItem('commonVoucher');
