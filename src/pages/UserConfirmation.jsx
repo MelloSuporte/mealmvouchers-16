@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 import { validateVoucher, registerVoucherUsage } from '../components/voucher/VoucherValidation';
-import { logSystemEvent, LOG_TYPES } from '../utils/systemLogs';
 
 const UserConfirmation = () => {
   const navigate = useNavigate();
@@ -66,13 +65,6 @@ const UserConfirmation = () => {
     } catch (error) {
       logger.error('Erro na validação:', error);
       toast.error(error.message || 'Erro ao validar voucher');
-      
-      await logSystemEvent({
-        tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
-        mensagem: error.message || 'Erro ao validar voucher',
-        detalhes: JSON.stringify({ error: error.message }),
-        nivel: 'error'
-      });
     } finally {
       setIsLoading(false);
     }
