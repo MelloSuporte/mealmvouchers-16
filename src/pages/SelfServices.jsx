@@ -27,6 +27,23 @@ const SelfServices = () => {
   });
 
   useEffect(() => {
+    // Verificar voucher e redirecionar se não houver
+    const disposableVoucher = localStorage.getItem('disposableVoucher');
+    const commonVoucher = localStorage.getItem('commonVoucher');
+    
+    if (!disposableVoucher && !commonVoucher) {
+      toast.error('Nenhum voucher válido encontrado');
+      navigate('/voucher');
+      return;
+    }
+
+    // Timer para redirecionar após 3 segundos se nenhuma refeição for selecionada
+    const redirectTimer = setTimeout(() => {
+      toast.error('Nenhuma refeição selecionada');
+      navigate('/voucher');
+    }, 3000);
+
+    // Buscar imagem de fundo
     const fetchBackgroundImage = async () => {
       try {
         const { data, error } = await supabase
@@ -47,14 +64,8 @@ const SelfServices = () => {
 
     fetchBackgroundImage();
 
-    // Verifica se existe um voucher no localStorage
-    const disposableVoucher = localStorage.getItem('disposableVoucher');
-    const commonVoucher = localStorage.getItem('commonVoucher');
-    
-    if (!disposableVoucher && !commonVoucher) {
-      toast.error('Nenhum voucher válido encontrado');
-      navigate('/voucher');
-    }
+    // Limpar o timer quando o componente for desmontado ou uma refeição for selecionada
+    return () => clearTimeout(redirectTimer);
   }, [navigate]);
 
   const handleMealSelection = async (meal) => {
