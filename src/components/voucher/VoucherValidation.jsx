@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { supabase } from '../../config/supabase';
 import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
 import logger from '../../config/logger';
@@ -8,37 +7,9 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
     // Log da tentativa de validação
     await logSystemEvent({
       tipo: LOG_TYPES.TENTATIVA_VALIDACAO,
-      mensagem: `Iniciando validação do voucher: ${codigo}`,
+      mensagem: `Iniciando validação do voucher comum: ${codigo}`,
       detalhes: { codigo, tipoRefeicaoId }
     });
-
-    // Validação do voucher descartável
-    logger.info('Iniciando validação detalhada do voucher descartável:', codigo);
-    const { data: voucherDescartavel, error: errorDescartavel } = await supabase
-      .from('vouchers_descartaveis')
-      .select('*')
-      .eq('codigo', codigo)
-      .single();
-
-    if (errorDescartavel) {
-      await logSystemEvent({
-        tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
-        mensagem: 'Erro ao consultar voucher descartável',
-        detalhes: errorDescartavel,
-        nivel: 'error'
-      });
-      throw errorDescartavel;
-    }
-
-    if (voucherDescartavel) {
-      // Log do resultado da validação
-      await logSystemEvent({
-        tipo: LOG_TYPES.VALIDACAO_VOUCHER,
-        mensagem: 'Voucher descartável encontrado',
-        detalhes: voucherDescartavel
-      });
-      return { success: true, voucher: voucherDescartavel };
-    }
 
     // Validação do voucher comum
     logger.info('Validando voucher comum:', codigo);
@@ -58,24 +29,43 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       throw errorUsuario;
     }
 
-    if (usuario) {
-      // Log do sucesso da validação
+    if (!usuario) {
       await logSystemEvent({
-        tipo: LOG_TYPES.VALIDACAO_SUCESSO,
-        mensagem: 'Voucher comum válido',
-        detalhes: usuario
+        tipo: LOG_TYPES.VALIDACAO_FALHA,
+        mensagem: 'Voucher comum não encontrado',
+        detalhes: { codigo }
       });
-      return { success: true, user: usuario };
+      return { success: false, error: 'Voucher inválido' };
     }
 
-    // Log de falha na validação
+    // Verificar se o usuário está suspenso
+    if (usuario.suspenso) {
+      await logSystemEvent({
+        tipo: LOG_TYPES.VALIDACAO_FALHA,
+        mensagem: 'Usuário suspenso',
+        detalhes: { codigo, usuario_id: usuario.id }
+      });
+      return { success: false, error: 'Usuário suspenso' };
+    }
+
+    // Verificar se a empresa está ativa
+    if (!usuario.empresas?.ativo) {
+      await logSystemEvent({
+        tipo: LOG_TYPES.VALIDACAO_FALHA,
+        mensagem: 'Empresa inativa',
+        detalhes: { codigo, empresa_id: usuario.empresa_id }
+      });
+      return { success: false, error: 'Empresa inativa' };
+    }
+
+    // Log do sucesso da validação
     await logSystemEvent({
-      tipo: LOG_TYPES.VALIDACAO_FALHA,
-      mensagem: 'Voucher não encontrado',
-      detalhes: { codigo }
+      tipo: LOG_TYPES.VALIDACAO_SUCESSO,
+      mensagem: 'Voucher comum válido',
+      detalhes: usuario
     });
 
-    return { success: false, error: 'Voucher inválido' };
+    return { success: true, user: usuario };
   } catch (error) {
     // Log de erro na validação
     await logSystemEvent({
@@ -106,8 +96,8 @@ export const registerVoucherUsage = async ({
       });
 
     if (usageError) {
-      const errorMessage = usageError.message || 'Erro ao registrar uso do voucher';
-      throw new Error(errorMessage);
+      logger.error('Erro ao registrar uso:', usageError);
+      throw new Error('Erro ao registrar uso do voucher');
     }
   } catch (error) {
     logger.error('Erro ao registrar uso:', error);
