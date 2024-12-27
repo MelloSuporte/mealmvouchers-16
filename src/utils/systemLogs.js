@@ -23,8 +23,8 @@ export const logSystemEvent = async ({
     const tipoLog = tipo || LOG_TYPES.LOG_GENERICO;
     
     const dados = {
-      detalhes: typeof detalhes === 'string' ? JSON.parse(detalhes) : detalhes || {},
-      nivel
+      nivel,
+      detalhes: typeof detalhes === 'string' ? JSON.parse(detalhes) : detalhes || {}
     };
 
     const { error } = await supabase
@@ -33,7 +33,8 @@ export const logSystemEvent = async ({
         tipo: tipoLog,
         mensagem: mensagem || 'Sem mensagem',
         dados,
-        nivel
+        nivel,
+        detalhes: dados.detalhes
       });
 
     if (error) {
