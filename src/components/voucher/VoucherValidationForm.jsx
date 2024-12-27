@@ -2,7 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
-import { validateDisposableVoucher, validateCommonVoucher } from '../../services/voucherValidationService';
+import { 
+  identifyVoucherType,
+  validateCommonVoucher, 
+  validateDisposableVoucher,
+  validateMealTimeAndInterval
+} from '../../services/voucherValidationService';
 
 const VoucherValidationForm = () => {
   const navigate = useNavigate();
@@ -17,41 +22,52 @@ const VoucherValidationForm = () => {
       setIsValidating(true);
       console.log('Iniciando validação do voucher:', voucherCode);
       
-      // Primeiro tenta validar como voucher descartável
-      const disposableResult = await validateDisposableVoucher(voucherCode);
-      console.log('Resultado validação voucher descartável:', disposableResult);
-      
-      if (disposableResult.success) {
-        const { voucher } = disposableResult;
-        localStorage.setItem('disposableVoucher', JSON.stringify({
-          code: voucherCode,
-          mealTypeId: voucher.tipo_refeicao_id,
-          mealType: voucher.tipos_refeicao.nome
-        }));
-        navigate('/self-services');
+      // Identificar tipo de voucher
+      const voucherType = await identifyVoucherType(voucherCode);
+      console.log('Tipo de voucher identificado:', voucherType);
+
+      if (!voucherType) {
+        toast.error('Voucher inválido');
         return;
       }
 
-      // Se não for descartável, tenta como voucher comum
-      const commonResult = await validateCommonVoucher(voucherCode);
-      console.log('Resultado validação voucher comum:', commonResult);
-      
-      if (commonResult.success) {
-        const { user } = commonResult;
-        localStorage.setItem('commonVoucher', JSON.stringify({
-          code: voucherCode,
-          userName: user.nome,
-          turno: user.turnos?.tipo_turno,
-          cpf: user.cpf
-        }));
-        navigate('/self-services');
-        return;
+      // Validar baseado no tipo
+      if (voucherType === 'descartavel') {
+        const result = await validateDisposableVoucher(voucherCode);
+        console.log('Resultado validação voucher descartável:', result);
+        
+        if (result.success) {
+          const { voucher } = result;
+          localStorage.setItem('disposableVoucher', JSON.stringify({
+            code: voucherCode,
+            mealTypeId: voucher.tipo_refeicao_id,
+            mealType: voucher.tipos_refeicao.nome
+          }));
+          navigate('/self-services');
+          return;
+        }
+        toast.error(result.error);
+      } else if (voucherType === 'comum') {
+        const result = await validateCommonVoucher(voucherCode);
+        console.log('Resultado validação voucher comum:', result);
+        
+        if (result.success) {
+          const { user } = result;
+          localStorage.setItem('commonVoucher', JSON.stringify({
+            code: voucherCode,
+            userName: user.nome,
+            turno: user.turnos?.tipo_turno,
+            cpf: user.cpf,
+            userId: user.id
+          }));
+          navigate('/self-services');
+          return;
+        }
+        toast.error(result.error);
+      } else {
+        toast.error('Tipo de voucher não suportado no momento');
       }
 
-      // Se chegou aqui, nenhum voucher válido foi encontrado
-      toast.error(disposableResult.error || commonResult.error || "Voucher inválido");
-      console.error('Falha na validação:', { disposableResult, commonResult });
-      
     } catch (error) {
       console.error('Erro ao validar voucher:', error);
       toast.error(error.message || "Erro ao validar o voucher");

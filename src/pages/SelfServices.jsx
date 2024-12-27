@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from '../config/supabase';
 import { useQuery } from '@tanstack/react-query';
 import logger from '../config/logger';
+import { validateMealTimeAndInterval } from '../services/voucherValidationService';
 
 const SelfServices = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const SelfServices = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tipos_refeicao')
-        .select('id, nome, ativo')
+        .select('id, nome, ativo, horario_inicio, horario_fim')
         .eq('ativo', true)
         .order('nome');
       
@@ -63,8 +64,22 @@ const SelfServices = () => {
       
       logger.info('Selecionando refeição:', { mealId: meal.id, mealName: meal.nome });
 
+      // Validar horário da refeição
+      const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+      if (meal.horario_inicio && meal.horario_fim) {
+        if (currentTime < meal.horario_inicio || currentTime > meal.horario_fim) {
+          toast.error(`Esta refeição só está disponível entre ${meal.horario_inicio} e ${meal.horario_fim}`);
+          return;
+        }
+      }
+
       // Se for voucher descartável
       if (disposableVoucher.code) {
+        if (disposableVoucher.mealTypeId !== meal.id) {
+          toast.error('Tipo de refeição não corresponde ao voucher');
+          return;
+        }
+
         navigate('/bom-apetite', { 
           state: { 
             mealType: meal.id,
@@ -73,25 +88,23 @@ const SelfServices = () => {
           }
         });
       } 
-      // Se for voucher comum ou extra
+      // Se for voucher comum
       else if (commonVoucher.code) {
-        // Buscar o turno_id (que é UUID) do usuário
-        const { data: userData, error: userError } = await supabase
-          .from('usuarios')
-          .select('turno_id')
-          .eq('cpf', commonVoucher.cpf)
-          .single();
+        // Validar intervalo e limite de refeições
+        const validationResult = await validateMealTimeAndInterval(
+          commonVoucher.userId,
+          meal.id
+        );
 
-        if (userError) {
-          logger.error('Erro ao buscar turno do usuário:', userError);
-          toast.error('Erro ao buscar dados do usuário');
+        if (!validationResult.success) {
+          toast.error(validationResult.error);
           return;
         }
 
         navigate('/user-confirmation', { 
           state: { 
             userName: commonVoucher.userName,
-            userTurno: userData.turno_id,
+            userTurno: commonVoucher.turno,
             mealType: meal.id,
             mealName: meal.nome,
             voucherCode: commonVoucher.code,
