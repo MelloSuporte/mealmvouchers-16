@@ -41,16 +41,21 @@ const UserConfirmation = () => {
     try {
       const { mealType, mealName, voucherCode, cpf } = location.state;
       
-      await validateVoucher({
-        voucherCode,
+      // Garantir que voucherCode seja uma string
+      const validationResult = await validateVoucher({
+        voucherCode: String(voucherCode),
         mealType,
         mealName,
         cpf,
         turnoId: location.state.userTurno
       });
 
+      if (!validationResult.success) {
+        throw new Error(validationResult.error || 'Erro ao validar voucher');
+      }
+
       await registerVoucherUsage({
-        userId: location.state.userId,
+        userId: validationResult.user.id,
         mealType,
         mealName
       });
