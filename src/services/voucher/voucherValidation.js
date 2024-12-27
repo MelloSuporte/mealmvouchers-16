@@ -29,19 +29,24 @@ export const validateVoucherUsage = async (userId, tipoRefeicaoId) => {
 
     if (errorUsos) throw errorUsos;
 
+    // Se não houver usos hoje, retorna true direto
+    if (!usosHoje || usosHoje.length === 0) {
+      return true;
+    }
+
     // Máximo 2 vouchers por turno
-    if (usosHoje?.length >= 2) {
+    if (usosHoje.length >= 2) {
       throw new Error('Limite de vouchers por turno atingido');
     }
 
     // Verificar mesmo tipo de refeição
-    const mesmoTipo = usosHoje?.find(uso => uso.tipo_refeicao_id === tipoRefeicaoId);
+    const mesmoTipo = usosHoje.find(uso => uso.tipo_refeicao_id === tipoRefeicaoId);
     if (mesmoTipo) {
       throw new Error('Você já utilizou um voucher para este tipo de refeição hoje');
     }
 
     // Verificar intervalo mínimo de 2 horas
-    if (usosHoje?.length > 0) {
+    if (usosHoje.length > 0) {
       const ultimoUso = new Date(usosHoje[usosHoje.length - 1].usado_em);
       const agora = new Date();
       const diffHoras = (agora - ultimoUso) / (1000 * 60 * 60);

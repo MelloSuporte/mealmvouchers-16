@@ -1,7 +1,7 @@
 -- Drop existing function if it exists
 DROP FUNCTION IF EXISTS validate_and_use_voucher CASCADE;
 
--- Create updated function with proper data insertion
+-- Create updated function with proper data insertion and null handling
 CREATE OR REPLACE FUNCTION validate_and_use_voucher(
     p_codigo VARCHAR(4),
     p_tipo_refeicao_id UUID
@@ -46,13 +46,14 @@ BEGIN
         );
     END IF;
 
-    -- Check daily limit
-    SELECT COUNT(*), MAX(usado_em)
+    -- Check daily limit - handle null case
+    SELECT COALESCE(COUNT(*), 0), MAX(usado_em)
     INTO v_refeicoes_dia, v_ultima_refeicao
     FROM uso_voucher
     WHERE usuario_id = v_usuario_id
     AND DATE(usado_em) = CURRENT_DATE;
 
+    -- If no previous usage, v_refeicoes_dia will be 0
     IF v_refeicoes_dia >= 3 THEN
         RETURN jsonb_build_object(
             'success', false,
@@ -60,7 +61,7 @@ BEGIN
         );
     END IF;
 
-    -- Check minimum interval
+    -- Check minimum interval only if there was a previous usage
     IF v_ultima_refeicao IS NOT NULL AND 
        v_ultima_refeicao + INTERVAL '3 hours' > CURRENT_TIMESTAMP THEN
         RETURN jsonb_build_object(
@@ -138,4 +139,4 @@ GRANT EXECUTE ON FUNCTION validate_and_use_voucher TO authenticated;
 GRANT EXECUTE ON FUNCTION validate_and_use_voucher TO anon;
 
 -- Add helpful comment
-COMMENT ON FUNCTION validate_and_use_voucher IS 'Validates and registers the use of vouchers with proper data insertion and logging';
+COMMENT ON FUNCTION validate_and_use_voucher IS 'Validates and registers the use of vouchers with proper data insertion, logging and null handling';
