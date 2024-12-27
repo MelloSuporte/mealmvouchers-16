@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
-import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 import { validateVoucher, registerVoucherUsage } from '../components/voucher/VoucherValidation';
 import ConfirmationHeader from '../components/confirmation/ConfirmationHeader';
@@ -12,49 +11,26 @@ const UserConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
-  const [backgroundImage, setBackgroundImage] = useState('');
-
-  useEffect(() => {
-    const fetchBackgroundImage = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('background_images')
-          .select('image_url')
-          .eq('page', 'userConfirmation')
-          .eq('is_active', true)
-          .single();
-
-        if (error) throw error;
-        if (data?.image_url) {
-          setBackgroundImage(data.image_url);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar imagem de fundo:', error);
-      }
-    };
-
-    fetchBackgroundImage();
-  }, []);
 
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
-      const { mealType, mealName, voucherCode, cpf } = location.state;
+      const { mealType, mealName, voucherCode } = location.state;
       
-      // Garantir que voucherCode seja uma string
       const validationResult = await validateVoucher(String(voucherCode), mealType);
 
       if (!validationResult.success) {
         throw new Error(validationResult.error || 'Erro ao validar voucher');
       }
 
-      await registerVoucherUsage({
-        userId: validationResult.user?.id,
+      const { voucher, tipoVoucher, userId } = validationResult;
+
+      await registerVoucherUsage(
+        userId,
         mealType,
-        mealName,
-        voucherType: 'comum', // Será atualizado conforme o tipo identificado
-        voucherId: validationResult.voucher?.id
-      });
+        tipoVoucher,
+        voucher.id
+      );
 
       localStorage.removeItem('commonVoucher');
       
@@ -79,16 +55,7 @@ const UserConfirmation = () => {
   };
 
   return (
-    <div 
-      className="min-h-screen flex flex-col items-center justify-center p-4"
-      style={{
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
-        backgroundColor: 'rgb(185, 28, 28)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-red-700">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full space-y-6">
         <ConfirmationHeader />
         

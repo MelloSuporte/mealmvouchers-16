@@ -1,48 +1,47 @@
 import { supabase } from '../../config/supabase';
 import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
 import logger from '../../config/logger';
-import { validateCommonVoucher } from './validators/commonVoucherValidator';
-import { validateExtraVoucher } from './validators/extraVoucherValidator';
-import { validateDisposableVoucher } from './validators/disposableVoucherValidator';
+import { VOUCHER_TYPES } from '../../services/voucher/voucherTypes';
+import { 
+  findVoucherComum,
+  findVoucherExtra, 
+  findVoucherDescartavel 
+} from '../../services/voucher/voucherQueries';
+import {
+  validateVoucherTime,
+  validateVoucherUsage,
+  registerVoucherUsage
+} from '../../services/voucher/voucherValidation';
 
-const identifyVoucherType = async (codigo) => {
+export const identifyVoucherType = async (codigo) => {
   try {
+    logger.info('Identificando tipo de voucher:', codigo);
+    
     // Garantir que o código seja uma string
     const voucherCode = String(codigo);
     
     // Primeiro tenta encontrar como voucher comum
-    const { data: usuario } = await supabase
-      .from('usuarios')
-      .select('voucher')
-      .eq('voucher', voucherCode)
-      .single();
-
+    const usuario = await findVoucherComum(voucherCode);
     if (usuario) {
-      return 'comum';
+      logger.info('Voucher identificado como comum');
+      return VOUCHER_TYPES.COMUM;
     }
 
     // Tenta encontrar como voucher extra
-    const { data: voucherExtra } = await supabase
-      .from('vouchers_extras')
-      .select('*')
-      .eq('codigo', voucherCode)
-      .single();
-
+    const voucherExtra = await findVoucherExtra(voucherCode);
     if (voucherExtra) {
-      return 'extra';
+      logger.info('Voucher identificado como extra');
+      return VOUCHER_TYPES.EXTRA;
     }
 
     // Tenta encontrar como voucher descartável
-    const { data: voucherDescartavel } = await supabase
-      .from('vouchers_descartaveis')
-      .select('*')
-      .eq('codigo', voucherCode)
-      .single();
-
+    const voucherDescartavel = await findVoucherDescartavel(voucherCode);
     if (voucherDescartavel) {
-      return 'descartavel';
+      logger.info('Voucher identificado como descartável');
+      return VOUCHER_TYPES.DESCARTAVEL;
     }
 
+    logger.info('Tipo de voucher não identificado');
     return null;
   } catch (error) {
     logger.error('Erro ao identificar tipo de voucher:', error);
@@ -52,7 +51,6 @@ const identifyVoucherType = async (codigo) => {
 
 export const validateVoucher = async (codigo, tipoRefeicaoId) => {
   try {
-    // Log da tentativa de validação
     await logSystemEvent({
       tipo: LOG_TYPES.TENTATIVA_VALIDACAO,
       mensagem: `Iniciando validação do voucher: ${codigo}`,
@@ -74,18 +72,48 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       return { success: false, error: 'Voucher inválido' };
     }
 
-    logger.info(`Validando voucher ${tipoVoucher}:`, voucherCode);
+    // Buscar dados do voucher
+    let voucher = null;
+    let userId = null;
+    let turnoId = null;
 
     switch (tipoVoucher) {
-      case 'comum':
-        return await validateCommonVoucher(voucherCode);
-      case 'extra':
-        return await validateExtraVoucher(voucherCode);
-      case 'descartavel':
-        return await validateDisposableVoucher(voucherCode, tipoRefeicaoId);
-      default:
-        throw new Error('Tipo de voucher não reconhecido');
+      case VOUCHER_TYPES.COMUM:
+        voucher = await findVoucherComum(voucherCode);
+        userId = voucher?.id;
+        turnoId = voucher?.turno_id;
+        break;
+      case VOUCHER_TYPES.EXTRA:
+        voucher = await findVoucherExtra(voucherCode);
+        userId = voucher?.usuario_id;
+        turnoId = voucher?.turno_id;
+        break;
+      case VOUCHER_TYPES.DESCARTAVEL:
+        voucher = await findVoucherDescartavel(voucherCode);
+        break;
     }
+
+    if (!voucher) {
+      throw new Error('Voucher não encontrado ou já utilizado');
+    }
+
+    // Validar horário se não for descartável
+    if (tipoVoucher !== VOUCHER_TYPES.DESCARTAVEL) {
+      const timeValid = await validateVoucherTime(tipoRefeicaoId, turnoId);
+      if (!timeValid) {
+        throw new Error('Horário não permitido para esta refeição');
+      }
+
+      // Validar regras de uso
+      await validateVoucherUsage(userId, tipoRefeicaoId);
+    }
+
+    return { 
+      success: true, 
+      voucher,
+      tipoVoucher,
+      userId
+    };
   } catch (error) {
     logger.error('Erro na validação:', error);
     await logSystemEvent({
@@ -94,54 +122,9 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       detalhes: error,
       nivel: 'error'
     });
-    throw error;
-  }
-};
-
-export const registerVoucherUsage = async ({
-  userId,
-  mealType,
-  mealName,
-  voucherType,
-  voucherId
-}) => {
-  try {
-    const usageData = {
-      usuario_id: userId,
-      tipo_refeicao_id: mealType,
-      usado_em: new Date().toISOString(),
-      observacao: `Refeição: ${mealName} (${voucherType})`
+    return { 
+      success: false, 
+      error: error.message || 'Erro ao validar voucher'
     };
-
-    if (voucherType === 'extra') {
-      usageData.voucher_extra_id = voucherId;
-    } else if (voucherType === 'descartavel') {
-      usageData.voucher_descartavel_id = voucherId;
-    }
-
-    const { error: usageError } = await supabase
-      .from('uso_voucher')
-      .insert([usageData]);
-
-    if (usageError) {
-      logger.error('Erro ao registrar uso:', usageError);
-      throw new Error('Erro ao registrar uso do voucher');
-    }
-
-    // Atualizar status do voucher se for extra ou descartável
-    if (voucherType === 'extra') {
-      await supabase
-        .from('vouchers_extras')
-        .update({ usado: true, usado_em: new Date().toISOString() })
-        .eq('id', voucherId);
-    } else if (voucherType === 'descartavel') {
-      await supabase
-        .from('vouchers_descartaveis')
-        .update({ usado: true, usado_em: new Date().toISOString() })
-        .eq('id', voucherId);
-    }
-  } catch (error) {
-    logger.error('Erro ao registrar uso:', error);
-    throw error;
   }
 };
