@@ -19,30 +19,38 @@ export const validateVoucher = async ({
     });
 
     // Valida o voucher
-    const { data: validationResult, error: validationError } = await supabase.rpc('validate_and_use_voucher', {
+    const { data, error: validationError } = await supabase.rpc('validate_and_use_voucher', {
       p_codigo: voucherCode,
       p_tipo_refeicao_id: mealType
     });
 
     if (validationError) {
+      const errorMessage = validationError.message || 'Erro ao validar voucher';
       logger.error('Erro na validação:', validationError);
+      
       await logSystemEvent({
         tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
-        mensagem: validationError.message || 'Erro ao validar voucher',
+        mensagem: errorMessage,
         detalhes: JSON.stringify({ error: validationError }),
         nivel: 'error'
       });
-      throw new Error(validationError.message || 'Erro ao validar voucher');
+      
+      throw new Error(errorMessage);
     }
 
+    const validationResult = data;
+
     if (!validationResult?.success) {
+      const errorMessage = validationResult?.error || 'Erro ao validar voucher';
+      
       await logSystemEvent({
         tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
-        mensagem: validationResult?.error || 'Erro ao validar voucher',
+        mensagem: errorMessage,
         detalhes: JSON.stringify({ result: validationResult }),
         nivel: 'error'
       });
-      throw new Error(validationResult?.error || 'Erro ao validar voucher');
+      
+      throw new Error(errorMessage);
     }
 
     return validationResult;
@@ -68,13 +76,16 @@ export const registerVoucherUsage = async ({
       });
 
     if (usageError) {
+      const errorMessage = usageError.message || 'Erro ao registrar uso do voucher';
+      
       await logSystemEvent({
         tipo: LOG_TYPES.ERRO_USO_VOUCHER,
-        mensagem: 'Erro ao registrar uso do voucher',
-        detalhes: JSON.stringify({ error: usageError.message }),
+        mensagem: errorMessage,
+        detalhes: JSON.stringify({ error: usageError }),
         nivel: 'error'
       });
-      throw new Error(usageError.message || 'Erro ao registrar uso do voucher');
+      
+      throw new Error(errorMessage);
     }
 
     await logSystemEvent({
