@@ -1,67 +1,75 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import React from 'react';
+import { toast } from "sonner";
 import logger from '../../config/logger';
-import { supabase } from '../../config/supabase';
 import { registerVoucherUsage } from '../../services/voucher/voucherUsageService';
+import { 
+  identifyVoucherType,
+  validateCommonVoucher,
+  validateDisposableVoucher,
+  validateMealTimeAndInterval
+} from '../../services/voucherValidationService';
 
 export const validateVoucher = async (voucherCode, mealType) => {
   try {
     logger.info('Iniciando validação do voucher:', voucherCode);
 
-    // Log da tentativa de validação
-    await supabase
-      .from('logs_sistema')
-      .insert({
-        tipo: 'TENTATIVA_VALIDACAO',
-        mensagem: `Iniciando validação do voucher: ${voucherCode}`,
-        nivel: 'info',
-        detalhes: {
-          codigo: voucherCode,
-          tipoRefeicaoId: mealType
-        }
-      });
-
-    // Buscar o voucher
-    const { data: voucher, error: voucherError } = await supabase
-      .from('vouchers_descartaveis')
-      .select('*')
-      .eq('codigo', voucherCode)
-      .single();
-
-    if (voucherError) {
+    // Identify voucher type
+    const voucherType = await identifyVoucherType(voucherCode);
+    
+    if (!voucherType) {
       throw new Error('Voucher não encontrado ou inválido');
     }
 
-    // Registrar o uso do voucher
-    const result = await registerVoucherUsage(
-      voucher.usuario_id,
-      mealType,
-      'descartavel',
-      voucher.id
-    );
+    // Validate based on type
+    if (voucherType === 'comum') {
+      const result = await validateCommonVoucher(voucherCode);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
-    if (!result) {
-      throw new Error('Erro ao registrar uso do voucher');
+      // Validate meal time and interval
+      const intervalResult = await validateMealTimeAndInterval(result.user.id);
+      if (!intervalResult.success) {
+        throw new Error(intervalResult.error);
+      }
+
+      // Register usage
+      const usageResult = await registerVoucherUsage(
+        result.user.id,
+        mealType,
+        'comum'
+      );
+
+      if (!usageResult.success) {
+        throw new Error(usageResult.error);
+      }
+
+      return { success: true };
+    } 
+    else if (voucherType === 'descartavel') {
+      const result = await validateDisposableVoucher(voucherCode);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Register usage
+      const usageResult = await registerVoucherUsage(
+        null,
+        mealType,
+        'descartavel',
+        result.voucher.id
+      );
+
+      if (!usageResult.success) {
+        throw new Error(usageResult.error);
+      }
+
+      return { success: true };
     }
 
-    return { success: true };
-  } catch (error) {
-    // Log do erro de validação
-    await supabase
-      .from('logs_sistema')
-      .insert({
-        tipo: 'ERRO_VALIDACAO_VOUCHER',
-        mensagem: 'Erro na validação',
-        nivel: 'error',
-        detalhes: {
-          message: error.message,
-          code: error.code || '',
-          details: error.details || '',
-          hint: error.hint || ''
-        }
-      });
+    throw new Error('Tipo de voucher não suportado');
 
+  } catch (error) {
     logger.error('Erro na validação do voucher:', error);
     throw error;
   }

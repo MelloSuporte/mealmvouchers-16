@@ -1,43 +1,28 @@
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 
-export const identifyVoucherType = async (code) => {
+export const identifyVoucherType = async (codigo) => {
   try {
-    // Garantir que o código seja uma string
-    const voucherCode = String(code);
+    logger.info('Identificando tipo de voucher:', codigo);
     
-    logger.info('Identificando tipo de voucher:', voucherCode);
-
-    // Primeiro tenta encontrar como voucher comum
+    // Check common voucher first
     const { data: usuario } = await supabase
       .from('usuarios')
       .select('voucher')
-      .eq('voucher', voucherCode)
-      .single();
+      .eq('voucher', codigo)
+      .maybeSingle();
 
     if (usuario) {
       logger.info('Voucher identificado como comum');
       return 'comum';
     }
 
-    // Tenta encontrar como voucher extra
-    const { data: voucherExtra } = await supabase
-      .from('vouchers_extras')
-      .select('*')
-      .eq('codigo', voucherCode)
-      .single();
-
-    if (voucherExtra) {
-      logger.info('Voucher identificado como extra');
-      return 'extra';
-    }
-
-    // Tenta encontrar como voucher descartável
+    // Then check disposable voucher
     const { data: voucherDescartavel } = await supabase
       .from('vouchers_descartaveis')
       .select('*')
-      .eq('codigo', voucherCode)
-      .single();
+      .eq('codigo', codigo)
+      .maybeSingle();
 
     if (voucherDescartavel) {
       logger.info('Voucher identificado como descartável');
@@ -52,10 +37,10 @@ export const identifyVoucherType = async (code) => {
   }
 };
 
-export const validateCommonVoucher = async (code) => {
+export const validateCommonVoucher = async (codigo) => {
   try {
-    logger.info('Validando voucher comum:', code);
-    
+    logger.info('Validando voucher comum:', codigo);
+
     const { data: user, error } = await supabase
       .from('usuarios')
       .select(`
@@ -72,21 +57,16 @@ export const validateCommonVoucher = async (code) => {
           horario_fim
         )
       `)
-      .eq('voucher', String(code))
+      .eq('voucher', codigo)
       .eq('suspenso', false)
-      .single();
+      .maybeSingle();
 
-    if (error || !user) {
-      logger.info('Voucher comum inválido');
-      return { success: false, error: 'Voucher comum inválido' };
+    if (error) throw error;
+    
+    if (!user) {
+      return { success: false, error: 'Voucher comum não encontrado ou usuário suspenso' };
     }
 
-    // Verificar se o usuário está suspenso
-    if (user.suspenso) {
-      return { success: false, error: 'Usuário suspenso' };
-    }
-
-    // Verificar se a empresa está ativa
     if (!user.empresas?.ativo) {
       return { success: false, error: 'Empresa inativa' };
     }
@@ -99,103 +79,56 @@ export const validateCommonVoucher = async (code) => {
   }
 };
 
-export const validateDisposableVoucher = async (code) => {
+export const validateDisposableVoucher = async (codigo) => {
   try {
-    logger.info('Iniciando validação detalhada do voucher descartável:', code);
-    
     const { data: voucher, error } = await supabase
       .from('vouchers_descartaveis')
-      .select(`
-        *,
-        tipos_refeicao (
-          id,
-          nome,
-          horario_inicio,
-          horario_fim,
-          minutos_tolerancia,
-          ativo
-        )
-      `)
-      .eq('codigo', String(code))
+      .select('*, tipos_refeicao(*)')
+      .eq('codigo', codigo)
       .is('usado_em', null)
-      .gte('data_expiracao', new Date().toISOString().split('T')[0])
-      .single();
+      .maybeSingle();
 
     if (error || !voucher) {
-      logger.info('Voucher não encontrado ou já utilizado');
       return { success: false, error: 'Voucher descartável inválido ou já utilizado' };
     }
 
-    // Verificar se o tipo de refeição está ativo
-    if (!voucher.tipos_refeicao?.ativo) {
-      return { success: false, error: 'Tipo de refeição inativo' };
-    }
-
-    logger.info('Voucher descartável válido:', voucher);
     return { success: true, voucher };
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
-    return { success: false, error: 'Erro ao validar voucher' };
+    throw error;
   }
 };
 
-export const validateMealTimeAndInterval = async (userId, mealTypeId) => {
+export const validateMealTimeAndInterval = async (userId) => {
   try {
-    // Verificar última refeição do usuário
-    const { data: lastMeal } = await supabase
+    const { data, error } = await supabase
       .from('uso_voucher')
       .select('usado_em')
       .eq('usuario_id', userId)
       .order('usado_em', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (lastMeal) {
-      const lastMealTime = new Date(lastMeal.usado_em);
-      const now = new Date();
-      const hoursDiff = (now - lastMealTime) / (1000 * 60 * 60);
+    if (error) throw error;
 
-      if (hoursDiff < 2) {
-        return {
-          success: false,
-          error: 'É necessário aguardar 2 horas entre refeições'
-        };
-      }
+    if (!data) {
+      return { success: true }; // First usage
     }
 
-    // Verificar se já usou este tipo de refeição hoje
-    const today = new Date().toISOString().split('T')[0];
-    const { data: mealCount } = await supabase
-      .from('uso_voucher')
-      .select('id')
-      .eq('usuario_id', userId)
-      .eq('tipo_refeicao_id', mealTypeId)
-      .gte('usado_em', today);
+    const lastUsage = new Date(data.usado_em);
+    const now = new Date();
+    const hoursDiff = (now - lastUsage) / (1000 * 60 * 60);
 
-    if (mealCount && mealCount.length > 0) {
-      return {
-        success: false,
-        error: 'Você já utilizou este tipo de refeição hoje'
-      };
-    }
-
-    // Verificar limite de 2 refeições diferentes por turno
-    const { data: totalMealsToday } = await supabase
-      .from('uso_voucher')
-      .select('tipo_refeicao_id')
-      .eq('usuario_id', userId)
-      .gte('usado_em', today);
-
-    if (totalMealsToday && totalMealsToday.length >= 2) {
-      return {
-        success: false,
-        error: 'Limite de 2 refeições diferentes por turno atingido'
+    if (hoursDiff < 3) {
+      return { 
+        success: false, 
+        error: 'Intervalo mínimo entre refeições não respeitado' 
       };
     }
 
     return { success: true };
   } catch (error) {
-    logger.error('Erro ao validar horários e intervalos:', error);
-    return { success: false, error: 'Erro ao validar horários' };
+    logger.error('Erro ao validar intervalo entre refeições:', error);
+    throw error;
   }
 };
