@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 import { validateVoucher, registerVoucherUsage } from '../components/voucher/VoucherValidation';
+import ConfirmationHeader from '../components/confirmation/ConfirmationHeader';
+import UserDataDisplay from '../components/confirmation/UserDataDisplay';
+import ConfirmationActions from '../components/confirmation/ConfirmationActions';
 
 const UserConfirmation = () => {
   const navigate = useNavigate();
@@ -87,29 +89,12 @@ const UserConfirmation = () => {
       }}
     >
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full space-y-6">
-        <h2 className="text-2xl font-bold text-center">
-          Confirmar Refeição
-        </h2>
+        <ConfirmationHeader />
         
-        <p className="text-center text-gray-600">
-          Por favor, confirme os dados abaixo
-        </p>
-
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="font-bold text-lg mb-2">Dados do Usuário</h3>
-          <p className="flex items-center gap-2">
-            <span className="text-green-600">✓</span>
-            {location.state?.userName || 'Usuário'}
-          </p>
-        </div>
-
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="font-bold text-lg mb-2">Tipo de Refeição</h3>
-          <p className="flex items-center gap-2">
-            <span className="text-green-600">✓</span>
-            {location.state?.mealName || 'Refeição'}
-          </p>
-        </div>
+        <UserDataDisplay 
+          userName={location.state?.userName}
+          mealName={location.state?.mealName}
+        />
 
         <div className="flex items-center gap-2 text-gray-600">
           <span className="text-blue-600">ℹ</span>
@@ -118,24 +103,11 @@ const UserConfirmation = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Button
-            onClick={handleCancel}
-            variant="outline"
-            className="w-full"
-            disabled={isLoading}
-          >
-            Cancelar
-          </Button>
-
-          <Button
-            onClick={handleConfirm}
-            disabled={isLoading}
-            className="w-full bg-blue-900 hover:bg-blue-800"
-          >
-            {isLoading ? 'Confirmando...' : 'Confirmar'}
-          </Button>
-        </div>
+        <ConfirmationActions 
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );
