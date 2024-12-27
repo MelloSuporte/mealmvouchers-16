@@ -33,12 +33,16 @@ export const validateVoucher = async (voucherCode, mealType) => {
         throw new Error(intervalResult.error);
       }
 
+      if (!result.user.id || !mealType) {
+        throw new Error('Dados inválidos para registro de uso do voucher');
+      }
+
       // Register usage
-      const usageResult = await registerVoucherUsage(
-        result.user.id,
-        mealType,
-        'comum'
-      );
+      const usageResult = await registerVoucherUsage({
+        userId: result.user.id,
+        tipoRefeicaoId: mealType,
+        tipoVoucher: 'comum'
+      });
 
       if (!usageResult.success) {
         throw new Error(usageResult.error || 'Erro ao registrar uso do voucher');
@@ -52,13 +56,16 @@ export const validateVoucher = async (voucherCode, mealType) => {
         throw new Error(result.error);
       }
 
+      if (!result.voucher.id || !mealType) {
+        throw new Error('Dados inválidos para registro de uso do voucher');
+      }
+
       // Register usage
-      const usageResult = await registerVoucherUsage(
-        null,
-        mealType,
-        'descartavel',
-        result.voucher.id
-      );
+      const usageResult = await registerVoucherUsage({
+        tipoRefeicaoId: mealType,
+        tipoVoucher: 'descartavel',
+        voucherDescartavelId: result.voucher.id
+      });
 
       if (!usageResult.success) {
         throw new Error(usageResult.error || 'Erro ao registrar uso do voucher');

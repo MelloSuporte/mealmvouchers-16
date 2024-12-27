@@ -9,6 +9,15 @@ export const registerVoucherUsage = async ({
   voucherDescartavelId = null
 }) => {
   try {
+    // Validate required parameters based on voucher type
+    if (tipoVoucher === 'comum' && (!userId || !tipoRefeicaoId)) {
+      throw new Error('Usuário e tipo de refeição são obrigatórios para voucher comum');
+    }
+
+    if (tipoVoucher === 'descartavel' && (!voucherDescartavelId || !tipoRefeicaoId)) {
+      throw new Error('ID do voucher descartável e tipo de refeição são obrigatórios');
+    }
+
     logger.info('Registrando uso de voucher:', {
       userId,
       tipoRefeicaoId,
@@ -87,7 +96,10 @@ export const registerVoucherUsage = async ({
         code: error.code
       });
 
-      throw new Error('Erro ao registrar uso do voucher');
+      return { 
+        success: false, 
+        error: 'Erro ao registrar uso do voucher' 
+      };
     }
 
     // Log successful usage
@@ -103,6 +115,7 @@ export const registerVoucherUsage = async ({
     });
 
     return { success: true };
+
   } catch (error) {
     await logSystemEvent({
       tipo: LOG_TYPES.ERRO_USO_VOUCHER,
@@ -121,6 +134,9 @@ export const registerVoucherUsage = async ({
       code: error.code
     });
 
-    throw error;
+    return { 
+      success: false, 
+      error: error.message || 'Erro ao registrar uso do voucher' 
+    };
   }
 };
