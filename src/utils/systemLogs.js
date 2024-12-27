@@ -8,7 +8,8 @@ export const LOG_TYPES = {
   TENTATIVA_VALIDACAO: 'TENTATIVA_VALIDACAO',
   VALIDACAO_SUCESSO: 'VALIDACAO_SUCESSO',
   VALIDACAO_FALHA: 'VALIDACAO_FALHA',
-  VALIDACAO_TURNO: 'VALIDACAO_TURNO'
+  VALIDACAO_TURNO: 'VALIDACAO_TURNO',
+  LOG_GENERICO: 'LOG_GENERICO' // Tipo padrão para fallback
 };
 
 export const logSystemEvent = async ({
@@ -17,12 +18,10 @@ export const logSystemEvent = async ({
   detalhes,
   nivel = 'info'
 }) => {
-  if (!tipo || !Object.values(LOG_TYPES).includes(tipo)) {
-    console.warn('Tipo de log inválido ou não especificado:', tipo);
-    tipo = 'ERRO_VALIDACAO_VOUCHER'; // Fallback para garantir que sempre tenha um tipo
-  }
-
   try {
+    // Garantir que tipo nunca seja nulo usando um fallback
+    const tipoLog = tipo || LOG_TYPES.LOG_GENERICO;
+
     const dados = {
       detalhes: typeof detalhes === 'string' ? JSON.parse(detalhes) : detalhes || {},
       nivel: nivel
@@ -31,9 +30,10 @@ export const logSystemEvent = async ({
     const { error } = await supabase
       .from('logs_sistema')
       .insert({
-        tipo: tipo,
+        tipo: tipoLog,
         mensagem: mensagem || 'Sem mensagem',
-        dados: dados
+        dados: dados,
+        nivel: nivel
       });
 
     if (error) {
