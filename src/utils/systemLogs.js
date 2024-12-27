@@ -20,12 +20,14 @@ export const logSystemEvent = async ({
       throw new Error('Tipo de log é obrigatório e deve ser um dos tipos válidos');
     }
 
-    const { error } = await supabase.rpc('insert_log_sistema', {
-      p_tipo: tipo,
-      p_mensagem: mensagem || 'Sem mensagem',
-      p_detalhes: detalhes || '{}',
-      p_nivel: nivel
-    });
+    const { error } = await supabase
+      .from('logs_sistema')
+      .insert({
+        tipo,
+        mensagem: mensagem || 'Sem mensagem',
+        detalhes: detalhes || '{}',
+        nivel
+      });
 
     if (error) {
       logger.error('Erro ao registrar log:', error);
