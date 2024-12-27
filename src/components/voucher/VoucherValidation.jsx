@@ -11,7 +11,7 @@ export const validateVoucher = async ({
 }) => {
   try {
     // Log inicial da tentativa de validação
-    await logSystemEvent({
+    logSystemEvent({
       tipo: LOG_TYPES.VALIDACAO_VOUCHER,
       mensagem: `Tentativa de validação de voucher: ${voucherCode}`,
       detalhes: JSON.stringify({ mealType, mealName, voucherCode, cpf, turnoId }),
@@ -19,19 +19,16 @@ export const validateVoucher = async ({
     });
 
     // Valida o voucher
-    const response = await supabase.rpc('validate_and_use_voucher', {
+    const { data, error: validationError } = await supabase.rpc('validate_and_use_voucher', {
       p_codigo: voucherCode,
       p_tipo_refeicao_id: mealType
     });
-
-    // Extrair dados e erro da resposta uma única vez
-    const { data, error: validationError } = response;
 
     if (validationError) {
       const errorMessage = validationError.message || 'Erro ao validar voucher';
       logger.error('Erro na validação:', validationError);
       
-      await logSystemEvent({
+      logSystemEvent({
         tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
         mensagem: errorMessage,
         detalhes: JSON.stringify({ error: validationError }),
@@ -44,7 +41,7 @@ export const validateVoucher = async ({
     if (!data?.success) {
       const errorMessage = data?.error || 'Erro ao validar voucher';
       
-      await logSystemEvent({
+      logSystemEvent({
         tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
         mensagem: errorMessage,
         detalhes: JSON.stringify({ result: data }),
@@ -67,7 +64,7 @@ export const registerVoucherUsage = async ({
   mealName
 }) => {
   try {
-    const response = await supabase
+    const { error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
         usuario_id: userId,
@@ -76,12 +73,10 @@ export const registerVoucherUsage = async ({
         observacao: `Refeição: ${mealName}`
       });
 
-    const { error: usageError } = response;
-
     if (usageError) {
       const errorMessage = usageError.message || 'Erro ao registrar uso do voucher';
       
-      await logSystemEvent({
+      logSystemEvent({
         tipo: LOG_TYPES.ERRO_USO_VOUCHER,
         mensagem: errorMessage,
         detalhes: JSON.stringify({ error: usageError }),
@@ -91,7 +86,7 @@ export const registerVoucherUsage = async ({
       throw new Error(errorMessage);
     }
 
-    await logSystemEvent({
+    logSystemEvent({
       tipo: LOG_TYPES.USO_VOUCHER,
       mensagem: `Voucher utilizado com sucesso`,
       detalhes: JSON.stringify({ mealType, mealName, userId }),

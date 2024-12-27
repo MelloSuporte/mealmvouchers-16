@@ -14,28 +14,30 @@ export const logSystemEvent = async ({
   detalhes,
   nivel = 'info'
 }) => {
+  if (!tipo || !Object.values(LOG_TYPES).includes(tipo)) {
+    console.warn('Tipo de log inválido:', tipo);
+    return;
+  }
+
   try {
-    if (!tipo || !Object.values(LOG_TYPES).includes(tipo)) {
-      logger.error('Tipo de log inválido ou não especificado');
-      throw new Error('Tipo de log é obrigatório e deve ser um dos tipos válidos');
-    }
+    const logData = {
+      tipo,
+      mensagem: mensagem || 'Sem mensagem',
+      detalhes: detalhes || '{}',
+      nivel,
+      criado_em: new Date().toISOString()
+    };
 
     const { error } = await supabase
       .from('logs_sistema')
-      .insert([{
-        tipo,
-        mensagem: mensagem || 'Sem mensagem',
-        detalhes: detalhes || '{}',
-        nivel,
-        criado_em: new Date().toISOString()
-      }]);
+      .insert([logData])
+      .single();
 
     if (error) {
-      logger.error('Erro ao registrar log:', error);
-      throw error;
+      console.error('Erro ao registrar log:', error);
+      return;
     }
   } catch (error) {
-    logger.error('Erro ao registrar log:', error);
-    // Não propagar o erro para não interromper o fluxo principal
+    console.error('Erro ao registrar log:', error);
   }
 };
