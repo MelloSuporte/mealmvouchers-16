@@ -22,22 +22,14 @@ export const validateVoucher = async ({
       .is('usado_em', null)
       .single();
 
-    logger.info('Resultado da consulta:', { voucher: disposableData, error: disposableError });
-
     if (!disposableError && disposableData) {
-      // Validar voucher descartável
-      logger.info('Iniciando validação detalhada do voucher descartável:', voucherCode);
+      logger.info('Voucher descartável encontrado:', disposableData);
       
       const { data: validationData, error: validationError } = await supabase.rpc(
         'validate_disposable_voucher',
         {
           p_codigo: voucherCode,
           p_tipo_refeicao_id: mealType
-        },
-        {
-          headers: {
-            'Content-Profile': 'public'
-          }
         }
       );
 
@@ -46,14 +38,11 @@ export const validateVoucher = async ({
         throw new Error(validationError.message || 'Erro ao validar voucher descartável');
       }
 
-      logger.info('Resultado validação voucher descartável:', validationData);
       return validationData;
     }
 
-    logger.info('Voucher não encontrado ou já utilizado');
-    
     // Se não for descartável, tenta validar como voucher comum
-    logger.info('Validando voucher comum:', voucherCode);
+    logger.info('Tentando validar como voucher comum:', voucherCode);
 
     const { data: userData, error: userError } = await supabase
       .from('usuarios')
@@ -66,9 +55,8 @@ export const validateVoucher = async ({
       .eq('suspenso', false)
       .single();
 
-    logger.info('Resultado da consulta de usuário:', { user: userData, error: userError });
-
     if (userError || !userData) {
+      logger.error('Erro ao buscar usuário:', userError);
       throw new Error('Usuário não encontrado ou voucher inválido');
     }
 
@@ -82,11 +70,6 @@ export const validateVoucher = async ({
       {
         p_codigo: voucherCode,
         p_tipo_refeicao_id: mealType
-      },
-      {
-        headers: {
-          'Content-Profile': 'public'
-        }
       }
     );
 
@@ -94,9 +77,6 @@ export const validateVoucher = async ({
       logger.error('Erro na validação do voucher comum:', validationError);
       throw new Error(validationError.message || 'Erro ao validar voucher comum');
     }
-
-    logger.info('Resultado validação voucher comum:', { success: true, user: userData });
-    logger.info('Voucher comum válido:', userData);
 
     return {
       success: true,
@@ -122,10 +102,6 @@ export const registerVoucherUsage = async ({
         tipo_refeicao_id: mealType,
         usado_em: new Date().toISOString(),
         observacao: `Refeição: ${mealName}`
-      }, {
-        headers: {
-          'Content-Profile': 'public'
-        }
       });
 
     if (usageError) {
