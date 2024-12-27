@@ -55,16 +55,22 @@ export const registerVoucherUsage = async (userId, tipoRefeicaoId, tipoVoucher, 
 
 export const getLastVoucherUsage = async (userId) => {
   try {
+    logger.info('Buscando último uso do voucher para usuário:', userId);
+    
     const { data, error } = await supabase
       .from('uso_voucher')
       .select('usado_em')
       .eq('usuario_id', userId)
       .order('usado_em', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      logger.error('Erro ao buscar último uso:', error);
+      throw error;
+    }
+
+    // Return null if no records found, otherwise return the first record
+    return data && data.length > 0 ? data[0] : null;
   } catch (error) {
     logger.error('Erro ao buscar último uso do voucher:', error);
     return null;
