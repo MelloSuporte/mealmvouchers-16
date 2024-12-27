@@ -27,6 +27,7 @@ export const validateExtraVoucher = async (codigo: string, tipoRefeicaoId: strin
       });
 
     if (usageError) {
+      logger.error('Erro ao registrar uso do voucher extra:', usageError);
       throw usageError;
     }
 
@@ -37,6 +38,7 @@ export const validateExtraVoucher = async (codigo: string, tipoRefeicaoId: strin
       .eq('id', voucher.id);
 
     if (updateError) {
+      logger.error('Erro ao atualizar status do voucher extra:', updateError);
       throw updateError;
     }
 

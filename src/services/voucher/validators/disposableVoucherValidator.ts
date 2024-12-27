@@ -26,6 +26,7 @@ export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: 
       });
 
     if (usageError) {
+      logger.error('Erro ao registrar uso do voucher descartável:', usageError);
       throw usageError;
     }
 
@@ -36,6 +37,7 @@ export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: 
       .eq('id', voucher.id);
 
     if (updateError) {
+      logger.error('Erro ao atualizar status do voucher descartável:', updateError);
       throw updateError;
     }
 

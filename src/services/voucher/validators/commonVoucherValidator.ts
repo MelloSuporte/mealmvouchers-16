@@ -50,6 +50,7 @@ export const validateCommonVoucher = async (codigo: string, tipoRefeicaoId: stri
       });
 
     if (usageError) {
+      logger.error('Erro ao registrar uso do voucher comum:', usageError);
       throw usageError;
     }
 
