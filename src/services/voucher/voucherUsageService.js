@@ -4,7 +4,7 @@ import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
 
 export const registerVoucherUsage = async (userId, tipoRefeicaoId, tipoVoucher, voucherId) => {
   try {
-    const { error: usageError } = await supabase
+    const { data, error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
         usuario_id: userId,
@@ -13,7 +13,9 @@ export const registerVoucherUsage = async (userId, tipoRefeicaoId, tipoVoucher, 
         voucher_extra_id: tipoVoucher === 'extra' ? voucherId : null,
         voucher_descartavel_id: tipoVoucher === 'descartavel' ? voucherId : null,
         usado_em: new Date().toISOString()
-      });
+      })
+      .select()
+      .single();
 
     if (usageError) {
       logger.error('Erro ao registrar uso:', usageError);
@@ -43,7 +45,7 @@ export const registerVoucherUsage = async (userId, tipoRefeicaoId, tipoVoucher, 
       detalhes: { userId, tipoRefeicaoId, tipoVoucher, voucherId }
     });
 
-    return true;
+    return data;
   } catch (error) {
     logger.error('Erro ao registrar uso do voucher:', error);
     throw error;
@@ -58,7 +60,7 @@ export const getLastVoucherUsage = async (userId) => {
       .eq('usuario_id', userId)
       .order('usado_em', { ascending: false })
       .limit(1)
-      .maybeSingle(); // Usa maybeSingle ao invés de single para evitar erro 406
+      .maybeSingle();
 
     if (error) throw error;
     return data;
