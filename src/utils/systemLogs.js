@@ -7,7 +7,8 @@ export const LOG_TYPES = {
   ERRO_VALIDACAO_VOUCHER: 'ERRO_VALIDACAO_VOUCHER',
   TENTATIVA_VALIDACAO: 'TENTATIVA_VALIDACAO',
   VALIDACAO_SUCESSO: 'VALIDACAO_SUCESSO',
-  VALIDACAO_FALHA: 'VALIDACAO_FALHA'
+  VALIDACAO_FALHA: 'VALIDACAO_FALHA',
+  VALIDACAO_TURNO: 'VALIDACAO_TURNO'
 };
 
 export const logSystemEvent = async ({
@@ -27,11 +28,13 @@ export const logSystemEvent = async ({
       nivel: nivel
     };
 
-    const { error } = await supabase.rpc('insert_system_log', {
-      p_tipo: tipo,
-      p_mensagem: mensagem || 'Sem mensagem',
-      p_dados: dados
-    });
+    const { error } = await supabase
+      .from('logs_sistema')
+      .insert({
+        tipo: tipo,
+        mensagem: mensagem || 'Sem mensagem',
+        dados: dados
+      });
 
     if (error) {
       console.error('Erro ao registrar log:', error);

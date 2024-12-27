@@ -20,17 +20,21 @@ export const registerVoucherUsage = async (userId, tipoRefeicaoId, tipoVoucher, 
       throw usageError;
     }
 
-    // Atualizar status do voucher
-    if (tipoVoucher === 'extra') {
-      await supabase
+    // Atualizar status do voucher específico
+    if (tipoVoucher === 'extra' && voucherId) {
+      const { error: updateError } = await supabase
         .from('vouchers_extras')
         .update({ usado_em: new Date().toISOString() })
         .eq('id', voucherId);
-    } else if (tipoVoucher === 'descartavel') {
-      await supabase
+
+      if (updateError) throw updateError;
+    } else if (tipoVoucher === 'descartavel' && voucherId) {
+      const { error: updateError } = await supabase
         .from('vouchers_descartaveis')
         .update({ usado_em: new Date().toISOString() })
         .eq('id', voucherId);
+
+      if (updateError) throw updateError;
     }
 
     await logSystemEvent({
@@ -43,5 +47,23 @@ export const registerVoucherUsage = async (userId, tipoRefeicaoId, tipoVoucher, 
   } catch (error) {
     logger.error('Erro ao registrar uso do voucher:', error);
     throw error;
+  }
+};
+
+export const getLastVoucherUsage = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('uso_voucher')
+      .select('usado_em')
+      .eq('usuario_id', userId)
+      .order('usado_em', { ascending: false })
+      .limit(1)
+      .maybeSingle(); // Usa maybeSingle ao invés de single para evitar erro 406
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logger.error('Erro ao buscar último uso do voucher:', error);
+    return null;
   }
 };
