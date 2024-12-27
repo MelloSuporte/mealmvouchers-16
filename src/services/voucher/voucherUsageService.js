@@ -1,6 +1,6 @@
 import { supabase } from '../../config/supabase';
 import logger from '../../config/logger';
-import { LOG_TYPES } from '../../utils/systemLogs';
+import { LOG_TYPES, logSystemEvent } from '../../utils/systemLogs';
 
 export const registerVoucherUsage = async (
   userId,
@@ -9,6 +9,13 @@ export const registerVoucherUsage = async (
   voucherDescartavelId = null
 ) => {
   try {
+    await logSystemEvent({
+      tipo: LOG_TYPES.TENTATIVA_VALIDACAO,
+      mensagem: 'Iniciando registro de uso do voucher',
+      detalhes: { userId, tipoRefeicaoId, tipoVoucher },
+      nivel: 'info'
+    });
+
     const { data, error } = await supabase
       .from('uso_voucher')
       .insert({
@@ -22,19 +29,17 @@ export const registerVoucherUsage = async (
       .maybeSingle();
 
     if (error) {
-      await supabase
-        .from('logs_sistema')
-        .insert({
-          tipo: LOG_TYPES.ERRO_USO_VOUCHER,
-          mensagem: 'Erro ao registrar uso do voucher',
-          nivel: 'error',
-          detalhes: {
-            error: error.message,
-            userId,
-            tipoRefeicaoId,
-            tipoVoucher
-          }
-        });
+      await logSystemEvent({
+        tipo: LOG_TYPES.ERRO_USO_VOUCHER,
+        mensagem: 'Erro ao registrar uso do voucher',
+        detalhes: {
+          error: error.message,
+          userId,
+          tipoRefeicaoId,
+          tipoVoucher
+        },
+        nivel: 'error'
+      });
 
       logger.error('Erro ao registrar uso do voucher:', {
         message: error.message,
@@ -46,38 +51,33 @@ export const registerVoucherUsage = async (
       return { success: false, error: 'Erro ao registrar uso do voucher' };
     }
 
-    await supabase
-      .from('logs_sistema')
-      .insert({
-        tipo: LOG_TYPES.USO_VOUCHER,
-        mensagem: 'Uso do voucher registrado com sucesso',
-        nivel: 'info',
-        detalhes: {
-          userId,
-          tipoRefeicaoId,
-          tipoVoucher,
-          data
-        }
-      });
+    await logSystemEvent({
+      tipo: LOG_TYPES.USO_VOUCHER,
+      mensagem: 'Uso do voucher registrado com sucesso',
+      detalhes: {
+        userId,
+        tipoRefeicaoId,
+        tipoVoucher,
+        data
+      },
+      nivel: 'info'
+    });
 
     return { success: true, data };
   } catch (error) {
-    logger.error('Erro ao registrar uso do voucher:', error);
-    
-    await supabase
-      .from('logs_sistema')
-      .insert({
-        tipo: LOG_TYPES.ERRO_USO_VOUCHER,
-        mensagem: 'Erro ao registrar uso do voucher',
-        nivel: 'error',
-        detalhes: {
-          error: error.message,
-          userId,
-          tipoRefeicaoId,
-          tipoVoucher
-        }
-      });
+    await logSystemEvent({
+      tipo: LOG_TYPES.ERRO_USO_VOUCHER,
+      mensagem: 'Erro ao registrar uso do voucher',
+      detalhes: {
+        error: error.message,
+        userId,
+        tipoRefeicaoId,
+        tipoVoucher
+      },
+      nivel: 'error'
+    });
 
+    logger.error('Erro ao registrar uso do voucher:', error);
     return { success: false, error: 'Erro ao registrar uso do voucher' };
   }
 };
