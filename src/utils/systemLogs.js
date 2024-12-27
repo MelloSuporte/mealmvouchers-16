@@ -22,12 +22,13 @@ export const logSystemEvent = async ({
 
     const { error } = await supabase
       .from('logs_sistema')
-      .insert({
+      .insert([{
         tipo,
         mensagem: mensagem || 'Sem mensagem',
         detalhes: detalhes || '{}',
-        nivel
-      });
+        nivel,
+        criado_em: new Date().toISOString()
+      }]);
 
     if (error) {
       logger.error('Erro ao registrar log:', error);
@@ -35,6 +36,6 @@ export const logSystemEvent = async ({
     }
   } catch (error) {
     logger.error('Erro ao registrar log:', error);
-    throw error;
+    // Não propagar o erro para não interromper o fluxo principal
   }
 };

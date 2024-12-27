@@ -10,7 +10,7 @@ export const validateVoucher = async ({
   turnoId
 }) => {
   try {
-    // Log da tentativa de validação com tipo explícito
+    // Log inicial da tentativa de validação
     await logSystemEvent({
       tipo: LOG_TYPES.VALIDACAO_VOUCHER,
       mensagem: `Tentativa de validação de voucher: ${voucherCode}`,
@@ -19,10 +19,13 @@ export const validateVoucher = async ({
     });
 
     // Valida o voucher
-    const { data, error: validationError } = await supabase.rpc('validate_and_use_voucher', {
+    const response = await supabase.rpc('validate_and_use_voucher', {
       p_codigo: voucherCode,
       p_tipo_refeicao_id: mealType
     });
+
+    // Extrair dados e erro da resposta uma única vez
+    const { data, error: validationError } = response;
 
     if (validationError) {
       const errorMessage = validationError.message || 'Erro ao validar voucher';
@@ -38,22 +41,20 @@ export const validateVoucher = async ({
       throw new Error(errorMessage);
     }
 
-    const validationResult = data;
-
-    if (!validationResult?.success) {
-      const errorMessage = validationResult?.error || 'Erro ao validar voucher';
+    if (!data?.success) {
+      const errorMessage = data?.error || 'Erro ao validar voucher';
       
       await logSystemEvent({
         tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
         mensagem: errorMessage,
-        detalhes: JSON.stringify({ result: validationResult }),
+        detalhes: JSON.stringify({ result: data }),
         nivel: 'error'
       });
       
       throw new Error(errorMessage);
     }
 
-    return validationResult;
+    return data;
   } catch (error) {
     logger.error('Erro na validação:', error);
     throw error;
@@ -66,7 +67,7 @@ export const registerVoucherUsage = async ({
   mealName
 }) => {
   try {
-    const { error: usageError } = await supabase
+    const response = await supabase
       .from('uso_voucher')
       .insert({
         usuario_id: userId,
@@ -74,6 +75,8 @@ export const registerVoucherUsage = async ({
         usado_em: new Date().toISOString(),
         observacao: `Refeição: ${mealName}`
       });
+
+    const { error: usageError } = response;
 
     if (usageError) {
       const errorMessage = usageError.message || 'Erro ao registrar uso do voucher';
