@@ -1,14 +1,23 @@
 import { supabase } from '../../config/supabase';
 import logger from '../../config/logger';
 
-export const validateVoucher = async (voucherCode, mealType, mealName) => {
+export const validateVoucher = async ({
+  voucherCode,
+  mealType,
+  mealName,
+  cpf,
+  turnoId
+}) => {
   try {
     logger.info('Iniciando validação do voucher:', voucherCode);
 
     // Primeiro tenta validar como voucher descartável
     const { data: disposableData, error: disposableError } = await supabase
       .from('vouchers_descartaveis')
-      .select('*')
+      .select(`
+        *,
+        tipos_refeicao (*)
+      `)
       .eq('codigo', voucherCode)
       .is('usado_em', null)
       .single();
@@ -39,18 +48,10 @@ export const validateVoucher = async (voucherCode, mealType, mealName) => {
       .from('usuarios')
       .select(`
         *,
-        empresas (
-          id,
-          nome,
-          ativo
-        ),
-        turnos (
-          id,
-          tipo_turno
-        )
+        empresas (*),
+        turnos (*)
       `)
       .eq('voucher', voucherCode)
-      .eq('ativo', true)
       .eq('suspenso', false)
       .single();
 
@@ -59,9 +60,13 @@ export const validateVoucher = async (voucherCode, mealType, mealName) => {
       throw new Error('Usuário não encontrado ou voucher inválido');
     }
 
+    if (!userData.empresas?.ativo) {
+      throw new Error('Empresa do usuário não está ativa');
+    }
+
     // Validar voucher comum
     const { data: validationData, error: validationError } = await supabase.rpc(
-      'validate_common_voucher',
+      'validate_and_use_voucher',
       {
         p_codigo: voucherCode,
         p_tipo_refeicao_id: mealType
@@ -84,7 +89,11 @@ export const validateVoucher = async (voucherCode, mealType, mealName) => {
   }
 };
 
-export const registerVoucherUsage = async (userId, mealType, mealName) => {
+export const registerVoucherUsage = async ({
+  userId,
+  mealType,
+  mealName
+}) => {
   try {
     const { error: usageError } = await supabase
       .from('uso_voucher')
@@ -99,8 +108,6 @@ export const registerVoucherUsage = async (userId, mealType, mealName) => {
       logger.error('Erro ao registrar uso:', usageError);
       throw new Error(usageError.message || 'Erro ao registrar uso do voucher');
     }
-
-    return { success: true };
   } catch (error) {
     logger.error('Erro ao registrar uso:', error);
     throw error;
