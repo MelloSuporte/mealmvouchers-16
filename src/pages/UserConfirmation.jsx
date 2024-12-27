@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
 import logger from '../config/logger';
@@ -12,12 +12,32 @@ const UserConfirmation = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    // Validate required state data on component mount
+    if (!location.state) {
+      toast.error('Dados da refeição não encontrados');
+      navigate('/');
+      return;
+    }
+
+    const { mealType, mealName, voucherCode } = location.state;
+    
+    if (!mealType || !mealName || !voucherCode) {
+      toast.error('Dados incompletos para confirmação');
+      navigate('/');
+    }
+  }, [location.state, navigate]);
+
   const handleConfirm = async () => {
-    if (isLoading) return;
+    if (isLoading || !location.state) return;
     
     setIsLoading(true);
     try {
       const { mealType, mealName, voucherCode } = location.state;
+      
+      if (!mealType || !voucherCode) {
+        throw new Error('Dados incompletos para validação');
+      }
       
       logger.info('Iniciando confirmação com dados:', {
         mealType,
@@ -52,6 +72,11 @@ const UserConfirmation = () => {
     localStorage.removeItem('commonVoucher');
     navigate('/');
   };
+
+  // If location.state is null, render nothing (useEffect will handle navigation)
+  if (!location.state) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-red-700">
