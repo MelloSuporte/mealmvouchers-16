@@ -9,10 +9,14 @@ export const validateVoucher = async ({
   turnoId
 }) => {
   try {
-    // Valida o voucher
+    // Valida o voucher usando uma função com search_path seguro
     const { data, error: validationError } = await supabase.rpc('validate_and_use_voucher', {
       p_codigo: voucherCode,
       p_tipo_refeicao_id: mealType
+    }, {
+      head: {
+        'Content-Profile': 'public'
+      }
     });
 
     if (validationError) {
@@ -46,6 +50,10 @@ export const registerVoucherUsage = async ({
         tipo_refeicao_id: mealType,
         usado_em: new Date().toISOString(),
         observacao: `Refeição: ${mealName}`
+      }, {
+        head: {
+          'Content-Profile': 'public'
+        }
       });
 
     if (usageError) {
