@@ -4,7 +4,10 @@ export const LOG_TYPES = {
   VALIDACAO_VOUCHER: 'VALIDACAO_VOUCHER',
   ERRO_USO_VOUCHER: 'ERRO_USO_VOUCHER',
   USO_VOUCHER: 'USO_VOUCHER',
-  ERRO_VALIDACAO_VOUCHER: 'ERRO_VALIDACAO_VOUCHER'
+  ERRO_VALIDACAO_VOUCHER: 'ERRO_VALIDACAO_VOUCHER',
+  TENTATIVA_VALIDACAO: 'TENTATIVA_VALIDACAO',
+  VALIDACAO_SUCESSO: 'VALIDACAO_SUCESSO',
+  VALIDACAO_FALHA: 'VALIDACAO_FALHA'
 };
 
 export const logSystemEvent = async ({
@@ -14,8 +17,8 @@ export const logSystemEvent = async ({
   nivel = 'info'
 }) => {
   if (!tipo || !Object.values(LOG_TYPES).includes(tipo)) {
-    console.warn('Tipo de log inválido:', tipo);
-    return;
+    console.warn('Tipo de log inválido ou não especificado:', tipo);
+    tipo = 'ERRO_VALIDACAO_VOUCHER'; // Fallback para garantir que sempre tenha um tipo
   }
 
   try {

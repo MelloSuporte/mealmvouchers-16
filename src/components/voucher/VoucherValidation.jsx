@@ -1,33 +1,90 @@
+import { useState } from 'react';
 import { supabase } from '../../config/supabase';
+import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
 import logger from '../../config/logger';
 
-export const validateVoucher = async ({
-  voucherCode,
-  mealType,
-  mealName,
-  cpf,
-  turnoId
-}) => {
+export const validateVoucher = async (codigo, tipoRefeicaoId) => {
   try {
-    // Valida o voucher
-    const { data, error: validationError } = await supabase.rpc('validate_and_use_voucher', {
-      p_codigo: voucherCode,
-      p_tipo_refeicao_id: mealType
+    // Log da tentativa de validação
+    await logSystemEvent({
+      tipo: LOG_TYPES.TENTATIVA_VALIDACAO,
+      mensagem: `Iniciando validação do voucher: ${codigo}`,
+      detalhes: { codigo, tipoRefeicaoId }
     });
 
-    if (validationError) {
-      const errorMessage = validationError.message || 'Erro ao validar voucher';
-      logger.error('Erro na validação:', validationError);
-      throw new Error(errorMessage);
+    // Validação do voucher descartável
+    logger.info('Iniciando validação detalhada do voucher descartável:', codigo);
+    const { data: voucherDescartavel, error: errorDescartavel } = await supabase
+      .from('vouchers_descartaveis')
+      .select('*')
+      .eq('codigo', codigo)
+      .single();
+
+    if (errorDescartavel) {
+      await logSystemEvent({
+        tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
+        mensagem: 'Erro ao consultar voucher descartável',
+        detalhes: errorDescartavel,
+        nivel: 'error'
+      });
+      throw errorDescartavel;
     }
 
-    if (!data?.success) {
-      const errorMessage = data?.error || 'Erro ao validar voucher';
-      throw new Error(errorMessage);
+    if (voucherDescartavel) {
+      // Log do resultado da validação
+      await logSystemEvent({
+        tipo: LOG_TYPES.VALIDACAO_VOUCHER,
+        mensagem: 'Voucher descartável encontrado',
+        detalhes: voucherDescartavel
+      });
+      return { success: true, voucher: voucherDescartavel };
     }
 
-    return data;
+    // Validação do voucher comum
+    logger.info('Validando voucher comum:', codigo);
+    const { data: usuario, error: errorUsuario } = await supabase
+      .from('usuarios')
+      .select('*, empresas(*), turnos(*)')
+      .eq('voucher', codigo)
+      .single();
+
+    if (errorUsuario) {
+      await logSystemEvent({
+        tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
+        mensagem: 'Erro ao consultar usuário',
+        detalhes: errorUsuario,
+        nivel: 'error'
+      });
+      throw errorUsuario;
+    }
+
+    if (usuario) {
+      // Log do sucesso da validação
+      await logSystemEvent({
+        tipo: LOG_TYPES.VALIDACAO_SUCESSO,
+        mensagem: 'Voucher comum válido',
+        detalhes: usuario
+      });
+      return { success: true, user: usuario };
+    }
+
+    // Log de falha na validação
+    await logSystemEvent({
+      tipo: LOG_TYPES.VALIDACAO_FALHA,
+      mensagem: 'Voucher não encontrado',
+      detalhes: { codigo }
+    });
+
+    return { success: false, error: 'Voucher inválido' };
   } catch (error) {
+    // Log de erro na validação
+    await logSystemEvent({
+      tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
+      mensagem: 'Erro na validação',
+      detalhes: error,
+      nivel: 'error'
+    });
+    
     logger.error('Erro na validação:', error);
     throw error;
   }
