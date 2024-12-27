@@ -1,84 +1,68 @@
-import { supabase } from '../../config/supabase';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import logger from '../../config/logger';
-import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
-import { identifyVoucherType } from '../../services/voucher/validators/voucherTypeIdentifier';
-import { validateCommonVoucher } from './validators/commonVoucherValidator';
-import { validateExtraVoucher } from './validators/extraVoucherValidator';
-import { validateDisposableVoucher } from './validators/disposableVoucherValidator';
+import { supabase } from '../../config/supabase';
 import { registerVoucherUsage } from '../../services/voucher/voucherUsageService';
 
-export const validateVoucher = async (codigo, tipoRefeicaoId) => {
+export const validateVoucher = async (voucherCode, mealType) => {
   try {
-    await logSystemEvent({
-      tipo: LOG_TYPES.TENTATIVA_VALIDACAO,
-      mensagem: `Iniciando validação do voucher: ${codigo}`,
-      detalhes: { codigo, tipoRefeicaoId }
-    });
+    logger.info('Iniciando validação do voucher:', voucherCode);
 
-    const voucherCode = String(codigo);
-    const tipoVoucher = await identifyVoucherType(voucherCode);
-    
-    if (!tipoVoucher) {
-      await logSystemEvent({
-        tipo: LOG_TYPES.VALIDACAO_FALHA,
-        mensagem: 'Voucher não encontrado',
-        detalhes: { codigo: voucherCode }
+    // Log da tentativa de validação
+    await supabase
+      .from('logs_sistema')
+      .insert({
+        tipo: 'TENTATIVA_VALIDACAO',
+        mensagem: `Iniciando validação do voucher: ${voucherCode}`,
+        nivel: 'info',
+        detalhes: {
+          codigo: voucherCode,
+          tipoRefeicaoId: mealType
+        }
       });
-      return { success: false, error: 'Voucher inválido' };
+
+    // Buscar o voucher
+    const { data: voucher, error: voucherError } = await supabase
+      .from('vouchers_descartaveis')
+      .select('*')
+      .eq('codigo', voucherCode)
+      .single();
+
+    if (voucherError) {
+      throw new Error('Voucher não encontrado ou inválido');
     }
 
-    let voucher = null;
-    let userId = null;
-    let voucherId = null;
+    // Registrar o uso do voucher
+    const result = await registerVoucherUsage(
+      voucher.usuario_id,
+      mealType,
+      'descartavel',
+      voucher.id
+    );
 
-    switch (tipoVoucher) {
-      case 'comum': {
-        const resultComum = await validateCommonVoucher(voucherCode);
-        if (!resultComum.success) return resultComum;
-        voucher = resultComum.user;
-        userId = voucher?.id;
-        break;
-      }
-      case 'extra': {
-        const resultExtra = await validateExtraVoucher(voucherCode);
-        if (!resultExtra.success) return resultExtra;
-        voucher = resultExtra.voucher;
-        userId = voucher?.usuario_id;
-        voucherId = voucher?.id;
-        break;
-      }
-      case 'descartavel': {
-        const resultDescartavel = await validateDisposableVoucher(voucherCode);
-        if (!resultDescartavel.success) return resultDescartavel;
-        voucher = resultDescartavel.voucher;
-        voucherId = voucher?.id;
-        break;
-      }
+    if (!result) {
+      throw new Error('Erro ao registrar uso do voucher');
     }
 
-    if (!voucher) {
-      throw new Error('Voucher não encontrado ou já utilizado');
-    }
-
-    await registerVoucherUsage(userId, tipoRefeicaoId, tipoVoucher, voucherId);
-
-    return { 
-      success: true, 
-      voucher,
-      tipoVoucher,
-      userId
-    };
+    return { success: true };
   } catch (error) {
-    logger.error('Erro na validação:', error);
-    await logSystemEvent({
-      tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
-      mensagem: 'Erro na validação',
-      detalhes: error,
-      nivel: 'error'
-    });
-    return { 
-      success: false, 
-      error: error.message || 'Erro ao validar voucher'
-    };
+    // Log do erro de validação
+    await supabase
+      .from('logs_sistema')
+      .insert({
+        tipo: 'ERRO_VALIDACAO_VOUCHER',
+        mensagem: 'Erro na validação',
+        nivel: 'error',
+        detalhes: {
+          message: error.message,
+          code: error.code || '',
+          details: error.details || '',
+          hint: error.hint || ''
+        }
+      });
+
+    logger.error('Erro na validação do voucher:', error);
+    throw error;
   }
 };
