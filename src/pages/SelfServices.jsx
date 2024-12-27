@@ -37,11 +37,11 @@ const SelfServices = () => {
       return;
     }
 
-    // Timer para redirecionar após 3 segundos se nenhuma refeição for selecionada
+    // Timer para redirecionar após 5 segundos se nenhuma refeição for selecionada
     const redirectTimer = setTimeout(() => {
       toast.error('Nenhuma refeição selecionada');
       navigate('/voucher');
-    }, 3000);
+    }, 5000); // Alterado de 3000 para 5000 milissegundos
 
     // Buscar imagem de fundo
     const fetchBackgroundImage = async () => {
