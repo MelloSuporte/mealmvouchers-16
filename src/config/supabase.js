@@ -22,16 +22,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: { 
-      'apikey': supabaseAnonKey
+      'apikey': supabaseAnonKey,
+      'Authorization': `Bearer ${supabaseAnonKey}`
     }
   },
   db: {
     schema: 'public'
-  },
-  // Add retryOnError configuration
-  retryOnError: {
-    count: 3,
-    timeInterval: 500
   }
 });
 
@@ -50,6 +46,19 @@ const checkConnection = async () => {
       hasSession: !!session?.session,
       user: session?.session?.user?.email
     });
+
+    // Testar acesso à tabela admin_users
+    const { data: adminTest, error: adminError } = await supabase
+      .from('admin_users')
+      .select('count')
+      .limit(1)
+      .single();
+
+    if (adminError) {
+      logger.error('Erro ao acessar admin_users:', adminError);
+    } else {
+      logger.info('Acesso à tabela admin_users OK');
+    }
 
     logger.info('Conexão Supabase verificada com sucesso');
     return true;
