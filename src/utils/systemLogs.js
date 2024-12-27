@@ -22,11 +22,15 @@ export const logSystemEvent = async ({
   }
 
   try {
+    const dados = {
+      detalhes: typeof detalhes === 'string' ? JSON.parse(detalhes) : detalhes || {},
+      nivel: nivel
+    };
+
     const { error } = await supabase.rpc('insert_system_log', {
       p_tipo: tipo,
       p_mensagem: mensagem || 'Sem mensagem',
-      p_detalhes: typeof detalhes === 'string' ? JSON.parse(detalhes) : detalhes || {},
-      p_nivel: nivel
+      p_dados: dados
     });
 
     if (error) {

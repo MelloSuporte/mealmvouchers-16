@@ -13,10 +13,14 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
 
     // Validação do voucher comum
     logger.info('Validando voucher comum:', codigo);
+    
+    // Garantir que o código seja uma string
+    const voucherCode = String(codigo);
+    
     const { data: usuario, error: errorUsuario } = await supabase
       .from('usuarios')
       .select('*, empresas(*), turnos(*)')
-      .eq('voucher', codigo)
+      .eq('voucher', voucherCode)
       .single();
 
     if (errorUsuario) {
@@ -33,7 +37,7 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       await logSystemEvent({
         tipo: LOG_TYPES.VALIDACAO_FALHA,
         mensagem: 'Voucher comum não encontrado',
-        detalhes: { codigo }
+        detalhes: { codigo: voucherCode }
       });
       return { success: false, error: 'Voucher inválido' };
     }
@@ -43,7 +47,7 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       await logSystemEvent({
         tipo: LOG_TYPES.VALIDACAO_FALHA,
         mensagem: 'Usuário suspenso',
-        detalhes: { codigo, usuario_id: usuario.id }
+        detalhes: { codigo: voucherCode, usuario_id: usuario.id }
       });
       return { success: false, error: 'Usuário suspenso' };
     }
@@ -53,7 +57,7 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       await logSystemEvent({
         tipo: LOG_TYPES.VALIDACAO_FALHA,
         mensagem: 'Empresa inativa',
-        detalhes: { codigo, empresa_id: usuario.empresa_id }
+        detalhes: { codigo: voucherCode, empresa_id: usuario.empresa_id }
       });
       return { success: false, error: 'Empresa inativa' };
     }
@@ -65,6 +69,7 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       detalhes: usuario
     });
 
+    logger.info('Resultado validação voucher comum:', { success: true, user: usuario });
     return { success: true, user: usuario };
   } catch (error) {
     // Log de erro na validação
