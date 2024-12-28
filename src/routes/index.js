@@ -1,75 +1,32 @@
-import { createBrowserRouter } from "react-router-dom";
-import App from "@/App";
-import ErrorPage from "@/pages/ErrorPage";
-import LoginPage from "@/pages/LoginPage";
-import HomePage from "@/pages/HomePage";
-import AdminPage from "@/pages/AdminPage";
-import UsersPage from "@/pages/UsersPage";
-import CompaniesPage from "@/pages/CompaniesPage";
-import VouchersPage from "@/pages/VouchersPage";
-import ReportsPage from "@/pages/ReportsPage";
-import ReportsT from '@/pages/ReportsT';
-import BomApetitePage from "@/pages/BomApetitePage";
-import ValidatePage from "@/pages/ValidatePage";
-import SettingsPage from "@/pages/SettingsPage";
-import ProfilePage from "@/pages/ProfilePage";
+import express from 'express';
+import adminRoutes from './admin';
+import empresasRoutes from './empresas';
+import healthRoutes from './health';
+import imagensFundoRoutes from './imagensFundo';
+import refeicaoRoutes from './refeicoes';
+import relatoriosRoutes from './relatorios';
+import turnosRoutes from './turnos';
+import usuariosRoutes from './usuarios';
+import usuariosAdminRoutes from './usuariosAdmin';
+import vouchersRoutes from './vouchers';
+import vouchersDescartaveisRoutes from './vouchersDescartaveis';
+import vouchersExtraRoutes from './vouchersExtra';
+import logsRoutes from './logs';
 
-const routes = [
-  {
-    path: "/",
-    element: <App />,
-    errorElement: <ErrorPage />,
-    children: [
-      {
-        path: "/",
-        element: <HomePage />,
-      },
-      {
-        path: "/login",
-        element: <LoginPage />,
-      },
-      {
-        path: "/admin",
-        element: <AdminPage />,
-      },
-      {
-        path: "/admin/users",
-        element: <UsersPage />,
-      },
-      {
-        path: "/admin/companies",
-        element: <CompaniesPage />,
-      },
-      {
-        path: "/admin/vouchers",
-        element: <VouchersPage />,
-      },
-      {
-        path: "/admin/reports",
-        element: <ReportsPage />,
-      },
-      {
-        path: '/admin/reports-t',
-        element: <ReportsT />,
-      },
-      {
-        path: "/bom-apetite",
-        element: <BomApetitePage />,
-      },
-      {
-        path: "/validate",
-        element: <ValidatePage />,
-      },
-      {
-        path: "/settings",
-        element: <SettingsPage />,
-      },
-      {
-        path: "/profile",
-        element: <ProfilePage />,
-      },
-    ],
-  },
-];
+const router = express.Router();
 
-export const router = createBrowserRouter(routes);
+router.use('/admin', adminRoutes);
+router.use('/empresas', empresasRoutes);
+router.use('/health', healthRoutes);
+router.use('/imagens-fundo', imagensFundoRoutes);
+router.use('/refeicoes', refeicaoRoutes);
+router.use('/relatorios', relatoriosRoutes);
+router.use('/turnos', turnosRoutes);
+router.use('/usuarios', usuariosRoutes);
+router.use('/usuarios-admin', usuariosAdminRoutes);
+router.use('/vouchers', vouchersRoutes);
+router.use('/vouchers-descartaveis', vouchersDescartaveisRoutes);
+router.use('/vouchers-extra', vouchersExtraRoutes);
+router.use('/logs', logsRoutes);
+
+export default router;
