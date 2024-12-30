@@ -22,9 +22,9 @@ export const fetchAllVoucherData = async () => {
   logger.info('Iniciando busca de todos os registros de voucher');
   
   const { data, error } = await supabase
-    .from('uso_voucher')
-    .select(baseSelect)
-    .order('usado_em', { ascending: false })
+    .from('vw_uso_voucher_detalhado')
+    .select('*')
+    .order('data_uso', { ascending: false })
     .limit(100);
 
   if (error) {
@@ -44,29 +44,29 @@ export const fetchFilteredVoucherData = async (startUtc, endUtc, filters) => {
   });
 
   let query = supabase
-    .from('uso_voucher')
-    .select(baseSelect)
-    .gte('usado_em', startUtc)
-    .lte('usado_em', endUtc);
+    .from('vw_uso_voucher_detalhado')
+    .select('*')
+    .gte('data_uso', startUtc)
+    .lte('data_uso', endUtc);
 
   if (filters.company && filters.company !== 'all') {
     logger.info(`Aplicando filtro de empresa: ${filters.company}`);
-    query = query.eq('usuarios.empresa_id', filters.company);
+    query = query.eq('empresa_id', filters.company);
   }
 
   if (filters.shift && filters.shift !== 'all') {
     logger.info(`Aplicando filtro de turno: ${filters.shift}`);
-    query = query.eq('usuarios.turno_id', filters.shift);
+    query = query.eq('turno', filters.shift);
   }
 
   if (filters.sector && filters.sector !== 'all') {
     logger.info(`Aplicando filtro de setor: ${filters.sector}`);
-    query = query.eq('usuarios.setor_id', filters.sector);
+    query = query.eq('setor_id', filters.sector);
   }
 
   if (filters.mealType && filters.mealType !== 'all') {
     logger.info(`Aplicando filtro de tipo de refeição: ${filters.mealType}`);
-    query = query.eq('tipo_refeicao_id', filters.mealType);
+    query = query.eq('tipo_refeicao', filters.mealType);
   }
 
   const { data, error } = await query;
