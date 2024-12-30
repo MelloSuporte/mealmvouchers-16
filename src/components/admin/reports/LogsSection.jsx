@@ -31,14 +31,14 @@ const LogsSection = () => {
         let query = supabase
           .from('logs_sistema')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('criado_em', { ascending: false });
         
         if (filters.startDate) {
-          query = query.gte('created_at', filters.startDate);
+          query = query.gte('criado_em', filters.startDate);
         }
         
         if (filters.endDate) {
-          query = query.lte('created_at', filters.endDate);
+          query = query.lte('criado_em', filters.endDate);
         }
         
         if (filters.tipo) {
@@ -138,7 +138,7 @@ const LogsSection = () => {
             <TableBody>
               {logs?.map((log) => (
                 <TableRow key={log.id}>
-                  <TableCell>{formatDate(log.created_at)}</TableCell>
+                  <TableCell>{formatDate(log.criado_em)}</TableCell>
                   <TableCell>{log.tipo}</TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-xs ${
