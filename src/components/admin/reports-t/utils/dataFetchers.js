@@ -39,19 +39,25 @@ export const fetchFilteredVoucherData = async (startUtc, endUtc, filters) => {
     query = query.eq('empresa_id', filters.company);
   }
 
+  // Modificando a lógica de filtragem para turno
   if (filters.shift && filters.shift !== 'all') {
-    logger.info(`Aplicando filtro de turno: ${filters.shift}`);
-    query = query.eq('turno', filters.shift);
+    const turnoId = filters.shift.toString();
+    logger.info(`Aplicando filtro de turno: ${turnoId}`);
+    query = query.eq('turno_id', turnoId);
   }
 
+  // Modificando a lógica de filtragem para setor
   if (filters.sector && filters.sector !== 'all') {
-    logger.info(`Aplicando filtro de setor: ${filters.sector}`);
-    query = query.eq('setor_id', filters.sector);
+    const setorId = parseInt(filters.sector);
+    logger.info(`Aplicando filtro de setor: ${setorId}`);
+    query = query.eq('setor_id', setorId);
   }
 
+  // Modificando a lógica de filtragem para tipo de refeição
   if (filters.mealType && filters.mealType !== 'all') {
-    logger.info(`Aplicando filtro de tipo de refeição: ${filters.mealType}`);
-    query = query.eq('tipo_refeicao', filters.mealType);
+    const tipoRefeicaoId = parseInt(filters.mealType);
+    logger.info(`Aplicando filtro de tipo de refeição: ${tipoRefeicaoId}`);
+    query = query.eq('tipo_refeicao_id', tipoRefeicaoId);
   }
 
   const { data, error } = await query;
