@@ -33,7 +33,7 @@ const ReportsTForm = () => {
     );
   }
 
-  const showNoDataMessage = filters.startDate && filters.endDate && (!data || data.length === 0);
+  const showNoDataMessage = !data || data.length === 0;
 
   return (
     <div className="space-y-6 p-4">
