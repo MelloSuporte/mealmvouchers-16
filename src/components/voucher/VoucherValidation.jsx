@@ -2,13 +2,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
+import { format } from 'date-fns-tz';
 import { 
   identifyVoucherType,
   validateCommonVoucher, 
   validateDisposableVoucher,
   validateMealTimeAndInterval
 } from '../../services/voucherValidationService';
-import { format } from 'date-fns-tz';
 
 export const validateVoucher = async (voucherCode, mealType) => {
   try {
@@ -42,7 +42,7 @@ export const validateVoucher = async (voucherCode, mealType) => {
   }
 };
 
-const VoucherValidationForm = () => {
+const VoucherValidation = () => {
   const navigate = useNavigate();
   const [voucherCode, setVoucherCode] = React.useState('');
   const [isValidating, setIsValidating] = React.useState(false);
@@ -135,4 +135,4 @@ const VoucherValidationForm = () => {
   );
 };
 
-export default VoucherValidationForm;
+export default VoucherValidation;
