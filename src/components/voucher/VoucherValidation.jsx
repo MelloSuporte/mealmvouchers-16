@@ -1,109 +1,105 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
-import logger from '../../config/logger';
-import { registerVoucherUsage } from '../../services/voucher/voucherUsageService';
+import VoucherForm from './VoucherForm';
 import { 
   identifyVoucherType,
-  validateCommonVoucher,
+  validateCommonVoucher, 
   validateDisposableVoucher,
   validateMealTimeAndInterval
 } from '../../services/voucherValidationService';
 
-export const validateVoucher = async (voucherCode, mealType) => {
-  try {
-    logger.info('Iniciando validação do voucher:', voucherCode);
+const VoucherValidationForm = () => {
+  const navigate = useNavigate();
+  const [voucherCode, setVoucherCode] = React.useState('');
+  const [isValidating, setIsValidating] = React.useState(false);
 
-    // Identify voucher type
-    const voucherType = await identifyVoucherType(voucherCode);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isValidating) return;
     
-    if (!voucherType) {
-      throw new Error('Voucher não encontrado ou inválido');
-    }
+    try {
+      setIsValidating(true);
+      console.log('Iniciando validação do voucher:', voucherCode);
+      
+      // Identificar tipo de voucher
+      const voucherType = await identifyVoucherType(voucherCode);
+      console.log('Tipo de voucher identificado:', voucherType);
 
-    // Validate based on type
-    if (voucherType === 'comum') {
-      const result = await validateCommonVoucher(voucherCode);
-      if (!result.success) {
-        throw new Error(result.error);
+      if (!voucherType) {
+        toast.error('Voucher inválido');
+        return;
       }
 
-      // Validate meal time and interval
-      const intervalResult = await validateMealTimeAndInterval(result.user.id);
-      if (!intervalResult.success) {
-        throw new Error(intervalResult.error);
-      }
-
-      if (!result.user.id || !mealType) {
-        throw new Error('Dados inválidos para registro de uso do voucher');
-      }
-
-      try {
-        // Register usage
-        const usageResult = await registerVoucherUsage({
-          userId: result.user.id,
-          tipoRefeicaoId: mealType,
-          tipoVoucher: 'comum'
-        });
-
-        if (!usageResult.success) {
-          // Parse error message from Supabase response if available
-          let errorMessage = usageResult.error || 'Erro ao registrar uso do voucher';
-          try {
-            const errorBody = JSON.parse(usageResult.body);
-            if (errorBody?.message?.includes('Fora do horário do turno')) {
-              throw new Error('Fora do Horário de Turno');
-            }
-          } catch (parseError) {
-            // If parsing fails, use the original error message
-            if (errorMessage.includes('Fora do horário do turno')) {
-              throw new Error('Fora do Horário de Turno');
-            }
-          }
-          throw new Error(errorMessage);
+      // Validar baseado no tipo
+      if (voucherType === 'descartavel') {
+        const result = await validateDisposableVoucher(voucherCode);
+        console.log('Resultado validação voucher descartável:', result);
+        
+        if (result.success) {
+          const { voucher } = result;
+          localStorage.setItem('disposableVoucher', JSON.stringify({
+            code: voucherCode,
+            mealTypeId: voucher.tipo_refeicao_id,
+            mealType: voucher.tipos_refeicao.nome
+          }));
+          navigate('/self-services');
+          return;
+        }
+        toast.error(result.error);
+      } else if (voucherType === 'comum') {
+        const result = await validateCommonVoucher(voucherCode);
+        console.log('Resultado validação voucher comum:', result);
+        
+        if (result.success) {
+          const { user } = result;
+          localStorage.setItem('commonVoucher', JSON.stringify({
+            code: voucherCode,
+            userName: user.nome,
+            turno: user.turnos?.tipo_turno,
+            cpf: user.cpf,
+            userId: user.id
+          }));
+          navigate('/self-services');
+          return;
         }
 
-        return { success: true };
-      } catch (error) {
-        // Handle specific error messages from the backend
-        if (error.message?.includes('Fora do horário do turno') || 
-            error.message === 'Fora do Horário de Turno') {
-          throw new Error('Fora do Horário de Turno');
+        // Check if the error is related to shift time
+        if (result.error?.includes('Fora do horário do turno') || 
+            result.error === 'Fora do Horário de Turno') {
+          toast.error('Fora do Horário de Turno');
+          return;
         }
-        throw error;
-      }
-    } 
-    else if (voucherType === 'descartavel') {
-      const result = await validateDisposableVoucher(voucherCode);
-      if (!result.success) {
-        throw new Error(result.error);
+        
+        toast.error(result.error);
+      } else {
+        toast.error('Tipo de voucher não suportado no momento');
       }
 
-      if (!result.voucher.id || !mealType) {
-        throw new Error('Dados inválidos para registro de uso do voucher');
+    } catch (error) {
+      console.error('Erro ao validar voucher:', error);
+      // Check if the error is related to shift time
+      if (error.message?.includes('Fora do horário do turno') || 
+          error.message === 'Fora do Horário de Turno' ||
+          (typeof error.body === 'string' && error.body.includes('Fora do horário do turno'))) {
+        toast.error('Fora do Horário de Turno');
+        return;
       }
-
-      // Register usage
-      const usageResult = await registerVoucherUsage({
-        tipoRefeicaoId: mealType,
-        tipoVoucher: 'descartavel',
-        voucherDescartavelId: result.voucher.id
-      });
-
-      if (!usageResult.success) {
-        throw new Error(usageResult.error || 'Erro ao registrar uso do voucher');
-      }
-
-      return { success: true };
+      toast.error(error.message || "Erro ao validar o voucher");
+    } finally {
+      setIsValidating(false);
     }
+  };
 
-    throw new Error('Tipo de voucher não suportado');
-
-  } catch (error) {
-    logger.error('Erro na validação do voucher:', error);
-    // Format the error message for display
-    const errorMessage = error.message === 'Fora do Horário de Turno' 
-      ? error.message 
-      : error.message || 'Erro ao validar voucher';
-    throw new Error(errorMessage);
-  }
+  return (
+    <VoucherForm
+      voucherCode={voucherCode}
+      onSubmit={handleSubmit}
+      onNumpadClick={(num) => setVoucherCode(prev => prev.length < 4 ? prev + num : prev)}
+      onBackspace={() => setVoucherCode(prev => prev.slice(0, -1))}
+      isValidating={isValidating}
+    />
+  );
 };
+
+export default VoucherValidationForm;
