@@ -15,23 +15,28 @@ export const AdminProvider = ({ children }) => {
   const [adminType, setAdminType] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminName, setAdminName] = useState(null);
 
   const checkAuth = useCallback(() => {
     try {
       const adminToken = localStorage.getItem('adminToken');
       const storedType = localStorage.getItem('adminType');
+      const storedName = localStorage.getItem('adminName');
       
       if (adminToken && storedType) {
         setIsAuthenticated(true);
         setAdminType(storedType);
+        setAdminName(storedName);
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
+        setAdminName(null);
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
       setIsAuthenticated(false);
       setAdminType(null);
+      setAdminName(null);
     } finally {
       setIsLoading(false);
     }
@@ -44,14 +49,17 @@ export const AdminProvider = ({ children }) => {
   const logout = useCallback(() => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminType');
+    localStorage.removeItem('adminName');
     localStorage.removeItem('adminPermissions');
     setIsAuthenticated(false);
     setAdminType(null);
+    setAdminName(null);
     toast.success("Logout realizado com sucesso");
   }, []);
 
   const value = {
     adminType,
+    adminName,
     isLoading,
     isAuthenticated,
     isMasterAdmin: adminType === 'master',

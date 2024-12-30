@@ -8,9 +8,11 @@ import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import logger from '@/config/logger';
+import { useAdmin } from '@/contexts/AdminContext';
 
 const ExportTButton = ({ filters }) => {
   const { data, isLoading } = useReportsTData(filters);
+  const { adminName } = useAdmin();
 
   const formatCurrency = (value) => {
     if (!value || isNaN(value)) return 'R$ 0,00';
@@ -35,7 +37,7 @@ const ExportTButton = ({ filters }) => {
       
       // Informações do usuário que exportou
       doc.setFontSize(10);
-      const currentUser = "Sistema"; // TODO: Pegar nome do usuário logado
+      const currentUser = adminName || 'Usuário não identificado';
       const exportDate = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
       doc.text(`Exportado por: ${currentUser} em ${exportDate}`, 14, 25);
 
