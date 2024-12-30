@@ -19,7 +19,7 @@ export const useUsageData = (filters) => {
         }
 
         let query = supabase
-          .from('relatorio_uso_voucher')
+          .from('vw_uso_voucher_detalhado')
           .select('*');
 
         // Apply filters
