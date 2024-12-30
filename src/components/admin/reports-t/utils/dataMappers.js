@@ -10,7 +10,7 @@ export const mapVoucherData = (data) => {
     turno: item.turno || 'Turno Teste',
     setor_id: item.setor_id || 1,
     nome_setor: item.nome_setor || 'Setor Teste',
-    tipo_refeicao: item.tipo_refeicao || 'Não especificado',
+    tipo_refeicao: item.tipo_refeicao || 'Refeição Teste',
     valor_refeicao: item.valor_refeicao || 0,
     observacao: item.observacao
   })) || [];
