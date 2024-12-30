@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { supabase } from '@/config/supabase';
 
 const LogsSection = () => {
   const [filters, setFilters] = React.useState({
@@ -27,19 +28,35 @@ const LogsSection = () => {
     queryKey: ['system-logs', filters],
     queryFn: async () => {
       try {
-        const response = await fetch('/rest/v1/logs', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(filters)
-        });
+        let query = supabase
+          .from('logs_sistema')
+          .select('*')
+          .order('created_at', { ascending: false });
         
-        if (!response.ok) {
-          throw new Error('Erro ao buscar logs');
+        if (filters.startDate) {
+          query = query.gte('created_at', filters.startDate);
         }
         
-        const data = await response.json();
+        if (filters.endDate) {
+          query = query.lte('created_at', filters.endDate);
+        }
+        
+        if (filters.tipo) {
+          query = query.eq('tipo', filters.tipo);
+        }
+        
+        if (filters.nivel) {
+          query = query.eq('nivel', filters.nivel);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          console.error('Erro ao buscar logs:', error);
+          toast.error('Erro ao buscar logs: ' + error.message);
+          throw error;
+        }
+
         return data || [];
       } catch (error) {
         console.error('Erro ao buscar logs:', error);
@@ -121,7 +138,7 @@ const LogsSection = () => {
             <TableBody>
               {logs?.map((log) => (
                 <TableRow key={log.id}>
-                  <TableCell>{formatDate(log.criado_em)}</TableCell>
+                  <TableCell>{formatDate(log.created_at)}</TableCell>
                   <TableCell>{log.tipo}</TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-xs ${
