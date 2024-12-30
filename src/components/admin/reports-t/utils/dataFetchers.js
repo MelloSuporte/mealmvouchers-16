@@ -47,9 +47,8 @@ export const fetchFilteredVoucherData = async (startUtc, endUtc, filters) => {
 
   // Corrigindo a lógica de filtragem para setor
   if (filters.sector && filters.sector !== 'all') {
-    const setorId = filters.sector;
-    logger.info(`Aplicando filtro de setor: ${setorId}`);
-    query = query.eq('nome_setor', setorId);
+    logger.info(`Aplicando filtro de setor: ${filters.sector}`);
+    query = query.eq('nome_setor', filters.sector);
   }
 
   // Corrigindo a lógica de filtragem para tipo de refeição
