@@ -5,91 +5,59 @@ DROP POLICY IF EXISTS "uso_voucher_select_policy" ON uso_voucher;
 -- Enable RLS
 ALTER TABLE uso_voucher ENABLE ROW LEVEL SECURITY;
 
--- Create unified insert policy with proper validation for all voucher types
-CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher AS PERMISSIVE
-    FOR INSERT TO authenticated, anon
+-- Create unified insert policy with proper validation
+CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
+    FOR INSERT TO authenticated
     WITH CHECK (
-        -- Allow system to register voucher usage
-        (
-            EXISTS (
-                SELECT 1 FROM admin_users au
-                WHERE au.id = auth.uid()
-                AND au.permissoes->>'sistema' = 'true'
-            )
+        -- Verificar se o voucher já foi usado para este tipo de refeição
+        NOT EXISTS (
+            SELECT 1 FROM uso_voucher uv
+            WHERE uv.usuario_id = NEW.usuario_id
+            AND uv.tipo_refeicao_id = NEW.tipo_refeicao_id
+            AND DATE(uv.usado_em) = CURRENT_DATE
         )
-        OR
-        -- Allow voucher comum usage
+        AND
+        -- Verificar limite de 2 refeições por turno
         (
-            tipo_voucher = 'comum'
-            AND EXISTS (
-                SELECT 1 FROM usuarios u
-                WHERE u.id = usuario_id
-                AND NOT u.suspenso
-                AND EXISTS (
-                    SELECT 1 FROM empresas e
-                    WHERE e.id = u.empresa_id
-                    AND e.ativo = true
-                )
-            )
-        )
-        OR
-        -- Allow voucher extra usage
-        (
-            tipo_voucher = 'extra'
-            AND voucher_extra_id IS NOT NULL
-            AND EXISTS (
-                SELECT 1 FROM vouchers_extras ve
-                WHERE ve.id = voucher_extra_id
-                AND ve.usado_em IS NULL
-                AND ve.usuario_id = usuario_id
-            )
-        )
-        OR
-        -- Allow voucher descartável usage
-        (
-            tipo_voucher = 'descartavel'
-            AND voucher_descartavel_id IS NOT NULL
-            AND EXISTS (
-                SELECT 1 FROM vouchers_descartaveis vd
-                WHERE vd.id = voucher_descartavel_id
-                AND vd.usado_em IS NULL
-                AND CURRENT_DATE <= vd.data_expiracao::date
-            )
+            SELECT COUNT(*)
+            FROM uso_voucher uv
+            JOIN usuarios u ON u.id = NEW.usuario_id
+            WHERE uv.usuario_id = NEW.usuario_id
+            AND u.turno_id = (SELECT turno_id FROM usuarios WHERE id = NEW.usuario_id)
+            AND DATE(uv.usado_em) = CURRENT_DATE
+        ) < 2
+        AND
+        -- Verificar se está dentro do horário permitido
+        EXISTS (
+            SELECT 1 FROM usuarios u
+            JOIN turnos t ON t.id = u.turno_id
+            JOIN tipos_refeicao tr ON tr.id = NEW.tipo_refeicao_id
+            WHERE u.id = NEW.usuario_id
+            AND t.ativo = true
+            AND tr.ativo = true
+            AND CURRENT_TIME BETWEEN t.horario_inicio AND t.horario_fim
+            AND CURRENT_TIME BETWEEN tr.horario_inicio 
+                AND tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL
         )
     );
 
 -- Create select policy
-CREATE POLICY "uso_voucher_select_policy" ON uso_voucher AS PERMISSIVE
-    FOR SELECT TO authenticated, anon
+CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
+    FOR SELECT TO authenticated
     USING (
-        -- Authenticated users can see their own records
-        (auth.uid() IS NOT NULL AND usuario_id = auth.uid())
+        usuario_id = auth.uid()
         OR
-        -- Admins can see all records
-        (
-            EXISTS (
-                SELECT 1 FROM admin_users au
-                WHERE au.id = auth.uid()
-                AND au.permissoes->>'gerenciar_usuarios' = 'true'
-                AND NOT au.suspenso
-            )
-        )
-        OR
-        -- Anonymous users can see disposable voucher usage
-        (
-            auth.uid() IS NULL 
-            AND tipo_voucher = 'descartavel'
-            AND voucher_descartavel_id IS NOT NULL
+        EXISTS (
+            SELECT 1 FROM admin_users au
+            WHERE au.id = auth.uid()
+            AND au.permissoes->>'gerenciar_usuarios' = 'true'
+            AND NOT au.suspenso
         )
     );
 
--- Grant necessary permissions
-GRANT SELECT, INSERT ON uso_voucher TO authenticated;
-GRANT SELECT, INSERT ON uso_voucher TO anon;
-
 -- Add helpful comments
 COMMENT ON POLICY "uso_voucher_insert_policy" ON uso_voucher IS 
-'Permite registro de uso de vouchers (comum, extra e descartável) com validações específicas para cada tipo';
+'Controla inserção de registros de uso de vouchers com validações de limite por turno e tipo de refeição';
 
 COMMENT ON POLICY "uso_voucher_select_policy" ON uso_voucher IS 
-'Permite visualização do histórico de uso de vouchers com base no tipo de usuário';
+'Controla visualização do histórico de uso de vouchers';
