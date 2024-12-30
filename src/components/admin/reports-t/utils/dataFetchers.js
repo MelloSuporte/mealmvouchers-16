@@ -3,21 +3,6 @@ import { mapVoucherData } from './dataMappers';
 import logger from '@/config/logger';
 import { toast } from "sonner";
 
-const baseSelect = `
-  *,
-  usuarios (
-    nome,
-    cpf,
-    empresa_id,
-    turno_id,
-    setor_id
-  ),
-  tipos_refeicao (
-    nome,
-    valor
-  )
-`;
-
 export const fetchAllVoucherData = async () => {
   logger.info('Iniciando busca de todos os registros de voucher');
   
