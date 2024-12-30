@@ -5,7 +5,6 @@ import { AdminProvider, useAdmin } from '@/contexts/AdminContext';
 import UserFormMain from '@/components/admin/UserFormMain';
 import CompanyForm from '@/components/admin/CompanyForm';
 import MealTypeForm from '@/components/admin/meal-type/MealTypeForm';
-import ReportForm from '@/components/admin/ReportForm';
 import ReportsTForm from '@/components/admin/reports-t/ReportsTForm';
 import RLSForm from '@/components/admin/RLSForm';
 import DisposableVoucherForm from '@/components/admin/DisposableVoucherForm';
@@ -49,7 +48,6 @@ const Admin = () => {
             <TabsTrigger value="users">Usuários</TabsTrigger>
             <TabsTrigger value="companies">Empresas</TabsTrigger>
             <TabsTrigger value="meal-types">Tipos de Refeição</TabsTrigger>
-            <TabsTrigger value="reports">Relatórios</TabsTrigger>
             <TabsTrigger value="reports-t">Relatórios (T)</TabsTrigger>
             <TabsTrigger value="rls">Vouchers Extras</TabsTrigger>
             <TabsTrigger value="disposable-vouchers">Vouchers Descartáveis</TabsTrigger>
@@ -70,11 +68,6 @@ const Admin = () => {
           <TabsContent value="meal-types">
             <Card>
               <MealTypeForm />
-            </Card>
-          </TabsContent>
-          <TabsContent value="reports">
-            <Card>
-              <ReportForm />
             </Card>
           </TabsContent>
           <TabsContent value="reports-t">
