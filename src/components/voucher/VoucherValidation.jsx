@@ -37,18 +37,30 @@ export const validateVoucher = async (voucherCode, mealType) => {
         throw new Error('Dados inválidos para registro de uso do voucher');
       }
 
-      // Register usage
-      const usageResult = await registerVoucherUsage({
-        userId: result.user.id,
-        tipoRefeicaoId: mealType,
-        tipoVoucher: 'comum'
-      });
+      try {
+        // Register usage
+        const usageResult = await registerVoucherUsage({
+          userId: result.user.id,
+          tipoRefeicaoId: mealType,
+          tipoVoucher: 'comum'
+        });
 
-      if (!usageResult.success) {
-        throw new Error(usageResult.error || 'Erro ao registrar uso do voucher');
+        if (!usageResult.success) {
+          // Check for specific error messages
+          if (usageResult.error?.includes('Fora do horário do turno')) {
+            throw new Error('Fora do Horário de Turno');
+          }
+          throw new Error(usageResult.error || 'Erro ao registrar uso do voucher');
+        }
+
+        return { success: true };
+      } catch (error) {
+        // Handle specific error messages from the backend
+        if (error.message?.includes('Fora do horário do turno')) {
+          throw new Error('Fora do Horário de Turno');
+        }
+        throw error;
       }
-
-      return { success: true };
     } 
     else if (voucherType === 'descartavel') {
       const result = await validateDisposableVoucher(voucherCode);
@@ -78,6 +90,10 @@ export const validateVoucher = async (voucherCode, mealType) => {
 
   } catch (error) {
     logger.error('Erro na validação do voucher:', error);
-    throw error;
+    // Format the error message for display
+    const errorMessage = error.message === 'Fora do Horário de Turno' 
+      ? error.message 
+      : error.message || 'Erro ao validar voucher';
+    throw new Error(errorMessage);
   }
 };
