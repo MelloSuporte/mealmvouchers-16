@@ -16,7 +16,7 @@ export const validateExtraVoucher = async (codigo: string, tipoRefeicaoId: strin
     }
 
     // Registrar uso do voucher
-    const { error: usageError } = await supabase
+    const { data: usoVoucher, error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
         usuario_id: voucher.usuario_id,
@@ -24,7 +24,9 @@ export const validateExtraVoucher = async (codigo: string, tipoRefeicaoId: strin
         usado_em: new Date().toISOString(),
         tipo_voucher: 'extra',
         voucher_extra_id: voucher.id
-      });
+      })
+      .select()
+      .single();
 
     if (usageError) {
       logger.error('Erro ao registrar uso do voucher extra:', usageError);
@@ -48,7 +50,11 @@ export const validateExtraVoucher = async (codigo: string, tipoRefeicaoId: strin
       detalhes: { voucherId: voucher.id, tipoRefeicaoId }
     });
 
-    return { success: true, voucher };
+    return { 
+      success: true, 
+      voucher,
+      usoVoucherId: usoVoucher.id 
+    };
   } catch (error) {
     logger.error('Erro ao validar voucher extra:', error);
     throw error;

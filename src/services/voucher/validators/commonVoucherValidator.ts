@@ -40,14 +40,16 @@ export const validateCommonVoucher = async (codigo: string, tipoRefeicaoId: stri
     }
 
     // Registrar uso do voucher
-    const { error: usageError } = await supabase
+    const { data: usoVoucher, error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
         usuario_id: user.id,
         tipo_refeicao_id: tipoRefeicaoId,
         usado_em: new Date().toISOString(),
         tipo_voucher: 'comum'
-      });
+      })
+      .select()
+      .single();
 
     if (usageError) {
       logger.error('Erro ao registrar uso do voucher comum:', usageError);
@@ -61,7 +63,11 @@ export const validateCommonVoucher = async (codigo: string, tipoRefeicaoId: stri
     });
 
     logger.info('Voucher comum válido:', user);
-    return { success: true, user };
+    return { 
+      success: true, 
+      user,
+      usoVoucherId: usoVoucher.id 
+    };
   } catch (error) {
     logger.error('Erro ao validar voucher comum:', error);
     throw error;

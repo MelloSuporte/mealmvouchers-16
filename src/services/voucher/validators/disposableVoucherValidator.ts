@@ -16,14 +16,16 @@ export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: 
     }
 
     // Registrar uso do voucher
-    const { error: usageError } = await supabase
+    const { data: usoVoucher, error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
         tipo_refeicao_id: tipoRefeicaoId,
         usado_em: new Date().toISOString(),
         tipo_voucher: 'descartavel',
         voucher_descartavel_id: voucher.id
-      });
+      })
+      .select()
+      .single();
 
     if (usageError) {
       logger.error('Erro ao registrar uso do voucher descartável:', usageError);
@@ -47,7 +49,11 @@ export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: 
       detalhes: { voucherId: voucher.id, tipoRefeicaoId }
     });
 
-    return { success: true, voucher };
+    return { 
+      success: true, 
+      voucher,
+      usoVoucherId: usoVoucher.id 
+    };
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
     throw error;
