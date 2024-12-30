@@ -19,7 +19,7 @@ export const useUsageData = (filters) => {
         }
 
         let query = supabase
-          .from('relatorio_uso_voucher')
+          .from('vw_uso_voucher_detalhado')
           .select('*');
 
         // Apply filters
@@ -61,6 +61,11 @@ export const useUsageData = (filters) => {
           ultimoRegistro: data?.[data?.length - 1]
         });
 
+        // Sincronizar com a tabela de relatório
+        if (data && data.length > 0) {
+          await syncReportData(data);
+        }
+
         return data || [];
       } catch (error) {
         logger.error('Erro ao buscar dados:', error);
@@ -72,4 +77,37 @@ export const useUsageData = (filters) => {
     staleTime: 30000,
     refetchOnWindowFocus: false
   });
+};
+
+// Função auxiliar para sincronizar dados com a tabela de relatório
+const syncReportData = async (data) => {
+  try {
+    const { error } = await supabase
+      .from('relatorio_uso_voucher')
+      .upsert(
+        data.map(item => ({
+          data_uso: item.data_uso,
+          usuario_id: item.usuario_id,
+          nome_usuario: item.nome_usuario,
+          cpf: item.cpf,
+          empresa_id: item.empresa_id,
+          nome_empresa: item.nome_empresa,
+          turno: item.turno,
+          setor_id: item.setor_id,
+          nome_setor: item.nome_setor,
+          tipo_refeicao: item.tipo_refeicao,
+          valor: item.valor_refeicao,
+          observacao: item.observacao
+        })),
+        { onConflict: ['data_uso', 'usuario_id', 'tipo_refeicao'] }
+      );
+
+    if (error) {
+      logger.error('Erro ao sincronizar dados do relatório:', error);
+    } else {
+      logger.info('Dados do relatório sincronizados com sucesso');
+    }
+  } catch (error) {
+    logger.error('Erro ao sincronizar dados do relatório:', error);
+  }
 };
