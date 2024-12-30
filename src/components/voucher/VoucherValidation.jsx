@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
 import { format } from 'date-fns-tz';
+import logger from '../../config/logger';
+import { supabase } from '../../config/supabase';
 import { 
   identifyVoucherType,
   validateCommonVoucher, 
@@ -12,29 +14,71 @@ import {
 
 export const validateVoucher = async (voucherCode, mealType) => {
   try {
+    logger.info('Iniciando validação do voucher:', { voucherCode, mealType });
+    
     // Get current time in America/Sao_Paulo timezone
     const currentTime = format(new Date(), 'HH:mm:ss', { timeZone: 'America/Sao_Paulo' });
-    console.log('Current time in São Paulo:', currentTime);
+    logger.info('Current time in São Paulo:', currentTime);
 
     const voucherType = await identifyVoucherType(voucherCode);
+    logger.info('Tipo de voucher identificado:', voucherType);
     
     if (voucherType === 'descartavel') {
       const result = await validateDisposableVoucher(voucherCode);
+      logger.info('Resultado validação voucher descartável:', result);
+      
       if (!result.success) {
         throw new Error(result.error);
       }
+
+      // Registrar uso do voucher descartável
+      const { error: usageError } = await supabase
+        .from('uso_voucher')
+        .insert({
+          tipo_refeicao_id: mealType,
+          usado_em: new Date().toISOString(),
+          voucher_descartavel_id: result.voucher.id,
+          observacao: 'Voucher descartável utilizado'
+        });
+
+      if (usageError) {
+        logger.error('Erro ao registrar uso do voucher descartável:', usageError);
+        throw new Error('Erro ao registrar uso do voucher');
+      }
+
+      logger.info('Uso do voucher descartável registrado com sucesso');
       return result;
     } else if (voucherType === 'comum') {
       const result = await validateCommonVoucher(voucherCode);
+      logger.info('Resultado validação voucher comum:', result);
+      
       if (!result.success) {
         throw new Error(result.error);
       }
+
+      // Registrar uso do voucher comum
+      const { error: usageError } = await supabase
+        .from('uso_voucher')
+        .insert({
+          usuario_id: result.user.id,
+          tipo_refeicao_id: mealType,
+          usado_em: new Date().toISOString(),
+          cpf: result.user.cpf,
+          observacao: 'Voucher comum utilizado'
+        });
+
+      if (usageError) {
+        logger.error('Erro ao registrar uso do voucher comum:', usageError);
+        throw new Error('Erro ao registrar uso do voucher');
+      }
+
+      logger.info('Uso do voucher comum registrado com sucesso');
       return result;
     }
     
     throw new Error('Tipo de voucher não suportado');
   } catch (error) {
-    console.error('Erro na validação do voucher:', error);
+    logger.error('Erro na validação do voucher:', error);
     return {
       success: false,
       error: error.message
@@ -44,8 +88,8 @@ export const validateVoucher = async (voucherCode, mealType) => {
 
 const VoucherValidation = () => {
   const navigate = useNavigate();
-  const [voucherCode, setVoucherCode] = React.useState('');
-  const [isValidating, setIsValidating] = React.useState(false);
+  const [voucherCode, setVoucherCode] = useState('');
+  const [isValidating, setIsValidating] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,11 +97,11 @@ const VoucherValidation = () => {
     
     try {
       setIsValidating(true);
-      console.log('Iniciando validação do voucher:', voucherCode);
+      logger.info('Iniciando validação do voucher:', voucherCode);
       
       // Identificar tipo de voucher
       const voucherType = await identifyVoucherType(voucherCode);
-      console.log('Tipo de voucher identificado:', voucherType);
+      logger.info('Tipo de voucher identificado:', voucherType);
 
       if (!voucherType) {
         toast.error('Voucher inválido');
@@ -67,7 +111,7 @@ const VoucherValidation = () => {
       // Validar baseado no tipo
       if (voucherType === 'descartavel') {
         const result = await validateDisposableVoucher(voucherCode);
-        console.log('Resultado validação voucher descartável:', result);
+        logger.info('Resultado validação voucher descartável:', result);
         
         if (result.success) {
           const { voucher } = result;
@@ -82,7 +126,7 @@ const VoucherValidation = () => {
         toast.error(result.error);
       } else if (voucherType === 'comum') {
         const result = await validateCommonVoucher(voucherCode);
-        console.log('Resultado validação voucher comum:', result);
+        logger.info('Resultado validação voucher comum:', result);
         
         if (result.success) {
           const { user } = result;
@@ -110,7 +154,7 @@ const VoucherValidation = () => {
       }
 
     } catch (error) {
-      console.error('Erro ao validar voucher:', error);
+      logger.error('Erro ao validar voucher:', error);
       // Check if the error is related to shift time
       if (error.message?.includes('Fora do horário do turno') || 
           error.message === 'Fora do Horário de Turno' ||
