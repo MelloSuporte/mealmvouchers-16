@@ -7,6 +7,90 @@ import logger from '../../config/logger';
 import { supabase } from '../../config/supabase';
 import { identifyVoucherType } from '../../services/voucherValidationService';
 
+const syncReportData = async (usoVoucherId) => {
+  try {
+    logger.info('Iniciando sincronização com relatório:', { usoVoucherId });
+    
+    // Buscar dados do uso do voucher
+    const { data: usoVoucher, error: usoError } = await supabase
+      .from('uso_voucher')
+      .select(`
+        *,
+        usuarios (
+          id,
+          nome,
+          cpf,
+          empresa_id,
+          turno_id,
+          setor_id
+        ),
+        tipos_refeicao (
+          nome,
+          valor
+        )
+      `)
+      .eq('id', usoVoucherId)
+      .single();
+
+    if (usoError) throw usoError;
+
+    if (!usoVoucher) {
+      logger.error('Registro de uso do voucher não encontrado');
+      return;
+    }
+
+    // Buscar dados complementares
+    const { data: empresa } = await supabase
+      .from('empresas')
+      .select('nome')
+      .eq('id', usoVoucher.usuarios?.empresa_id)
+      .single();
+
+    const { data: setor } = await supabase
+      .from('setores')
+      .select('nome_setor')
+      .eq('id', usoVoucher.usuarios?.setor_id)
+      .single();
+
+    const { data: turno } = await supabase
+      .from('turnos')
+      .select('tipo_turno')
+      .eq('id', usoVoucher.usuarios?.turno_id)
+      .single();
+
+    // Preparar dados para inserção no relatório
+    const reportData = {
+      data_uso: usoVoucher.usado_em,
+      usuario_id: usoVoucher.usuario_id,
+      nome_usuario: usoVoucher.usuarios?.nome,
+      cpf: usoVoucher.usuarios?.cpf,
+      empresa_id: usoVoucher.usuarios?.empresa_id,
+      nome_empresa: empresa?.nome,
+      turno: turno?.tipo_turno,
+      setor_id: usoVoucher.usuarios?.setor_id,
+      nome_setor: setor?.nome_setor,
+      tipo_refeicao: usoVoucher.tipos_refeicao?.nome,
+      valor: usoVoucher.tipos_refeicao?.valor,
+      observacao: usoVoucher.observacao
+    };
+
+    // Inserir no relatório
+    const { error: insertError } = await supabase
+      .from('relatorio_uso_voucher')
+      .upsert([reportData]);
+
+    if (insertError) {
+      logger.error('Erro ao sincronizar relatório:', insertError);
+      throw insertError;
+    }
+
+    logger.info('Relatório sincronizado com sucesso:', reportData);
+  } catch (error) {
+    logger.error('Erro na sincronização do relatório:', error);
+    throw error;
+  }
+};
+
 export const validateVoucher = async (voucherCode, mealType) => {
   try {
     logger.info('Iniciando validação do voucher:', { voucherCode, mealType });
@@ -35,6 +119,11 @@ export const validateVoucher = async (voucherCode, mealType) => {
 
     if (!data?.success) {
       throw new Error(data?.error || 'Erro ao validar voucher');
+    }
+
+    // Se a validação foi bem sucedida e temos o ID do registro
+    if (data.uso_voucher_id) {
+      await syncReportData(data.uso_voucher_id);
     }
 
     return data;
