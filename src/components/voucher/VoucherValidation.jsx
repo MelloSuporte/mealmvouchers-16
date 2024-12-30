@@ -8,6 +8,39 @@ import {
   validateDisposableVoucher,
   validateMealTimeAndInterval
 } from '../../services/voucherValidationService';
+import { format } from 'date-fns-tz';
+
+export const validateVoucher = async (voucherCode, mealType) => {
+  try {
+    // Get current time in America/Sao_Paulo timezone
+    const currentTime = format(new Date(), 'HH:mm:ss', { timeZone: 'America/Sao_Paulo' });
+    console.log('Current time in São Paulo:', currentTime);
+
+    const voucherType = await identifyVoucherType(voucherCode);
+    
+    if (voucherType === 'descartavel') {
+      const result = await validateDisposableVoucher(voucherCode);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result;
+    } else if (voucherType === 'comum') {
+      const result = await validateCommonVoucher(voucherCode);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result;
+    }
+    
+    throw new Error('Tipo de voucher não suportado');
+  } catch (error) {
+    console.error('Erro na validação do voucher:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
 
 const VoucherValidationForm = () => {
   const navigate = useNavigate();

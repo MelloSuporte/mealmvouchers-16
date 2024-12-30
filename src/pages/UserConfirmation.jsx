@@ -13,7 +13,6 @@ const UserConfirmation = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Validate required state data on component mount
     if (!location.state) {
       toast.error('Dados da refeição não encontrados');
       navigate('/');
@@ -48,6 +47,11 @@ const UserConfirmation = () => {
       const validationResult = await validateVoucher(voucherCode, mealType);
 
       if (!validationResult.success) {
+        // Check if the error is related to shift time
+        if (validationResult.error?.includes('Fora do horário do turno') || 
+            validationResult.error === 'Fora do Horário de Turno') {
+          throw new Error('Fora do Horário de Turno');
+        }
         throw new Error(validationResult.error || 'Erro ao validar voucher');
       }
 
@@ -73,7 +77,6 @@ const UserConfirmation = () => {
     navigate('/');
   };
 
-  // If location.state is null, render nothing (useEffect will handle navigation)
   if (!location.state) {
     return null;
   }
