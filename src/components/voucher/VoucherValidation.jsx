@@ -46,17 +46,27 @@ export const validateVoucher = async (voucherCode, mealType) => {
         });
 
         if (!usageResult.success) {
-          // Check for specific error messages
-          if (usageResult.error?.includes('Fora do horário do turno')) {
-            throw new Error('Fora do Horário de Turno');
+          // Parse error message from Supabase response if available
+          let errorMessage = usageResult.error || 'Erro ao registrar uso do voucher';
+          try {
+            const errorBody = JSON.parse(usageResult.body);
+            if (errorBody?.message?.includes('Fora do horário do turno')) {
+              throw new Error('Fora do Horário de Turno');
+            }
+          } catch (parseError) {
+            // If parsing fails, use the original error message
+            if (errorMessage.includes('Fora do horário do turno')) {
+              throw new Error('Fora do Horário de Turno');
+            }
           }
-          throw new Error(usageResult.error || 'Erro ao registrar uso do voucher');
+          throw new Error(errorMessage);
         }
 
         return { success: true };
       } catch (error) {
         // Handle specific error messages from the backend
-        if (error.message?.includes('Fora do horário do turno')) {
+        if (error.message?.includes('Fora do horário do turno') || 
+            error.message === 'Fora do Horário de Turno') {
           throw new Error('Fora do Horário de Turno');
         }
         throw error;
