@@ -5,12 +5,7 @@ import VoucherForm from './VoucherForm';
 import { format } from 'date-fns-tz';
 import logger from '../../config/logger';
 import { supabase } from '../../config/supabase';
-import { 
-  identifyVoucherType,
-  validateCommonVoucher, 
-  validateDisposableVoucher,
-  validateMealTimeAndInterval
-} from '../../services/voucherValidationService';
+import { identifyVoucherType } from '../../services/voucherValidationService';
 
 export const validateVoucher = async (voucherCode, mealType) => {
   try {
@@ -20,69 +15,32 @@ export const validateVoucher = async (voucherCode, mealType) => {
     const currentTime = format(new Date(), 'HH:mm:ss', { timeZone: 'America/Sao_Paulo' });
     logger.info('Current time in São Paulo:', currentTime);
 
-    const voucherType = await identifyVoucherType(voucherCode);
-    logger.info('Tipo de voucher identificado:', voucherType);
-    
-    if (voucherType === 'descartavel') {
-      const result = await validateDisposableVoucher(voucherCode);
-      logger.info('Resultado validação voucher descartável:', result);
+    // Validate and use voucher using RPC function
+    const { data, error } = await supabase.rpc('validate_and_use_voucher', {
+      p_codigo: voucherCode,
+      p_tipo_refeicao_id: mealType
+    });
+
+    if (error) {
+      logger.error('Erro ao validar voucher:', error);
       
-      if (!result.success) {
-        throw new Error(result.error);
+      // Check if error message contains shift time error
+      if (error.message?.includes('Fora do horário') || 
+          error.message?.includes('horário não permitido')) {
+        throw new Error('Fora do Horário de Turno');
       }
-
-      // Registrar uso do voucher descartável
-      const { error: usageError } = await supabase
-        .from('uso_voucher')
-        .insert({
-          tipo_refeicao_id: mealType,
-          usado_em: new Date().toISOString(),
-          voucher_descartavel_id: result.voucher.id,
-          observacao: 'Voucher descartável utilizado'
-        });
-
-      if (usageError) {
-        logger.error('Erro ao registrar uso do voucher descartável:', usageError);
-        throw new Error('Erro ao registrar uso do voucher');
-      }
-
-      logger.info('Uso do voucher descartável registrado com sucesso');
-      return result;
-    } else if (voucherType === 'comum') {
-      const result = await validateCommonVoucher(voucherCode);
-      logger.info('Resultado validação voucher comum:', result);
       
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      // Registrar uso do voucher comum
-      const { error: usageError } = await supabase
-        .from('uso_voucher')
-        .insert({
-          usuario_id: result.user.id,
-          tipo_refeicao_id: mealType,
-          usado_em: new Date().toISOString(),
-          cpf: result.user.cpf,
-          observacao: 'Voucher comum utilizado'
-        });
-
-      if (usageError) {
-        logger.error('Erro ao registrar uso do voucher comum:', usageError);
-        throw new Error('Erro ao registrar uso do voucher');
-      }
-
-      logger.info('Uso do voucher comum registrado com sucesso');
-      return result;
+      throw error;
     }
-    
-    throw new Error('Tipo de voucher não suportado');
+
+    if (!data?.success) {
+      throw new Error(data?.error || 'Erro ao validar voucher');
+    }
+
+    return data;
   } catch (error) {
-    logger.error('Erro na validação do voucher:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    logger.error('Erro na validação:', error);
+    throw error;
   }
 };
 
@@ -110,7 +68,7 @@ const VoucherValidation = () => {
 
       // Validar baseado no tipo
       if (voucherType === 'descartavel') {
-        const result = await validateDisposableVoucher(voucherCode);
+        const result = await validateVoucher(voucherCode);
         logger.info('Resultado validação voucher descartável:', result);
         
         if (result.success) {
@@ -125,7 +83,7 @@ const VoucherValidation = () => {
         }
         toast.error(result.error);
       } else if (voucherType === 'comum') {
-        const result = await validateCommonVoucher(voucherCode);
+        const result = await validateVoucher(voucherCode);
         logger.info('Resultado validação voucher comum:', result);
         
         if (result.success) {
@@ -157,8 +115,7 @@ const VoucherValidation = () => {
       logger.error('Erro ao validar voucher:', error);
       // Check if the error is related to shift time
       if (error.message?.includes('Fora do horário do turno') || 
-          error.message === 'Fora do Horário de Turno' ||
-          (typeof error.body === 'string' && error.body.includes('Fora do horário do turno'))) {
+          error.message === 'Fora do Horário de Turno') {
         toast.error('Fora do Horário de Turno');
         return;
       }

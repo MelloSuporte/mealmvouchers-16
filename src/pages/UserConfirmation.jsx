@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
 import logger from '../config/logger';
-import { validateVoucher } from '../components/voucher/VoucherValidation';
+import { supabase } from '../config/supabase';
 import ConfirmationHeader from '../components/confirmation/ConfirmationHeader';
 import UserDataDisplay from '../components/confirmation/UserDataDisplay';
 import ConfirmationActions from '../components/confirmation/ConfirmationActions';
@@ -32,7 +32,7 @@ const UserConfirmation = () => {
     
     setIsLoading(true);
     try {
-      const { mealType, mealName, voucherCode } = location.state;
+      const { mealType, voucherCode } = location.state;
       
       if (!mealType || !voucherCode) {
         throw new Error('Dados incompletos para validação');
@@ -40,19 +40,30 @@ const UserConfirmation = () => {
       
       logger.info('Iniciando confirmação com dados:', {
         mealType,
-        mealName,
+        mealName: location.state.mealName,
         voucherCode
       });
 
-      const validationResult = await validateVoucher(voucherCode, mealType);
+      // Validate and use voucher using RPC function
+      const { data, error } = await supabase.rpc('validate_and_use_voucher', {
+        p_codigo: voucherCode,
+        p_tipo_refeicao_id: mealType
+      });
 
-      if (!validationResult.success) {
-        // Check if the error is related to shift time
-        if (validationResult.error?.includes('Fora do horário do turno') || 
-            validationResult.error === 'Fora do Horário de Turno') {
+      if (error) {
+        logger.error('Erro na validação:', error);
+        
+        // Check if error message contains shift time error
+        if (error.message?.includes('Fora do horário') || 
+            error.message?.includes('horário não permitido')) {
           throw new Error('Fora do Horário de Turno');
         }
-        throw new Error(validationResult.error || 'Erro ao validar voucher');
+        
+        throw error;
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao validar voucher');
       }
 
       localStorage.removeItem('commonVoucher');
@@ -66,7 +77,14 @@ const UserConfirmation = () => {
 
     } catch (error) {
       logger.error('Erro na validação:', error);
-      toast.error(error.message || 'Erro ao validar voucher');
+      
+      // Check if error is related to shift time
+      if (error.message?.includes('Fora do horário') || 
+          error.message === 'Fora do Horário de Turno') {
+        toast.error('Fora do Horário de Turno');
+      } else {
+        toast.error(error.message || 'Erro ao validar voucher');
+      }
     } finally {
       setIsLoading(false);
     }
