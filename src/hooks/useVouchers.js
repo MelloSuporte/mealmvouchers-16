@@ -14,7 +14,7 @@ export const useVouchers = () => {
           codigo,
           tipo_refeicao_id,
           data_expiracao,
-          usado_em,
+          usado,
           data_uso,
           data_criacao,
           tipos_refeicao (
@@ -26,8 +26,7 @@ export const useVouchers = () => {
             minutos_tolerancia
           )
         `)
-        .is('usado_em', null)
-        .is('data_uso', null)
+        .eq('usado', false)
         .gte('data_expiracao', new Date().toISOString())
         .order('data_criacao', { ascending: false });
 
@@ -51,5 +50,6 @@ export const useVouchers = () => {
   return useQuery({
     queryKey: ['vouchers-descartaveis'],
     queryFn: fetchVouchers,
+    refetchInterval: 30000, // Atualiza a cada 30 segundos
   });
 };
