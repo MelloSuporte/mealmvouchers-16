@@ -39,7 +39,7 @@ CREATE POLICY "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis
     );
 
 COMMENT ON POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis IS 
-'Permite visualizar vouchers descartáveis apenas dentro do horário permitido do tipo de refeição';
+'Permite visualizar vouchers descartáveis usuários anonimos e autenticados';
 
 COMMENT ON POLICY "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis IS
 'Permite apenas admins/gestores criarem vouchers descartáveis com validação de tipo de refeição';
