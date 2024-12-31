@@ -1,59 +1,51 @@
 import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
-import { logSystemEvent, LOG_TYPES } from '../../../utils/systemLogs';
+import { validateMealTime } from './mealTimeValidator';
 
 export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: string) => {
   try {
+    // Buscar voucher com informações do tipo de refeição
     const { data: voucher, error } = await supabase
       .from('vouchers_descartaveis')
-      .select('*')
+      .select(`
+        *,
+        tipos_refeicao (
+          id,
+          nome,
+          horario_inicio,
+          horario_fim,
+          minutos_tolerancia,
+          ativo
+        )
+      `)
       .eq('codigo', String(codigo))
+      .eq('tipo_refeicao_id', tipoRefeicaoId)
       .is('usado_em', null)
-      .single();
+      .is('data_uso', null)
+      .gte('data_expiracao', new Date().toISOString())
+      .maybeSingle();
 
-    if (error || !voucher) {
-      return { success: false, error: 'Voucher descartável inválido ou já utilizado' };
+    if (error) {
+      logger.error('Erro ao buscar voucher descartável:', error);
+      return { success: false, error: 'Erro ao validar voucher descartável' };
     }
 
-    // Registrar uso do voucher
-    const { data: usoVoucher, error: usageError } = await supabase
-      .from('uso_voucher')
-      .insert({
-        tipo_refeicao_id: tipoRefeicaoId,
-        usado_em: new Date().toISOString(),
-        tipo_voucher: 'descartavel',
-        voucher_descartavel_id: voucher.id
-      })
-      .select()
-      .single();
-
-    if (usageError) {
-      logger.error('Erro ao registrar uso do voucher descartável:', usageError);
-      throw usageError;
+    if (!voucher) {
+      return { success: false, error: 'Voucher não encontrado ou já utilizado' };
     }
 
-    // Marcar voucher descartável como usado
-    const { error: updateError } = await supabase
-      .from('vouchers_descartaveis')
-      .update({ usado_em: new Date().toISOString() })
-      .eq('id', voucher.id);
-
-    if (updateError) {
-      logger.error('Erro ao atualizar status do voucher descartável:', updateError);
-      throw updateError;
+    // Verificar tipo de refeição
+    if (!voucher.tipos_refeicao?.ativo) {
+      return { success: false, error: 'Tipo de refeição inativo' };
     }
 
-    await logSystemEvent({
-      tipo: LOG_TYPES.USO_VOUCHER,
-      mensagem: 'Voucher descartável utilizado com sucesso',
-      detalhes: { voucherId: voucher.id, tipoRefeicaoId }
-    });
+    // Validar horário da refeição
+    const timeValidation = validateMealTime(voucher.tipos_refeicao);
+    if (!timeValidation.success) {
+      return timeValidation;
+    }
 
-    return { 
-      success: true, 
-      voucher,
-      usoVoucherId: usoVoucher.id 
-    };
+    return { success: true, voucher };
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
     throw error;
