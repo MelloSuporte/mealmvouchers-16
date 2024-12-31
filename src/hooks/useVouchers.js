@@ -21,10 +21,10 @@ export const useVouchers = () => {
         }
 
         // Extrair array de IDs
-        const usedIds = usedVoucherIds.map(v => v.voucher_descartavel_id);
+        const usedIds = usedVoucherIds?.map(v => v.voucher_descartavel_id) || [];
 
-        // Buscar vouchers não usados
-        const { data, error } = await supabase
+        // Construir query base
+        let query = supabase
           .from('vouchers_descartaveis')
           .select(`
             id,
@@ -43,9 +43,15 @@ export const useVouchers = () => {
             )
           `)
           .is('usado_em', null)
-          .not('id', 'in', usedIds)
           .gte('data_expiracao', new Date().toISOString())
           .order('data_criacao', { ascending: false });
+
+        // Adicionar filtro not.in apenas se houver IDs usados
+        if (usedIds.length > 0) {
+          query = query.not('id', 'in', `(${usedIds.join(',')})`);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
           logger.error('Erro ao buscar vouchers:', error);
