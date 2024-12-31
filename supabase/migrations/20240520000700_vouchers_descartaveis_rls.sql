@@ -38,6 +38,11 @@ CREATE POLICY "vouchers_descartaveis_insert_policy" ON vouchers_descartaveis
         )
     );
 
+-- Grant necessary permissions
+GRANT SELECT ON vouchers_descartaveis TO anon;
+GRANT SELECT ON tipos_refeicao TO anon;
+GRANT USAGE ON SCHEMA public TO anon;
+
 COMMENT ON POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis IS 
 'Permite visualizar vouchers descartáveis usuários anonimos e autenticados';
 
