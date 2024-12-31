@@ -9,40 +9,46 @@ export const identifyVoucherType = async (codigo) => {
     const voucherCode = String(codigo);
     
     // Verificar primeiro se é um voucher descartável
-    const { data: voucherDescartavel } = await supabase
+    const { data: voucherDescartavel, error: errorDescartavel } = await supabase
       .from('vouchers_descartaveis')
       .select('*')
       .eq('codigo', voucherCode)
       .is('usado_em', null)
       .is('data_uso', null)
       .gte('data_expiracao', new Date().toISOString())
-      .single();
+      .maybeSingle(); // Usar maybeSingle ao invés de single
 
-    if (voucherDescartavel) {
+    if (errorDescartavel) {
+      logger.error('Erro ao buscar voucher descartável:', errorDescartavel);
+    } else if (voucherDescartavel) {
       logger.info('Voucher identificado como descartável');
       return 'descartavel';
     }
 
     // Verificar se é um voucher comum
-    const { data: usuario } = await supabase
+    const { data: usuario, error: errorUsuario } = await supabase
       .from('usuarios')
       .select('voucher')
       .eq('voucher', voucherCode)
-      .single();
+      .maybeSingle(); // Usar maybeSingle ao invés de single
 
-    if (usuario) {
+    if (errorUsuario) {
+      logger.error('Erro ao buscar voucher comum:', errorUsuario);
+    } else if (usuario) {
       logger.info('Voucher identificado como comum');
       return 'comum';
     }
 
     // Verificar se é um voucher extra
-    const { data: voucherExtra } = await supabase
+    const { data: voucherExtra, error: errorExtra } = await supabase
       .from('vouchers_extras')
       .select('*')
       .eq('codigo', voucherCode)
-      .single();
+      .maybeSingle(); // Usar maybeSingle ao invés de single
 
-    if (voucherExtra) {
+    if (errorExtra) {
+      logger.error('Erro ao buscar voucher extra:', errorExtra);
+    } else if (voucherExtra) {
       logger.info('Voucher identificado como extra');
       return 'extra';
     }
@@ -64,11 +70,15 @@ export const validateDisposableVoucher = async (codigo) => {
       .is('usado_em', null)
       .is('data_uso', null)
       .gte('data_expiracao', new Date().toISOString())
-      .single();
+      .maybeSingle(); // Usar maybeSingle ao invés de single
 
-    if (error || !voucher) {
+    if (error) {
       logger.info('Voucher não encontrado ou já utilizado');
       return { success: false, error: 'Voucher descartável inválido ou já utilizado' };
+    }
+
+    if (!voucher) {
+      return { success: false, error: 'Voucher não encontrado' };
     }
 
     // Verificar tipo de refeição
