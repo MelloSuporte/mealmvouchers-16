@@ -9,6 +9,8 @@ import 'jspdf-autotable';
 import { toast } from "sonner";
 
 const VoucherTable = ({ vouchers = [] }) => {
+  console.log('Vouchers recebidos na tabela:', vouchers); // Debug log
+
   const downloadPDF = () => {
     try {
       const doc = new jsPDF();
@@ -27,6 +29,8 @@ const VoucherTable = ({ vouchers = [] }) => {
         format(new Date(voucher.data_expiracao), 'dd/MM/yyyy', { locale: ptBR }),
         voucher.tipos_refeicao?.valor ? `R$ ${voucher.tipos_refeicao.valor.toFixed(2)}` : ''
       ]);
+
+      console.log('Dados preparados para PDF:', tableData); // Debug log
 
       // Gerar tabela
       doc.autoTable({
@@ -53,7 +57,7 @@ const VoucherTable = ({ vouchers = [] }) => {
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      toast.error('Erro ao gerar PDF');
+      toast.error('Erro ao gerar PDF. Verifique o console para mais detalhes.');
     }
   };
 
