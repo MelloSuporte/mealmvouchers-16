@@ -1,126 +1,74 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
-import { toast } from "sonner";
-import logger from '@/config/logger';
+import { useVouchers } from '@/hooks/useVouchers';
+import { useMealTypes } from '@/hooks/useMealTypes';
+import { toast } from 'sonner';
 
 export const useDisposableVoucherFormLogic = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Buscar tipos de refeição
-  const { data: mealTypes, isLoading } = useQuery({
-    queryKey: ['meal-types'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tipos_refeicao')
-        .select('*')
-        .eq('ativo', true)
-        .order('nome');
+  const { data: mealTypes, isLoading: isMealTypesLoading } = useMealTypes();
+  const { data: allVouchers = [] } = useVouchers();
 
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  // Buscar vouchers descartáveis
-  const { data: allVouchers = [] } = useQuery({
-    queryKey: ['vouchers-descartaveis'],
-    queryFn: async () => {
-      logger.info('Buscando vouchers descartáveis...');
+  const generateVouchersMutation = useMutation({
+    mutationFn: async ({ quantity, mealTypeIds, dates }) => {
+      const promises = [];
       
-      const { data, error } = await supabase
-        .from('vouchers_descartaveis')
-        .select(`
-          id,
-          codigo,
-          tipo_refeicao_id,
-          data_expiracao,
-          usado_em,
-          data_uso,
-          data_criacao,
-          tipos_refeicao (
-            id,
-            nome,
-            valor,
-            horario_inicio,
-            horario_fim,
-            minutos_tolerancia
-          )
-        `)
-        .is('usado_em', null)
-        .is('data_uso', null)
-        .gte('data_expiracao', new Date().toISOString())
-        .order('data_criacao', { ascending: false });
-
-      if (error) {
-        logger.error('Erro ao buscar vouchers descartáveis:', error);
-        throw error;
+      for (const mealTypeId of mealTypeIds) {
+        for (const date of dates) {
+          for (let i = 0; i < quantity; i++) {
+            const { error } = await supabase.rpc('insert_voucher_descartavel', {
+              p_tipo_refeicao_id: mealTypeId,
+              p_data_expiracao: date,
+              p_codigo: Math.floor(1000 + Math.random() * 9000).toString()
+            });
+            
+            if (error) throw error;
+          }
+        }
       }
-
-      logger.info('Vouchers encontrados:', {
-        quantidade: data?.length || 0,
-        primeiro: data?.[0]
-      });
-
-      return data || [];
+      
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      toast.success('Vouchers gerados com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['vouchers-descartaveis'] });
+      setSelectedMealTypes([]);
+      setSelectedDates([]);
+      setQuantity(1);
+    },
+    onError: (error) => {
+      console.error('Erro ao gerar vouchers:', error);
+      toast.error('Erro ao gerar vouchers. Por favor, tente novamente.');
     }
   });
 
   const handleMealTypeToggle = (mealTypeId) => {
-    setSelectedMealTypes(prev => {
-      if (prev.includes(mealTypeId)) {
-        return prev.filter(id => id !== mealTypeId);
-      }
-      return [...prev, mealTypeId];
-    });
+    setSelectedMealTypes(prev => 
+      prev.includes(mealTypeId)
+        ? prev.filter(id => id !== mealTypeId)
+        : [...prev, mealTypeId]
+    );
   };
 
   const handleGenerateVouchers = async () => {
+    if (!selectedMealTypes.length || !selectedDates.length || quantity < 1) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
     try {
-      setIsGenerating(true);
-      
-      // Validações
-      if (!selectedMealTypes.length || !selectedDates.length || quantity < 1) {
-        toast.error('Preencha todos os campos obrigatórios');
-        return;
-      }
-
-      // Gerar vouchers para cada combinação de tipo de refeição e data
-      for (const mealTypeId of selectedMealTypes) {
-        for (const date of selectedDates) {
-          for (let i = 0; i < quantity; i++) {
-            const { error } = await supabase
-              .from('vouchers_descartaveis')
-              .insert({
-                tipo_refeicao_id: mealTypeId,
-                data_expiracao: new Date(date).toISOString(),
-                codigo: Math.floor(1000 + Math.random() * 9000).toString()
-              });
-
-            if (error) {
-              logger.error('Erro ao gerar voucher:', error);
-              toast.error(`Erro ao gerar voucher: ${error.message}`);
-              return;
-            }
-          }
-        }
-      }
-
-      toast.success('Vouchers gerados com sucesso!');
-      
-      // Limpar seleções
-      setSelectedMealTypes([]);
-      setSelectedDates([]);
-      setQuantity(1);
-      
+      await generateVouchersMutation.mutateAsync({
+        quantity,
+        mealTypeIds: selectedMealTypes,
+        dates: selectedDates
+      });
     } catch (error) {
-      logger.error('Erro ao gerar vouchers:', error);
-      toast.error('Erro ao gerar vouchers');
-    } finally {
-      setIsGenerating(false);
+      console.error('Erro ao gerar vouchers:', error);
     }
   };
 
@@ -130,9 +78,9 @@ export const useDisposableVoucherFormLogic = () => {
     selectedMealTypes,
     selectedDates,
     setSelectedDates,
-    mealTypes,
-    isLoading,
-    isGenerating,
+    mealTypes: mealTypes || [],
+    isLoading: isMealTypesLoading,
+    isGenerating: generateVouchersMutation.isPending,
     allVouchers,
     handleMealTypeToggle,
     handleGenerateVouchers
