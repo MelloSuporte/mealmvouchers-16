@@ -37,3 +37,5 @@ CREATE POLICY "vouchers_extras_select_policy" ON vouchers_extras
 1. Vouchers não usados são visíveis para todos
 2. Histórico de uso visível apenas para proprietário
 3. Admins e gerentes podem ver todos os vouchers
+4. PDF de vouchers ativos pode ser baixado por usuários autenticados
+5. Geração de novos vouchers restrita a admins/gestores
