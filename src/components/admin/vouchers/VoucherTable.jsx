@@ -58,7 +58,7 @@ const VoucherTable = ({ vouchers = [] }) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Vouchers Descartáveis Ativos</h3>
-        {vouchers.length > 0 && (
+        {vouchers && vouchers.length > 0 && (
           <Button 
             onClick={downloadPDF}
             variant="outline"
@@ -82,7 +82,7 @@ const VoucherTable = ({ vouchers = [] }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {vouchers.length === 0 ? (
+            {!vouchers || vouchers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
                   Nenhum voucher descartável ativo
