@@ -5,7 +5,7 @@ import logger from '@/config/logger';
 export const useVouchers = () => {
   const fetchVouchers = async () => {
     try {
-      logger.info('Iniciando busca de vouchers descartáveis...');
+      logger.info('Iniciando busca de vouchers descartáveis ativos...');
       
       const { data, error } = await supabase
         .from('vouchers_descartaveis')
@@ -27,6 +27,7 @@ export const useVouchers = () => {
           )
         `)
         .is('usado_em', null)
+        .is('data_uso', null)
         .gte('data_expiracao', new Date().toISOString())
         .order('data_criacao', { ascending: false });
 
