@@ -66,6 +66,8 @@ const DisposableVoucherForm = () => {
                   onSelect={setSelectedDates}
                   className="w-full"
                   locale={ptBR}
+                  disabled={(date) => date < new Date()}
+                  initialFocus
                   formatters={{
                     formatCaption: (date) => {
                       const month = ptBR.localize.month(date.getMonth());
