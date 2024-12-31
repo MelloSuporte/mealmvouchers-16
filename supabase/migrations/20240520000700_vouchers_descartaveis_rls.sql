@@ -54,7 +54,7 @@ GRANT SELECT ON tipos_refeicao TO anon;
 
 -- Add helpful comments
 COMMENT ON POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis IS 
-'Permite visualizar vouchers válidos para qualquer usuário (autenticado ou anônimo)';
+'Permite visualizar apenas vouchers válidos, não utilizados e dentro do horário permitido';
 
 COMMENT ON POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis IS 
-'Permite marcar vouchers como usados para qualquer usuário (autenticado ou anônimo)';
+'Permite apenas marcar vouchers como usados quando dentro do horário permitido';
