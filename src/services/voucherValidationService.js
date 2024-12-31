@@ -11,12 +11,22 @@ export const identifyVoucherType = async (codigo) => {
     // Verificar primeiro se é um voucher descartável
     const { data: voucherDescartavel, error: errorDescartavel } = await supabase
       .from('vouchers_descartaveis')
-      .select('*')
+      .select(`
+        *,
+        tipos_refeicao (
+          id,
+          nome,
+          horario_inicio,
+          horario_fim,
+          minutos_tolerancia,
+          ativo
+        )
+      `)
       .eq('codigo', voucherCode)
       .is('usado_em', null)
       .is('data_uso', null)
       .gte('data_expiracao', new Date().toISOString())
-      .maybeSingle(); // Usar maybeSingle ao invés de single
+      .maybeSingle();
 
     if (errorDescartavel) {
       logger.error('Erro ao buscar voucher descartável:', errorDescartavel);
@@ -30,7 +40,7 @@ export const identifyVoucherType = async (codigo) => {
       .from('usuarios')
       .select('voucher')
       .eq('voucher', voucherCode)
-      .maybeSingle(); // Usar maybeSingle ao invés de single
+      .maybeSingle();
 
     if (errorUsuario) {
       logger.error('Erro ao buscar voucher comum:', errorUsuario);
@@ -44,7 +54,7 @@ export const identifyVoucherType = async (codigo) => {
       .from('vouchers_extras')
       .select('*')
       .eq('codigo', voucherCode)
-      .maybeSingle(); // Usar maybeSingle ao invés de single
+      .maybeSingle();
 
     if (errorExtra) {
       logger.error('Erro ao buscar voucher extra:', errorExtra);
@@ -65,16 +75,26 @@ export const validateDisposableVoucher = async (codigo) => {
   try {
     const { data: voucher, error } = await supabase
       .from('vouchers_descartaveis')
-      .select('*, tipos_refeicao(*)')
+      .select(`
+        *,
+        tipos_refeicao (
+          id,
+          nome,
+          horario_inicio,
+          horario_fim,
+          minutos_tolerancia,
+          ativo
+        )
+      `)
       .eq('codigo', String(codigo))
       .is('usado_em', null)
       .is('data_uso', null)
       .gte('data_expiracao', new Date().toISOString())
-      .maybeSingle(); // Usar maybeSingle ao invés de single
+      .maybeSingle();
 
     if (error) {
-      logger.info('Voucher não encontrado ou já utilizado');
-      return { success: false, error: 'Voucher descartável inválido ou já utilizado' };
+      logger.error('Erro ao buscar voucher descartável:', error);
+      return { success: false, error: 'Erro ao validar voucher descartável' };
     }
 
     if (!voucher) {
@@ -84,6 +104,22 @@ export const validateDisposableVoucher = async (codigo) => {
     // Verificar tipo de refeição
     if (!voucher.tipos_refeicao?.ativo) {
       return { success: false, error: 'Tipo de refeição inativo' };
+    }
+
+    // Verificar horário
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // Converter para minutos
+    const startTime = voucher.tipos_refeicao.horario_inicio.split(':');
+    const endTime = voucher.tipos_refeicao.horario_fim.split(':');
+    
+    const startMinutes = parseInt(startTime[0]) * 60 + parseInt(startTime[1]);
+    const endMinutes = parseInt(endTime[0]) * 60 + parseInt(endTime[1]) + (voucher.tipos_refeicao.minutos_tolerancia || 0);
+
+    if (currentTime < startMinutes || currentTime > endMinutes) {
+      return { 
+        success: false, 
+        error: `Esta refeição só pode ser utilizada entre ${voucher.tipos_refeicao.horario_inicio} e ${voucher.tipos_refeicao.horario_fim}`
+      };
     }
 
     return { success: true, voucher };
