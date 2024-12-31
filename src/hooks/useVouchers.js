@@ -27,7 +27,6 @@ export const useVouchers = () => {
           )
         `)
         .is('usado_em', null)
-        .is('data_uso', null)
         .gte('data_expiracao', new Date().toISOString())
         .order('data_criacao', { ascending: false });
 
