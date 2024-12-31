@@ -9,20 +9,17 @@ import 'jspdf-autotable';
 import { toast } from "sonner";
 
 const VoucherTable = ({ vouchers = [] }) => {
-  console.log('Vouchers recebidos na tabela:', vouchers); // Debug log
+  console.log('Vouchers recebidos na tabela:', vouchers);
 
   const downloadPDF = () => {
     try {
       const doc = new jsPDF();
       
-      // Configurar fonte para suportar caracteres especiais
       doc.setFont("helvetica");
       
-      // Título do documento
       doc.setFontSize(16);
       doc.text("Vouchers Descartáveis", 14, 15);
       
-      // Preparar dados para a tabela
       const tableData = vouchers.map(voucher => [
         voucher.codigo,
         voucher.tipos_refeicao?.nome || '',
@@ -30,9 +27,6 @@ const VoucherTable = ({ vouchers = [] }) => {
         voucher.tipos_refeicao?.valor ? `R$ ${voucher.tipos_refeicao.valor.toFixed(2)}` : ''
       ]);
 
-      console.log('Dados preparados para PDF:', tableData); // Debug log
-
-      // Gerar tabela
       doc.autoTable({
         head: [['Código', 'Tipo de Refeição', 'Data de Expiração', 'Valor']],
         body: tableData,
@@ -52,7 +46,6 @@ const VoucherTable = ({ vouchers = [] }) => {
         }
       });
 
-      // Salvar o PDF
       doc.save('vouchers-descartaveis.pdf');
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
