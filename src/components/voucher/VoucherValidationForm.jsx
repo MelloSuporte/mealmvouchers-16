@@ -8,6 +8,7 @@ import {
   validateDisposableVoucher,
   validateMealTimeAndInterval
 } from '../../services/voucherValidationService';
+import logger from '../../config/logger';
 
 const VoucherValidationForm = () => {
   const navigate = useNavigate();
@@ -31,17 +32,38 @@ const VoucherValidationForm = () => {
         return;
       }
 
+      // Get current meal type based on time
+      const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+      const { data: mealTypes, error: mealTypesError } = await supabase
+        .from('tipos_refeicao')
+        .select('*')
+        .eq('ativo', true)
+        .gte('horario_fim', currentTime)
+        .lte('horario_inicio', currentTime);
+
+      if (mealTypesError) {
+        console.error('Erro ao buscar tipo de refeição:', mealTypesError);
+        toast.error('Erro ao validar horário da refeição');
+        return;
+      }
+
+      if (!mealTypes || mealTypes.length === 0) {
+        toast.error('Nenhum tipo de refeição disponível neste horário');
+        return;
+      }
+
+      const currentMealType = mealTypes[0];
+
       // Validar baseado no tipo
       if (voucherType === 'descartavel') {
-        const result = await validateDisposableVoucher(voucherCode);
+        const result = await validateDisposableVoucher(voucherCode, currentMealType.id);
         console.log('Resultado validação voucher descartável:', result);
         
         if (result.success) {
-          const { voucher } = result;
           localStorage.setItem('disposableVoucher', JSON.stringify({
             code: voucherCode,
-            mealTypeId: voucher.tipo_refeicao_id,
-            mealType: voucher.tipos_refeicao.nome
+            mealTypeId: currentMealType.id,
+            mealType: currentMealType.nome
           }));
           navigate('/self-services');
           return;

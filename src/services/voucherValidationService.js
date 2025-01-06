@@ -11,20 +11,60 @@ export const validateDisposableVoucher = async (codigo, tipoRefeicaoId) => {
       throw new Error('Código do voucher e tipo de refeição são obrigatórios');
     }
 
-    const { data, error } = await supabase.rpc('validate_disposable_voucher', {
-      p_codigo: codigo,
-      p_tipo_refeicao_id: tipoRefeicaoId
-    });
+    // Buscar voucher com informações do tipo de refeição
+    const { data: voucher, error } = await supabase
+      .from('vouchers_descartaveis')
+      .select(`
+        *,
+        tipos_refeicao (
+          id,
+          nome,
+          horario_inicio,
+          horario_fim,
+          minutos_tolerancia,
+          ativo
+        )
+      `)
+      .eq('codigo', String(codigo))
+      .eq('tipo_refeicao_id', tipoRefeicaoId)
+      .is('usado_em', null)
+      .is('data_uso', null)
+      .gte('data_expiracao', new Date().toISOString())
+      .maybeSingle();
 
     if (error) {
-      logger.error('Erro ao validar voucher descartável:', error);
-      throw error;
+      logger.error('Erro ao buscar voucher descartável:', error);
+      throw new Error('Erro ao validar voucher descartável');
     }
 
-    return data;
+    if (!voucher) {
+      return { success: false, error: 'Voucher não encontrado ou já utilizado' };
+    }
+
+    // Verificar tipo de refeição
+    if (!voucher.tipos_refeicao?.ativo) {
+      return { success: false, error: 'Tipo de refeição inativo' };
+    }
+
+    // Marcar voucher como usado
+    const { error: updateError } = await supabase
+      .from('vouchers_descartaveis')
+      .update({
+        usado_em: new Date().toISOString(),
+        data_uso: new Date().toISOString()
+      })
+      .eq('id', voucher.id)
+      .is('usado_em', null);
+
+    if (updateError) {
+      logger.error('Erro ao atualizar voucher:', updateError);
+      throw new Error('Erro ao marcar voucher como usado');
+    }
+
+    return { success: true, voucher };
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
-    throw error;
+    return { success: false, error: error.message };
   }
 };
 
@@ -43,25 +83,6 @@ export const validateCommonVoucher = async (codigo, tipoRefeicaoId) => {
     return data;
   } catch (error) {
     logger.error('Erro ao validar voucher comum:', error);
-    throw error;
-  }
-};
-
-export const validateExtraVoucher = async (codigo, tipoRefeicaoId) => {
-  try {
-    const { data, error } = await supabase.rpc('validate_extra_voucher', {
-      p_codigo: codigo,
-      p_tipo_refeicao_id: tipoRefeicaoId
-    });
-
-    if (error) {
-      logger.error('Erro ao validar voucher extra:', error);
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    logger.error('Erro ao validar voucher extra:', error);
     throw error;
   }
 };
@@ -93,42 +114,24 @@ export const identifyVoucherType = async (codigo) => {
     const voucherCode = String(codigo);
     
     // Primeiro tenta encontrar como voucher comum
-    const { data: usuario, error: userError } = await supabase
+    const { data: usuario } = await supabase
       .from('usuarios')
       .select('voucher')
       .eq('voucher', voucherCode)
       .maybeSingle();
 
-    if (userError) throw userError;
-    
     if (usuario) {
       logger.info('Voucher identificado como comum');
       return 'comum';
     }
 
-    // Tenta encontrar como voucher extra
-    const { data: voucherExtra, error: extraError } = await supabase
-      .from('vouchers_extras')
-      .select('*')
-      .eq('codigo', voucherCode)
-      .maybeSingle();
-
-    if (extraError) throw extraError;
-    
-    if (voucherExtra) {
-      logger.info('Voucher identificado como extra');
-      return 'extra';
-    }
-
     // Tenta encontrar como voucher descartável
-    const { data: voucherDescartavel, error: descartavelError } = await supabase
+    const { data: voucherDescartavel } = await supabase
       .from('vouchers_descartaveis')
       .select('*')
       .eq('codigo', voucherCode)
       .maybeSingle();
 
-    if (descartavelError) throw descartavelError;
-    
     if (voucherDescartavel) {
       logger.info('Voucher identificado como descartável');
       return 'descartavel';
