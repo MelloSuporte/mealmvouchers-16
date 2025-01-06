@@ -9,25 +9,34 @@ export const useVouchers = () => {
       try {
         logger.info('[INFO] Iniciando busca de vouchers descartáveis...');
         
-        // Simplificar a query inicial para debug
-        const { data: allVouchers, error: initialError } = await supabase
+        // Query sem nenhum filtro primeiro
+        const { data: todosVouchers, error: erroInicial } = await supabase
           .from('vouchers_descartaveis')
-          .select('*')
-          .limit(100);
+          .select('*');
 
-        // Log da query inicial para debug
-        logger.info('Resultado da query inicial:', {
-          total: allVouchers?.length || 0,
-          error: initialError?.message,
-          primeiros: allVouchers?.slice(0, 3)
-        });
+        logger.info('Todos os vouchers:', todosVouchers);
 
-        if (initialError) {
-          logger.error('Erro na query inicial:', initialError);
-          throw initialError;
+        if (erroInicial) {
+          logger.error('Erro ao buscar todos os vouchers:', erroInicial);
+          throw erroInicial;
         }
 
-        // Agora fazer a query com os filtros
+        // Query apenas com o relacionamento, sem filtros
+        const { data: vouchersComTipos, error: erroTipos } = await supabase
+          .from('vouchers_descartaveis')
+          .select(`
+            *,
+            tipos_refeicao (*)
+          `);
+
+        logger.info('Tipos de refeição recebidos:', vouchersComTipos);
+
+        if (erroTipos) {
+          logger.error('Erro ao buscar vouchers com tipos:', erroTipos);
+          throw erroTipos;
+        }
+
+        // Agora sim aplicar os filtros
         const currentDate = new Date().toISOString();
         
         const { data, error } = await supabase
@@ -37,7 +46,7 @@ export const useVouchers = () => {
             codigo,
             tipo_refeicao_id,
             data_expiracao,
-            usado_em,
+            usado,
             data_uso,
             data_criacao,
             tipos_refeicao (
@@ -49,25 +58,16 @@ export const useVouchers = () => {
               minutos_tolerancia
             )
           `)
-          .eq('usado_em', false)
-          .is('data_uso', null)
+          .eq('usado', false)
           .gte('data_expiracao', currentDate)
           .order('data_criacao', { ascending: false });
 
+        logger.info('Vouchers recebidos na tabela:', data);
+
         if (error) {
-          logger.error('Erro na query com filtros:', error);
+          logger.error('Erro na query final:', error);
           throw error;
         }
-
-        logger.info('Query com filtros executada. Resultado:', {
-          totalFiltrado: data?.length || 0,
-          filtros: {
-            usado_em: false,
-            data_uso: null,
-            data_expiracao: `>= ${currentDate}`
-          },
-          primeirosResultados: data?.slice(0, 3)
-        });
 
         return data || [];
       } catch (error) {
