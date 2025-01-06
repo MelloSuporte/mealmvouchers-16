@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
+import { supabase } from '../../config/supabase';
 import { 
   identifyVoucherType,
   validateCommonVoucher, 
