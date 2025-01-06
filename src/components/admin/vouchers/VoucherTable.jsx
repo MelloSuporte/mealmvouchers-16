@@ -23,12 +23,14 @@ const VoucherTable = ({ vouchers = [] }) => {
       const tableData = vouchers.map(voucher => [
         voucher.codigo,
         voucher.tipos_refeicao?.nome || '',
-        format(new Date(voucher.data_expiracao), 'dd/MM/yyyy', { locale: ptBR }),
-        voucher.tipos_refeicao?.valor ? `R$ ${voucher.tipos_refeicao.valor.toFixed(2)}` : ''
+        format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+        voucher.data_uso ? format(new Date(voucher.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
+        format(new Date(voucher.data_expiracao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+        voucher.usado_em ? 'Sim' : 'Não'
       ]);
 
       doc.autoTable({
-        head: [['Código', 'Tipo de Refeição', 'Data de Expiração', 'Valor']],
+        head: [['Código', 'Tipo de Refeição', 'Data Criação', 'Data Uso', 'Data Expiração', 'Usado']],
         body: tableData,
         startY: 25,
         theme: 'grid',
@@ -75,16 +77,18 @@ const VoucherTable = ({ vouchers = [] }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">Código</TableHead>
-              <TableHead>Tipo de Refeição</TableHead>
-              <TableHead>Data de Expiração</TableHead>
-              <TableHead className="text-right">Valor</TableHead>
+              <TableHead>Código</TableHead>
+              <TableHead>Tipo Refeição</TableHead>
+              <TableHead>Data Criação</TableHead>
+              <TableHead>Data Uso</TableHead>
+              <TableHead>Data Expiração</TableHead>
+              <TableHead>Usado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {!vouchers || vouchers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   Nenhum voucher descartável ativo
                 </TableCell>
               </TableRow>
@@ -94,14 +98,18 @@ const VoucherTable = ({ vouchers = [] }) => {
                   <TableCell className="font-medium">{voucher.codigo}</TableCell>
                   <TableCell>{voucher.tipos_refeicao?.nome}</TableCell>
                   <TableCell>
-                    {format(new Date(voucher.data_expiracao), 'dd/MM/yyyy', { locale: ptBR })}
+                    {format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {voucher.tipos_refeicao?.valor ? 
-                      `R$ ${voucher.tipos_refeicao.valor.toFixed(2)}` : 
+                  <TableCell>
+                    {voucher.data_uso ? 
+                      format(new Date(voucher.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : 
                       '-'
                     }
                   </TableCell>
+                  <TableCell>
+                    {format(new Date(voucher.data_expiracao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  </TableCell>
+                  <TableCell>{voucher.usado_em ? 'Sim' : 'Não'}</TableCell>
                 </TableRow>
               ))
             )}
