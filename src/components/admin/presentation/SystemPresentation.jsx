@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
+import PresentationPDF from './PresentationPDF';
 
 const SystemPresentation = () => {
   const { data: usageData } = useQuery({
@@ -41,15 +42,19 @@ const SystemPresentation = () => {
       <header className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Sistema de Vouchers para Refeitório</h1>
         <p className="text-gray-600">Gestão Inteligente de Refeições</p>
+        <div className="mt-4">
+          <PresentationPDF />
+        </div>
       </header>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="benefits">Benefícios</TabsTrigger>
-          <TabsTrigger value="metrics">Métricas</TabsTrigger>
-          <TabsTrigger value="features">Funcionalidades</TabsTrigger>
-        </TabsList>
+      <div className="screen-capture">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="benefits">Benefícios</TabsTrigger>
+            <TabsTrigger value="metrics">Métricas</TabsTrigger>
+            <TabsTrigger value="features">Funcionalidades</TabsTrigger>
+          </TabsList>
 
         <TabsContent value="overview">
           <div className="grid md:grid-cols-2 gap-6">
@@ -209,7 +214,8 @@ const SystemPresentation = () => {
             </Card>
           </div>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 };
