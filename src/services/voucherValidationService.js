@@ -5,6 +5,12 @@ export const validateDisposableVoucher = async (codigo, tipoRefeicaoId) => {
   try {
     logger.info('Iniciando validação do voucher descartável:', { codigo, tipoRefeicaoId });
     
+    // Validate both parameters are present
+    if (!codigo || !tipoRefeicaoId) {
+      logger.error('Parâmetros inválidos:', { codigo, tipoRefeicaoId });
+      throw new Error('Código do voucher e tipo de refeição são obrigatórios');
+    }
+
     const { data, error } = await supabase.rpc('validate_disposable_voucher', {
       p_codigo: codigo,
       p_tipo_refeicao_id: tipoRefeicaoId
@@ -60,25 +66,6 @@ export const validateExtraVoucher = async (codigo, tipoRefeicaoId) => {
   }
 };
 
-export const validateMealTimeAndInterval = async (userId, mealTypeId) => {
-  try {
-    const { data, error } = await supabase.rpc('validate_meal_time_and_interval', {
-      p_usuario_id: userId,
-      p_tipo_refeicao_id: mealTypeId
-    });
-
-    if (error) {
-      logger.error('Erro ao validar horário e intervalo:', error);
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    logger.error('Erro na validação de horário e intervalo:', error);
-    throw error;
-  }
-};
-
 export const identifyVoucherType = async (codigo) => {
   try {
     logger.info('Identificando tipo de voucher:', codigo);
@@ -87,36 +74,42 @@ export const identifyVoucherType = async (codigo) => {
     const voucherCode = String(codigo);
     
     // Primeiro tenta encontrar como voucher comum
-    const { data: usuario } = await supabase
+    const { data: usuario, error: userError } = await supabase
       .from('usuarios')
       .select('voucher')
       .eq('voucher', voucherCode)
-      .single();
+      .maybeSingle();
 
+    if (userError) throw userError;
+    
     if (usuario) {
       logger.info('Voucher identificado como comum');
       return 'comum';
     }
 
     // Tenta encontrar como voucher extra
-    const { data: voucherExtra } = await supabase
+    const { data: voucherExtra, error: extraError } = await supabase
       .from('vouchers_extras')
       .select('*')
       .eq('codigo', voucherCode)
-      .single();
+      .maybeSingle();
 
+    if (extraError) throw extraError;
+    
     if (voucherExtra) {
       logger.info('Voucher identificado como extra');
       return 'extra';
     }
 
     // Tenta encontrar como voucher descartável
-    const { data: voucherDescartavel } = await supabase
+    const { data: voucherDescartavel, error: descartavelError } = await supabase
       .from('vouchers_descartaveis')
       .select('*')
       .eq('codigo', voucherCode)
-      .single();
+      .maybeSingle();
 
+    if (descartavelError) throw descartavelError;
+    
     if (voucherDescartavel) {
       logger.info('Voucher identificado como descartável');
       return 'descartavel';
