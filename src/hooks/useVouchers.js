@@ -7,13 +7,29 @@ export const useVouchers = () => {
     queryKey: ['vouchers-descartaveis'],
     queryFn: async () => {
       try {
-        logger.info('[INFO] Iniciando busca de vouchers descartáveis ativos...');
+        logger.info('[INFO] Iniciando busca de vouchers descartáveis...');
         
+        // Simplificar a query inicial para debug
+        const { data: allVouchers, error: initialError } = await supabase
+          .from('vouchers_descartaveis')
+          .select('*')
+          .limit(100);
+
+        // Log da query inicial para debug
+        logger.info('Resultado da query inicial:', {
+          total: allVouchers?.length || 0,
+          error: initialError?.message,
+          primeiros: allVouchers?.slice(0, 3)
+        });
+
+        if (initialError) {
+          logger.error('Erro na query inicial:', initialError);
+          throw initialError;
+        }
+
+        // Agora fazer a query com os filtros
         const currentDate = new Date().toISOString();
         
-        logger.info('Data atual para filtro:', currentDate);
-        logger.info('Executando query para buscar vouchers...');
-
         const { data, error } = await supabase
           .from('vouchers_descartaveis')
           .select(`
@@ -33,33 +49,24 @@ export const useVouchers = () => {
               minutos_tolerancia
             )
           `)
-          .eq('usado_em', false) // Alterado para usar eq(false) já que é um campo boolean
+          .eq('usado_em', false)
           .is('data_uso', null)
           .gte('data_expiracao', currentDate)
           .order('data_criacao', { ascending: false });
 
         if (error) {
-          logger.error('Erro ao buscar vouchers:', error);
+          logger.error('Erro na query com filtros:', error);
           throw error;
         }
 
-        logger.info('Query executada com sucesso. Resultado:', {
-          sql: error?.query,
-          params: error?.params,
-          data: data
-        });
-
-        logger.info('[INFO] Vouchers descartáveis encontrados:', {
-          quantidade: data?.length || 0,
-          primeiro: data?.[0] || null,
-          query: {
-            data_atual: currentDate,
-            filtros: {
-              usado_em: false,
-              data_uso: 'is null',
-              data_expiracao: `>= ${currentDate}`
-            }
-          }
+        logger.info('Query com filtros executada. Resultado:', {
+          totalFiltrado: data?.length || 0,
+          filtros: {
+            usado_em: false,
+            data_uso: null,
+            data_expiracao: `>= ${currentDate}`
+          },
+          primeirosResultados: data?.slice(0, 3)
         });
 
         return data || [];
