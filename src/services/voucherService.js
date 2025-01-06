@@ -29,9 +29,9 @@ export const generateVouchers = async ({ selectedMealTypes, selectedDates, quant
           
           const { data: voucherId, error } = await supabase
             .rpc('insert_voucher_descartavel', {
+              p_codigo: code,
               p_tipo_refeicao_id: tipo_refeicao_id,
-              p_data_expiracao: data.toISOString().split('T')[0],
-              p_codigo: code
+              p_data_expiracao: data.toISOString().split('T')[0]
             });
 
           if (error) {
