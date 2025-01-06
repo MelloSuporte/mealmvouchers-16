@@ -9,37 +9,8 @@ export const useVouchers = () => {
       try {
         logger.info('[INFO] Iniciando busca de vouchers descartáveis...');
         
-        const currentDate = new Date().toISOString();
+        const currentDate = new Date().toISOString().split('T')[0];
         
-        // Query apenas com o relacionamento, sem filtros
-        const { data: vouchersComTipos, error: erroTipos } = await supabase
-          .from('vouchers_descartaveis')
-          .select(`
-            id,
-            codigo,
-            tipo_refeicao_id,
-            data_expiracao,
-            usado_em,
-            data_uso,
-            data_criacao,
-            tipos_refeicao (
-              id,
-              nome,
-              valor,
-              horario_inicio,
-              horario_fim,
-              minutos_tolerancia
-            )
-          `);
-
-        logger.info('Tipos de refeição recebidos:', vouchersComTipos);
-
-        if (erroTipos) {
-          logger.error('Erro ao buscar vouchers com tipos:', erroTipos);
-          throw erroTipos;
-        }
-
-        // Agora sim aplicar os filtros
         const { data, error } = await supabase
           .from('vouchers_descartaveis')
           .select(`
@@ -60,17 +31,15 @@ export const useVouchers = () => {
             )
           `)
           .is('usado_em', null)
-          .is('data_uso', null)
           .gte('data_expiracao', currentDate)
           .order('data_criacao', { ascending: false });
 
-        logger.info('Vouchers recebidos na tabela:', data);
-
         if (error) {
-          logger.error('Erro na query final:', error);
+          logger.error('Erro ao buscar vouchers:', error);
           throw error;
         }
 
+        logger.info('Vouchers recebidos:', data);
         return data || [];
       } catch (error) {
         logger.error('Erro ao buscar vouchers:', error);
