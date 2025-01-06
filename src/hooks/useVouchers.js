@@ -8,6 +8,11 @@ export const useVouchers = () => {
     queryFn: async () => {
       try {
         logger.info('[INFO] Iniciando busca de vouchers descartáveis ativos...');
+        
+        const currentDate = new Date().toISOString();
+        
+        // Log da data atual para debug
+        logger.info('Data atual para filtro:', currentDate);
 
         const { data, error } = await supabase
           .from('vouchers_descartaveis')
@@ -30,7 +35,7 @@ export const useVouchers = () => {
           `)
           .is('usado_em', null)
           .is('data_uso', null)
-          .gte('data_expiracao', new Date().toISOString())
+          .gte('data_expiracao', currentDate)
           .order('data_criacao', { ascending: false });
 
         if (error) {
@@ -38,9 +43,18 @@ export const useVouchers = () => {
           throw error;
         }
 
+        // Log detalhado dos resultados
         logger.info('[INFO] Vouchers descartáveis encontrados:', {
           quantidade: data?.length || 0,
-          primeiro: data?.[0] || null
+          primeiro: data?.[0] || null,
+          query: {
+            data_atual: currentDate,
+            filtros: {
+              usado_em: 'is null',
+              data_uso: 'is null',
+              data_expiracao: `>= ${currentDate}`
+            }
+          }
         });
 
         return data || [];
