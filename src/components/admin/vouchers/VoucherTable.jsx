@@ -26,7 +26,7 @@ const VoucherTable = ({ vouchers = [] }) => {
         format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
         voucher.data_uso ? format(new Date(voucher.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
         format(new Date(voucher.data_expiracao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-        voucher.usado_em ? 'Sim' : 'Não'
+        voucher.usado_em || voucher.data_uso ? 'Sim' : 'Não'
       ]);
 
       doc.autoTable({
@@ -109,7 +109,7 @@ const VoucherTable = ({ vouchers = [] }) => {
                   <TableCell>
                     {format(new Date(voucher.data_expiracao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                   </TableCell>
-                  <TableCell>{voucher.usado_em ? 'Sim' : 'Não'}</TableCell>
+                  <TableCell>{voucher.usado_em || voucher.data_uso ? 'Sim' : 'Não'}</TableCell>
                 </TableRow>
               ))
             )}
