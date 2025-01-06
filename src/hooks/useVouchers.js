@@ -11,8 +11,8 @@ export const useVouchers = () => {
         
         const currentDate = new Date().toISOString();
         
-        // Log da data atual para debug
         logger.info('Data atual para filtro:', currentDate);
+        logger.info('Executando query para buscar vouchers...');
 
         const { data, error } = await supabase
           .from('vouchers_descartaveis')
@@ -33,7 +33,7 @@ export const useVouchers = () => {
               minutos_tolerancia
             )
           `)
-          .is('usado_em', null)
+          .eq('usado_em', false) // Alterado para usar eq(false) já que é um campo boolean
           .is('data_uso', null)
           .gte('data_expiracao', currentDate)
           .order('data_criacao', { ascending: false });
@@ -43,14 +43,19 @@ export const useVouchers = () => {
           throw error;
         }
 
-        // Log detalhado dos resultados
+        logger.info('Query executada com sucesso. Resultado:', {
+          sql: error?.query,
+          params: error?.params,
+          data: data
+        });
+
         logger.info('[INFO] Vouchers descartáveis encontrados:', {
           quantidade: data?.length || 0,
           primeiro: data?.[0] || null,
           query: {
             data_atual: currentDate,
             filtros: {
-              usado_em: 'is null',
+              usado_em: false,
               data_uso: 'is null',
               data_expiracao: `>= ${currentDate}`
             }
