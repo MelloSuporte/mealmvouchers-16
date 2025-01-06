@@ -67,6 +67,25 @@ export const validateCommonVoucher = async (codigo, tipoRefeicaoId) => {
   }
 };
 
+export const validateMealTimeAndInterval = async (userId, mealTypeId) => {
+  try {
+    const { data, error } = await supabase.rpc('validate_meal_time_and_interval', {
+      p_usuario_id: userId,
+      p_tipo_refeicao_id: mealTypeId
+    });
+
+    if (error) {
+      logger.error('Erro ao validar horário e intervalo:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    logger.error('Erro na validação de horário e intervalo:', error);
+    throw error;
+  }
+};
+
 export const identifyVoucherType = async (codigo) => {
   try {
     logger.info('Identificando tipo de voucher:', codigo);
