@@ -12,7 +12,6 @@ import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
 import AdminList from '@/components/admin/managers/AdminList';
 import TurnosForm from '@/components/admin/TurnosForm';
-import SystemPresentation from '@/components/admin/presentation/SystemPresentation';
 import { LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -52,7 +51,6 @@ const Admin = () => {
             <TabsTrigger value="background-images">Imagens de Fundo</TabsTrigger>
             <TabsTrigger value="managers">Gerentes</TabsTrigger>
             <TabsTrigger value="turnos">Turnos</TabsTrigger>
-            <TabsTrigger value="presentation">Apresentação</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -106,12 +104,6 @@ const Admin = () => {
           <TabsContent value="turnos">
             <Card>
               <TurnosForm />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="presentation">
-            <Card>
-              <SystemPresentation />
             </Card>
           </TabsContent>
         </Tabs>
