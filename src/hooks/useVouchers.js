@@ -58,7 +58,7 @@ export const useVouchers = () => {
               minutos_tolerancia
             )
           `)
-          .eq('usado_em', false)
+          .is('usado_em', null)
           .gte('data_expiracao', currentDate)
           .order('data_criacao', { ascending: false });
 
