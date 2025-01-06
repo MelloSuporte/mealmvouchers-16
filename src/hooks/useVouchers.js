@@ -28,8 +28,7 @@ export const useVouchers = () => {
               minutos_tolerancia
             )
           `)
-          .is('usado_em', null)
-          .is('data_uso', null)
+          .is('usado', false)  // Mudança aqui: verificando campo 'usado' ao invés de 'usado_em'
           .gte('data_expiracao', new Date().toISOString())
           .order('data_criacao', { ascending: false });
 
@@ -38,10 +37,7 @@ export const useVouchers = () => {
           throw error;
         }
 
-        logger.info('[INFO] Vouchers descartáveis encontrados:', {
-          quantidade: data?.length || 0,
-          primeiro: data?.[0] || null
-        });
+        logger.info('Todos os vouchers:', data);
 
         return data || [];
       } catch (error) {
