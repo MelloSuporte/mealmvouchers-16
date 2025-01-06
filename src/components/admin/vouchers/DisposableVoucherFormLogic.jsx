@@ -5,6 +5,10 @@ import { toast } from "sonner";
 import { useMealTypes } from '@/hooks/useMealTypes';
 import { useVouchers } from '@/hooks/useVouchers';
 
+const generateUniqueCode = () => {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+};
+
 export const useDisposableVoucherFormLogic = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
@@ -14,14 +18,21 @@ export const useDisposableVoucherFormLogic = () => {
   const { data: allVouchers } = useVouchers();
 
   const generateMutation = useMutation({
-    mutationFn: async ({ quantity, mealTypeId, expirationDate }) => {
+    mutationFn: async ({ mealTypeId, expirationDate }) => {
+      const code = generateUniqueCode();
+      console.log('Gerando voucher com código:', code);
+      
       const { data, error } = await supabase.rpc('insert_voucher_descartavel', {
+        p_codigo: code,
         p_tipo_refeicao_id: mealTypeId,
-        p_data_expiracao: expirationDate,
-        p_quantidade: quantity
+        p_data_expiracao: expirationDate
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao gerar voucher:', error);
+        throw error;
+      }
+      
       return data;
     },
     onSuccess: () => {
@@ -46,11 +57,12 @@ export const useDisposableVoucherFormLogic = () => {
     try {
       for (const mealTypeId of selectedMealTypes) {
         for (const date of selectedDates) {
-          await generateMutation.mutateAsync({
-            quantity,
-            mealTypeId,
-            expirationDate: date.toISOString()
-          });
+          for (let i = 0; i < quantity; i++) {
+            await generateMutation.mutateAsync({
+              mealTypeId,
+              expirationDate: date.toISOString().split('T')[0]
+            });
+          }
         }
       }
     } catch (error) {
