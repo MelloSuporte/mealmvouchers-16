@@ -46,7 +46,7 @@ export const useVouchers = () => {
             codigo,
             tipo_refeicao_id,
             data_expiracao,
-            usado,
+            usado_em,
             data_uso,
             data_criacao,
             tipos_refeicao (
@@ -58,7 +58,7 @@ export const useVouchers = () => {
               minutos_tolerancia
             )
           `)
-          .eq('usado', false)
+          .eq('usado_em', false)
           .gte('data_expiracao', currentDate)
           .order('data_criacao', { ascending: false });
 
