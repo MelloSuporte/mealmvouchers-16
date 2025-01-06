@@ -12,6 +12,7 @@ import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
 import AdminList from '@/components/admin/managers/AdminList';
 import TurnosForm from '@/components/admin/TurnosForm';
+import SystemPresentation from '@/components/admin/presentation/SystemPresentation';
 import { LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -51,50 +52,66 @@ const Admin = () => {
             <TabsTrigger value="background-images">Imagens de Fundo</TabsTrigger>
             <TabsTrigger value="managers">Gerentes</TabsTrigger>
             <TabsTrigger value="turnos">Turnos</TabsTrigger>
+            <TabsTrigger value="presentation">Apresentação</TabsTrigger>
           </TabsList>
+
           <TabsContent value="users">
             <Card>
               <UserFormMain />
             </Card>
           </TabsContent>
+
           <TabsContent value="companies">
             <Card>
               <CompanyForm />
             </Card>
           </TabsContent>
+
           <TabsContent value="meal-types">
             <Card>
               <MealTypeForm />
             </Card>
           </TabsContent>
+
           <TabsContent value="reports-t">
             <Card>
               <ReportsTForm />
             </Card>
           </TabsContent>
+
           <TabsContent value="rls">
             <Card>
               <RLSForm />
             </Card>
           </TabsContent>
+
           <TabsContent value="disposable-vouchers">
             <Card>
               <DisposableVoucherForm />
             </Card>
           </TabsContent>
+
           <TabsContent value="background-images">
             <Card>
               <BackgroundImageForm />
             </Card>
           </TabsContent>
+
           <TabsContent value="managers">
             <Card>
               <AdminList />
             </Card>
           </TabsContent>
+
           <TabsContent value="turnos">
             <Card>
               <TurnosForm />
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="presentation">
+            <Card>
+              <SystemPresentation />
             </Card>
           </TabsContent>
         </Tabs>
