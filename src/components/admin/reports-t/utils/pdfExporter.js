@@ -65,7 +65,6 @@ export const exportToPDF = async (data, filters, adminName) => {
       formatDate(item.data_uso),
       item.nome_usuario || '-',
       item.cpf || '-',
-      item.nome_empresa || '-',
       item.tipo_refeicao || '-',
       formatCurrency(item.valor_refeicao || 0),
       item.turno || '-',
@@ -74,7 +73,7 @@ export const exportToPDF = async (data, filters, adminName) => {
 
     doc.autoTable({
       startY: 135,
-      head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor']],
+      head: [['Data/Hora', 'Usuário', 'CPF', 'Refeição', 'Valor', 'Turno', 'Setor']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -93,8 +92,7 @@ export const exportToPDF = async (data, filters, adminName) => {
         3: { cellWidth: 25 },
         4: { cellWidth: 20 },
         5: { cellWidth: 20 },
-        6: { cellWidth: 20 },
-        7: { cellWidth: 20 }
+        6: { cellWidth: 20 }
       }
     });
 
