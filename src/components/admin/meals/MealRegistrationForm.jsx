@@ -14,7 +14,7 @@ const MealRegistrationForm = () => {
         .from('refeicoes_extras')
         .insert([
           {
-            nome_refeicao: data.nome,
+            nome_refeicao: data.nome_refeicao,
             valor: parseFloat(data.valor),
             ativo: true
           }
@@ -33,13 +33,13 @@ const MealRegistrationForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label htmlFor="nome" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="nome_refeicao" className="block text-sm font-medium text-gray-700">
           Nome da Refeição
         </label>
         <Input
-          id="nome"
+          id="nome_refeicao"
           type="text"
-          {...register('nome', { required: true })}
+          {...register('nome_refeicao', { required: true })}
           className="mt-1"
         />
       </div>
