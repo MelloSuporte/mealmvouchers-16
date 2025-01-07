@@ -14,7 +14,7 @@ const MealRegistrationForm = () => {
         .from('refeicoes_extras')
         .insert([
           {
-            nome_refeicao: data.nome,
+            nome: data.nome,
             valor: parseFloat(data.valor),
             ativo: true
           }
