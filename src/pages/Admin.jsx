@@ -12,11 +12,10 @@ import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
 import AdminList from '@/components/admin/managers/AdminList';
 import TurnosForm from '@/components/admin/TurnosForm';
-import { LogOut } from 'lucide-react';
+import { LogOut, FileText } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import RefeicoesExtras from './RefeicoesExtras';
-import MealRegistrationForm from '@/components/admin/meals/MealRegistrationForm';
 
 const Admin = () => {
   const { user, logout } = useAdmin();
@@ -33,7 +32,6 @@ const Admin = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Administração</h1>
           <div className="flex items-center gap-2">
-            <MealRegistrationForm />
             <Button
               variant="ghost"
               size="icon"
@@ -56,7 +54,12 @@ const Admin = () => {
             <TabsTrigger value="background-images">Imagens de Fundo</TabsTrigger>
             <TabsTrigger value="managers">Gerentes</TabsTrigger>
             <TabsTrigger value="turnos">Turnos</TabsTrigger>
-            <TabsTrigger value="refeicoes-extras">Refeições Extras</TabsTrigger>
+            <TabsTrigger value="refeicoes-extras">
+              <div className="flex items-center gap-1">
+                <FileText className="h-4 w-4" />
+                Refeições Extras
+              </div>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">

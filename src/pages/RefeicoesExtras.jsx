@@ -2,6 +2,8 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExtraMealForm from '../components/admin/extra-meals/ExtraMealForm';
 import ExtraMealReport from '../components/admin/extra-meals/ExtraMealReport';
+import MealRegistrationForm from '../components/admin/meals/MealRegistrationForm';
+import { FileText, FilePlus } from 'lucide-react';
 
 const RefeicoesExtras = () => {
   return (
@@ -10,12 +12,25 @@ const RefeicoesExtras = () => {
       
       <Tabs defaultValue="register" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="register">Cadastrar</TabsTrigger>
-          <TabsTrigger value="report">Relatórios</TabsTrigger>
+          <TabsTrigger value="register">
+            <div className="flex items-center gap-1">
+              <FilePlus className="h-4 w-4" />
+              Cadastrar
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="report">
+            <div className="flex items-center gap-1">
+              <FileText className="h-4 w-4" />
+              Relatórios
+            </div>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="register">
-          <ExtraMealForm />
+          <div className="space-y-6">
+            <MealRegistrationForm />
+            <ExtraMealForm />
+          </div>
         </TabsContent>
         
         <TabsContent value="report">
