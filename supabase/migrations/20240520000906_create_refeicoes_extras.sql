@@ -15,14 +15,19 @@ CREATE TABLE IF NOT EXISTS refeicoes_extras (
 -- Habilitar RLS
 ALTER TABLE refeicoes_extras ENABLE ROW LEVEL SECURITY;
 
+-- Remover políticas existentes
+DROP POLICY IF EXISTS "Permitir leitura para usuários autenticados" ON refeicoes_extras;
+DROP POLICY IF EXISTS "Permitir inserção para usuários autenticados" ON refeicoes_extras;
+DROP POLICY IF EXISTS "Permitir atualização para usuários autenticados" ON refeicoes_extras;
+
 -- Criar políticas
-CREATE POLICY "Permitir leitura para usuários autenticados" ON refeicoes_extras
+CREATE POLICY "refeicoes_extras_select_policy" ON refeicoes_extras
     FOR SELECT TO authenticated USING (true);
 
-CREATE POLICY "Permitir inserção para usuários autenticados" ON refeicoes_extras
+CREATE POLICY "refeicoes_extras_insert_policy" ON refeicoes_extras
     FOR INSERT TO authenticated WITH CHECK (true);
 
-CREATE POLICY "Permitir atualização para usuários autenticados" ON refeicoes_extras
+CREATE POLICY "refeicoes_extras_update_policy" ON refeicoes_extras
     FOR UPDATE TO authenticated USING (true);
 
 -- Criar índices
