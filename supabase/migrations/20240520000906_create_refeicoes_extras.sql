@@ -1,5 +1,8 @@
+-- Drop existing table if exists
+DROP TABLE IF EXISTS refeicoes_extras;
+
 -- Criar tabela para refeições extras
-CREATE TABLE IF NOT EXISTS refeicoes_extras (
+CREATE TABLE refeicoes_extras (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     usuario_id UUID REFERENCES usuarios(id),
     tipo_refeicao_id UUID REFERENCES tipos_refeicao(id),
@@ -7,7 +10,7 @@ CREATE TABLE IF NOT EXISTS refeicoes_extras (
     quantidade INTEGER NOT NULL DEFAULT 1,
     data_consumo DATE NOT NULL,
     observacao TEXT,
-    autorizado_por UUID REFERENCES auth.users(id),
+    autorizado_por TEXT, -- Changed from UUID to TEXT to store string ID
     nome_refeicao VARCHAR(255),
     ativo BOOLEAN DEFAULT true,
     criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -18,9 +21,9 @@ CREATE TABLE IF NOT EXISTS refeicoes_extras (
 ALTER TABLE refeicoes_extras ENABLE ROW LEVEL SECURITY;
 
 -- Remover políticas existentes
-DROP POLICY IF EXISTS "Permitir leitura para usuários autenticados" ON refeicoes_extras;
-DROP POLICY IF EXISTS "Permitir inserção para usuários autenticados" ON refeicoes_extras;
-DROP POLICY IF EXISTS "Permitir atualização para usuários autenticados" ON refeicoes_extras;
+DROP POLICY IF EXISTS "refeicoes_extras_select_policy" ON refeicoes_extras;
+DROP POLICY IF EXISTS "refeicoes_extras_insert_policy" ON refeicoes_extras;
+DROP POLICY IF EXISTS "refeicoes_extras_update_policy" ON refeicoes_extras;
 
 -- Criar políticas
 CREATE POLICY "refeicoes_extras_select_policy" ON refeicoes_extras
