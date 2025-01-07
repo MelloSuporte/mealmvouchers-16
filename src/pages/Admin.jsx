@@ -62,12 +62,7 @@ const Admin = () => {
             <TabsTrigger value="background-images">Imagens de Fundo</TabsTrigger>
             <TabsTrigger value="managers">Gerentes</TabsTrigger>
             <TabsTrigger value="turnos">Turnos</TabsTrigger>
-            <TabsTrigger value="refeicoes-extras">
-              <div className="flex items-center gap-1">
-                <FileText className="h-4 w-4" />
-                Refeições Extras
-              </div>
-            </TabsTrigger>
+            <TabsTrigger value="refeicoes-extras">Refeições Extras</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">

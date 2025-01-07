@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExtraMealForm from '../components/admin/extra-meals/ExtraMealForm';
 import ExtraMealReport from '../components/admin/extra-meals/ExtraMealReport';
 import MealRegistrationForm from '../components/admin/meals/MealRegistrationForm';
-import { FileText, FilePlus, Utensils } from 'lucide-react';
+import { Utensils } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 
@@ -23,37 +23,14 @@ const RefeicoesExtras = () => {
           >
             <Utensils className="h-5 w-5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/relatorios')}
-            className="hover:bg-slate-100"
-          >
-            <FileText className="h-5 w-5" />
-          </Button>
         </div>
       </div>
       
       <Tabs defaultValue="register" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="register">
-            <div className="flex items-center gap-1">
-              <FilePlus className="h-4 w-4" />
-              Cadastrar
-            </div>
-          </TabsTrigger>
-          <TabsTrigger value="meal">
-            <div className="flex items-center gap-1">
-              <Utensils className="h-4 w-4" />
-              Refeição
-            </div>
-          </TabsTrigger>
-          <TabsTrigger value="report">
-            <div className="flex items-center gap-1">
-              <FileText className="h-4 w-4" />
-              Relatórios
-            </div>
-          </TabsTrigger>
+          <TabsTrigger value="register">Cadastrar</TabsTrigger>
+          <TabsTrigger value="meal">Refeição</TabsTrigger>
+          <TabsTrigger value="report">Relatórios</TabsTrigger>
         </TabsList>
         
         <TabsContent value="register">
