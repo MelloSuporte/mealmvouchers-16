@@ -12,7 +12,7 @@ import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
 import AdminList from '@/components/admin/managers/AdminList';
 import TurnosForm from '@/components/admin/TurnosForm';
-import { LogOut, FileText, Restaurant } from 'lucide-react';
+import { LogOut, FileText, Utensils } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import RefeicoesExtras from './RefeicoesExtras';
@@ -38,7 +38,7 @@ const Admin = () => {
               onClick={() => navigate('/refeicao')}
               className="hover:bg-slate-100"
             >
-              <Restaurant className="h-5 w-5" />
+              <Utensils className="h-5 w-5" />
             </Button>
             <Button
               variant="ghost"
