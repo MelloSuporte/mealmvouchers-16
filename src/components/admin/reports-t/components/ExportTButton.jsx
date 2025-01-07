@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { FileDown } from 'lucide-react';
+import { FileDown, FileSpreadsheet } from 'lucide-react';
 import { toast } from "sonner";
 import { useReportsTData } from '../hooks/useReportsTData';
 import jsPDF from 'jspdf';
@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import logger from '@/config/logger';
 import { useAdmin } from '@/contexts/AdminContext';
+import * as XLSX from 'xlsx';
 
 const ExportTButton = ({ filters }) => {
   const { data, isLoading } = useReportsTData(filters);
@@ -22,9 +23,51 @@ const ExportTButton = ({ filters }) => {
     }).format(value);
   };
 
-  const handleExport = async () => {
+  const handleExportExcel = async () => {
     try {
-      logger.info('Iniciando exportação do relatório T', {
+      logger.info('Iniciando exportação do relatório Excel', {
+        filters,
+        recordCount: data?.length || 0
+      });
+
+      // Preparar dados para Excel
+      const excelData = data?.map(item => ({
+        'Data/Hora': format(new Date(item.data_uso), "dd/MM/yyyy HH:mm", { locale: ptBR }),
+        'Usuário': item.nome_usuario || '-',
+        'CPF': item.cpf || '-',
+        'Empresa': item.nome_empresa || '-',
+        'Refeição': item.tipo_refeicao || '-',
+        'Valor': formatCurrency(item.valor_refeicao || 0),
+        'Turno': item.turno || '-',
+        'Setor': item.nome_setor || '-'
+      })) || [];
+
+      // Criar workbook e worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Adicionar worksheet ao workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Relatório");
+
+      // Gerar arquivo
+      const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      logger.info('Relatório Excel exportado com sucesso', { fileName });
+      toast.success("Relatório Excel exportado com sucesso!");
+    } catch (error) {
+      logger.error('Erro ao exportar relatório Excel:', {
+        error: error.message,
+        stack: error.stack,
+        filters: filters
+      });
+      toast.error("Erro ao exportar relatório Excel: " + error.message);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      logger.info('Iniciando exportação do relatório PDF', {
         filters,
         recordCount: data?.length || 0
       });
@@ -167,28 +210,40 @@ const ExportTButton = ({ filters }) => {
       const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
       doc.save(fileName);
       
-      logger.info('Relatório exportado com sucesso', { fileName });
-      toast.success("Relatório exportado com sucesso!");
+      logger.info('Relatório PDF exportado com sucesso', { fileName });
+      toast.success("Relatório PDF exportado com sucesso!");
     } catch (error) {
-      logger.error('Erro ao exportar relatório:', {
+      logger.error('Erro ao exportar relatório PDF:', {
         error: error.message,
         stack: error.stack,
         filters: filters
       });
-      toast.error("Erro ao exportar relatório: " + error.message);
+      toast.error("Erro ao exportar relatório PDF: " + error.message);
     }
   };
 
   return (
-    <Button 
-      onClick={handleExport}
-      disabled={isLoading}
-      className="bg-primary hover:bg-primary/90 text-white"
-      size="sm"
-    >
-      <FileDown className="mr-2 h-4 w-4" />
-      Exportar Relatório
-    </Button>
+    <div className="flex gap-2">
+      <Button 
+        onClick={handleExportPDF}
+        disabled={isLoading}
+        className="bg-primary hover:bg-primary/90 text-white"
+        size="sm"
+      >
+        <FileDown className="mr-2 h-4 w-4" />
+        Exportar PDF
+      </Button>
+      
+      <Button 
+        onClick={handleExportExcel}
+        disabled={isLoading}
+        className="bg-green-600 hover:bg-green-700 text-white"
+        size="sm"
+      >
+        <FileSpreadsheet className="mr-2 h-4 w-4" />
+        Exportar Excel
+      </Button>
+    </div>
   );
 };
 
