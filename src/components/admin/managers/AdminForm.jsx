@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from '../../../config/supabase';
 import CompanySelect from '../user/CompanySelect';
 import { formatCPF } from '../../../utils/formatters';
+import { AdminPermissionsForm } from './AdminPermissionsForm';
 
 const AdminForm = ({ onClose, adminToEdit = null }) => {
   const [formData, setFormData] = useState({
@@ -19,13 +20,24 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
       gerenciar_vouchers_extra: adminToEdit?.permissoes?.gerenciar_vouchers_extra || false,
       gerenciar_vouchers_descartaveis: adminToEdit?.permissoes?.gerenciar_vouchers_descartaveis || false,
       gerenciar_usuarios: adminToEdit?.permissoes?.gerenciar_usuarios || false,
-      gerenciar_relatorios: adminToEdit?.permissoes?.gerenciar_relatorios || false
+      gerenciar_relatorios: adminToEdit?.permissoes?.gerenciar_relatorios || false,
+      gerenciar_refeicoes_extras: adminToEdit?.permissoes?.gerenciar_refeicoes_extras || false
     }
   });
 
   const handleCPFChange = (e) => {
     const formattedCPF = formatCPF(e.target.value);
     setFormData(prev => ({ ...prev, cpf: formattedCPF }));
+  };
+
+  const handlePermissionChange = (permission, checked) => {
+    setFormData(prev => ({
+      ...prev,
+      permissoes: {
+        ...prev.permissoes,
+        [permission]: checked
+      }
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -42,7 +54,6 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
         return;
       }
 
-      // Validate email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
         toast.error('Por favor, insira um email válido');
@@ -120,71 +131,10 @@ const AdminForm = ({ onClose, adminToEdit = null }) => {
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>Permissões</Label>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={formData.permissoes.gerenciar_vouchers_extra}
-              onCheckedChange={(checked) => 
-                setFormData({
-                  ...formData,
-                  permissoes: {
-                    ...formData.permissoes,
-                    gerenciar_vouchers_extra: checked
-                  }
-                })
-              }
-            />
-            <Label>Gerenciar Vouchers Extra</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={formData.permissoes.gerenciar_vouchers_descartaveis}
-              onCheckedChange={(checked) => 
-                setFormData({
-                  ...formData,
-                  permissoes: {
-                    ...formData.permissoes,
-                    gerenciar_vouchers_descartaveis: checked
-                  }
-                })
-              }
-            />
-            <Label>Gerenciar Vouchers Descartáveis</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={formData.permissoes.gerenciar_usuarios}
-              onCheckedChange={(checked) => 
-                setFormData({
-                  ...formData,
-                  permissoes: {
-                    ...formData.permissoes,
-                    gerenciar_usuarios: checked
-                  }
-                })
-              }
-            />
-            <Label>Gerenciar Usuários</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={formData.permissoes.gerenciar_relatorios}
-              onCheckedChange={(checked) => 
-                setFormData({
-                  ...formData,
-                  permissoes: {
-                    ...formData.permissoes,
-                    gerenciar_relatorios: checked
-                  }
-                })
-              }
-            />
-            <Label>Gerenciar Relatórios</Label>
-          </div>
-        </div>
-      </div>
+      <AdminPermissionsForm 
+        permissions={formData.permissoes}
+        onPermissionChange={handlePermissionChange}
+      />
 
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onClose}>
