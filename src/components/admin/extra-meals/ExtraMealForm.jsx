@@ -1,111 +1,187 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useAdmin } from '@/contexts/AdminContext';
-import { supabase } from '@/config/supabase';
-import { toast } from "sonner";
-import logger from '@/config/logger';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { useUserSearch } from '../../../hooks/useUserSearch';
+import { useMealTypes } from '../../../hooks/useMealTypes';
+import { useRefeicoes } from '../../../hooks/useRefeicoes';
+import { generatePDF } from './pdfGenerator';
+import { supabase } from '../../../config/supabase';
+import { useAdmin } from '../../../contexts/AdminContext';
+import { useForm } from 'react-hook-form';
+import logger from '../../../config/logger';
 
 const ExtraMealForm = () => {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isAuthenticated, adminId, adminName } = useAdmin();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
+  const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
+  const { data: mealTypes } = useMealTypes();
+  const { data: refeicoes } = useRefeicoes();
+  const { adminId, isAuthenticated, checkAuth } = useAdmin();
+
+  const selectedRefeicaoId = watch('refeicao_id');
+  const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
+
+  React.useEffect(() => {
+    if (selectedRefeicao) {
+      setValue('valor', selectedRefeicao.valor);
+    }
+  }, [selectedRefeicao, setValue]);
 
   const onSubmit = async (data) => {
     try {
-      if (!isAuthenticated || !adminId) {
-        logger.error('Admin não autenticado', { adminId, isAuthenticated });
+      if (!isAuthenticated) {
+        logger.error('Admin não autenticado');
         toast.error("Você precisa estar autenticado como administrador");
         return;
       }
 
-      setIsSubmitting(true);
-      logger.info('Iniciando cadastro de refeição extra', { 
+      const { data: session } = await supabase.auth.getSession();
+      logger.info('Status da sessão:', {
+        hasSession: !!session?.session,
+        accessToken: !!session?.session?.access_token,
         adminId,
-        adminName,
-        data 
+        isAuthenticated
+      });
+
+      if (!session?.session?.access_token) {
+        logger.error('Sessão Supabase não encontrada');
+        await checkAuth();
+        toast.error("Erro de autenticação. Tentando reconectar...");
+        return;
+      }
+
+      if (!selectedUser) {
+        toast.error("Selecione um usuário");
+        return;
+      }
+
+      const mealType = mealTypes?.find(type => type.id === data.tipo_refeicao_id);
+      const refeicao = refeicoes?.find(ref => ref.id === data.refeicao_id);
+      
+      if (!refeicao) {
+        toast.error("Selecione uma refeição");
+        return;
+      }
+
+      logger.info('Iniciando cadastro de refeição extra:', {
+        usuario: selectedUser.id,
+        refeicao: refeicao.id,
+        adminId,
+        sessionExists: !!session?.session,
+        authToken: !!session?.session?.access_token
       });
 
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
-          ...data,
-          criado_por: adminId,
-          criado_por_nome: adminName,
-          data_registro: new Date().toISOString()
-        });
+          usuario_id: selectedUser.id,
+          tipo_refeicao_id: data.tipo_refeicao_id,
+          nome_refeicao: mealType?.nome || '',
+          valor: refeicao.valor,
+          quantidade: data.quantidade,
+          data_consumo: data.data_consumo,
+          observacao: data.observacao,
+          ativo: true,
+          autorizado_por: adminId
+        })
+        .select();
 
       if (error) {
-        logger.error('Erro ao cadastrar refeição extra:', error);
-        toast.error("Erro ao cadastrar refeição extra");
-        return;
+        logger.error('Erro ao inserir refeição:', error);
+        throw error;
       }
 
-      logger.info('Refeição extra cadastrada com sucesso');
-      toast.success("Refeição extra cadastrada com sucesso!");
+      toast.success("Refeição extra registrada com sucesso!");
+      generatePDF({ ...data, usuario: selectedUser });
       reset();
+      setSelectedUser(null);
     } catch (error) {
-      logger.error('Erro inesperado ao cadastrar refeição:', error);
-      toast.error("Erro ao cadastrar refeição");
-    } finally {
-      setIsSubmitting(false);
+      logger.error('Erro ao registrar refeição:', error);
+      toast.error("Erro ao registrar refeição extra: " + error.message);
     }
   };
 
   return (
-    <Card>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="cpf">CPF</Label>
+    <Card className="p-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="cpf">CPF do Usuário</Label>
             <Input
               id="cpf"
-              {...register("cpf", { required: true })}
               placeholder="Digite o CPF"
+              {...register("cpf")}
+              onChange={(e) => searchUser(e.target.value)}
             />
-            {errors.cpf && <span className="text-red-500">CPF é obrigatório</span>}
           </div>
 
-          <div>
-            <Label htmlFor="nome">Nome</Label>
+          {selectedUser && (
+            <div className="space-y-2">
+              <Label>Usuário Selecionado</Label>
+              <div className="p-2 bg-gray-100 rounded">
+                {selectedUser.nome}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="tipo_refeicao">Tipo de Refeição</Label>
+            <select
+              {...register("tipo_refeicao_id", { required: true })}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Selecione...</option>
+              {mealTypes?.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="refeicao">Refeição</Label>
+            <select
+              {...register("refeicao_id", { required: true })}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Selecione...</option>
+              {refeicoes?.map((refeicao) => (
+                <option key={refeicao.id} value={refeicao.id}>
+                  {refeicao.nome} - R$ {Number(refeicao.valor).toFixed(2)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="quantidade">Quantidade</Label>
             <Input
-              id="nome"
-              {...register("nome", { required: true })}
-              placeholder="Digite o nome"
+              type="number"
+              {...register("quantidade", { required: true, min: 1 })}
             />
-            {errors.nome && <span className="text-red-500">Nome é obrigatório</span>}
           </div>
 
-          <div>
-            <Label htmlFor="empresa">Empresa</Label>
+          <div className="space-y-2">
+            <Label htmlFor="data_consumo">Data de Consumo</Label>
             <Input
-              id="empresa"
-              {...register("empresa", { required: true })}
-              placeholder="Digite a empresa"
+              type="date"
+              {...register("data_consumo", { required: true })}
             />
-            {errors.empresa && <span className="text-red-500">Empresa é obrigatória</span>}
           </div>
 
-          <div>
+          <div className="space-y-2 col-span-2">
             <Label htmlFor="observacao">Observação</Label>
-            <Input
-              id="observacao"
-              {...register("observacao")}
-              placeholder="Digite uma observação (opcional)"
-            />
+            <Input {...register("observacao")} />
           </div>
+        </div>
 
-          <Button 
-            type="submit" 
-            disabled={isSubmitting || !isAuthenticated}
-          >
-            {isSubmitting ? "Cadastrando..." : "Cadastrar Refeição Extra"}
-          </Button>
-        </form>
-      </CardContent>
+        <Button type="submit" className="w-full">
+          Registrar Refeição Extra
+        </Button>
+      </form>
     </Card>
   );
 };
