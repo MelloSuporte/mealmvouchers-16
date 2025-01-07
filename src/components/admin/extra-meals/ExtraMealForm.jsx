@@ -18,7 +18,7 @@ const ExtraMealForm = () => {
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: mealTypes } = useMealTypes();
   const { data: refeicoes } = useRefeicoes();
-  const { adminId, isAuthenticated } = useAdmin();
+  const { adminId, isAuthenticated, checkAuth } = useAdmin();
 
   const selectedRefeicaoId = watch('refeicao_id');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
@@ -31,11 +31,26 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Verificação de autenticação
+      // Verificar autenticação do admin
+      if (!isAuthenticated) {
+        logger.error('Admin não autenticado');
+        toast.error("Você precisa estar autenticado como administrador");
+        return;
+      }
+
+      // Verificar sessão do Supabase
       const { data: session } = await supabase.auth.getSession();
+      logger.info('Status da sessão:', {
+        hasSession: !!session?.session,
+        accessToken: !!session?.session?.access_token,
+        adminId,
+        isAuthenticated
+      });
+
       if (!session?.session?.access_token) {
-        logger.error('Sessão não encontrada');
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
+        logger.error('Sessão Supabase não encontrada');
+        await checkAuth(); // Tentar reautenticar
+        toast.error("Erro de autenticação. Tentando reconectar...");
         return;
       }
 
@@ -56,9 +71,11 @@ const ExtraMealForm = () => {
         usuario: selectedUser.id,
         refeicao: refeicao.id,
         adminId,
-        sessionExists: !!session?.session
+        sessionExists: !!session?.session,
+        authToken: !!session?.session?.access_token
       });
 
+      // Configurar cabeçalhos de autenticação
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
@@ -71,7 +88,8 @@ const ExtraMealForm = () => {
           observacao: data.observacao,
           ativo: true,
           autorizado_por: adminId
-        });
+        })
+        .select();
 
       if (error) {
         logger.error('Erro ao inserir refeição:', error);
