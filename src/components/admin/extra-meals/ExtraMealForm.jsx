@@ -17,7 +17,7 @@ const ExtraMealForm = () => {
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: mealTypes } = useMealTypes();
   const { data: refeicoes } = useRefeicoes();
-  const { isAuthenticated } = useAdmin();
+  const { adminId } = useAdmin();
 
   const selectedRefeicaoId = watch('refeicao_id');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
@@ -35,23 +35,8 @@ const ExtraMealForm = () => {
         return;
       }
 
-      if (!isAuthenticated) {
-        toast.error("Você precisa estar autenticado para realizar esta operação");
-        return;
-      }
-
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Erro ao obter sessão:', sessionError);
-        toast.error("Erro de autenticação");
-        return;
-      }
-
-      const adminId = localStorage.getItem('adminId');
       if (!adminId) {
-        toast.error("ID do administrador não encontrado");
+        toast.error("ID do administrador não encontrado. Por favor, faça login novamente.");
         return;
       }
 
