@@ -63,15 +63,14 @@ const MealRegistrationForm = () => {
 
       // Convert currency string to number
       const numericValue = parseFloat(mealData.valor.replace(/[^0-9,]/g, '').replace(',', '.'));
-      
-      const { data, error } = await supabase
+
+      const { error } = await supabase
         .from('refeicoes')
         .insert([{
           nome: mealData.nome,
           valor: numericValue,
           ativo: mealData.ativo
-        }])
-        .select();
+        }]);
 
       if (error) throw error;
       
