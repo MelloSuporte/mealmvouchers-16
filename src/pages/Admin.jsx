@@ -12,7 +12,7 @@ import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
 import AdminList from '@/components/admin/managers/AdminList';
 import TurnosForm from '@/components/admin/TurnosForm';
-import { LogOut, FileText, Utensils } from 'lucide-react';
+import { LogOut, Utensils } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import RefeicoesExtras from './RefeicoesExtras';
@@ -62,7 +62,12 @@ const Admin = () => {
             <TabsTrigger value="background-images">Imagens de Fundo</TabsTrigger>
             <TabsTrigger value="managers">Gerentes</TabsTrigger>
             <TabsTrigger value="turnos">Turnos</TabsTrigger>
-            <TabsTrigger value="refeicoes-extras">Refeições Extras</TabsTrigger>
+            <TabsTrigger value="refeicoes-extras">
+              <div className="flex items-center gap-1">
+                <Utensils className="h-4 w-4" />
+                Refeições Extras
+              </div>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
