@@ -1,5 +1,5 @@
 -- Drop existing table if exists
-DROP TABLE IF EXISTS refeicoes_extras;
+DROP TABLE IF EXISTS refeicoes_extras CASCADE;
 
 -- Criar tabela para refeições extras
 CREATE TABLE refeicoes_extras (
@@ -10,7 +10,7 @@ CREATE TABLE refeicoes_extras (
     quantidade INTEGER NOT NULL DEFAULT 1,
     data_consumo DATE NOT NULL,
     observacao TEXT,
-    autorizado_por TEXT, -- Changed from UUID to TEXT to store string ID
+    autorizado_por TEXT,
     nome_refeicao VARCHAR(255),
     ativo BOOLEAN DEFAULT true,
     criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

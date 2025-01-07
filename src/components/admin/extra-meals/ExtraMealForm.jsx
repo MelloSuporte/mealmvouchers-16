@@ -22,8 +22,6 @@ const ExtraMealForm = () => {
         return;
       }
 
-      const mealType = mealTypes?.find(type => type.id === data.tipo_refeicao_id);
-      
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -33,6 +31,13 @@ const ExtraMealForm = () => {
         return;
       }
 
+      if (!session?.user?.id) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
+      const mealType = mealTypes?.find(type => type.id === data.tipo_refeicao_id);
+      
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
@@ -44,12 +49,15 @@ const ExtraMealForm = () => {
           data_consumo: data.data_consumo,
           observacao: data.observacao,
           ativo: true,
-          autorizado_por: session?.user?.id || 'sistema'
-        });
+          autorizado_por: session.user.id
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Erro ao inserir refeição:', error);
-        throw error;
+        toast.error("Erro ao registrar refeição extra: " + error.message);
+        return;
       }
 
       toast.success("Refeição extra registrada com sucesso!");
