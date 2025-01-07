@@ -32,13 +32,11 @@ export const AdminProvider = ({ children }) => {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!session) {
-          // Se não houver sessão, fazer login anônimo
-          const { error: anonError } = await supabase.auth.signInAnonymously();
-          
-          if (anonError) {
-            logger.error('Erro no login anônimo:', anonError);
-            throw anonError;
-          }
+          setIsAuthenticated(false);
+          setAdminType(null);
+          setAdminName(null);
+          setAdminId(null);
+          return;
         }
 
         setIsAuthenticated(true);
