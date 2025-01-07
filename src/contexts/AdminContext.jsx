@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
+import { supabase } from '../config/supabase';
+import logger from '../config/logger';
 
 const AdminContext = createContext(null);
 
@@ -16,27 +18,55 @@ export const AdminProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminName, setAdminName] = useState(null);
+  const [adminId, setAdminId] = useState(null);
 
-  const checkAuth = useCallback(() => {
+  const checkAuth = useCallback(async () => {
     try {
       const adminToken = localStorage.getItem('adminToken');
       const storedType = localStorage.getItem('adminType');
       const storedName = localStorage.getItem('adminName');
+      const storedId = localStorage.getItem('adminId');
       
       if (adminToken && storedType) {
+        // Verificar se a sessão do Supabase está ativa
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          logger.error('Erro ao verificar sessão:', error);
+          throw error;
+        }
+
+        if (!session) {
+          // Se não houver sessão, fazer login anônimo
+          const { error: anonError } = await supabase.auth.signInWithPassword({
+            email: process.env.VITE_SUPABASE_ANON_KEY,
+            password: process.env.VITE_SUPABASE_ANON_SECRET
+          });
+
+          if (anonError) {
+            logger.error('Erro no login anônimo:', anonError);
+            throw anonError;
+          }
+        }
+
         setIsAuthenticated(true);
         setAdminType(storedType);
         setAdminName(storedName);
+        setAdminId(storedId);
+        logger.info('Admin autenticado:', { type: storedType, name: storedName });
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
         setAdminName(null);
+        setAdminId(null);
+        logger.warn('Sem token de admin encontrado');
       }
     } catch (error) {
-      console.error('Erro ao verificar autenticação:', error);
+      logger.error('Erro ao verificar autenticação:', error);
       setIsAuthenticated(false);
       setAdminType(null);
       setAdminName(null);
+      setAdminId(null);
     } finally {
       setIsLoading(false);
     }
@@ -46,20 +76,29 @@ export const AdminProvider = ({ children }) => {
     checkAuth();
   }, [checkAuth]);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminType');
-    localStorage.removeItem('adminName');
-    localStorage.removeItem('adminPermissions');
-    setIsAuthenticated(false);
-    setAdminType(null);
-    setAdminName(null);
-    toast.success("Logout realizado com sucesso");
+  const logout = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminType');
+      localStorage.removeItem('adminName');
+      localStorage.removeItem('adminId');
+      localStorage.removeItem('adminPermissions');
+      setIsAuthenticated(false);
+      setAdminType(null);
+      setAdminName(null);
+      setAdminId(null);
+      toast.success("Logout realizado com sucesso");
+    } catch (error) {
+      logger.error('Erro ao fazer logout:', error);
+      toast.error("Erro ao realizar logout");
+    }
   }, []);
 
   const value = {
     adminType,
     adminName,
+    adminId,
     isLoading,
     isAuthenticated,
     isMasterAdmin: adminType === 'master',

@@ -1,5 +1,4 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,13 +10,15 @@ import { useRefeicoes } from '../../../hooks/useRefeicoes';
 import { generatePDF } from './pdfGenerator';
 import { supabase } from '../../../config/supabase';
 import { useAdmin } from '../../../contexts/AdminContext';
+import { useForm } from 'react-hook-form';
+import logger from '../../../config/logger';
 
 const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: mealTypes } = useMealTypes();
   const { data: refeicoes } = useRefeicoes();
-  const { adminId } = useAdmin();
+  const { adminId, isAuthenticated } = useAdmin();
 
   const selectedRefeicaoId = watch('refeicao_id');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
@@ -30,6 +31,12 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
+      if (!isAuthenticated) {
+        logger.error('Tentativa de submissão sem autenticação');
+        toast.error("Você precisa estar autenticado para realizar esta ação");
+        return;
+      }
+
       if (!selectedUser) {
         toast.error("Selecione um usuário");
         return;
@@ -42,6 +49,12 @@ const ExtraMealForm = () => {
         toast.error("Selecione uma refeição");
         return;
       }
+
+      logger.info('Iniciando cadastro de refeição extra:', {
+        usuario: selectedUser.id,
+        refeicao: refeicao.id,
+        adminId
+      });
 
       const { error } = await supabase
         .from('refeicoes_extras')
@@ -58,9 +71,8 @@ const ExtraMealForm = () => {
         });
 
       if (error) {
-        console.error('Erro ao inserir refeição:', error);
-        toast.error("Erro ao registrar refeição extra: " + error.message);
-        return;
+        logger.error('Erro ao inserir refeição:', error);
+        throw error;
       }
 
       toast.success("Refeição extra registrada com sucesso!");
@@ -68,8 +80,8 @@ const ExtraMealForm = () => {
       reset();
       setSelectedUser(null);
     } catch (error) {
-      console.error('Erro ao registrar refeição:', error);
-      toast.error("Erro ao registrar refeição extra");
+      logger.error('Erro ao registrar refeição:', error);
+      toast.error("Erro ao registrar refeição extra: " + error.message);
     }
   };
 
