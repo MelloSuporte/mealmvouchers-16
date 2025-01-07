@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '../../../config/supabase';
-import { toast } from 'sonner';
+import { toast } from "sonner";
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 
@@ -14,7 +14,7 @@ const MealRegistrationForm = () => {
         .from('refeicoes_extras')
         .insert([
           {
-            nome_refeicao: data.nome,
+            nome: data.nome,
             valor: parseFloat(data.valor),
             ativo: true
           }
