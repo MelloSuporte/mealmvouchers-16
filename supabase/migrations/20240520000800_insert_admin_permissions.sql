@@ -25,4 +25,6 @@ VALUES (
 ON CONFLICT (email) 
 DO UPDATE SET
     permissoes = EXCLUDED.permissoes,
-    senha = EXCLUDED.senha;
+    senha = EXCLUDED.senha,
+    nome = EXCLUDED.nome,
+    cpf = EXCLUDED.cpf;
