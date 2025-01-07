@@ -7,13 +7,24 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useUserSearch } from '../../../hooks/useUserSearch';
 import { useMealTypes } from '../../../hooks/useMealTypes';
+import { useRefeicoes } from '../../../hooks/useRefeicoes';
 import { generatePDF } from './pdfGenerator';
 import { supabase } from '../../../config/supabase';
 
 const ExtraMealForm = () => {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: mealTypes } = useMealTypes();
+  const { data: refeicoes } = useRefeicoes();
+
+  const selectedRefeicaoId = watch('refeicao_id');
+  const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
+
+  React.useEffect(() => {
+    if (selectedRefeicao) {
+      setValue('valor', selectedRefeicao.valor);
+    }
+  }, [selectedRefeicao, setValue]);
 
   const onSubmit = async (data) => {
     try {
@@ -37,22 +48,26 @@ const ExtraMealForm = () => {
       }
 
       const mealType = mealTypes?.find(type => type.id === data.tipo_refeicao_id);
+      const refeicao = refeicoes?.find(ref => ref.id === data.refeicao_id);
       
+      if (!refeicao) {
+        toast.error("Selecione uma refeição");
+        return;
+      }
+
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
           tipo_refeicao_id: data.tipo_refeicao_id,
           nome_refeicao: mealType?.nome || '',
-          valor: data.valor,
+          valor: refeicao.valor,
           quantidade: data.quantidade,
           data_consumo: data.data_consumo,
           observacao: data.observacao,
           ativo: true,
           autorizado_por: session.user.id
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
         console.error('Erro ao inserir refeição:', error);
@@ -109,12 +124,18 @@ const ExtraMealForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="valor">Valor</Label>
-            <Input
-              type="number"
-              step="0.01"
-              {...register("valor", { required: true, min: 0 })}
-            />
+            <Label htmlFor="refeicao">Refeição</Label>
+            <select
+              {...register("refeicao_id", { required: true })}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Selecione...</option>
+              {refeicoes?.map((refeicao) => (
+                <option key={refeicao.id} value={refeicao.id}>
+                  {refeicao.nome} - R$ {Number(refeicao.valor).toFixed(2)}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">
