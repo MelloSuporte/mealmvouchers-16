@@ -25,11 +25,6 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
       // Admin master hardcoded
       if (formData.password === '0001000') {
         logger.info('Login master admin detectado');
-        
-        // Autenticação anônima no Supabase
-        const { error: authError } = await supabase.auth.signInAnonymously();
-        if (authError) throw authError;
-
         localStorage.setItem('adminToken', 'master-admin-token');
         localStorage.setItem('adminType', 'master');
         localStorage.setItem('adminId', 'master');
@@ -38,25 +33,16 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
           gerenciar_vouchers_extra: true,
           gerenciar_vouchers_descartaveis: true,
           gerenciar_usuarios: true,
-          gerenciar_relatorios: true,
-          gerenciar_imagens_fundo: true,
-          gerenciar_gerentes: true,
-          gerenciar_turnos: true,
-          gerenciar_refeicoes_extras: true
+          gerenciar_relatorios: true
         }));
-        
         onClose();
         navigate('/admin');
         toast.success("Login realizado com sucesso!");
         return;
       }
 
-      // Login gerente
+      // Login gerente - Busca completa na tabela admin_users
       logger.info('Buscando admin_user na tabela:', { email: formData.email });
-      
-      // Primeiro, autenticar anonimamente no Supabase
-      const { error: authError } = await supabase.auth.signInAnonymously();
-      if (authError) throw authError;
       
       const { data: admin, error } = await supabase
         .from('admin_users')
@@ -81,6 +67,7 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
           permissoes: admin.permissoes 
         });
         
+        // Armazenando todas as informações necessárias
         localStorage.setItem('adminToken', 'admin-token-' + admin.id);
         localStorage.setItem('adminType', 'manager');
         localStorage.setItem('adminId', admin.id);
