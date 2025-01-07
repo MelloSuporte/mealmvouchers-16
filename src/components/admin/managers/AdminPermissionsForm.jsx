@@ -6,9 +6,13 @@ export const AdminPermissionsForm = ({ permissions, onPermissionChange }) => {
   const permissionLabels = {
     gerenciar_vouchers_extra: "Gerenciar Vouchers Extra",
     gerenciar_vouchers_descartaveis: "Gerenciar Vouchers Descartáveis",
-    gerenciar_usuarios: "Gerenciar Usuários",
-    gerenciar_relatorios: "Gerenciar Relatórios",
-    gerenciar_refeicoes_extras: "Refeições Extras"
+    gerenciar_usuarios: "Usuários",
+    gerenciar_empresas: "Empresas",
+    gerenciar_tipos_refeicao: "Tipos de Refeição",
+    gerenciar_relatorios: "Relatórios",
+    gerenciar_imagens_fundo: "Imagens de Fundo",
+    gerenciar_gerentes: "Gerentes",
+    gerenciar_turnos: "Turnos"
   };
 
   return (
