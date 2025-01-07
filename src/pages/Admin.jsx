@@ -12,7 +12,7 @@ import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
 import AdminList from '@/components/admin/managers/AdminList';
 import TurnosForm from '@/components/admin/TurnosForm';
-import { LogOut, Utensils } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import RefeicoesExtras from './RefeicoesExtras';
@@ -32,14 +32,6 @@ const Admin = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Administração</h1>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/refeicao')}
-              className="hover:bg-slate-100"
-            >
-              <Utensils className="h-5 w-5" />
-            </Button>
             <Button
               variant="ghost"
               size="icon"
