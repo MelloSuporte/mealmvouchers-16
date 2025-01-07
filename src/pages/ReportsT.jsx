@@ -7,7 +7,7 @@ const ReportsT = () => {
   return (
     <AdminProvider>
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Relatórios (T)</h1>
+        <h1 className="text-2xl font-bold mb-4">Relatórios</h1>
         <Card>
           <ReportsTForm />
         </Card>
