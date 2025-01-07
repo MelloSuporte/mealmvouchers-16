@@ -16,6 +16,7 @@ const MealRegistrationForm = () => {
 
   const handleInputChange = (field, value) => {
     if (field === 'valor') {
+      // Remove non-numeric characters and format as currency
       const numericValue = value.replace(/[^0-9]/g, '');
       const formattedValue = (numericValue / 100).toLocaleString('pt-BR', {
         style: 'currency',
@@ -48,6 +49,19 @@ const MealRegistrationForm = () => {
 
     try {
       setIsSubmitting(true);
+      
+      // Get the current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        throw new Error('Erro ao verificar autenticação: ' + sessionError.message);
+      }
+
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Convert currency string to number
       const numericValue = parseFloat(mealData.valor.replace(/[^0-9,]/g, '').replace(',', '.'));
       
       const { data, error } = await supabase
