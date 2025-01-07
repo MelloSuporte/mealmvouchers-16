@@ -31,18 +31,10 @@ export const AdminProvider = ({ children }) => {
         // Verificar se a sessão do Supabase está ativa
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (error) {
-          logger.error('Erro ao verificar sessão:', error);
-          throw error;
-        }
-
         if (!session) {
           // Se não houver sessão, fazer login anônimo
-          const { error: anonError } = await supabase.auth.signInWithPassword({
-            email: process.env.VITE_SUPABASE_ANON_KEY,
-            password: process.env.VITE_SUPABASE_ANON_SECRET
-          });
-
+          const { error: anonError } = await supabase.auth.signInAnonymously();
+          
           if (anonError) {
             logger.error('Erro no login anônimo:', anonError);
             throw anonError;
@@ -53,7 +45,11 @@ export const AdminProvider = ({ children }) => {
         setAdminType(storedType);
         setAdminName(storedName);
         setAdminId(storedId);
-        logger.info('Admin autenticado:', { type: storedType, name: storedName });
+        logger.info('Admin autenticado:', { 
+          type: storedType, 
+          name: storedName,
+          permissions: localStorage.getItem('adminPermissions')
+        });
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
@@ -95,6 +91,17 @@ export const AdminProvider = ({ children }) => {
     }
   }, []);
 
+  const hasPermission = useCallback((permission) => {
+    if (adminType === 'master') return true;
+    try {
+      const permissions = JSON.parse(localStorage.getItem('adminPermissions') || '{}');
+      return permissions[permission] === true;
+    } catch (error) {
+      logger.error('Erro ao verificar permissão:', error);
+      return false;
+    }
+  }, [adminType]);
+
   const value = {
     adminType,
     adminName,
@@ -103,15 +110,7 @@ export const AdminProvider = ({ children }) => {
     isAuthenticated,
     isMasterAdmin: adminType === 'master',
     isManager: adminType === 'manager' || adminType === 'master',
-    hasPermission: (permission) => {
-      if (adminType === 'master') return true;
-      try {
-        const permissions = JSON.parse(localStorage.getItem('adminPermissions') || '{}');
-        return permissions[permission] === true;
-      } catch {
-        return false;
-      }
-    },
+    hasPermission,
     logout,
     checkAuth
   };
