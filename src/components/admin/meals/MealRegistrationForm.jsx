@@ -5,6 +5,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from '../../../config/supabase';
+import { useAdmin } from '../../../contexts/AdminContext';
+import logger from '../../../config/logger';
 
 const MealRegistrationForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -13,6 +15,8 @@ const MealRegistrationForm = () => {
     valor: '',
     ativo: true
   });
+
+  const { isAuthenticated, adminId } = useAdmin();
 
   const handleInputChange = (field, value) => {
     if (field === 'valor') {
@@ -49,16 +53,12 @@ const MealRegistrationForm = () => {
 
     try {
       setIsSubmitting(true);
-      
-      // Get the current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        throw new Error('Erro ao verificar autenticação: ' + sessionError.message);
-      }
 
-      if (!session) {
-        throw new Error('Usuário não autenticado');
+      // Verificar autenticação
+      if (!isAuthenticated || !adminId) {
+        logger.error('Tentativa de cadastro sem autenticação');
+        toast.error("Você precisa estar autenticado como administrador");
+        return;
       }
 
       // Convert currency string to number
@@ -69,10 +69,14 @@ const MealRegistrationForm = () => {
         .insert([{
           nome: mealData.nome,
           valor: numericValue,
-          ativo: mealData.ativo
+          ativo: mealData.ativo,
+          criado_por: adminId
         }]);
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao inserir refeição:', error);
+        throw error;
+      }
       
       toast.success("Refeição cadastrada com sucesso!");
       setMealData({
@@ -81,7 +85,7 @@ const MealRegistrationForm = () => {
         ativo: true
       });
     } catch (error) {
-      console.error('Erro ao cadastrar refeição:', error);
+      logger.error('Erro ao cadastrar refeição:', error);
       toast.error("Erro ao cadastrar refeição: " + (error.message || 'Erro desconhecido'));
     } finally {
       setIsSubmitting(false);
