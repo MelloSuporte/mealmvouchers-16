@@ -10,12 +10,14 @@ import { useMealTypes } from '../../../hooks/useMealTypes';
 import { useRefeicoes } from '../../../hooks/useRefeicoes';
 import { generatePDF } from './pdfGenerator';
 import { supabase } from '../../../config/supabase';
+import { useAdmin } from '../../../contexts/AdminContext';
 
 const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: mealTypes } = useMealTypes();
   const { data: refeicoes } = useRefeicoes();
+  const { isAuthenticated } = useAdmin();
 
   const selectedRefeicaoId = watch('refeicao_id');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
@@ -33,6 +35,11 @@ const ExtraMealForm = () => {
         return;
       }
 
+      if (!isAuthenticated) {
+        toast.error("Você precisa estar autenticado para realizar esta operação");
+        return;
+      }
+
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -42,8 +49,9 @@ const ExtraMealForm = () => {
         return;
       }
 
-      if (!session?.user?.id) {
-        toast.error("Usuário não autenticado");
+      const adminId = localStorage.getItem('adminId');
+      if (!adminId) {
+        toast.error("ID do administrador não encontrado");
         return;
       }
 
@@ -66,7 +74,7 @@ const ExtraMealForm = () => {
           data_consumo: data.data_consumo,
           observacao: data.observacao,
           ativo: true,
-          autorizado_por: session.user.id
+          autorizado_por: adminId
         });
 
       if (error) {
