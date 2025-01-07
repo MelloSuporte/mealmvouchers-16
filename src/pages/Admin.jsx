@@ -15,6 +15,7 @@ import TurnosForm from '@/components/admin/TurnosForm';
 import { LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
+import RefeicoesExtras from './RefeicoesExtras';
 
 const Admin = () => {
   const { user, logout } = useAdmin();
@@ -51,6 +52,7 @@ const Admin = () => {
             <TabsTrigger value="background-images">Imagens de Fundo</TabsTrigger>
             <TabsTrigger value="managers">Gerentes</TabsTrigger>
             <TabsTrigger value="turnos">Turnos</TabsTrigger>
+            <TabsTrigger value="refeicoes-extras">Refeições Extras</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -104,6 +106,12 @@ const Admin = () => {
           <TabsContent value="turnos">
             <Card>
               <TurnosForm />
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="refeicoes-extras">
+            <Card>
+              <RefeicoesExtras />
             </Card>
           </TabsContent>
         </Tabs>
