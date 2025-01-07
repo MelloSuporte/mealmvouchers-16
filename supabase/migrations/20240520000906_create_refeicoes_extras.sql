@@ -25,17 +25,30 @@ DROP POLICY IF EXISTS "refeicoes_extras_select_policy" ON refeicoes_extras;
 DROP POLICY IF EXISTS "refeicoes_extras_insert_policy" ON refeicoes_extras;
 DROP POLICY IF EXISTS "refeicoes_extras_update_policy" ON refeicoes_extras;
 
--- Criar políticas
+-- Criar políticas mais permissivas para testes
 CREATE POLICY "refeicoes_extras_select_policy" ON refeicoes_extras
-    FOR SELECT TO authenticated USING (true);
+    FOR SELECT TO authenticated, anon
+    USING (true);
 
 CREATE POLICY "refeicoes_extras_insert_policy" ON refeicoes_extras
-    FOR INSERT TO authenticated WITH CHECK (true);
+    FOR INSERT TO authenticated
+    WITH CHECK (true);
 
 CREATE POLICY "refeicoes_extras_update_policy" ON refeicoes_extras
-    FOR UPDATE TO authenticated USING (true);
+    FOR UPDATE TO authenticated
+    USING (true)
+    WITH CHECK (true);
 
 -- Criar índices
 CREATE INDEX idx_refeicoes_extras_usuario ON refeicoes_extras(usuario_id);
 CREATE INDEX idx_refeicoes_extras_tipo_refeicao ON refeicoes_extras(tipo_refeicao_id);
 CREATE INDEX idx_refeicoes_extras_data ON refeicoes_extras(data_consumo);
+
+-- Grant necessary permissions
+GRANT ALL ON refeicoes_extras TO authenticated;
+GRANT SELECT ON refeicoes_extras TO anon;
+
+-- Add helpful comments
+COMMENT ON TABLE refeicoes_extras IS 'Tabela para registro de refeições extras';
+COMMENT ON COLUMN refeicoes_extras.usuario_id IS 'ID do usuário que receberá a refeição extra';
+COMMENT ON COLUMN refeicoes_extras.tipo_refeicao_id IS 'ID do tipo de refeição';
