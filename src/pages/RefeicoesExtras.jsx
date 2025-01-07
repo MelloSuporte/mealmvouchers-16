@@ -42,6 +42,12 @@ const RefeicoesExtras = () => {
               Cadastrar
             </div>
           </TabsTrigger>
+          <TabsTrigger value="meal">
+            <div className="flex items-center gap-1">
+              <Utensils className="h-4 w-4" />
+              Refeição
+            </div>
+          </TabsTrigger>
           <TabsTrigger value="report">
             <div className="flex items-center gap-1">
               <FileText className="h-4 w-4" />
@@ -52,9 +58,12 @@ const RefeicoesExtras = () => {
         
         <TabsContent value="register">
           <div className="space-y-6">
-            <MealRegistrationForm />
             <ExtraMealForm />
           </div>
+        </TabsContent>
+
+        <TabsContent value="meal">
+          <MealRegistrationForm />
         </TabsContent>
         
         <TabsContent value="report">
