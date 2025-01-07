@@ -31,9 +31,11 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      if (!isAuthenticated) {
-        logger.error('Tentativa de submissão sem autenticação');
-        toast.error("Você precisa estar autenticado para realizar esta ação");
+      // Verificação de autenticação
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.access_token) {
+        logger.error('Sessão não encontrada');
+        toast.error("Sessão expirada. Por favor, faça login novamente.");
         return;
       }
 
@@ -53,7 +55,8 @@ const ExtraMealForm = () => {
       logger.info('Iniciando cadastro de refeição extra:', {
         usuario: selectedUser.id,
         refeicao: refeicao.id,
-        adminId
+        adminId,
+        sessionExists: !!session?.session
       });
 
       const { error } = await supabase
