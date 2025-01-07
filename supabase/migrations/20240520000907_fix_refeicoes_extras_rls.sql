@@ -53,7 +53,6 @@ CREATE POLICY "refeicoes_extras_update_policy" ON refeicoes_extras
 
 -- Grant necessary permissions
 GRANT ALL ON refeicoes_extras TO authenticated;
-GRANT USAGE ON SEQUENCE refeicoes_extras_id_seq TO authenticated;
 
 -- Add helpful comments
 COMMENT ON POLICY "refeicoes_extras_select_policy" ON refeicoes_extras IS 
