@@ -16,6 +16,7 @@ import { LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import RefeicoesExtras from './RefeicoesExtras';
+import MealRegistrationForm from '@/components/admin/meals/MealRegistrationForm';
 
 const Admin = () => {
   const { user, logout } = useAdmin();
@@ -31,14 +32,17 @@ const Admin = () => {
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Administração</h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-            className="hover:bg-slate-100"
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <MealRegistrationForm />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="hover:bg-slate-100"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
         
         <Tabs defaultValue="users" className="mt-4">
