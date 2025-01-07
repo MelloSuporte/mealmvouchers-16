@@ -8,29 +8,25 @@ import { supabase } from '../../../config/supabase';
 
 const MealRegistrationForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mealSchedule, setMealSchedule] = useState({
-    name: '',
-    startTime: '',
-    endTime: '',
-    value: '',
-    isActive: true,
-    maxUsersPerDay: '',
-    toleranceMinutes: '15'
+  const [mealData, setMealData] = useState({
+    nome: '',
+    valor: '',
+    ativo: true
   });
 
   const handleInputChange = (field, value) => {
-    if (field === 'value') {
+    if (field === 'valor') {
       const numericValue = value.replace(/[^0-9]/g, '');
       const formattedValue = (numericValue / 100).toLocaleString('pt-BR', {
         style: 'currency',
         currency: 'BRL'
       });
-      setMealSchedule(prev => ({
+      setMealData(prev => ({
         ...prev,
         [field]: formattedValue
       }));
     } else {
-      setMealSchedule(prev => ({
+      setMealData(prev => ({
         ...prev,
         [field]: value
       }));
@@ -38,19 +34,10 @@ const MealRegistrationForm = () => {
   };
 
   const validateForm = () => {
-    if (!mealSchedule.name || !mealSchedule.startTime || !mealSchedule.endTime || !mealSchedule.value) {
+    if (!mealData.nome || !mealData.valor) {
       toast.error("Por favor, preencha todos os campos obrigatórios");
       return false;
     }
-
-    const start = new Date(`2000-01-01T${mealSchedule.startTime}`);
-    const end = new Date(`2000-01-01T${mealSchedule.endTime}`);
-    
-    if (end <= start) {
-      toast.error("O horário de término deve ser posterior ao horário de início");
-      return false;
-    }
-
     return true;
   };
 
@@ -61,32 +48,24 @@ const MealRegistrationForm = () => {
 
     try {
       setIsSubmitting(true);
-      const numericValue = parseFloat(mealSchedule.value.replace(/[^0-9,]/g, '').replace(',', '.'));
+      const numericValue = parseFloat(mealData.valor.replace(/[^0-9,]/g, '').replace(',', '.'));
       
       const { data, error } = await supabase
-        .from('refeicoes_extras')
+        .from('refeicoes')
         .insert([{
-          nome_refeicao: mealSchedule.name,
-          hora_inicio: mealSchedule.startTime,
-          hora_fim: mealSchedule.endTime,
+          nome: mealData.nome,
           valor: numericValue,
-          ativo: mealSchedule.isActive,
-          max_usuarios_por_dia: mealSchedule.maxUsersPerDay || null,
-          minutos_tolerancia: parseInt(mealSchedule.toleranceMinutes) || 15
+          ativo: mealData.ativo
         }])
         .select();
 
       if (error) throw error;
       
       toast.success("Refeição cadastrada com sucesso!");
-      setMealSchedule({
-        name: '',
-        startTime: '',
-        endTime: '',
-        value: '',
-        isActive: true,
-        maxUsersPerDay: '',
-        toleranceMinutes: '15'
+      setMealData({
+        nome: '',
+        valor: '',
+        ativo: true
       });
     } catch (error) {
       console.error('Erro ao cadastrar refeição:', error);
@@ -99,82 +78,35 @@ const MealRegistrationForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Nome da Refeição</Label>
+        <Label htmlFor="nome">Nome da Refeição</Label>
         <Input
-          id="name"
-          value={mealSchedule.name}
-          onChange={(e) => handleInputChange('name', e.target.value)}
+          id="nome"
+          value={mealData.nome}
+          onChange={(e) => handleInputChange('nome', e.target.value)}
           placeholder="Ex: Almoço"
           disabled={isSubmitting}
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="startTime">Horário Início</Label>
-          <Input
-            id="startTime"
-            type="time"
-            value={mealSchedule.startTime}
-            onChange={(e) => handleInputChange('startTime', e.target.value)}
-            disabled={isSubmitting}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="endTime">Horário Fim</Label>
-          <Input
-            id="endTime"
-            type="time"
-            value={mealSchedule.endTime}
-            onChange={(e) => handleInputChange('endTime', e.target.value)}
-            disabled={isSubmitting}
-          />
-        </div>
-      </div>
-
       <div className="space-y-2">
-        <Label htmlFor="value">Valor (R$)</Label>
+        <Label htmlFor="valor">Valor (R$)</Label>
         <Input
-          id="value"
-          value={mealSchedule.value}
-          onChange={(e) => handleInputChange('value', e.target.value)}
+          id="valor"
+          value={mealData.valor}
+          onChange={(e) => handleInputChange('valor', e.target.value)}
           placeholder="R$ 0,00"
-          disabled={isSubmitting}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="maxUsersPerDay">Limite de Usuários por Dia</Label>
-        <Input
-          id="maxUsersPerDay"
-          type="number"
-          value={mealSchedule.maxUsersPerDay}
-          onChange={(e) => handleInputChange('maxUsersPerDay', e.target.value)}
-          placeholder="Sem limite"
-          disabled={isSubmitting}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="toleranceMinutes">Tolerância (minutos)</Label>
-        <Input
-          id="toleranceMinutes"
-          type="number"
-          value={mealSchedule.toleranceMinutes}
-          onChange={(e) => handleInputChange('toleranceMinutes', e.target.value)}
-          placeholder="15"
           disabled={isSubmitting}
         />
       </div>
 
       <div className="flex items-center space-x-2">
         <Switch
-          id="isActive"
-          checked={mealSchedule.isActive}
-          onCheckedChange={(checked) => handleInputChange('isActive', checked)}
+          id="ativo"
+          checked={mealData.ativo}
+          onCheckedChange={(checked) => handleInputChange('ativo', checked)}
           disabled={isSubmitting}
         />
-        <Label htmlFor="isActive">Refeição Ativa</Label>
+        <Label htmlFor="ativo">Refeição Ativa</Label>
       </div>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
