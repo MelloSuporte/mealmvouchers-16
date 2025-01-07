@@ -26,12 +26,8 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
       if (formData.password === '0001000') {
         logger.info('Login master admin detectado');
         
-        // Login com email/senha para master admin
-        const { error: authError } = await supabase.auth.signInWithPassword({
-          email: 'admin@mealmvouchers.com',
-          password: '0001000'
-        });
-        
+        // Autenticação anônima no Supabase
+        const { error: authError } = await supabase.auth.signInAnonymously();
         if (authError) throw authError;
 
         localStorage.setItem('adminToken', 'master-admin-token');
@@ -58,6 +54,10 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
       // Login gerente
       logger.info('Buscando admin_user na tabela:', { email: formData.email });
       
+      // Primeiro, autenticar anonimamente no Supabase
+      const { error: authError } = await supabase.auth.signInAnonymously();
+      if (authError) throw authError;
+      
       const { data: admin, error } = await supabase
         .from('admin_users')
         .select('*, empresas(id, nome)')
@@ -74,14 +74,6 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
       }
 
       if (admin) {
-        // Login com email/senha para gerente
-        const { error: authError } = await supabase.auth.signInWithPassword({
-          email: admin.email,
-          password: formData.password
-        });
-        
-        if (authError) throw authError;
-
         logger.info('Admin encontrado com sucesso:', { 
           id: admin.id, 
           nome: admin.nome,
