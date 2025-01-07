@@ -31,14 +31,12 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Verificar autenticação do admin
       if (!isAuthenticated) {
         logger.error('Admin não autenticado');
         toast.error("Você precisa estar autenticado como administrador");
         return;
       }
 
-      // Verificar sessão do Supabase
       const { data: session } = await supabase.auth.getSession();
       logger.info('Status da sessão:', {
         hasSession: !!session?.session,
@@ -49,7 +47,7 @@ const ExtraMealForm = () => {
 
       if (!session?.session?.access_token) {
         logger.error('Sessão Supabase não encontrada');
-        await checkAuth(); // Tentar reautenticar
+        await checkAuth();
         toast.error("Erro de autenticação. Tentando reconectar...");
         return;
       }
@@ -75,7 +73,6 @@ const ExtraMealForm = () => {
         authToken: !!session?.session?.access_token
       });
 
-      // Configurar cabeçalhos de autenticação
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
