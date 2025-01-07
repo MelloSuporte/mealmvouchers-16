@@ -2,7 +2,6 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExtraMealForm from '../components/admin/extra-meals/ExtraMealForm';
 import ExtraMealReport from '../components/admin/extra-meals/ExtraMealReport';
-import MealRegistrationForm from '../components/admin/meals/MealRegistrationForm';
 import { FileText, FilePlus, Utensils } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -42,12 +41,6 @@ const RefeicoesExtras = () => {
               Cadastrar
             </div>
           </TabsTrigger>
-          <TabsTrigger value="meal">
-            <div className="flex items-center gap-1">
-              <Utensils className="h-4 w-4" />
-              Refeição
-            </div>
-          </TabsTrigger>
           <TabsTrigger value="report">
             <div className="flex items-center gap-1">
               <FileText className="h-4 w-4" />
@@ -60,10 +53,6 @@ const RefeicoesExtras = () => {
           <div className="space-y-6">
             <ExtraMealForm />
           </div>
-        </TabsContent>
-
-        <TabsContent value="meal">
-          <MealRegistrationForm />
         </TabsContent>
         
         <TabsContent value="report">
