@@ -18,13 +18,84 @@ import { useNavigate } from 'react-router-dom';
 import RefeicoesExtras from './RefeicoesExtras';
 
 const Admin = () => {
-  const { user, logout } = useAdmin();
+  const { user, logout, hasPermission } = useAdmin();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate('/voucher');
   };
+
+  const tabs = [
+    {
+      id: 'users',
+      label: 'Usuários',
+      content: <UserFormMain />,
+      permission: 'gerenciar_usuarios'
+    },
+    {
+      id: 'companies',
+      label: 'Empresas',
+      content: <CompanyForm />,
+      permission: 'gerenciar_empresas'
+    },
+    {
+      id: 'meal-types',
+      label: 'Tipos de Refeição',
+      content: <MealTypeForm />,
+      permission: 'gerenciar_tipos_refeicao'
+    },
+    {
+      id: 'reports-t',
+      label: 'Relatórios',
+      content: <ReportsTForm />,
+      permission: 'gerenciar_relatorios'
+    },
+    {
+      id: 'rls',
+      label: 'Vouchers Extras',
+      content: <RLSForm />,
+      permission: 'gerenciar_vouchers_extra'
+    },
+    {
+      id: 'disposable-vouchers',
+      label: 'Vouchers Descartáveis',
+      content: <DisposableVoucherForm />,
+      permission: 'gerenciar_vouchers_descartaveis'
+    },
+    {
+      id: 'background-images',
+      label: 'Imagens de Fundo',
+      content: <BackgroundImageForm />,
+      permission: 'gerenciar_imagens_fundo'
+    },
+    {
+      id: 'managers',
+      label: 'Gerentes',
+      content: <AdminList />,
+      permission: 'gerenciar_gerentes'
+    },
+    {
+      id: 'turnos',
+      label: 'Turnos',
+      content: <TurnosForm />,
+      permission: 'gerenciar_turnos'
+    },
+    {
+      id: 'refeicoes-extras',
+      label: (
+        <div className="flex items-center gap-1">
+          <Utensils className="h-4 w-4" />
+          Refeições Extras
+        </div>
+      ),
+      content: <RefeicoesExtras />,
+      permission: 'gerenciar_refeicoes_extras'
+    }
+  ];
+
+  const authorizedTabs = tabs.filter(tab => hasPermission(tab.permission));
+  const defaultTab = authorizedTabs[0]?.id || '';
 
   return (
     <AdminProvider>
@@ -43,84 +114,22 @@ const Admin = () => {
           </div>
         </div>
         
-        <Tabs defaultValue="users" className="mt-4">
+        <Tabs defaultValue={defaultTab} className="mt-4">
           <TabsList>
-            <TabsTrigger value="users">Usuários</TabsTrigger>
-            <TabsTrigger value="companies">Empresas</TabsTrigger>
-            <TabsTrigger value="meal-types">Tipos de Refeição</TabsTrigger>
-            <TabsTrigger value="reports-t">Relatórios</TabsTrigger>
-            <TabsTrigger value="rls">Vouchers Extras</TabsTrigger>
-            <TabsTrigger value="disposable-vouchers">Vouchers Descartáveis</TabsTrigger>
-            <TabsTrigger value="background-images">Imagens de Fundo</TabsTrigger>
-            <TabsTrigger value="managers">Gerentes</TabsTrigger>
-            <TabsTrigger value="turnos">Turnos</TabsTrigger>
-            <TabsTrigger value="refeicoes-extras">
-              <div className="flex items-center gap-1">
-                <Utensils className="h-4 w-4" />
-                Refeições Extras
-              </div>
-            </TabsTrigger>
+            {authorizedTabs.map(tab => (
+              <TabsTrigger key={tab.id} value={tab.id}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          <TabsContent value="users">
-            <Card>
-              <UserFormMain />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="companies">
-            <Card>
-              <CompanyForm />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="meal-types">
-            <Card>
-              <MealTypeForm />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="reports-t">
-            <Card>
-              <ReportsTForm />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="rls">
-            <Card>
-              <RLSForm />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="disposable-vouchers">
-            <Card>
-              <DisposableVoucherForm />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="background-images">
-            <Card>
-              <BackgroundImageForm />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="managers">
-            <Card>
-              <AdminList />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="turnos">
-            <Card>
-              <TurnosForm />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="refeicoes-extras">
-            <Card>
-              <RefeicoesExtras />
-            </Card>
-          </TabsContent>
+          {authorizedTabs.map(tab => (
+            <TabsContent key={tab.id} value={tab.id}>
+              <Card>
+                {tab.content}
+              </Card>
+            </TabsContent>
+          ))}
         </Tabs>
       </div>
       {user ? null : <AdminLoginDialog />}
