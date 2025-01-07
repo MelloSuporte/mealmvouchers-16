@@ -22,15 +22,19 @@ const ExtraMealForm = () => {
         return;
       }
 
+      const mealType = mealTypes?.find(type => type.id === data.tipo_refeicao_id);
+
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
           tipo_refeicao_id: data.tipo_refeicao_id,
+          nome_refeicao: mealType?.nome || '',
           valor: data.valor,
           quantidade: data.quantidade,
           data_consumo: data.data_consumo,
           observacao: data.observacao,
+          ativo: true,
           autorizado_por: (await supabase.auth.getUser()).data.user?.id
         });
 

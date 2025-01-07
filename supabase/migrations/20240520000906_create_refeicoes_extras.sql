@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS refeicoes_extras (
     data_consumo DATE NOT NULL,
     observacao TEXT,
     autorizado_por UUID REFERENCES auth.users(id),
+    nome_refeicao VARCHAR(255),
+    ativo BOOLEAN DEFAULT true,
     criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
