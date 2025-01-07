@@ -12,7 +12,7 @@ import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
 import AdminList from '@/components/admin/managers/AdminList';
 import TurnosForm from '@/components/admin/TurnosForm';
-import { LogOut } from 'lucide-react';
+import { LogOut, Utensils } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import RefeicoesExtras from './RefeicoesExtras';
