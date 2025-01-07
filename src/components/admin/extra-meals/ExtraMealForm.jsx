@@ -35,11 +35,6 @@ const ExtraMealForm = () => {
         return;
       }
 
-      if (!adminId) {
-        toast.error("ID do administrador não encontrado. Por favor, faça login novamente.");
-        return;
-      }
-
       const mealType = mealTypes?.find(type => type.id === data.tipo_refeicao_id);
       const refeicao = refeicoes?.find(ref => ref.id === data.refeicao_id);
       
