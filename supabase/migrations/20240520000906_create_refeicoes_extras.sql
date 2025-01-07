@@ -1,9 +1,13 @@
 -- Criar tabela para refeições extras
 CREATE TABLE IF NOT EXISTS refeicoes_extras (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    nome_refeicao VARCHAR(255) NOT NULL,
+    usuario_id UUID REFERENCES usuarios(id),
+    tipo_refeicao_id UUID REFERENCES tipos_refeicao(id),
     valor DECIMAL(10,2) NOT NULL,
-    ativo BOOLEAN DEFAULT true,
+    quantidade INTEGER NOT NULL DEFAULT 1,
+    data_consumo DATE NOT NULL,
+    observacao TEXT,
+    autorizado_por UUID REFERENCES auth.users(id),
     criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -22,5 +26,6 @@ CREATE POLICY "Permitir atualização para usuários autenticados" ON refeicoes_
     FOR UPDATE TO authenticated USING (true);
 
 -- Criar índices
-CREATE INDEX idx_refeicoes_extras_nome ON refeicoes_extras(nome_refeicao);
-CREATE INDEX idx_refeicoes_extras_ativo ON refeicoes_extras(ativo);
+CREATE INDEX idx_refeicoes_extras_usuario ON refeicoes_extras(usuario_id);
+CREATE INDEX idx_refeicoes_extras_tipo_refeicao ON refeicoes_extras(tipo_refeicao_id);
+CREATE INDEX idx_refeicoes_extras_data ON refeicoes_extras(data_consumo);
