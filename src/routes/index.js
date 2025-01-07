@@ -11,6 +11,7 @@ import usuariosAdminRoutes from './usuariosAdmin';
 import vouchersRoutes from './vouchers';
 import vouchersDescartaveisRoutes from './vouchersDescartaveis';
 import vouchersExtraRoutes from './vouchersExtra';
+import refeicoesExtrasRoutes from './refeicoesExtras';
 import logsRoutes from './logs';
 
 const router = express.Router();
@@ -20,6 +21,7 @@ router.use('/empresas', empresasRoutes);
 router.use('/health', healthRoutes);
 router.use('/imagens-fundo', imagensFundoRoutes);
 router.use('/refeicoes', refeicaoRoutes);
+router.use('/refeicoes-extras', refeicoesExtrasRoutes);
 router.use('/relatorios', relatoriosRoutes);
 router.use('/turnos', turnosRoutes);
 router.use('/usuarios', usuariosRoutes);
