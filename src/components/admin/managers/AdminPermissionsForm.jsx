@@ -12,7 +12,8 @@ export const AdminPermissionsForm = ({ permissions, onPermissionChange }) => {
     gerenciar_relatorios: "Relatórios",
     gerenciar_imagens_fundo: "Imagens de Fundo",
     gerenciar_gerentes: "Gerentes",
-    gerenciar_turnos: "Turnos"
+    gerenciar_turnos: "Turnos",
+    gerenciar_refeicoes_extras: "Refeições Extras"
   };
 
   return (
