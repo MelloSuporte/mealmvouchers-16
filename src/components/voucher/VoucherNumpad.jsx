@@ -23,7 +23,7 @@ const VoucherNumpad = ({ onNumpadClick, onBackspace, voucherCode, disabled }) =>
         className="bg-red-500 hover:bg-red-600 text-white col-span-2"
         disabled={disabled}
       >
-        Backspace
+        Apagar
       </Button>
     </div>
   );
