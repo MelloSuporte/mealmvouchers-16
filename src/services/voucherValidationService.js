@@ -4,7 +4,6 @@ import logger from '../config/logger';
 export const validateDisposableVoucher = async (codigo, tipoRefeicaoId) => {
   try {
     if (!codigo || !tipoRefeicaoId) {
-      logger.error('Código do voucher e tipo de refeição são obrigatórios');
       throw new Error('Código do voucher e tipo de refeição são obrigatórios');
     }
 
@@ -19,12 +18,7 @@ export const validateDisposableVoucher = async (codigo, tipoRefeicaoId) => {
       throw error;
     }
 
-    // Ensure we're not trying to read the response body multiple times
-    if (!data) {
-      return { success: false, error: 'Erro ao processar resposta do servidor' };
-    }
-
-    return { success: true, data };
+    return data;
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
     return { success: false, error: error.message };
@@ -33,26 +27,22 @@ export const validateDisposableVoucher = async (codigo, tipoRefeicaoId) => {
 
 export const validateCommonVoucher = async (codigo, tipoRefeicaoId) => {
   try {
-    logger.info('Validando voucher comum:', codigo);
-    
-    // Call the RPC function with proper error handling
-    const response = await supabase
+    if (!codigo || !tipoRefeicaoId) {
+      throw new Error('Código do voucher e tipo de refeição são obrigatórios');
+    }
+
+    const { data, error } = await supabase
       .rpc('validate_and_use_voucher', {
         p_codigo: codigo,
         p_tipo_refeicao_id: tipoRefeicaoId
       });
 
-    if (response.error) {
-      logger.error('Erro ao validar voucher comum:', response.error);
-      throw response.error;
+    if (error) {
+      logger.error('Erro ao validar voucher comum:', error);
+      throw error;
     }
 
-    // Handle the response data properly
-    if (!response.data) {
-      return { success: false, error: 'Voucher inválido ou já utilizado' };
-    }
-
-    return { success: true, data: response.data };
+    return data;
   } catch (error) {
     logger.error('Erro ao validar voucher comum:', error);
     return { success: false, error: error.message };
@@ -61,8 +51,10 @@ export const validateCommonVoucher = async (codigo, tipoRefeicaoId) => {
 
 export const validateExtraVoucher = async (codigo, tipoRefeicaoId) => {
   try {
-    logger.info('Validando voucher extra:', codigo);
-    
+    if (!codigo || !tipoRefeicaoId) {
+      throw new Error('Código do voucher e tipo de refeição são obrigatórios');
+    }
+
     const { data, error } = await supabase
       .rpc('validate_and_use_voucher', {
         p_codigo: codigo,
@@ -74,11 +66,7 @@ export const validateExtraVoucher = async (codigo, tipoRefeicaoId) => {
       throw error;
     }
 
-    if (!data) {
-      return { success: false, error: 'Voucher extra inválido ou já utilizado' };
-    }
-
-    return { success: true, data };
+    return data;
   } catch (error) {
     logger.error('Erro ao validar voucher extra:', error);
     return { success: false, error: error.message };
@@ -121,5 +109,28 @@ export const identifyVoucherType = async (codigo) => {
   } catch (error) {
     logger.error('Erro ao identificar tipo de voucher:', error);
     return null;
+  }
+};
+
+export const validateMealTimeAndInterval = async (userId, mealTypeId) => {
+  try {
+    const { data, error } = await supabase
+      .rpc('validate_meal_time_and_interval', {
+        p_usuario_id: userId,
+        p_tipo_refeicao_id: mealTypeId
+      });
+
+    if (error) {
+      logger.error('Erro ao validar horário e intervalo:', error);
+      throw error;
+    }
+
+    return data || { success: true };
+  } catch (error) {
+    logger.error('Erro ao validar horário e intervalo:', error);
+    return { 
+      success: false, 
+      error: error.message || 'Erro ao validar horário e intervalo da refeição'
+    };
   }
 };
