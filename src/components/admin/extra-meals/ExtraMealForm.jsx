@@ -31,23 +31,11 @@ const ExtraMealForm = () => {
     try {
       if (!isAuthenticated) {
         logger.error('Admin não autenticado');
-        toast.error("Você precisa estar autenticado como administrador");
-        return;
-      }
-
-      const { data: session } = await supabase.auth.getSession();
-      logger.info('Status da sessão:', {
-        hasSession: !!session?.session,
-        accessToken: !!session?.session?.access_token,
-        adminId,
-        isAuthenticated
-      });
-
-      if (!session?.session?.access_token) {
-        logger.error('Sessão Supabase não encontrada');
-        await checkAuth();
-        toast.error("Erro de autenticação. Tentando reconectar...");
-        return;
+        await checkAuth(); // Try to revalidate authentication
+        if (!isAuthenticated) {
+          toast.error("Você precisa estar autenticado como administrador");
+          return;
+        }
       }
 
       if (!selectedUser) {
@@ -65,9 +53,7 @@ const ExtraMealForm = () => {
       logger.info('Iniciando cadastro de refeição extra:', {
         usuario: selectedUser.id,
         refeicao: refeicao.id,
-        adminId,
-        sessionExists: !!session?.session,
-        authToken: !!session?.session?.access_token
+        adminId
       });
 
       const { error } = await supabase
@@ -94,7 +80,11 @@ const ExtraMealForm = () => {
       setSelectedUser(null);
     } catch (error) {
       logger.error('Erro ao registrar refeição:', error);
-      toast.error("Erro ao registrar refeição extra: " + error.message);
+      if (error.message.includes('auth')) {
+        toast.error("Erro de autenticação. Por favor, faça login novamente.");
+      } else {
+        toast.error("Erro ao registrar refeição extra: " + error.message);
+      }
     }
   };
 
