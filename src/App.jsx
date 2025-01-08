@@ -12,7 +12,6 @@ import { Toaster } from './components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 import { AdminProvider } from './contexts/AdminContext';
 
-// Criar uma instância do QueryClient
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -30,7 +29,6 @@ function App() {
       <AdminProvider>
         <Router>
           <Routes>
-            {/* Redireciona / para /voucher */}
             <Route path="/" element={<Navigate to="/voucher" replace />} />
             <Route path="/voucher" element={<Voucher />} />
             <Route path="/refeitorio" element={<Home />} />
