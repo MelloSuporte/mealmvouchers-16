@@ -16,7 +16,7 @@ const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
-  const { adminId } = useAdmin();
+  const { adminId, hasPermission } = useAdmin();
 
   const selectedRefeicaoId = watch('refeicao_id');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
@@ -29,6 +29,11 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
+      if (!hasPermission('gerenciar_refeicoes_extras')) {
+        toast.error("Você não tem permissão para registrar refeições extras");
+        return;
+      }
+
       if (!adminId) {
         toast.error("ID do administrador não encontrado");
         return;
