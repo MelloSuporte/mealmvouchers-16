@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
@@ -14,14 +14,6 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Se estiver na rota /admin-login, redireciona para /admin
-  useEffect(() => {
-    if (location.pathname === '/admin-login') {
-      navigate('/admin', { replace: true });
-    }
-  }, [location, navigate]);
 
   const handleLogin = async () => {
     if (isSubmitting) return;
