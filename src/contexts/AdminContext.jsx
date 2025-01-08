@@ -28,24 +28,7 @@ export const AdminProvider = ({ children }) => {
       const storedId = localStorage.getItem('adminId');
       
       if (adminToken && storedType) {
-        // Verificar se a sessão do Supabase está ativa
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          logger.error('Erro ao verificar sessão:', error);
-          throw error;
-        }
-
-        if (!session) {
-          // Se não houver sessão, fazer login anônimo
-          const { error: anonError } = await supabase.auth.signInAnonymously();
-
-          if (anonError) {
-            logger.error('Erro no login anônimo:', anonError);
-            throw anonError;
-          }
-        }
-
+        // Se temos um token admin, consideramos autenticado
         setIsAuthenticated(true);
         setAdminType(storedType);
         setAdminName(storedName);
@@ -75,7 +58,6 @@ export const AdminProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminType');
       localStorage.removeItem('adminName');

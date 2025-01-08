@@ -30,13 +30,6 @@ const checkConnection = async () => {
   try {
     logger.info('Verificando conexão com Supabase...');
     
-    const { data: session } = await supabase.auth.getSession();
-    
-    logger.info('Sessão atual:', {
-      hasSession: !!session?.session,
-      user: session?.session?.user?.email
-    });
-
     // Testar acesso à tabela admin_users
     const { data: adminTest, error: adminError } = await supabase
       .from('admin_users')
