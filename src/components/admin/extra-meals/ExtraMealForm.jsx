@@ -53,7 +53,15 @@ const ExtraMealForm = () => {
         data_consumo: data.data_consumo
       });
 
-      const { error } = await supabase
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Sessão expirada. Por favor, faça login novamente.");
+        return;
+      }
+
+      const { error: insertError } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
@@ -65,16 +73,14 @@ const ExtraMealForm = () => {
           ativo: true,
           autorizado_por: adminId,
           nome_refeicao: refeicao.nome
-        })
-        .select()
-        .single();
+        });
 
-      if (error) {
-        logger.error('Erro ao inserir refeição:', error);
-        if (error.code === '42501') {
+      if (insertError) {
+        logger.error('Erro ao inserir refeição:', insertError);
+        if (insertError.code === '42501') {
           toast.error("Erro de permissão. Verifique se você tem as permissões necessárias.");
         } else {
-          throw error;
+          throw insertError;
         }
         return;
       }
