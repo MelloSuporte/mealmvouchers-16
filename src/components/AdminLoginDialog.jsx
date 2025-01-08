@@ -35,9 +35,10 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
           gerenciar_usuarios: true,
           gerenciar_relatorios: true
         }));
+        
         onClose();
-        toast.success("Login realizado com sucesso!");
         navigate('/admin');
+        toast.success("Login realizado com sucesso!");
         return;
       }
 
@@ -84,8 +85,8 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         });
         
         onClose();
-        toast.success("Login realizado com sucesso!");
         navigate('/admin');
+        toast.success("Login realizado com sucesso!");
       } else {
         logger.warn('Nenhum admin encontrado com as credenciais fornecidas');
         toast.error("Email ou senha incorretos");
