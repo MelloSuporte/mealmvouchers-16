@@ -10,6 +10,13 @@ export const MealListTable = ({
   onSelectAll, 
   onToggleActive 
 }) => {
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
   return (
     <div className="rounded-md border overflow-hidden">
       <Table>
@@ -41,7 +48,7 @@ export const MealListTable = ({
                 />
               </TableCell>
               <TableCell className="font-medium">{meal.nome}</TableCell>
-              <TableCell>R$ {meal.valor.toFixed(2)}</TableCell>
+              <TableCell>{formatCurrency(meal.valor)}</TableCell>
               <TableCell>{meal.hora_inicio || '-'}</TableCell>
               <TableCell>{meal.hora_fim || '-'}</TableCell>
               <TableCell className="text-right">
