@@ -15,7 +15,7 @@ CREATE POLICY "refeicoes_extras_select_policy" ON refeicoes_extras
             WHERE au.id = auth.uid()
             AND (
                 au.permissoes->>'gerenciar_usuarios' = 'true'
-                OR au.permissoes->>'gerenciar_vouchers_extra' = 'true'
+                OR au.permissoes->>'gerenciar_refeicoes_extras' = 'true'
             )
             AND NOT au.suspenso
         )
@@ -30,7 +30,7 @@ CREATE POLICY "refeicoes_extras_insert_policy" ON refeicoes_extras
             WHERE au.id = auth.uid()
             AND (
                 au.permissoes->>'gerenciar_usuarios' = 'true'
-                OR au.permissoes->>'gerenciar_vouchers_extra' = 'true'
+                OR au.permissoes->>'gerenciar_refeicoes_extras' = 'true'
             )
             AND NOT au.suspenso
         )
@@ -45,7 +45,7 @@ CREATE POLICY "refeicoes_extras_update_policy" ON refeicoes_extras
             WHERE au.id = auth.uid()
             AND (
                 au.permissoes->>'gerenciar_usuarios' = 'true'
-                OR au.permissoes->>'gerenciar_vouchers_extra' = 'true'
+                OR au.permissoes->>'gerenciar_refeicoes_extras' = 'true'
             )
             AND NOT au.suspenso
         )
