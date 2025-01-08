@@ -18,7 +18,7 @@ const ExtraMealForm = () => {
   const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
   const { adminId, hasPermission } = useAdmin();
 
-  const selectedRefeicaoId = watch('refeicao_id');
+  const selectedRefeicaoId = watch('tipo_refeicao_id');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
 
   React.useEffect(() => {
@@ -44,7 +44,7 @@ const ExtraMealForm = () => {
         return;
       }
 
-      const refeicao = refeicoes?.find(ref => ref.id === data.refeicao_id);
+      const refeicao = refeicoes?.find(ref => ref.id === data.tipo_refeicao_id);
       
       if (!refeicao) {
         toast.error("Selecione uma refeição");
@@ -58,7 +58,7 @@ const ExtraMealForm = () => {
         data_consumo: data.data_consumo
       });
 
-      const { data: insertData, error } = await supabase
+      const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
@@ -70,9 +70,7 @@ const ExtraMealForm = () => {
           ativo: true,
           autorizado_por: adminId,
           nome_refeicao: refeicao.nome
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
         logger.error('Erro ao inserir refeição:', error);
@@ -84,12 +82,11 @@ const ExtraMealForm = () => {
         return;
       }
 
-      if (insertData) {
-        toast.success("Refeição extra registrada com sucesso!");
-        generatePDF({ ...data, usuario: selectedUser });
-        reset();
-        setSelectedUser(null);
-      }
+      toast.success("Refeição extra registrada com sucesso!");
+      generatePDF({ ...data, usuario: selectedUser });
+      reset();
+      setSelectedUser(null);
+
     } catch (error) {
       logger.error('Erro ao registrar refeição:', error);
       toast.error("Erro ao registrar refeição extra. Por favor, tente novamente.");
@@ -127,7 +124,7 @@ const ExtraMealForm = () => {
           <div className="space-y-2">
             <Label htmlFor="refeicao">Refeição</Label>
             <select
-              {...register("refeicao_id", { required: true })}
+              {...register("tipo_refeicao_id", { required: true })}
               className="w-full p-2 border rounded"
               disabled={isLoadingRefeicoes}
             >
@@ -138,7 +135,7 @@ const ExtraMealForm = () => {
                 </option>
               ))}
             </select>
-            {errors.refeicao_id && (
+            {errors.tipo_refeicao_id && (
               <span className="text-red-500">Selecione uma refeição</span>
             )}
           </div>
