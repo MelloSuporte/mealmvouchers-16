@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from "sonner";
 
 export const useAdminAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -10,12 +9,12 @@ export const useAdminAuth = () => {
     const adminToken = localStorage.getItem('adminToken');
     
     if (!adminToken) {
-      navigate('/admin-login');
+      setIsAuthenticated(false);
       return;
     }
 
     setIsAuthenticated(true);
-  }, [navigate]);
+  }, []);
 
   return { isAuthenticated };
 };
