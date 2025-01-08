@@ -45,8 +45,8 @@ export const AdminProvider = ({ children }) => {
         
         try {
           const parsedPermissions = JSON.parse(storedPermissions || '{}');
+          logger.info('Parsed permissions:', parsedPermissions);
           setPermissions(parsedPermissions);
-          logger.info('Loaded permissions:', parsedPermissions);
         } catch (error) {
           logger.error('Error parsing permissions:', error);
           setPermissions({});

@@ -19,7 +19,7 @@ import RefeicoesExtras from './RefeicoesExtras';
 import logger from '../config/logger';
 
 const Admin = () => {
-  const { isAuthenticated, logout, hasPermission, isMasterAdmin, adminType } = useAdmin();
+  const { isAuthenticated, logout, hasPermission, isMasterAdmin, adminType, adminName } = useAdmin();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -32,6 +32,7 @@ const Admin = () => {
     isAuthenticated,
     isMasterAdmin,
     adminType,
+    adminName,
     hasPermissionGerenciarUsuarios: hasPermission('gerenciar_usuarios'),
     hasPermissionGerenciarEmpresas: hasPermission('gerenciar_empresas'),
     hasPermissionGerenciarTiposRefeicao: hasPermission('gerenciar_tipos_refeicao'),
@@ -135,14 +136,17 @@ const Admin = () => {
   const defaultTab = authorizedTabs[0]?.id || '';
 
   if (!isAuthenticated) {
-    return <AdminLoginDialog />;
+    return <AdminLoginDialog isOpen={true} onClose={() => {}} />;
   }
 
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Administração</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-600">
+            {adminName || 'Administrador'}
+          </span>
           <Button
             variant="ghost"
             size="icon"
@@ -154,23 +158,29 @@ const Admin = () => {
         </div>
       </div>
       
-      <Tabs defaultValue={defaultTab} className="mt-4">
-        <TabsList>
-          {authorizedTabs.map(tab => (
-            <TabsTrigger key={tab.id} value={tab.id}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {authorizedTabs.length > 0 ? (
+        <Tabs defaultValue={defaultTab} className="mt-4">
+          <TabsList>
+            {authorizedTabs.map(tab => (
+              <TabsTrigger key={tab.id} value={tab.id}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        {authorizedTabs.map(tab => (
-          <TabsContent key={tab.id} value={tab.id}>
-            <Card>
-              {tab.content}
-            </Card>
-          </TabsContent>
-        ))}
-      </Tabs>
+          {authorizedTabs.map(tab => (
+            <TabsContent key={tab.id} value={tab.id}>
+              <Card>
+                {tab.content}
+              </Card>
+            </TabsContent>
+          ))}
+        </Tabs>
+      ) : (
+        <div className="text-center py-8 text-gray-500">
+          Nenhuma aba disponível para suas permissões atuais
+        </div>
+      )}
     </div>
   );
 };
