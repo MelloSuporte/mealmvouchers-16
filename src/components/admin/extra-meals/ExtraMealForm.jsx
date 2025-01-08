@@ -58,7 +58,7 @@ const ExtraMealForm = () => {
         data_consumo: data.data_consumo
       });
 
-      const { error: insertError } = await supabase
+      const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
@@ -72,12 +72,12 @@ const ExtraMealForm = () => {
           nome_refeicao: refeicao.nome
         });
 
-      if (insertError) {
-        logger.error('Erro ao inserir refeição:', insertError);
-        if (insertError.code === '42501') {
+      if (error) {
+        logger.error('Erro ao inserir refeição:', error);
+        if (error.code === '42501') {
           toast.error("Você não tem permissão para registrar refeições extras. Verifique suas permissões.");
         } else {
-          toast.error(`Erro ao registrar refeição: ${insertError.message}`);
+          toast.error(`Erro ao registrar refeição: ${error.message}`);
         }
         return;
       }
