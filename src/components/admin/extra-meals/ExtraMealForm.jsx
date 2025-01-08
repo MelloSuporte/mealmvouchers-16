@@ -11,12 +11,14 @@ import { supabase } from '../../../config/supabase';
 import { useAdmin } from '../../../contexts/AdminContext';
 import { useForm } from 'react-hook-form';
 import logger from '../../../config/logger';
+import { useNavigate } from 'react-router-dom';
 
 const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
-  const { adminId, hasPermission } = useAdmin();
+  const { adminId, hasPermission, logout } = useAdmin();
+  const navigate = useNavigate();
 
   const selectedRefeicaoId = watch('refeicoes');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
@@ -26,6 +28,12 @@ const ExtraMealForm = () => {
       setValue('valor', selectedRefeicao.valor);
     }
   }, [selectedRefeicao, setValue]);
+
+  const handleSessionExpired = async () => {
+    await logout();
+    navigate('/admin-login');
+    toast.error("Sessão expirada. Por favor, faça login novamente.");
+  };
 
   const onSubmit = async (data) => {
     try {
@@ -61,7 +69,7 @@ const ExtraMealForm = () => {
       const { data: session } = await supabase.auth.getSession();
       
       if (!session?.session?.access_token) {
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
+        handleSessionExpired();
         return;
       }
 
@@ -85,6 +93,8 @@ const ExtraMealForm = () => {
         logger.error('Erro ao inserir refeição:', error);
         if (error.code === '42501') {
           toast.error("Você não tem permissão para registrar refeições extras. Verifique suas permissões.");
+        } else if (error.status === 401) {
+          handleSessionExpired();
         } else {
           toast.error("Erro ao registrar refeição extra. Por favor, tente novamente.");
         }
@@ -98,7 +108,11 @@ const ExtraMealForm = () => {
 
     } catch (error) {
       logger.error('Erro ao registrar refeição:', error);
-      toast.error("Erro ao registrar refeição extra. Por favor, tente novamente.");
+      if (error.status === 401) {
+        handleSessionExpired();
+      } else {
+        toast.error("Erro ao registrar refeição extra. Por favor, tente novamente.");
+      }
     }
   };
 
