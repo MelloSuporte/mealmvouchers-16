@@ -16,7 +16,7 @@ const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
-  const { adminId, isAuthenticated } = useAdmin();
+  const { adminId } = useAdmin();
 
   const selectedRefeicaoId = watch('refeicao_id');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
@@ -29,11 +29,6 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      if (!isAuthenticated) {
-        toast.error("Você precisa estar autenticado como administrador");
-        return;
-      }
-
       if (!adminId) {
         toast.error("ID do administrador não encontrado");
         return;
