@@ -6,7 +6,6 @@ import UserFormMain from '@/components/admin/UserFormMain';
 import CompanyForm from '@/components/admin/CompanyForm';
 import MealTypeForm from '@/components/admin/meal-type/MealTypeForm';
 import ReportsTForm from '@/components/admin/reports-t/ReportsTForm';
-import RLSForm from '@/components/admin/RLSForm';
 import DisposableVoucherForm from '@/components/admin/DisposableVoucherForm';
 import BackgroundImageForm from '@/components/admin/BackgroundImageForm';
 import AdminLoginDialog from '@/components/AdminLoginDialog';
@@ -37,7 +36,6 @@ const Admin = () => {
     hasPermissionGerenciarEmpresas: hasPermission('gerenciar_empresas'),
     hasPermissionGerenciarTiposRefeicao: hasPermission('gerenciar_tipos_refeicao'),
     hasPermissionGerenciarRelatorios: hasPermission('gerenciar_relatorios'),
-    hasPermissionGerenciarVouchersExtra: hasPermission('gerenciar_vouchers_extra'),
     hasPermissionGerenciarVouchersDescartaveis: hasPermission('gerenciar_vouchers_descartaveis'),
     hasPermissionGerenciarImagensFundo: hasPermission('gerenciar_imagens_fundo'),
     hasPermissionGerenciarGerentes: hasPermission('gerenciar_gerentes'),
@@ -69,12 +67,6 @@ const Admin = () => {
       label: 'Relatórios',
       content: <ReportsTForm />,
       permission: 'gerenciar_relatorios'
-    },
-    {
-      id: 'rls',
-      label: 'Vouchers Extras',
-      content: <RLSForm />,
-      permission: 'gerenciar_vouchers_extra'
     },
     {
       id: 'disposable-vouchers',
