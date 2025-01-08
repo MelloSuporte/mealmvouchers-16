@@ -16,7 +16,7 @@ const MealRegistrationForm = () => {
     ativo: true
   });
 
-  const { isAuthenticated, adminId } = useAdmin();
+  const { adminId, hasPermission } = useAdmin();
 
   const handleInputChange = (field, value) => {
     if (field === 'valor') {
@@ -54,10 +54,10 @@ const MealRegistrationForm = () => {
     try {
       setIsSubmitting(true);
 
-      // Verificar autenticação
-      if (!isAuthenticated || !adminId) {
-        logger.error('Tentativa de cadastro sem autenticação');
-        toast.error("Você precisa estar autenticado como administrador");
+      // Verificar permissão
+      if (!hasPermission('gerenciar_tipos_refeicao')) {
+        logger.error('Tentativa de cadastro sem permissão');
+        toast.error("Você não tem permissão para cadastrar refeições");
         return;
       }
 
