@@ -29,8 +29,13 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      if (!isAuthenticated || !adminId) {
+      if (!isAuthenticated) {
         toast.error("Você precisa estar autenticado como administrador");
+        return;
+      }
+
+      if (!adminId) {
+        toast.error("ID do administrador não encontrado");
         return;
       }
 
@@ -70,9 +75,9 @@ const ExtraMealForm = () => {
       if (insertError) {
         logger.error('Erro ao inserir refeição:', insertError);
         if (insertError.code === '42501') {
-          toast.error("Erro de permissão. Verifique se você tem as permissões necessárias.");
+          toast.error("Você não tem permissão para registrar refeições extras. Verifique suas permissões.");
         } else {
-          throw insertError;
+          toast.error(`Erro ao registrar refeição: ${insertError.message}`);
         }
         return;
       }
