@@ -9,7 +9,7 @@ INSERT INTO admin_users (
 VALUES (
     'admin@mealmvouchers.com',
     'Administrador Master',
-    '00000000000',
+    '99999999999',
     '0001000',
     '{
         "gerenciar_vouchers_extra": true,
