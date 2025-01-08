@@ -39,5 +39,3 @@ export const useUserSearch = () => {
     searchUser
   };
 };
-
-export default useUserSearch;
