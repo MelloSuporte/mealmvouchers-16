@@ -18,7 +18,7 @@ const ExtraMealForm = () => {
   const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
   const { adminId, hasPermission } = useAdmin();
 
-  const selectedRefeicaoId = watch('refeicoes');
+  const selectedRefeicaoId = watch('tipo_refeicao_id');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
 
   React.useEffect(() => {
@@ -44,7 +44,7 @@ const ExtraMealForm = () => {
         return;
       }
 
-      const refeicao = refeicoes?.find(ref => ref.id === data.refeicoes);
+      const refeicao = refeicoes?.find(ref => ref.id === data.tipo_refeicao_id);
       
       if (!refeicao) {
         toast.error("Selecione uma refeição");
@@ -62,7 +62,7 @@ const ExtraMealForm = () => {
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
-          refeicoes: refeicao.id,
+          tipo_refeicao_id: refeicao.id,
           valor: refeicao.valor,
           quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
@@ -124,7 +124,7 @@ const ExtraMealForm = () => {
           <div className="space-y-2">
             <Label htmlFor="refeicao">Refeição</Label>
             <select
-              {...register("refeicoes", { required: true })}
+              {...register("tipo_refeicao_id", { required: true })}
               className="w-full p-2 border rounded"
               disabled={isLoadingRefeicoes}
             >
@@ -135,7 +135,7 @@ const ExtraMealForm = () => {
                 </option>
               ))}
             </select>
-            {errors.refeicoes && (
+            {errors.tipo_refeicao_id && (
               <span className="text-red-500">Selecione uma refeição</span>
             )}
           </div>
