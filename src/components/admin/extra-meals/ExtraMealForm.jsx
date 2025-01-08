@@ -58,7 +58,7 @@ const ExtraMealForm = () => {
         data_consumo: data.data_consumo
       });
 
-      const { error: insertError } = await supabase
+      const { data: insertedData, error: insertError } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
