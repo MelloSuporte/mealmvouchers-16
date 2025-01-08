@@ -15,7 +15,7 @@ import logger from '../../../config/logger';
 const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
-  const { data: refeicoes } = useRefeicoes();
+  const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
   const { adminId, isAuthenticated, checkAuth } = useAdmin();
 
   const selectedRefeicaoId = watch('refeicao_id');
@@ -98,6 +98,11 @@ const ExtraMealForm = () => {
     }
   };
 
+  if (refeicoesError) {
+    toast.error("Erro ao carregar refeições");
+    return null;
+  }
+
   return (
     <Card className="p-6">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -126,6 +131,7 @@ const ExtraMealForm = () => {
             <select
               {...register("refeicao_id", { required: true })}
               className="w-full p-2 border rounded"
+              disabled={isLoadingRefeicoes}
             >
               <option value="">Selecione...</option>
               {refeicoes?.map((refeicao) => (
@@ -134,6 +140,9 @@ const ExtraMealForm = () => {
                 </option>
               ))}
             </select>
+            {errors.refeicao_id && (
+              <span className="text-red-500">Selecione uma refeição</span>
+            )}
           </div>
 
           <div className="space-y-2">
