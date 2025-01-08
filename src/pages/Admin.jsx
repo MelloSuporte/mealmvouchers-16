@@ -16,9 +16,10 @@ import { LogOut, Utensils } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import RefeicoesExtras from './RefeicoesExtras';
+import logger from '../config/logger';
 
 const Admin = () => {
-  const { isAuthenticated, logout, hasPermission, isMasterAdmin } = useAdmin();
+  const { isAuthenticated, logout, hasPermission, isMasterAdmin, adminType } = useAdmin();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -26,7 +27,22 @@ const Admin = () => {
     navigate('/voucher');
   };
 
-  console.log('Is Master Admin:', isMasterAdmin); // Debug log
+  // Debug logs
+  logger.info('Admin Component State:', {
+    isAuthenticated,
+    isMasterAdmin,
+    adminType,
+    hasPermissionGerenciarUsuarios: hasPermission('gerenciar_usuarios'),
+    hasPermissionGerenciarEmpresas: hasPermission('gerenciar_empresas'),
+    hasPermissionGerenciarTiposRefeicao: hasPermission('gerenciar_tipos_refeicao'),
+    hasPermissionGerenciarRelatorios: hasPermission('gerenciar_relatorios'),
+    hasPermissionGerenciarVouchersExtra: hasPermission('gerenciar_vouchers_extra'),
+    hasPermissionGerenciarVouchersDescartaveis: hasPermission('gerenciar_vouchers_descartaveis'),
+    hasPermissionGerenciarImagensFundo: hasPermission('gerenciar_imagens_fundo'),
+    hasPermissionGerenciarGerentes: hasPermission('gerenciar_gerentes'),
+    hasPermissionGerenciarTurnos: hasPermission('gerenciar_turnos'),
+    hasPermissionGerenciarRefeicoesExtras: hasPermission('gerenciar_refeicoes_extras')
+  });
 
   const tabs = [
     {
@@ -96,12 +112,25 @@ const Admin = () => {
     }
   ];
 
-  // Filter tabs based on permissions, showing all tabs for master admin
-  const authorizedTabs = tabs.filter(tab => 
-    isMasterAdmin || hasPermission(tab.permission)
-  );
+  // Log all tabs and their permission status
+  logger.info('Tabs Permission Status:', tabs.map(tab => ({
+    id: tab.id,
+    permission: tab.permission,
+    isVisible: isMasterAdmin || hasPermission(tab.permission)
+  })));
 
-  console.log('Authorized Tabs:', authorizedTabs.map(tab => tab.id)); // Debug log
+  // Filter tabs based on permissions
+  const authorizedTabs = tabs.filter(tab => {
+    const isAuthorized = isMasterAdmin || hasPermission(tab.permission);
+    logger.info(`Tab ${tab.id} authorization:`, {
+      isMasterAdmin,
+      hasPermission: hasPermission(tab.permission),
+      isAuthorized
+    });
+    return isAuthorized;
+  });
+
+  logger.info('Authorized Tabs:', authorizedTabs.map(tab => tab.id));
 
   const defaultTab = authorizedTabs[0]?.id || '';
 

@@ -19,6 +19,7 @@ export const AdminProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminName, setAdminName] = useState(null);
   const [adminId, setAdminId] = useState(null);
+  const [permissions, setPermissions] = useState({});
 
   const checkAuth = useCallback(async () => {
     try {
@@ -26,27 +27,51 @@ export const AdminProvider = ({ children }) => {
       const storedType = localStorage.getItem('adminType');
       const storedName = localStorage.getItem('adminName');
       const storedId = localStorage.getItem('adminId');
+      const storedPermissions = localStorage.getItem('adminPermissions');
       
+      logger.info('Checking auth with stored data:', {
+        hasToken: !!adminToken,
+        storedType,
+        storedName,
+        storedId,
+        storedPermissions
+      });
+
       if (adminToken && storedType) {
-        // Se temos um token admin, consideramos autenticado
         setIsAuthenticated(true);
         setAdminType(storedType);
         setAdminName(storedName);
         setAdminId(storedId);
-        logger.info('Admin autenticado:', { type: storedType, name: storedName });
+        
+        try {
+          const parsedPermissions = JSON.parse(storedPermissions || '{}');
+          setPermissions(parsedPermissions);
+          logger.info('Loaded permissions:', parsedPermissions);
+        } catch (error) {
+          logger.error('Error parsing permissions:', error);
+          setPermissions({});
+        }
+
+        logger.info('Admin authenticated:', { 
+          type: storedType, 
+          name: storedName,
+          permissions: permissions 
+        });
       } else {
         setIsAuthenticated(false);
         setAdminType(null);
         setAdminName(null);
         setAdminId(null);
-        logger.warn('Sem token de admin encontrado');
+        setPermissions({});
+        logger.warn('No admin token found');
       }
     } catch (error) {
-      logger.error('Erro ao verificar autenticação:', error);
+      logger.error('Error checking authentication:', error);
       setIsAuthenticated(false);
       setAdminType(null);
       setAdminName(null);
       setAdminId(null);
+      setPermissions({});
     } finally {
       setIsLoading(false);
     }
@@ -67,12 +92,31 @@ export const AdminProvider = ({ children }) => {
       setAdminType(null);
       setAdminName(null);
       setAdminId(null);
+      setPermissions({});
       toast.success("Logout realizado com sucesso");
     } catch (error) {
-      logger.error('Erro ao fazer logout:', error);
+      logger.error('Error during logout:', error);
       toast.error("Erro ao realizar logout");
     }
   }, []);
+
+  const hasPermission = useCallback((permission) => {
+    logger.info('Checking permission:', {
+      permission,
+      adminType,
+      currentPermissions: permissions,
+      isMaster: adminType === 'master'
+    });
+
+    if (adminType === 'master') {
+      logger.info('Master admin - permission granted');
+      return true;
+    }
+
+    const hasPermissionValue = permissions[permission] === true;
+    logger.info(`Permission ${permission} result:`, hasPermissionValue);
+    return hasPermissionValue;
+  }, [adminType, permissions]);
 
   const value = {
     adminType,
@@ -82,15 +126,7 @@ export const AdminProvider = ({ children }) => {
     isAuthenticated,
     isMasterAdmin: adminType === 'master',
     isManager: adminType === 'manager' || adminType === 'master',
-    hasPermission: (permission) => {
-      if (adminType === 'master') return true;
-      try {
-        const permissions = JSON.parse(localStorage.getItem('adminPermissions') || '{}');
-        return permissions[permission] === true;
-      } catch {
-        return false;
-      }
-    },
+    hasPermission,
     logout,
     checkAuth
   };
