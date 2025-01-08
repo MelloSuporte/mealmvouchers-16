@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useUserSearch } from '../../../hooks/useUserSearch';
-import { useMealTypes } from '../../../hooks/useMealTypes';
 import { useRefeicoes } from '../../../hooks/useRefeicoes';
 import { generatePDF } from './pdfGenerator';
 import { supabase } from '../../../config/supabase';
@@ -16,7 +15,6 @@ import logger from '../../../config/logger';
 const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
-  const { data: mealTypes } = useMealTypes();
   const { data: refeicoes } = useRefeicoes();
   const { adminId, isAuthenticated, checkAuth } = useAdmin();
 
@@ -57,7 +55,6 @@ const ExtraMealForm = () => {
         return;
       }
 
-      const mealType = mealTypes?.find(type => type.id === data.tipo_refeicao_id);
       const refeicao = refeicoes?.find(ref => ref.id === data.refeicao_id);
       
       if (!refeicao) {
@@ -77,8 +74,6 @@ const ExtraMealForm = () => {
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
-          tipo_refeicao_id: data.tipo_refeicao_id,
-          nome_refeicao: mealType?.nome || '',
           valor: refeicao.valor,
           quantidade: data.quantidade,
           data_consumo: data.data_consumo,
@@ -125,21 +120,6 @@ const ExtraMealForm = () => {
               </div>
             </div>
           )}
-
-          <div className="space-y-2">
-            <Label htmlFor="tipo_refeicao">Tipo de Refeição</Label>
-            <select
-              {...register("tipo_refeicao_id", { required: true })}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">Selecione...</option>
-              {mealTypes?.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.nome}
-                </option>
-              ))}
-            </select>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="refeicao">Refeição</Label>
