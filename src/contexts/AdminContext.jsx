@@ -38,10 +38,7 @@ export const AdminProvider = ({ children }) => {
 
         if (!session) {
           // Se não houver sessão, fazer login anônimo
-          const { error: anonError } = await supabase.auth.signInWithPassword({
-            email: process.env.VITE_SUPABASE_ANON_KEY,
-            password: process.env.VITE_SUPABASE_ANON_SECRET
-          });
+          const { error: anonError } = await supabase.auth.signInAnonymously();
 
           if (anonError) {
             logger.error('Erro no login anônimo:', anonError);

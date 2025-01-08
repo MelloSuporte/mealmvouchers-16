@@ -20,12 +20,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true
   },
-  global: {
-    headers: { 
-      'apikey': supabaseAnonKey,
-      'Authorization': `Bearer ${supabaseAnonKey}`
-    }
-  },
   db: {
     schema: 'public'
   }
@@ -36,11 +30,7 @@ const checkConnection = async () => {
   try {
     logger.info('Verificando conexão com Supabase...');
     
-    const { data: session, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) {
-      logger.error('Erro ao verificar sessão:', sessionError);
-      throw sessionError;
-    }
+    const { data: session } = await supabase.auth.getSession();
     
     logger.info('Sessão atual:', {
       hasSession: !!session?.session,
@@ -63,8 +53,12 @@ const checkConnection = async () => {
     logger.info('Conexão Supabase verificada com sucesso');
     return true;
   } catch (error) {
-    logger.error('Erro ao verificar conexão:', error);
-    console.error('Detalhes completos do erro:', error);
+    logger.error('Erro ao verificar conexão:', {
+      message: error.message,
+      details: error.stack,
+      hint: error.hint || '',
+      code: error.code || ''
+    });
     throw error;
   }
 };
@@ -72,7 +66,6 @@ const checkConnection = async () => {
 // Inicializar conexão
 checkConnection().catch(error => {
   logger.error('Falha ao inicializar conexão:', error);
-  console.error('Erro completo:', error);
 });
 
 export default supabase;
