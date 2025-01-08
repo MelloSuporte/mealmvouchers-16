@@ -53,17 +53,6 @@ const ExtraMealForm = () => {
         data_consumo: data.data_consumo
       });
 
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        toast.error("Erro de autenticação: Sessão inválida");
-        return;
-      }
-
-      // Ensure we're using the latest session token
-      supabase.auth.setSession(session);
-
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
