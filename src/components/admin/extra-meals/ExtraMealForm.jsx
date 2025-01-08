@@ -58,6 +58,13 @@ const ExtraMealForm = () => {
         data_consumo: data.data_consumo
       });
 
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.access_token) {
+        toast.error("Sessão expirada. Por favor, faça login novamente.");
+        return;
+      }
+
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
@@ -70,7 +77,9 @@ const ExtraMealForm = () => {
           ativo: true,
           autorizado_por: adminId,
           nome_refeicao: refeicao.nome
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         logger.error('Erro ao inserir refeição:', error);
