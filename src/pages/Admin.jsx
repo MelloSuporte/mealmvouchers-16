@@ -18,13 +18,15 @@ import { useNavigate } from 'react-router-dom';
 import RefeicoesExtras from './RefeicoesExtras';
 
 const Admin = () => {
-  const { user, logout, hasPermission } = useAdmin();
+  const { isAuthenticated, logout, hasPermission, isMasterAdmin } = useAdmin();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate('/voucher');
   };
+
+  console.log('Is Master Admin:', isMasterAdmin); // Debug log
 
   const tabs = [
     {
@@ -94,46 +96,53 @@ const Admin = () => {
     }
   ];
 
-  const authorizedTabs = tabs.filter(tab => hasPermission(tab.permission));
+  // Filter tabs based on permissions, showing all tabs for master admin
+  const authorizedTabs = tabs.filter(tab => 
+    isMasterAdmin || hasPermission(tab.permission)
+  );
+
+  console.log('Authorized Tabs:', authorizedTabs.map(tab => tab.id)); // Debug log
+
   const defaultTab = authorizedTabs[0]?.id || '';
 
-  return (
-    <AdminProvider>
-      <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Administração</h1>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              className="hover:bg-slate-100"
-            >
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-        
-        <Tabs defaultValue={defaultTab} className="mt-4">
-          <TabsList>
-            {authorizedTabs.map(tab => (
-              <TabsTrigger key={tab.id} value={tab.id}>
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+  if (!isAuthenticated) {
+    return <AdminLoginDialog />;
+  }
 
-          {authorizedTabs.map(tab => (
-            <TabsContent key={tab.id} value={tab.id}>
-              <Card>
-                {tab.content}
-              </Card>
-            </TabsContent>
-          ))}
-        </Tabs>
+  return (
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Administração</h1>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            className="hover:bg-slate-100"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
-      {user ? null : <AdminLoginDialog />}
-    </AdminProvider>
+      
+      <Tabs defaultValue={defaultTab} className="mt-4">
+        <TabsList>
+          {authorizedTabs.map(tab => (
+            <TabsTrigger key={tab.id} value={tab.id}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {authorizedTabs.map(tab => (
+          <TabsContent key={tab.id} value={tab.id}>
+            <Card>
+              {tab.content}
+            </Card>
+          </TabsContent>
+        ))}
+      </Tabs>
+    </div>
   );
 };
 
