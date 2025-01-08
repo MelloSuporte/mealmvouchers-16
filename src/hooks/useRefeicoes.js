@@ -28,5 +28,3 @@ export const useRefeicoes = () => {
     retry: 2
   });
 };
-
-export default useRefeicoes;
