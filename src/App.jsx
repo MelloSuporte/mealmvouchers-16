@@ -37,6 +37,7 @@ function App() {
             <Route path="/self-services" element={<SelfServices />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/background-images" element={<BackgroundImages />} />
+            <Route path="/admin-login" element={<Navigate to="/admin" replace />} />
           </Routes>
           <Toaster />
           <SonnerToaster position="top-right" />
