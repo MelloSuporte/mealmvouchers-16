@@ -29,10 +29,11 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      if (!isAuthenticated) {
+      // Ensure admin is authenticated
+      if (!isAuthenticated || !adminId) {
         logger.error('Admin não autenticado');
-        await checkAuth(); // Try to revalidate authentication
-        if (!isAuthenticated) {
+        await checkAuth();
+        if (!isAuthenticated || !adminId) {
           toast.error("Você precisa estar autenticado como administrador");
           return;
         }
@@ -53,19 +54,30 @@ const ExtraMealForm = () => {
       logger.info('Iniciando cadastro de refeição extra:', {
         usuario: selectedUser.id,
         refeicao: refeicao.id,
-        adminId
+        adminId,
+        data_consumo: data.data_consumo
       });
 
+      // Get fresh auth session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Erro de autenticação: Sessão inválida');
+      }
+
+      // Set auth header explicitly
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
+          tipo_refeicao_id: refeicao.id,
           valor: refeicao.valor,
-          quantidade: data.quantidade,
+          quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
           observacao: data.observacao,
           ativo: true,
-          autorizado_por: adminId
+          autorizado_por: adminId,
+          nome_refeicao: refeicao.nome
         })
         .select();
 
@@ -80,8 +92,10 @@ const ExtraMealForm = () => {
       setSelectedUser(null);
     } catch (error) {
       logger.error('Erro ao registrar refeição:', error);
-      if (error.message.includes('auth')) {
+      if (error.message.includes('auth') || error.message.includes('401')) {
         toast.error("Erro de autenticação. Por favor, faça login novamente.");
+      } else if (error.message.includes('policy')) {
+        toast.error("Erro de permissão. Verifique se você tem as permissões necessárias.");
       } else {
         toast.error("Erro ao registrar refeição extra: " + error.message);
       }
