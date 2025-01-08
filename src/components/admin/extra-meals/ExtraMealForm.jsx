@@ -53,14 +53,6 @@ const ExtraMealForm = () => {
         data_consumo: data.data_consumo
       });
 
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
-        return;
-      }
-
       const { error: insertError } = await supabase
         .from('refeicoes_extras')
         .insert({
