@@ -53,24 +53,6 @@ const ExtraMealForm = () => {
         data_consumo: data.data_consumo
       });
 
-      // Get current session and refresh if needed
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        logger.error('Erro ao obter sessão:', sessionError);
-        toast.error("Erro ao verificar autenticação");
-        return;
-      }
-
-      if (!session) {
-        const { error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError) {
-          logger.error('Erro ao atualizar sessão:', refreshError);
-          toast.error("Erro ao atualizar autenticação");
-          return;
-        }
-      }
-
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
