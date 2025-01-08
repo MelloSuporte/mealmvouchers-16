@@ -18,7 +18,7 @@ CREATE POLICY "refeicoes_extras_insert_policy" ON refeicoes_extras
                 OR au.permissoes->>'gerenciar_usuarios' = 'true'
             )
             AND NOT au.suspenso
-            AND autorizado_por = auth.uid()
+            AND autorizado_por::uuid = auth.uid()
         )
     );
 
