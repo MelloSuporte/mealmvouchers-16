@@ -16,7 +16,7 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // If we're on /admin-login, redirect to /admin and show dialog there
+  // Se estiver na rota /admin-login, redireciona para /admin
   useEffect(() => {
     if (location.pathname === '/admin-login') {
       navigate('/admin', { replace: true });
