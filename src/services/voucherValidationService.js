@@ -8,7 +8,6 @@ export const validateDisposableVoucher = async (codigo, tipoRefeicaoId) => {
       throw new Error('Código do voucher e tipo de refeição são obrigatórios');
     }
 
-    // Call the RPC function
     const { data, error } = await supabase
       .rpc('validate_and_use_voucher', {
         p_codigo: codigo,
@@ -83,5 +82,44 @@ export const validateExtraVoucher = async (codigo, tipoRefeicaoId) => {
   } catch (error) {
     logger.error('Erro ao validar voucher extra:', error);
     return { success: false, error: error.message };
+  }
+};
+
+export const identifyVoucherType = async (codigo) => {
+  try {
+    logger.info('Identificando tipo de voucher:', codigo);
+    
+    // Garantir que o código seja uma string
+    const voucherCode = String(codigo);
+    
+    // Primeiro tenta encontrar como voucher comum
+    const { data: usuario } = await supabase
+      .from('usuarios')
+      .select('voucher')
+      .eq('voucher', voucherCode)
+      .maybeSingle();
+
+    if (usuario) {
+      logger.info('Voucher identificado como comum');
+      return 'comum';
+    }
+
+    // Tenta encontrar como voucher descartável
+    const { data: voucherDescartavel } = await supabase
+      .from('vouchers_descartaveis')
+      .select('*')
+      .eq('codigo', voucherCode)
+      .maybeSingle();
+
+    if (voucherDescartavel) {
+      logger.info('Voucher identificado como descartável');
+      return 'descartavel';
+    }
+
+    logger.info('Tipo de voucher não identificado');
+    return null;
+  } catch (error) {
+    logger.error('Erro ao identificar tipo de voucher:', error);
+    return null;
   }
 };
