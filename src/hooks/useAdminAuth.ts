@@ -16,34 +16,56 @@ export const useAdminAuth = () => {
 
   const checkAuth = useCallback(async () => {
     try {
+      // Se for admin master, não verifica expiração
+      const adminType = localStorage.getItem('adminType') as AdminType;
+      if (adminType === 'master') {
+        const storedName = localStorage.getItem('adminName');
+        const storedId = localStorage.getItem('adminId');
+        const storedPermissions = localStorage.getItem('adminPermissions');
+        
+        setState({
+          adminType: 'master',
+          adminName: storedName,
+          adminId: storedId,
+          isLoading: false,
+          isAuthenticated: true,
+          permissions: parseStoredPermissions(storedPermissions)
+        });
+        
+        logger.info('Admin master autenticado:', { 
+          name: storedName,
+          id: storedId
+        });
+        return;
+      }
+
+      // Para outros tipos de admin, verifica expiração
       const isValid = checkTokenExpiration();
       
       if (!isValid) {
-        logger.warn('Sessão expirada ou inválida');
+        logger.warn('Sessão expirada ou inválida para admin não-master');
         await logout();
-        toast.error("Sessão expirada. Favor fazer login novamente.");
         return;
       }
 
       const adminToken = localStorage.getItem('adminToken');
-      const storedType = localStorage.getItem('adminType') as AdminType;
       const storedName = localStorage.getItem('adminName');
       const storedId = localStorage.getItem('adminId');
       const storedPermissions = localStorage.getItem('adminPermissions');
       
       logger.info('Verificando autenticação:', {
         hasToken: !!adminToken,
-        storedType,
+        adminType,
         storedName,
         storedId,
         temPermissoes: !!storedPermissions
       });
 
-      if (adminToken && storedType) {
+      if (adminToken && adminType) {
         const parsedPermissions = parseStoredPermissions(storedPermissions);
         
         setState({
-          adminType: storedType,
+          adminType,
           adminName: storedName,
           adminId: storedId,
           isLoading: false,
@@ -52,7 +74,7 @@ export const useAdminAuth = () => {
         });
 
         logger.info('Admin autenticado:', { 
-          type: storedType, 
+          type: adminType, 
           name: storedName,
           permissions: parsedPermissions 
         });
@@ -100,7 +122,8 @@ export const useAdminAuth = () => {
 
   useEffect(() => {
     checkAuth();
-    const interval = setInterval(checkAuth, 15 * 60 * 1000);
+    // Reduz a frequência de verificação para 1 hora
+    const interval = setInterval(checkAuth, 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, [checkAuth]);
 

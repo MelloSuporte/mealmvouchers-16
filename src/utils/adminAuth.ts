@@ -1,19 +1,13 @@
 import logger from '../config/logger';
 import { AdminPermissions } from '../types/admin';
 
-const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000; // 7 dias em milissegundos
 
 export const checkTokenExpiration = (): boolean => {
-  const tokenData = localStorage.getItem('adminToken');
   const adminType = localStorage.getItem('adminType');
   
-  if (!tokenData) {
-    logger.warn('Token não encontrado');
-    return false;
-  }
-
+  // Admin master nunca expira
   if (adminType === 'master') {
-    logger.info('Admin master - sessão permanente');
     return true;
   }
 
@@ -23,31 +17,29 @@ export const checkTokenExpiration = (): boolean => {
     return false;
   }
 
-  const expirationTime = new Date(Number(lastLoginTime) + SEVEN_DAYS);
-  const isExpired = new Date() > expirationTime;
+  const loginTime = Number(lastLoginTime);
+  const currentTime = Date.now();
+  const timeElapsed = currentTime - loginTime;
+  
+  // Se passou mais de 7 dias, sessão expirou
+  const isExpired = timeElapsed > SEVEN_DAYS;
 
-  if (isExpired) {
-    logger.warn('Token expirado:', {
-      loginTime: new Date(Number(lastLoginTime)).toISOString(),
-      expirationTime: expirationTime.toISOString(),
-      currentTime: new Date().toISOString(),
-      adminType
-    });
-  } else {
-    logger.info('Token válido:', {
-      loginTime: new Date(Number(lastLoginTime)).toISOString(),
-      expirationTime: expirationTime.toISOString(),
-      tempoRestante: Math.floor((expirationTime - new Date()) / (1000 * 60 * 60)),
-      adminType
-    });
-  }
+  logger.info('Verificação de expiração:', {
+    loginTime: new Date(loginTime).toISOString(),
+    currentTime: new Date(currentTime).toISOString(),
+    timeElapsed: Math.floor(timeElapsed / (1000 * 60 * 60)), // horas
+    isExpired
+  });
 
   return !isExpired;
 };
 
 export const parseStoredPermissions = (storedPermissions: string | null): AdminPermissions => {
   try {
-    return JSON.parse(storedPermissions || '{}');
+    if (!storedPermissions) {
+      return {};
+    }
+    return JSON.parse(storedPermissions);
   } catch (error) {
     logger.error('Erro ao processar permissões:', error);
     return {};
@@ -55,6 +47,14 @@ export const parseStoredPermissions = (storedPermissions: string | null): AdminP
 };
 
 export const clearAdminSession = () => {
+  const adminType = localStorage.getItem('adminType');
+  
+  // Não limpa sessão de admin master
+  if (adminType === 'master') {
+    logger.info('Tentativa de limpar sessão de admin master ignorada');
+    return;
+  }
+
   localStorage.removeItem('adminToken');
   localStorage.removeItem('adminType');
   localStorage.removeItem('adminName');
@@ -62,4 +62,6 @@ export const clearAdminSession = () => {
   localStorage.removeItem('adminPermissions');
   localStorage.removeItem('adminLoginTime');
   localStorage.removeItem('adminEmpresa');
+  
+  logger.info('Sessão de admin limpa com sucesso');
 };
