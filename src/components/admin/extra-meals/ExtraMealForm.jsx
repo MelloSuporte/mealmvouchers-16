@@ -17,7 +17,7 @@ const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
-  const { adminId, hasPermission } = useAdmin();
+  const { adminId } = useAdmin();
   const navigate = useNavigate();
 
   const selectedRefeicaoId = watch('refeicoes');
@@ -34,6 +34,11 @@ const ExtraMealForm = () => {
     try {
       if (!selectedUser) {
         toast.error("Selecione um usuário");
+        return;
+      }
+
+      if (!adminId) {
+        toast.error("ID do administrador não encontrado");
         return;
       }
 
