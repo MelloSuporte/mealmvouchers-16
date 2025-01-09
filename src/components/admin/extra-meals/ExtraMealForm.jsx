@@ -65,7 +65,7 @@ const ExtraMealForm = () => {
           quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
           observacao: data.observacao,
-          autorizado_por: adminId,
+          autorizado_por: adminId.toString(), // Convert adminId to string
           nome_refeicao: refeicao.nome,
           ativo: true
         })
