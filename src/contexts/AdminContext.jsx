@@ -21,8 +21,47 @@ export const AdminProvider = ({ children }) => {
   const [adminId, setAdminId] = useState(null);
   const [permissions, setPermissions] = useState({});
 
+  const checkTokenExpiration = useCallback(() => {
+    const tokenData = localStorage.getItem('adminToken');
+    if (!tokenData) return false;
+
+    // Para o admin master, não verificamos expiração
+    if (localStorage.getItem('adminType') === 'master') {
+      return true;
+    }
+
+    // Verifica se o token está expirado (24 horas após criação)
+    const lastLoginTime = localStorage.getItem('adminLoginTime');
+    if (!lastLoginTime) {
+      logger.warn('Tempo de login não encontrado');
+      return false;
+    }
+
+    const expirationTime = new Date(Number(lastLoginTime) + 24 * 60 * 60 * 1000); // 24 horas
+    const isExpired = new Date() > expirationTime;
+
+    if (isExpired) {
+      logger.warn('Token expirado:', {
+        loginTime: new Date(Number(lastLoginTime)).toISOString(),
+        expirationTime: expirationTime.toISOString(),
+        currentTime: new Date().toISOString()
+      });
+    }
+
+    return !isExpired;
+  }, []);
+
   const checkAuth = useCallback(async () => {
     try {
+      const isValid = checkTokenExpiration();
+      
+      if (!isValid) {
+        logger.warn('Sessão expirada ou inválida');
+        await logout();
+        toast.error("Sessão expirada. Favor fazer login novamente.");
+        return;
+      }
+
       const adminToken = localStorage.getItem('adminToken');
       const storedType = localStorage.getItem('adminType');
       const storedName = localStorage.getItem('adminName');
@@ -75,10 +114,13 @@ export const AdminProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [checkTokenExpiration]);
 
   useEffect(() => {
     checkAuth();
+    // Verifica a autenticação a cada 5 minutos
+    const interval = setInterval(checkAuth, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, [checkAuth]);
 
   const logout = useCallback(async () => {
@@ -88,6 +130,7 @@ export const AdminProvider = ({ children }) => {
       localStorage.removeItem('adminName');
       localStorage.removeItem('adminId');
       localStorage.removeItem('adminPermissions');
+      localStorage.removeItem('adminLoginTime');
       setIsAuthenticated(false);
       setAdminType(null);
       setAdminName(null);

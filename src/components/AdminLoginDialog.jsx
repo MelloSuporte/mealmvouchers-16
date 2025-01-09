@@ -35,6 +35,7 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
           gerenciar_usuarios: true,
           gerenciar_relatorios: true
         }));
+        localStorage.setItem('adminLoginTime', Date.now().toString());
         
         onClose();
         navigate('/admin');
@@ -75,6 +76,7 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         localStorage.setItem('adminName', admin.nome || 'Usuário Gerente');
         localStorage.setItem('adminPermissions', JSON.stringify(admin.permissoes));
         localStorage.setItem('adminEmpresa', admin.empresas?.nome || '');
+        localStorage.setItem('adminLoginTime', Date.now().toString());
         
         logger.info('Estado final da autenticação:', {
           adminId: admin.id,
