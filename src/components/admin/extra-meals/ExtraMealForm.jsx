@@ -17,7 +17,7 @@ const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
-  const { adminId, hasPermission, checkAuth } = useAdmin();
+  const { adminId, hasPermission } = useAdmin();
   const navigate = useNavigate();
 
   const selectedRefeicaoId = watch('refeicoes');
@@ -59,36 +59,6 @@ const ExtraMealForm = () => {
         adminId,
         data_consumo: data.data_consumo
       });
-
-      // Verificar a sessão antes de fazer a requisição
-      const { data: session, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        logger.error('Erro ao verificar sessão:', sessionError);
-        toast.error("Erro ao verificar sessão. Por favor, faça login novamente.");
-        navigate('/admin-login');
-        return;
-      }
-
-      if (!session?.session?.access_token) {
-        logger.warn('Sessão não encontrada ou expirada');
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
-        navigate('/admin-login');
-        return;
-      }
-
-      // Atualizar o cliente Supabase com o token atual
-      const { error: authError } = await supabase.auth.setSession({
-        access_token: session.session.access_token,
-        refresh_token: session.session.refresh_token
-      });
-
-      if (authError) {
-        logger.error('Erro ao atualizar sessão:', authError);
-        toast.error("Erro ao atualizar sessão. Por favor, faça login novamente.");
-        navigate('/admin-login');
-        return;
-      }
 
       const { error } = await supabase
         .from('refeicoes_extras')
