@@ -32,16 +32,6 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      if (!hasPermission('gerenciar_refeicoes_extras')) {
-        toast.error("Você não tem permissão para registrar refeições extras");
-        return;
-      }
-
-      if (!adminId) {
-        toast.error("ID do administrador não encontrado");
-        return;
-      }
-
       if (!selectedUser) {
         toast.error("Selecione um usuário");
         return;
