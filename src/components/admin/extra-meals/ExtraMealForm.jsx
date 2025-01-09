@@ -26,6 +26,7 @@ const ExtraMealForm = () => {
   React.useEffect(() => {
     if (selectedRefeicao) {
       setValue('valor', selectedRefeicao.valor);
+      setValue('nome_refeicao', selectedRefeicao.nome);
     }
   }, [selectedRefeicao, setValue]);
 
@@ -69,19 +70,14 @@ const ExtraMealForm = () => {
           quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
           observacao: data.observacao,
-          ativo: true,
           autorizado_por: adminId,
-          nome_refeicao: refeicao.nome
+          nome_refeicao: refeicao.nome,
+          ativo: true
         });
 
       if (error) {
         logger.error('Erro ao inserir refeição:', error);
-        if (error.code === '42501') {
-          toast.error("Você não tem permissão para registrar refeições extras. Verifique suas permissões.");
-        } else {
-          toast.error("Erro ao registrar refeição extra. Por favor, tente novamente.");
-        }
-        return;
+        throw error;
       }
 
       toast.success("Refeição extra registrada com sucesso!");
@@ -146,6 +142,8 @@ const ExtraMealForm = () => {
             <Label htmlFor="quantidade">Quantidade</Label>
             <Input
               type="number"
+              min="1"
+              defaultValue="1"
               {...register("quantidade", { required: true, min: 1 })}
             />
           </div>
