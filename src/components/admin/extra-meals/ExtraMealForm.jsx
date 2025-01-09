@@ -56,7 +56,7 @@ const ExtraMealForm = () => {
         data_consumo: data.data_consumo
       });
 
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
@@ -68,7 +68,9 @@ const ExtraMealForm = () => {
           autorizado_por: adminId,
           nome_refeicao: refeicao.nome,
           ativo: true
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         logger.error('Erro ao inserir refeição:', error);
