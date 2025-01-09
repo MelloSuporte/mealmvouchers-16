@@ -72,9 +72,7 @@ const ExtraMealForm = () => {
           ativo: true,
           autorizado_por: adminId,
           nome_refeicao: refeicao.nome
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
         logger.error('Erro ao inserir refeição:', error);
