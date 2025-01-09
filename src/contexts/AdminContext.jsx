@@ -23,28 +23,43 @@ export const AdminProvider = ({ children }) => {
 
   const checkTokenExpiration = useCallback(() => {
     const tokenData = localStorage.getItem('adminToken');
-    if (!tokenData) return false;
+    const adminType = localStorage.getItem('adminType');
+    
+    if (!tokenData) {
+      logger.warn('Token não encontrado');
+      return false;
+    }
 
-    // Para o admin master, não verificamos expiração
-    if (localStorage.getItem('adminType') === 'master') {
+    // Admin master tem sessão permanente
+    if (adminType === 'master') {
+      logger.info('Admin master - sessão permanente');
       return true;
     }
 
-    // Verifica se o token está expirado (24 horas após criação)
+    // Para outros admins, verifica expiração (7 dias)
     const lastLoginTime = localStorage.getItem('adminLoginTime');
     if (!lastLoginTime) {
       logger.warn('Tempo de login não encontrado');
       return false;
     }
 
-    const expirationTime = new Date(Number(lastLoginTime) + 24 * 60 * 60 * 1000); // 24 horas
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000; // 7 dias em milissegundos
+    const expirationTime = new Date(Number(lastLoginTime) + SEVEN_DAYS);
     const isExpired = new Date() > expirationTime;
 
     if (isExpired) {
       logger.warn('Token expirado:', {
         loginTime: new Date(Number(lastLoginTime)).toISOString(),
         expirationTime: expirationTime.toISOString(),
-        currentTime: new Date().toISOString()
+        currentTime: new Date().toISOString(),
+        adminType
+      });
+    } else {
+      logger.info('Token válido:', {
+        loginTime: new Date(Number(lastLoginTime)).toISOString(),
+        expirationTime: expirationTime.toISOString(),
+        tempoRestante: Math.floor((expirationTime - new Date()) / (1000 * 60 * 60)), // horas restantes
+        adminType
       });
     }
 
@@ -68,12 +83,12 @@ export const AdminProvider = ({ children }) => {
       const storedId = localStorage.getItem('adminId');
       const storedPermissions = localStorage.getItem('adminPermissions');
       
-      logger.info('Checking auth with stored data:', {
+      logger.info('Verificando autenticação:', {
         hasToken: !!adminToken,
         storedType,
         storedName,
         storedId,
-        storedPermissions
+        temPermissoes: !!storedPermissions
       });
 
       if (adminToken && storedType) {
@@ -84,14 +99,13 @@ export const AdminProvider = ({ children }) => {
         
         try {
           const parsedPermissions = JSON.parse(storedPermissions || '{}');
-          logger.info('Parsed permissions:', parsedPermissions);
           setPermissions(parsedPermissions);
         } catch (error) {
-          logger.error('Error parsing permissions:', error);
+          logger.error('Erro ao processar permissões:', error);
           setPermissions({});
         }
 
-        logger.info('Admin authenticated:', { 
+        logger.info('Admin autenticado:', { 
           type: storedType, 
           name: storedName,
           permissions: permissions 
@@ -102,10 +116,10 @@ export const AdminProvider = ({ children }) => {
         setAdminName(null);
         setAdminId(null);
         setPermissions({});
-        logger.warn('No admin token found');
+        logger.warn('Token de admin não encontrado');
       }
     } catch (error) {
-      logger.error('Error checking authentication:', error);
+      logger.error('Erro ao verificar autenticação:', error);
       setIsAuthenticated(false);
       setAdminType(null);
       setAdminName(null);
@@ -114,12 +128,12 @@ export const AdminProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [checkTokenExpiration]);
+  }, [checkTokenExpiration, permissions]);
 
   useEffect(() => {
     checkAuth();
-    // Verifica a autenticação a cada 5 minutos
-    const interval = setInterval(checkAuth, 5 * 60 * 1000);
+    // Verifica a autenticação a cada 15 minutos
+    const interval = setInterval(checkAuth, 15 * 60 * 1000);
     return () => clearInterval(interval);
   }, [checkAuth]);
 
@@ -131,6 +145,7 @@ export const AdminProvider = ({ children }) => {
       localStorage.removeItem('adminId');
       localStorage.removeItem('adminPermissions');
       localStorage.removeItem('adminLoginTime');
+      localStorage.removeItem('adminEmpresa');
       setIsAuthenticated(false);
       setAdminType(null);
       setAdminName(null);
@@ -138,27 +153,16 @@ export const AdminProvider = ({ children }) => {
       setPermissions({});
       toast.success("Logout realizado com sucesso");
     } catch (error) {
-      logger.error('Error during logout:', error);
+      logger.error('Erro durante logout:', error);
       toast.error("Erro ao realizar logout");
     }
   }, []);
 
   const hasPermission = useCallback((permission) => {
-    logger.info('Checking permission:', {
-      permission,
-      adminType,
-      currentPermissions: permissions,
-      isMaster: adminType === 'master'
-    });
-
     if (adminType === 'master') {
-      logger.info('Master admin - permission granted');
       return true;
     }
-
-    const hasPermissionValue = permissions[permission] === true;
-    logger.info(`Permission ${permission} result:`, hasPermissionValue);
-    return hasPermissionValue;
+    return permissions[permission] === true;
   }, [adminType, permissions]);
 
   const value = {
