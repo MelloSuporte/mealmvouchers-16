@@ -113,10 +113,10 @@ const ExtraMealForm = () => {
           toast.error(`Erro ao registrar refeição para ${user.nome}`);
           continue;
         }
-
-        // Gerar PDF para cada usuário
-        generatePDF({ ...data, usuario: user });
       }
+
+      // Gerar um único PDF com todos os usuários
+      generatePDF({ ...data, usuarios: selectedUsers });
 
       logger.info('Refeições extras registradas com sucesso');
       toast.success("Refeições extras registradas com sucesso!");
