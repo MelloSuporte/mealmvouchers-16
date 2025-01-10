@@ -74,9 +74,19 @@ const ExtraMealForm = () => {
 
       if (error) {
         logger.error('Erro ao inserir refeição:', error);
-        throw error;
+        
+        // More specific error messages based on error type
+        if (error.code === '42501') {
+          toast.error("Permissão negada. Verifique suas credenciais de administrador.");
+        } else if (error.code === '23505') {
+          toast.error("Esta refeição já foi registrada.");
+        } else {
+          toast.error(`Erro ao registrar refeição: ${error.message}`);
+        }
+        return;
       }
 
+      logger.info('Refeição extra registrada com sucesso:', insertedData);
       toast.success("Refeição extra registrada com sucesso!");
       generatePDF({ ...data, usuario: selectedUser });
       reset();
