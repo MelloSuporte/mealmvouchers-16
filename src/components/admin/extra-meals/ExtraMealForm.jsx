@@ -55,14 +55,13 @@ const ExtraMealForm = () => {
         return;
       }
 
-      // Log the refeicao object for debugging
       logger.info('Dados da refeição selecionada:', refeicao);
 
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
-          refeicoes: refeicao.id, // Make sure this matches the ID in tipos_refeicao
+          tipo_refeicao_id: refeicao.id, // Changed from refeicoes to tipo_refeicao_id
           valor: refeicao.valor,
           quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
