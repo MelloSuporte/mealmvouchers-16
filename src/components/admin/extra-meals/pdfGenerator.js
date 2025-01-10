@@ -17,8 +17,7 @@ export const generatePDF = (data) => {
     let yPosition = 50;
     data.usuarios.forEach((usuario, index) => {
       doc.text(`${index + 1}. Nome: ${usuario.nome || '-'}`, 20, yPosition);
-      doc.text(`   CPF: ${usuario.cpf || '-'}`, 20, yPosition + 10);
-      yPosition += 20;
+      yPosition += 10;
     });
     yPosition += 10;
     doc.text(`Solicitante: ${adminName}`, 14, yPosition);
@@ -36,18 +35,17 @@ export const generatePDF = (data) => {
   } else {
     // Fallback para caso de usuário único (mantendo compatibilidade)
     doc.text(`Usuário: ${data.usuario?.nome || '-'}`, 14, 40);
-    doc.text(`CPF: ${data.usuario?.cpf || '-'}`, 14, 50);
-    doc.text(`Solicitante: ${adminName}`, 14, 60);
-    doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, 70);
-    doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, 80);
-    doc.text(`Valor: R$ ${parseFloat(data.valor || 0).toFixed(2)}`, 14, 90);
-    doc.text(`Data de Consumo: ${new Date(data.data_consumo).toLocaleDateString()}`, 14, 100);
+    doc.text(`Solicitante: ${adminName}`, 14, 50);
+    doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, 60);
+    doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, 70);
+    doc.text(`Valor: R$ ${parseFloat(data.valor || 0).toFixed(2)}`, 14, 80);
+    doc.text(`Data de Consumo: ${new Date(data.data_consumo).toLocaleDateString()}`, 14, 90);
     
     if (data.observacao) {
-      doc.text('Observação:', 14, 110);
+      doc.text('Observação:', 14, 100);
       doc.setFontSize(10);
       const splitObservacao = doc.splitTextToSize(data.observacao, 180);
-      doc.text(splitObservacao, 14, 120);
+      doc.text(splitObservacao, 14, 110);
     }
   }
   
