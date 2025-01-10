@@ -10,7 +10,6 @@ import { generatePDF } from './pdfGenerator';
 import { supabase } from '../../../config/supabase';
 import { useAdmin } from '../../../contexts/AdminContext';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 import logger from '../../../config/logger';
 
 const ExtraMealForm = () => {
@@ -18,7 +17,6 @@ const ExtraMealForm = () => {
   const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
   const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
   const { adminId } = useAdmin();
-  const navigate = useNavigate();
 
   const selectedRefeicaoId = watch('refeicoes');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
@@ -66,19 +64,13 @@ const ExtraMealForm = () => {
           quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
           observacao: data.observacao,
-          autorizado_por: adminId.toString(),
+          autorizado_por: adminId,
           nome_refeicao: refeicao.nome,
           ativo: true
         });
 
       if (error) {
-        logger.error('Erro ao inserir refeição:', {
-          error,
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          adminId: adminId.toString()
-        });
+        logger.error('Erro ao inserir refeição:', error);
         
         if (error.code === '42501') {
           toast.error("Permissão negada. Verifique suas credenciais de administrador.");
