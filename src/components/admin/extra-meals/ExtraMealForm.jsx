@@ -92,6 +92,9 @@ const ExtraMealForm = () => {
 
       logger.info('Dados da refeição selecionada:', refeicao);
 
+      // Garantir que a data seja mantida exatamente como selecionada
+      const dataConsumo = data.data_consumo;
+
       // Registrar refeição para cada usuário selecionado
       for (const user of selectedUsers) {
         const { error: insertError } = await supabase
@@ -101,7 +104,7 @@ const ExtraMealForm = () => {
             refeicoes: refeicao.id,
             valor: refeicao.valor,
             quantidade: data.quantidade || 1,
-            data_consumo: data.data_consumo,
+            data_consumo: dataConsumo, // Usar a data exatamente como foi selecionada
             observacao: data.observacao,
             autorizado_por: adminId,
             nome_refeicao: refeicao.nome,
@@ -115,8 +118,8 @@ const ExtraMealForm = () => {
         }
       }
 
-      // Gerar um único PDF com todos os usuários
-      generatePDF({ ...data, usuarios: selectedUsers });
+      // Gerar PDF com a data correta
+      generatePDF({ ...data, usuarios: selectedUsers, data_consumo: dataConsumo });
 
       logger.info('Refeições extras registradas com sucesso');
       toast.success("Refeições extras registradas com sucesso!");
