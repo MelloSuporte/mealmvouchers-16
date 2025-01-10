@@ -1,5 +1,7 @@
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export const generatePDF = (data) => {
   const doc = new jsPDF();
@@ -9,7 +11,7 @@ export const generatePDF = (data) => {
   doc.text('Requisição de Refeição Extra', 14, 20);
   
   doc.setFontSize(12);
-  doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 30);
+  doc.text(`Data: ${format(new Date(), 'dd/MM/yyyy')}`, 14, 30);
 
   // Adiciona todos os usuários selecionados
   if (Array.isArray(data.usuarios) && data.usuarios.length > 0) {
@@ -23,7 +25,7 @@ export const generatePDF = (data) => {
     doc.text(`Solicitante: ${adminName}`, 14, yPosition);
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, yPosition + 10);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, yPosition + 20);
-    doc.text(`Data de Consumo: ${data.data_consumo}`, 14, yPosition + 30);
+    doc.text(`Data de Consumo: ${format(new Date(data.data_consumo), 'dd/MM/yyyy')}`, 14, yPosition + 30);
     
     if (data.observacao) {
       doc.text('Observação:', 14, yPosition + 40);
@@ -37,7 +39,7 @@ export const generatePDF = (data) => {
     doc.text(`Solicitante: ${adminName}`, 14, 50);
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, 60);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, 70);
-    doc.text(`Data de Consumo: ${data.data_consumo}`, 14, 80);
+    doc.text(`Data de Consumo: ${format(new Date(data.data_consumo), 'dd/MM/yyyy')}`, 14, 80);
     
     if (data.observacao) {
       doc.text('Observação:', 14, 90);
@@ -57,10 +59,10 @@ export const generateReportPDF = (meals, dateRange) => {
   doc.text('Relatório de Refeições Extras', 14, 20);
   
   doc.setFontSize(12);
-  doc.text(`Período: ${new Date(dateRange.start).toLocaleDateString('pt-BR')} a ${new Date(dateRange.end).toLocaleDateString('pt-BR')}`, 14, 30);
+  doc.text(`Período: ${format(new Date(dateRange.start), 'dd/MM/yyyy')} a ${format(new Date(dateRange.end), 'dd/MM/yyyy')}`, 14, 30);
   
   const tableData = meals.map(meal => [
-    new Date(meal.data_consumo).toLocaleDateString('pt-BR'),
+    format(new Date(meal.data_consumo), 'dd/MM/yyyy'),
     meal.usuarios?.nome || '-',
     meal.refeicoes?.nome || '-',
     meal.quantidade?.toString() || '0',
