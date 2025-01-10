@@ -104,7 +104,7 @@ const ExtraMealForm = () => {
             refeicoes: refeicao.id,
             valor: refeicao.valor,
             quantidade: data.quantidade || 1,
-            data_consumo: dataConsumo, // Usar a data exatamente como foi selecionada
+            data_consumo: dataConsumo,
             observacao: data.observacao,
             autorizado_por: adminId,
             nome_refeicao: refeicao.nome,
@@ -118,7 +118,7 @@ const ExtraMealForm = () => {
         }
       }
 
-      // Gerar PDF com a data correta
+      // Gerar PDF com a data exata selecionada
       generatePDF({ ...data, usuarios: selectedUsers, data_consumo: dataConsumo });
 
       logger.info('Refeições extras registradas com sucesso');
