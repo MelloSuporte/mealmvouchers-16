@@ -61,7 +61,7 @@ const ExtraMealForm = () => {
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
-          refeicao: refeicao.id, // Alterado de refeicoes para refeicao
+          refeicoes: refeicao.id,
           valor: refeicao.valor,
           quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
