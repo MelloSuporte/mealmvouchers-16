@@ -32,6 +32,12 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
+      logger.info('Iniciando registro de refeição extra:', {
+        usuario: selectedUser?.id,
+        adminId,
+        refeicao: data.refeicoes
+      });
+
       if (!selectedUser) {
         toast.error("Selecione um usuário");
         return;
@@ -51,13 +57,6 @@ const ExtraMealForm = () => {
         return;
       }
 
-      logger.info('Iniciando cadastro de refeição extra:', {
-        usuario: selectedUser.id,
-        refeicao: refeicao.id,
-        adminId,
-        data_consumo: data.data_consumo
-      });
-
       const { data: insertedData, error } = await supabase
         .from('refeicoes_extras')
         .insert({
@@ -67,7 +66,7 @@ const ExtraMealForm = () => {
           quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
           observacao: data.observacao,
-          autorizado_por: adminId,
+          autorizado_por: String(adminId), // Garantindo que adminId seja string
           nome_refeicao: refeicao.nome,
           ativo: true
         })
@@ -79,7 +78,8 @@ const ExtraMealForm = () => {
           error,
           code: error.code,
           message: error.message,
-          details: error.details
+          details: error.details,
+          adminId: String(adminId)
         });
         
         if (error.code === '42501') {
