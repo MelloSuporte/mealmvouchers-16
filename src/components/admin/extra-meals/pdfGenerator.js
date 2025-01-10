@@ -64,16 +64,30 @@ export const generateReportPDF = (meals, dateRange) => {
     meal.usuarios?.nome || '-',
     meal.refeicoes?.nome || '-',
     meal.quantidade?.toString() || '0',
+    `R$ ${meal.valor?.toFixed(2)}` || 'R$ 0,00',
   ]);
   
-  // Calcular quantidade total
+  // Calcular quantidade total e valor total
   const totalQuantity = meals.reduce((acc, meal) => acc + (meal.quantidade || 0), 0);
+  const totalValue = meals.reduce((acc, meal) => acc + (meal.valor || 0), 0);
   
   doc.autoTable({
     startY: 40,
-    head: [['Data', 'Usuário', 'Refeição', 'Qtd']],
+    head: [['Data', 'Usuário', 'Refeição', 'Qtd', 'Valor']],
     body: tableData,
-    foot: [['', '', 'Total:', totalQuantity.toString()]],
+    foot: [['', '', 'Totais:', totalQuantity.toString(), `R$ ${totalValue.toFixed(2)}`]],
+    theme: 'grid',
+    headStyles: {
+      fillColor: [51, 51, 51],
+      textColor: [255, 255, 255],
+      fontSize: 10
+    },
+    footStyles: {
+      fillColor: [240, 240, 240],
+      textColor: [0, 0, 0],
+      fontSize: 10,
+      fontStyle: 'bold'
+    }
   });
   
   doc.save('relatorio-refeicoes-extras.pdf');
