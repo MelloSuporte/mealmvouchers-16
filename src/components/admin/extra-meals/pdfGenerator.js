@@ -23,14 +23,13 @@ export const generatePDF = (data) => {
     doc.text(`Solicitante: ${adminName}`, 14, yPosition);
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, yPosition + 10);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, yPosition + 20);
-    doc.text(`Valor: R$ ${parseFloat(data.valor || 0).toFixed(2)}`, 14, yPosition + 30);
-    doc.text(`Data de Consumo: ${new Date(data.data_consumo).toLocaleDateString()}`, 14, yPosition + 40);
+    doc.text(`Data de Consumo: ${new Date(data.data_consumo).toLocaleDateString()}`, 14, yPosition + 30);
     
     if (data.observacao) {
-      doc.text('Observação:', 14, yPosition + 50);
+      doc.text('Observação:', 14, yPosition + 40);
       doc.setFontSize(10);
       const splitObservacao = doc.splitTextToSize(data.observacao, 180);
-      doc.text(splitObservacao, 14, yPosition + 60);
+      doc.text(splitObservacao, 14, yPosition + 50);
     }
   } else {
     // Fallback para caso de usuário único (mantendo compatibilidade)
@@ -38,14 +37,13 @@ export const generatePDF = (data) => {
     doc.text(`Solicitante: ${adminName}`, 14, 50);
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, 60);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, 70);
-    doc.text(`Valor: R$ ${parseFloat(data.valor || 0).toFixed(2)}`, 14, 80);
-    doc.text(`Data de Consumo: ${new Date(data.data_consumo).toLocaleDateString()}`, 14, 90);
+    doc.text(`Data de Consumo: ${new Date(data.data_consumo).toLocaleDateString()}`, 14, 80);
     
     if (data.observacao) {
-      doc.text('Observação:', 14, 100);
+      doc.text('Observação:', 14, 90);
       doc.setFontSize(10);
       const splitObservacao = doc.splitTextToSize(data.observacao, 180);
-      doc.text(splitObservacao, 14, 110);
+      doc.text(splitObservacao, 14, 100);
     }
   }
   
