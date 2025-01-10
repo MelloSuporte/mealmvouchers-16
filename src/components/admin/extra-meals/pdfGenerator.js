@@ -9,10 +9,10 @@ export const generatePDF = (data) => {
   
   doc.setFontSize(12);
   doc.text(`Data: ${new Date().toLocaleDateString()}`, 14, 30);
-  doc.text(`Usuário: ${data.usuario.nome}`, 14, 40);
-  doc.text(`CPF: ${data.usuario.cpf}`, 14, 50);
-  doc.text(`Quantidade: ${data.quantidade}`, 14, 60);
-  doc.text(`Valor: R$ ${parseFloat(data.valor).toFixed(2)}`, 14, 70);
+  doc.text(`Solicitante: ${data.usuario?.nome || '-'}`, 14, 40);
+  doc.text(`CPF: ${data.usuario?.cpf || '-'}`, 14, 50);
+  doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, 60);
+  doc.text(`Valor: R$ ${parseFloat(data.valor || 0).toFixed(2)}`, 14, 70);
   doc.text(`Data de Consumo: ${new Date(data.data_consumo).toLocaleDateString()}`, 14, 80);
   
   if (data.observacao) {
