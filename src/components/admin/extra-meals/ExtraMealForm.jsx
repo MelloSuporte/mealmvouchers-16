@@ -66,7 +66,7 @@ const ExtraMealForm = () => {
           quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
           observacao: data.observacao,
-          autorizado_por: adminId,
+          autorizado_por: adminId.toString(),
           nome_refeicao: refeicao.nome,
           ativo: true
         })
@@ -79,7 +79,7 @@ const ExtraMealForm = () => {
           code: error.code,
           message: error.message,
           details: error.details,
-          adminId
+          adminId: adminId.toString()
         });
         
         if (error.code === '42501') {
