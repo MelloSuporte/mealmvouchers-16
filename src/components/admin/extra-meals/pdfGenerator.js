@@ -23,7 +23,10 @@ export const generatePDF = (data) => {
     doc.text(`Solicitante: ${adminName}`, 14, yPosition);
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, yPosition + 10);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, yPosition + 20);
-    doc.text(`Data de Consumo: ${new Date(data.data_consumo).toLocaleDateString()}`, 14, yPosition + 30);
+    
+    // Formatação correta da data de consumo
+    const dataConsumo = new Date(data.data_consumo);
+    doc.text(`Data de Consumo: ${dataConsumo.toLocaleDateString('pt-BR')}`, 14, yPosition + 30);
     
     if (data.observacao) {
       doc.text('Observação:', 14, yPosition + 40);
@@ -37,7 +40,10 @@ export const generatePDF = (data) => {
     doc.text(`Solicitante: ${adminName}`, 14, 50);
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, 60);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, 70);
-    doc.text(`Data de Consumo: ${new Date(data.data_consumo).toLocaleDateString()}`, 14, 80);
+    
+    // Formatação correta da data de consumo
+    const dataConsumo = new Date(data.data_consumo);
+    doc.text(`Data de Consumo: ${dataConsumo.toLocaleDateString('pt-BR')}`, 14, 80);
     
     if (data.observacao) {
       doc.text('Observação:', 14, 90);
@@ -57,10 +63,10 @@ export const generateReportPDF = (meals, dateRange) => {
   doc.text('Relatório de Refeições Extras', 14, 20);
   
   doc.setFontSize(12);
-  doc.text(`Período: ${new Date(dateRange.start).toLocaleDateString()} a ${new Date(dateRange.end).toLocaleDateString()}`, 14, 30);
+  doc.text(`Período: ${new Date(dateRange.start).toLocaleDateString('pt-BR')} a ${new Date(dateRange.end).toLocaleDateString('pt-BR')}`, 14, 30);
   
   const tableData = meals.map(meal => [
-    new Date(meal.data_consumo).toLocaleDateString(),
+    new Date(meal.data_consumo).toLocaleDateString('pt-BR'),
     meal.usuarios?.nome || '-',
     meal.refeicoes?.nome || '-',
     meal.quantidade?.toString() || '0',
