@@ -11,7 +11,7 @@ export const generatePDF = (data) => {
   doc.text('Requisição de Refeição Extra', 14, 20);
   
   doc.setFontSize(12);
-  doc.text(`Data: ${format(new Date(), "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
+  doc.text(`Data: ${format(new Date(), "dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
 
   // Adiciona todos os usuários selecionados
   if (Array.isArray(data.usuarios) && data.usuarios.length > 0) {
@@ -25,8 +25,10 @@ export const generatePDF = (data) => {
     doc.text(`Solicitante: ${adminName}`, 14, yPosition);
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, yPosition + 10);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, yPosition + 20);
+    
     // Usar a data exata fornecida sem conversão de timezone
-    doc.text(`Data de Consumo: ${format(new Date(data.data_consumo), "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, yPosition + 30);
+    const dataConsumo = new Date(data.data_consumo);
+    doc.text(`Data de Consumo: ${format(dataConsumo, "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, yPosition + 30);
     
     if (data.observacao) {
       doc.text('Observação:', 14, yPosition + 40);
