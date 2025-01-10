@@ -57,7 +57,7 @@ const ExtraMealForm = () => {
 
       logger.info('Dados da refeição selecionada:', refeicao);
 
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
@@ -71,17 +71,17 @@ const ExtraMealForm = () => {
           ativo: true
         });
 
-      if (error) {
-        logger.error('Erro ao inserir refeição:', error);
+      if (insertError) {
+        logger.error('Erro ao inserir refeição:', insertError);
         
-        if (error.code === '42501') {
+        if (insertError.code === '42501') {
           toast.error("Permissão negada. Verifique suas credenciais de administrador.");
-        } else if (error.code === '23503') {
-          toast.error("Erro: Tipo de refeição inválido. Por favor, selecione outra refeição.");
-        } else if (error.code === '23505') {
+        } else if (insertError.code === '23503') {
+          toast.error("Erro: Refeição inválida. Por favor, selecione outra refeição.");
+        } else if (insertError.code === '23505') {
           toast.error("Esta refeição já foi registrada.");
         } else {
-          toast.error(`Erro ao registrar refeição: ${error.message}`);
+          toast.error(`Erro ao registrar refeição: ${insertError.message}`);
         }
         return;
       }
