@@ -51,15 +51,18 @@ const ExtraMealForm = () => {
       
       if (!refeicao) {
         logger.error('Refeição não encontrada:', data.refeicoes);
-        toast.error("Selecione uma refeição");
+        toast.error("Selecione uma refeição válida");
         return;
       }
+
+      // Log the refeicao object for debugging
+      logger.info('Dados da refeição selecionada:', refeicao);
 
       const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
-          refeicoes: refeicao.id,
+          refeicoes: refeicao.id, // Make sure this matches the ID in tipos_refeicao
           valor: refeicao.valor,
           quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
@@ -74,6 +77,8 @@ const ExtraMealForm = () => {
         
         if (error.code === '42501') {
           toast.error("Permissão negada. Verifique suas credenciais de administrador.");
+        } else if (error.code === '23503') {
+          toast.error("Erro: Tipo de refeição inválido. Por favor, selecione outra refeição.");
         } else if (error.code === '23505') {
           toast.error("Esta refeição já foi registrada.");
         } else {
