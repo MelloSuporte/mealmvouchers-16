@@ -32,12 +32,6 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      logger.info('Iniciando processo de registro de refeição extra:', {
-        data,
-        adminId,
-        selectedUser: selectedUser?.id
-      });
-
       if (!selectedUser) {
         toast.error("Selecione um usuário");
         return;
@@ -73,7 +67,7 @@ const ExtraMealForm = () => {
           quantidade: data.quantidade || 1,
           data_consumo: data.data_consumo,
           observacao: data.observacao,
-          autorizado_por: adminId.toString(), // Convert adminId to string
+          autorizado_por: adminId,
           nome_refeicao: refeicao.nome,
           ativo: true
         })
@@ -88,7 +82,6 @@ const ExtraMealForm = () => {
           details: error.details
         });
         
-        // More specific error messages based on error type
         if (error.code === '42501') {
           toast.error("Permissão negada. Verifique suas credenciais de administrador.");
         } else if (error.code === '23505') {
