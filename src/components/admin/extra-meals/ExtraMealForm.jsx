@@ -57,7 +57,7 @@ const ExtraMealForm = () => {
         return;
       }
 
-      const { data: insertedData, error } = await supabase
+      const { error } = await supabase
         .from('refeicoes_extras')
         .insert({
           usuario_id: selectedUser.id,
@@ -69,9 +69,7 @@ const ExtraMealForm = () => {
           autorizado_por: adminId.toString(),
           nome_refeicao: refeicao.nome,
           ativo: true
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
         logger.error('Erro ao inserir refeição:', {
@@ -92,7 +90,7 @@ const ExtraMealForm = () => {
         return;
       }
 
-      logger.info('Refeição extra registrada com sucesso:', insertedData);
+      logger.info('Refeição extra registrada com sucesso');
       toast.success("Refeição extra registrada com sucesso!");
       generatePDF({ ...data, usuario: selectedUser });
       reset();
