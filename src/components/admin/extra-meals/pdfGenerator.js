@@ -36,13 +36,13 @@ export const generateReportPDF = (meals, dateRange) => {
   
   const tableData = meals.map(meal => [
     new Date(meal.data_consumo).toLocaleDateString(),
-    meal.usuarios.nome,
-    meal.tipos_refeicao.nome,
-    meal.quantidade.toString(),
-    `R$ ${meal.valor.toFixed(2)}`
+    meal.usuarios?.nome || '-',
+    meal.refeicoes?.nome || '-',
+    meal.quantidade?.toString() || '0',
+    `R$ ${(meal.valor || 0).toFixed(2)}`
   ]);
   
-  const total = meals.reduce((acc, meal) => acc + (meal.valor * meal.quantidade), 0);
+  const total = meals.reduce((acc, meal) => acc + ((meal.valor || 0) * (meal.quantidade || 0)), 0);
   
   doc.autoTable({
     startY: 40,
