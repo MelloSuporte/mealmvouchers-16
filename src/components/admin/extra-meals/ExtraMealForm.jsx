@@ -11,10 +11,12 @@ import { supabase } from '../../../config/supabase';
 import { useAdmin } from '../../../contexts/AdminContext';
 import { useForm } from 'react-hook-form';
 import logger from '../../../config/logger';
+import { X } from 'lucide-react';
 
 const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
-  const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
+  const { searchUser } = useUserSearch();
+  const [selectedUsers, setSelectedUsers] = React.useState([]);
   const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
   const { adminId } = useAdmin();
 
@@ -28,16 +30,49 @@ const ExtraMealForm = () => {
     }
   }, [selectedRefeicao, setValue]);
 
+  const handleUserSearch = async (cpf) => {
+    try {
+      const cleanCPF = cpf.replace(/\D/g, '');
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('cpf', cleanCPF)
+        .single();
+
+      if (error) {
+        toast.error('Usuário não encontrado');
+        return;
+      }
+
+      if (data) {
+        const userExists = selectedUsers.some(user => user.id === data.id);
+        if (!userExists) {
+          setSelectedUsers(prev => [...prev, data]);
+          toast.success('Usuário adicionado!');
+        } else {
+          toast.error('Usuário já adicionado');
+        }
+      }
+    } catch (error) {
+      logger.error('Erro ao buscar usuário:', error);
+      toast.error('Erro ao buscar usuário');
+    }
+  };
+
+  const removeUser = (userId) => {
+    setSelectedUsers(prev => prev.filter(user => user.id !== userId));
+  };
+
   const onSubmit = async (data) => {
     try {
       logger.info('Iniciando registro de refeição extra:', {
-        usuario: selectedUser?.id,
+        usuarios: selectedUsers.map(u => u.id),
         adminId,
         refeicao: data.refeicoes
       });
 
-      if (!selectedUser) {
-        toast.error("Selecione um usuário");
+      if (selectedUsers.length === 0) {
+        toast.error("Selecione pelo menos um usuário");
         return;
       }
 
@@ -57,40 +92,36 @@ const ExtraMealForm = () => {
 
       logger.info('Dados da refeição selecionada:', refeicao);
 
-      const { error: insertError } = await supabase
-        .from('refeicoes_extras')
-        .insert({
-          usuario_id: selectedUser.id,
-          refeicoes: refeicao.id,
-          valor: refeicao.valor,
-          quantidade: data.quantidade || 1,
-          data_consumo: data.data_consumo,
-          observacao: data.observacao,
-          autorizado_por: adminId,
-          nome_refeicao: refeicao.nome,
-          ativo: true
-        });
+      // Registrar refeição para cada usuário selecionado
+      for (const user of selectedUsers) {
+        const { error: insertError } = await supabase
+          .from('refeicoes_extras')
+          .insert({
+            usuario_id: user.id,
+            refeicoes: refeicao.id,
+            valor: refeicao.valor,
+            quantidade: data.quantidade || 1,
+            data_consumo: data.data_consumo,
+            observacao: data.observacao,
+            autorizado_por: adminId,
+            nome_refeicao: refeicao.nome,
+            ativo: true
+          });
 
-      if (insertError) {
-        logger.error('Erro ao inserir refeição:', insertError);
-        
-        if (insertError.code === '42501') {
-          toast.error("Permissão negada. Verifique suas credenciais de administrador.");
-        } else if (insertError.code === '23503') {
-          toast.error("Erro: Refeição inválida. Por favor, selecione outra refeição.");
-        } else if (insertError.code === '23505') {
-          toast.error("Esta refeição já foi registrada.");
-        } else {
-          toast.error(`Erro ao registrar refeição: ${insertError.message}`);
+        if (insertError) {
+          logger.error('Erro ao inserir refeição:', insertError);
+          toast.error(`Erro ao registrar refeição para ${user.nome}`);
+          continue;
         }
-        return;
+
+        // Gerar PDF para cada usuário
+        generatePDF({ ...data, usuario: user });
       }
 
-      logger.info('Refeição extra registrada com sucesso');
-      toast.success("Refeição extra registrada com sucesso!");
-      generatePDF({ ...data, usuario: selectedUser });
+      logger.info('Refeições extras registradas com sucesso');
+      toast.success("Refeições extras registradas com sucesso!");
       reset();
-      setSelectedUser(null);
+      setSelectedUsers([]);
 
     } catch (error) {
       logger.error('Erro ao registrar refeição:', {
@@ -113,19 +144,35 @@ const ExtraMealForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="cpf">CPF do Usuário</Label>
-            <Input
-              id="cpf"
-              placeholder="Digite o CPF"
-              {...register("cpf")}
-              onChange={(e) => searchUser(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="cpf"
+                placeholder="Digite o CPF"
+                onChange={(e) => searchUser(e.target.value)}
+                onBlur={(e) => handleUserSearch(e.target.value)}
+              />
+            </div>
           </div>
 
-          {selectedUser && (
-            <div className="space-y-2">
-              <Label>Usuário Selecionado</Label>
-              <div className="p-2 bg-gray-100 rounded">
-                {selectedUser.nome}
+          {selectedUsers.length > 0 && (
+            <div className="space-y-2 col-span-2">
+              <Label>Usuários Selecionados</Label>
+              <div className="flex flex-wrap gap-2">
+                {selectedUsers.map((user) => (
+                  <div 
+                    key={user.id} 
+                    className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1"
+                  >
+                    <span>{user.nome}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeUser(user.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -173,7 +220,11 @@ const ExtraMealForm = () => {
           </div>
         </div>
 
-        <Button type="submit" className="w-full">
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={selectedUsers.length === 0}
+        >
           Registrar Refeição Extra
         </Button>
       </form>
