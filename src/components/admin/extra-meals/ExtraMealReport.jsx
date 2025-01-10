@@ -23,7 +23,7 @@ const ExtraMealReport = () => {
         .select(`
           *,
           usuarios (nome),
-          tipos_refeicao (nome)
+          refeicoes (nome)
         `)
         .gte('data_consumo', dateRange.start)
         .lte('data_consumo', dateRange.end)
@@ -105,10 +105,10 @@ const ExtraMealReport = () => {
                         {new Date(meal.data_consumo).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {meal.usuarios.nome}
+                        {meal.usuarios?.nome}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {meal.tipos_refeicao.nome}
+                        {meal.refeicoes?.nome}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {meal.quantidade}
