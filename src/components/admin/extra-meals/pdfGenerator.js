@@ -26,8 +26,9 @@ export const generatePDF = (data) => {
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, yPosition + 10);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, yPosition + 20);
     
-    // Usar a data exata fornecida sem conversão de timezone
-    const dataConsumo = new Date(data.data_consumo);
+    // Preservar a data exata sem conversão de timezone
+    const [year, month, day] = data.data_consumo.split('-');
+    const dataConsumo = new Date(year, month - 1, day);
     doc.text(`Data de Consumo: ${format(dataConsumo, "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, yPosition + 30);
     
     if (data.observacao) {
@@ -42,8 +43,11 @@ export const generatePDF = (data) => {
     doc.text(`Solicitante: ${adminName}`, 14, 50);
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, 60);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, 70);
-    // Usar a data exata fornecida sem conversão de timezone
-    doc.text(`Data de Consumo: ${format(new Date(data.data_consumo), "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, 80);
+    
+    // Preservar a data exata sem conversão de timezone
+    const [year, month, day] = data.data_consumo.split('-');
+    const dataConsumo = new Date(year, month - 1, day);
+    doc.text(`Data de Consumo: ${format(dataConsumo, "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, 80);
     
     if (data.observacao) {
       doc.text('Observação:', 14, 90);
