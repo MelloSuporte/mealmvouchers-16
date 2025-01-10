@@ -22,6 +22,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   db: {
     schema: 'public'
+  },
+  global: {
+    headers: { 'x-my-custom-header': 'my-app-name' }
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
+  },
+  // Configurações de timeout e retry
+  httpOptions: {
+    timeout: 30000, // 30 segundos
+    retryAttempts: 3,
+    retryInterval: 1000 // 1 segundo entre tentativas
   }
 });
 

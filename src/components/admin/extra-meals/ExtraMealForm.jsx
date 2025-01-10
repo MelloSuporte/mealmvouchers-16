@@ -1,187 +1,109 @@
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
-import { useUserSearch } from '../../../hooks/useUserSearch';
-import { useRefeicoes } from '../../../hooks/useRefeicoes';
-import { generatePDF } from './pdfGenerator';
-import { supabase } from '../../../config/supabase';
-import { useAdmin } from '../../../contexts/AdminContext';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
-import logger from '../../../config/logger';
+import { toast } from "sonner";
+import { supabase } from '@/config/supabase';
+import logger from '@/config/logger';
+import { generatePDF } from './pdfGenerator';
 
-const ExtraMealForm = () => {
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
-  const { searchUser, selectedUser, setSelectedUser } = useUserSearch();
-  const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
-  const { adminId } = useAdmin();
-  const navigate = useNavigate();
-
-  const selectedRefeicaoId = watch('refeicoes');
-  const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
-
-  React.useEffect(() => {
-    if (selectedRefeicao) {
-      setValue('valor', selectedRefeicao.valor);
-      setValue('nome_refeicao', selectedRefeicao.nome);
+// Função auxiliar para retry
+const retryOperation = async (operation, maxAttempts = 3, delay = 1000) => {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (attempt === maxAttempts) break;
+      
+      logger.warn(`Tentativa ${attempt} falhou, tentando novamente em ${delay}ms`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-  }, [selectedRefeicao, setValue]);
+  }
+  
+  throw lastError;
+};
+
+const ExtraMealForm = ({ selectedUser, adminId, refeicao }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const onSubmit = async (data) => {
+    if (!selectedUser?.id || !adminId || !refeicao?.id) {
+      toast.error("Dados incompletos. Verifique usuário, administrador e refeição.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      logger.info('Iniciando registro de refeição extra:', {
-        usuario: selectedUser?.id,
-        adminId,
-        refeicao: data.refeicoes
+      await retryOperation(async () => {
+        const { error } = await supabase
+          .from('refeicoes_extras')
+          .insert({
+            usuario_id: selectedUser.id,
+            tipo_refeicao_id: refeicao.id,
+            data_refeicao: data.data_refeicao,
+            motivo: data.motivo,
+            observacao: data.observacao || null,
+            autorizado_por: adminId.toString(),
+            nome_refeicao: refeicao.nome,
+            ativo: true
+          });
+
+        if (error) {
+          logger.error('Erro ao inserir refeição:', {
+            error,
+            userData: {
+              userId: selectedUser.id,
+              adminId,
+              refeicaoId: refeicao.id
+            }
+          });
+
+          if (error.code === '42501') {
+            throw new Error('Permissão negada. Verifique suas credenciais de administrador.');
+          }
+
+          throw error;
+        }
+
+        logger.info('Refeição extra registrada com sucesso');
+        return true;
       });
 
-      if (!selectedUser) {
-        toast.error("Selecione um usuário");
-        return;
-      }
-
-      if (!adminId) {
-        logger.error('ID do administrador não encontrado');
-        toast.error("ID do administrador não encontrado");
-        return;
-      }
-
-      const refeicao = refeicoes?.find(ref => ref.id === data.refeicoes);
-      
-      if (!refeicao) {
-        logger.error('Refeição não encontrada:', data.refeicoes);
-        toast.error("Selecione uma refeição");
-        return;
-      }
-
-      const { error } = await supabase
-        .from('refeicoes_extras')
-        .insert({
-          usuario_id: selectedUser.id,
-          refeicoes: refeicao.id,
-          valor: refeicao.valor,
-          quantidade: data.quantidade || 1,
-          data_consumo: data.data_consumo,
-          observacao: data.observacao,
-          autorizado_por: adminId.toString(),
-          nome_refeicao: refeicao.nome,
-          ativo: true
-        });
-
-      if (error) {
-        logger.error('Erro ao inserir refeição:', {
-          error,
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          adminId: adminId.toString()
-        });
-        
-        if (error.code === '42501') {
-          toast.error("Permissão negada. Verifique suas credenciais de administrador.");
-        } else if (error.code === '23505') {
-          toast.error("Esta refeição já foi registrada.");
-        } else {
-          toast.error(`Erro ao registrar refeição: ${error.message}`);
-        }
-        return;
-      }
-
-      logger.info('Refeição extra registrada com sucesso');
       toast.success("Refeição extra registrada com sucesso!");
       generatePDF({ ...data, usuario: selectedUser });
       reset();
-      setSelectedUser(null);
-
+      
     } catch (error) {
-      logger.error('Erro ao registrar refeição:', {
-        error,
-        stack: error.stack,
-        context: 'ExtraMealForm.onSubmit'
-      });
-      toast.error("Erro ao registrar refeição extra. Por favor, tente novamente.");
+      toast.error(error.message || "Erro ao registrar refeição extra");
+      logger.error('Erro final ao registrar refeição:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (refeicoesError) {
-    toast.error("Erro ao carregar refeições");
-    return null;
-  }
-
   return (
-    <Card className="p-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="cpf">CPF do Usuário</Label>
-            <Input
-              id="cpf"
-              placeholder="Digite o CPF"
-              {...register("cpf")}
-              onChange={(e) => searchUser(e.target.value)}
-            />
-          </div>
-
-          {selectedUser && (
-            <div className="space-y-2">
-              <Label>Usuário Selecionado</Label>
-              <div className="p-2 bg-gray-100 rounded">
-                {selectedUser.nome}
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="refeicao">Refeição</Label>
-            <select
-              {...register("refeicoes", { required: true })}
-              className="w-full p-2 border rounded"
-              disabled={isLoadingRefeicoes}
-            >
-              <option value="">Selecione...</option>
-              {refeicoes?.map((refeicao) => (
-                <option key={refeicao.id} value={refeicao.id}>
-                  {refeicao.nome} - R$ {Number(refeicao.valor).toFixed(2)}
-                </option>
-              ))}
-            </select>
-            {errors.refeicoes && (
-              <span className="text-red-500">Selecione uma refeição</span>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="quantidade">Quantidade</Label>
-            <Input
-              type="number"
-              min="1"
-              defaultValue="1"
-              {...register("quantidade", { required: true, min: 1 })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="data_consumo">Data de Consumo</Label>
-            <Input
-              type="date"
-              {...register("data_consumo", { required: true })}
-            />
-          </div>
-
-          <div className="space-y-2 col-span-2">
-            <Label htmlFor="observacao">Observação</Label>
-            <Input {...register("observacao")} />
-          </div>
-        </div>
-
-        <Button type="submit" className="w-full">
-          Registrar Refeição Extra
-        </Button>
-      </form>
-    </Card>
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div>
+        <label>Data da Refeição</label>
+        <input type="date" {...register("data_refeicao", { required: true })} />
+        {errors.data_refeicao && <span>Data é obrigatória</span>}
+      </div>
+      <div>
+        <label>Motivo</label>
+        <input type="text" {...register("motivo", { required: true })} />
+        {errors.motivo && <span>Motivo é obrigatório</span>}
+      </div>
+      <div>
+        <label>Observação</label>
+        <textarea {...register("observacao")} />
+      </div>
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Registrando...' : 'Registrar Refeição Extra'}
+      </button>
+    </form>
   );
 };
 
