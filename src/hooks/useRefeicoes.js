@@ -10,7 +10,7 @@ export const useRefeicoes = () => {
       logger.info('Buscando refeições...');
       
       const { data, error } = await supabase
-        .from('refeicoes')  // Alterado de tipos_refeicao para refeicoes
+        .from('refeicoes')
         .select('*')
         .eq('ativo', true)
         .order('nome');
@@ -21,7 +21,7 @@ export const useRefeicoes = () => {
         throw error;
       }
 
-      logger.info('Refeições encontradas:', data?.length || 0);
+      logger.info(`Refeições encontradas: ${data?.length || 0}`);
       return data || [];
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
