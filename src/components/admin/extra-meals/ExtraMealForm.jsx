@@ -32,12 +32,19 @@ const ExtraMealForm = () => {
 
   const onSubmit = async (data) => {
     try {
+      logger.info('Iniciando processo de registro de refeição extra:', {
+        data,
+        adminId,
+        selectedUser: selectedUser?.id
+      });
+
       if (!selectedUser) {
         toast.error("Selecione um usuário");
         return;
       }
 
       if (!adminId) {
+        logger.error('ID do administrador não encontrado');
         toast.error("ID do administrador não encontrado");
         return;
       }
@@ -45,6 +52,7 @@ const ExtraMealForm = () => {
       const refeicao = refeicoes?.find(ref => ref.id === data.refeicoes);
       
       if (!refeicao) {
+        logger.error('Refeição não encontrada:', data.refeicoes);
         toast.error("Selecione uma refeição");
         return;
       }
@@ -73,7 +81,12 @@ const ExtraMealForm = () => {
         .single();
 
       if (error) {
-        logger.error('Erro ao inserir refeição:', error);
+        logger.error('Erro ao inserir refeição:', {
+          error,
+          code: error.code,
+          message: error.message,
+          details: error.details
+        });
         
         // More specific error messages based on error type
         if (error.code === '42501') {
@@ -93,7 +106,11 @@ const ExtraMealForm = () => {
       setSelectedUser(null);
 
     } catch (error) {
-      logger.error('Erro ao registrar refeição:', error);
+      logger.error('Erro ao registrar refeição:', {
+        error,
+        stack: error.stack,
+        context: 'ExtraMealForm.onSubmit'
+      });
       toast.error("Erro ao registrar refeição extra. Por favor, tente novamente.");
     }
   };
