@@ -10,7 +10,7 @@ export const useRefeicoes = () => {
       logger.info('Buscando refeições...');
       
       const { data, error } = await supabase
-        .from('refeicoes')
+        .from('refeicoes')  // Alterado de tipos_refeicao para refeicoes
         .select('*')
         .eq('ativo', true)
         .order('nome');
