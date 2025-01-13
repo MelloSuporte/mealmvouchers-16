@@ -1,4 +1,3 @@
-import React from 'react';
 import { toast } from "sonner";
 import logger from '../../config/logger';
 import { supabase } from '../../config/supabase';
@@ -121,37 +120,59 @@ export const validateVoucher = async (voucherCode, mealType) => {
     }
 
     // Validar voucher com base no tipo
-    const { data, error } = await supabase
-      .rpc('validate_and_use_voucher', {
-        p_codigo: voucherCode,
-        p_tipo_refeicao_id: mealType
-      });
+    if (voucherType === 'descartavel') {
+      // Validação específica para voucher descartável
+      const { data, error } = await supabase
+        .rpc('validate_disposable_voucher', {
+          p_codigo: voucherCode,
+          p_tipo_refeicao_id: mealType
+        });
 
-    if (error) {
-      logger.error('Erro na validação do voucher:', error);
-      // Verificar se é um erro de horário
-      if (error.message.includes('fora do horário')) {
-        throw new Error('Fora do horário permitido');
+      if (error) {
+        logger.error('Erro na validação do voucher descartável:', error);
+        throw error;
       }
-      throw error;
+
+      logger.info('Resposta da validação:', data);
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao validar voucher descartável');
+      }
+
+      return {
+        ...data,
+        voucherType
+      };
+    } else {
+      // Validação para voucher comum
+      const { data, error } = await supabase
+        .rpc('validate_and_use_voucher', {
+          p_codigo: voucherCode,
+          p_tipo_refeicao_id: mealType
+        });
+
+      if (error) {
+        logger.error('Erro na validação do voucher:', error);
+        throw error;
+      }
+
+      logger.info('Resposta da validação:', data);
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao validar voucher');
+      }
+
+      // Se a validação foi bem sucedida e temos o ID do registro
+      if (data.uso_voucher_id) {
+        logger.info('Iniciando sincronização após validação bem-sucedida:', data.uso_voucher_id);
+        await syncReportData(data.uso_voucher_id);
+      }
+
+      return {
+        ...data,
+        voucherType
+      };
     }
-
-    logger.info('Resposta da validação:', data);
-
-    if (!data?.success) {
-      throw new Error(data?.error || 'Erro ao validar voucher');
-    }
-
-    // Se a validação foi bem sucedida e temos o ID do registro
-    if (data.uso_voucher_id) {
-      logger.info('Iniciando sincronização após validação bem-sucedida:', data.uso_voucher_id);
-      await syncReportData(data.uso_voucher_id);
-    }
-
-    return {
-      ...data,
-      voucherType
-    };
   } catch (error) {
     logger.error('Erro na validação do voucher:', error);
     throw error;
