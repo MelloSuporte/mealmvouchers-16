@@ -65,8 +65,7 @@ export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: 
       .from('vouchers_descartaveis')
       .update({
         usado_em: now,
-        data_uso: now,
-        usado: true
+        data_uso: now
       })
       .eq('id', voucher.id)
       .is('usado_em', null);
