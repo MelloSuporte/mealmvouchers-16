@@ -26,9 +26,8 @@ export const generatePDF = (data) => {
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, yPosition + 10);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, yPosition + 20);
     
-    // Preservar a data exata sem conversão de timezone
-    const [year, month, day] = data.data_consumo.split('-');
-    const dataConsumo = new Date(year, month - 1, day);
+    // Criar a data a partir da string YYYY-MM-DD
+    const dataConsumo = new Date(data.data_consumo + 'T12:00:00');
     doc.text(`Data de Consumo: ${format(dataConsumo, "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, yPosition + 30);
     
     if (data.observacao) {
@@ -44,9 +43,8 @@ export const generatePDF = (data) => {
     doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, 60);
     doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, 70);
     
-    // Preservar a data exata sem conversão de timezone
-    const [year, month, day] = data.data_consumo.split('-');
-    const dataConsumo = new Date(year, month - 1, day);
+    // Criar a data a partir da string YYYY-MM-DD
+    const dataConsumo = new Date(data.data_consumo + 'T12:00:00');
     doc.text(`Data de Consumo: ${format(dataConsumo, "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, 80);
     
     if (data.observacao) {

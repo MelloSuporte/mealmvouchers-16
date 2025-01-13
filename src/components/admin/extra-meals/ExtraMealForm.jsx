@@ -93,8 +93,8 @@ const ExtraMealForm = () => {
       logger.info('Dados da refeição selecionada:', refeicao);
 
       // Garantir que a data seja mantida exatamente como selecionada
-      const dataConsumo = new Date(data.data_consumo);
-      dataConsumo.setHours(0, 0, 0, 0);
+      const [year, month, day] = data.data_consumo.split('-');
+      const dataConsumo = `${year}-${month}-${day}`;
 
       // Registrar refeição para cada usuário selecionado
       for (const user of selectedUsers) {
@@ -105,7 +105,7 @@ const ExtraMealForm = () => {
             refeicoes: refeicao.id,
             valor: refeicao.valor,
             quantidade: data.quantidade || 1,
-            data_consumo: dataConsumo.toISOString().split('T')[0],
+            data_consumo: dataConsumo,
             observacao: data.observacao,
             autorizado_por: adminId,
             nome_refeicao: refeicao.nome,
@@ -120,7 +120,7 @@ const ExtraMealForm = () => {
       }
 
       // Gerar PDF com a data exata selecionada
-      generatePDF({ ...data, usuarios: selectedUsers, data_consumo: dataConsumo.toISOString().split('T')[0] });
+      generatePDF({ ...data, usuarios: selectedUsers, data_consumo: dataConsumo });
 
       logger.info('Refeições extras registradas com sucesso');
       toast.success("Refeições extras registradas com sucesso!");
