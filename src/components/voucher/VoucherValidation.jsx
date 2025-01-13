@@ -104,7 +104,6 @@ const syncReportData = async (usoVoucherId) => {
     toast.success('Dados sincronizados com sucesso para o relatório');
   } catch (error) {
     logger.error('Erro na sincronização do relatório:', error);
-    toast.error('Erro ao sincronizar dados do relatório: ' + error.message);
     throw error;
   }
 };
@@ -117,8 +116,8 @@ export const validateVoucher = async (voucherCode, mealType) => {
     const voucherType = await identifyVoucherType(voucherCode);
     logger.info('Tipo de voucher identificado:', voucherType);
 
-    if (!voucherType) {
-      throw new Error('Voucher inválido');
+    if (!voucherType || voucherType === 'extra') {
+      throw new Error('Voucher inválido ou tipo não suportado');
     }
 
     // Validar voucher com base no tipo
@@ -151,7 +150,7 @@ export const validateVoucher = async (voucherCode, mealType) => {
 
     return {
       ...data,
-      voucherType // Include the voucher type in the response
+      voucherType
     };
   } catch (error) {
     logger.error('Erro na validação do voucher:', error);

@@ -62,7 +62,7 @@ const VoucherValidationForm = () => {
             mealTypeId: currentMealType.id,
             mealName: currentMealType.nome
           }));
-        } else {
+        } else if (result.voucherType === 'comum') {
           localStorage.setItem('commonVoucher', JSON.stringify({
             code: voucherCode,
             userName: result.user?.nome || 'Usuário',
@@ -71,7 +71,7 @@ const VoucherValidationForm = () => {
             userId: result.user?.id
           }));
         }
-        
+
         navigate('/self-services');
       } else {
         toast.error(result.error || 'Erro ao validar voucher');
