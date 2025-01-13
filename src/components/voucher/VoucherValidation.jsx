@@ -2,77 +2,67 @@ import { supabase } from '../../config/supabase';
 import logger from '../../config/logger';
 import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
 
-const syncReportData = async (usoVoucherId) => {
-  try {
-    const { data: usoVoucher, error: usoError } = await supabase
-      .from('uso_voucher')
-      .select(`
-        *,
-        usuarios (
-          id,
-          nome,
-          cpf,
-          empresa_id,
-          turno,
-          setor_id
-        ),
-        tipos_refeicao (
-          nome,
-          valor
-        )
-      `)
-      .eq('id', usoVoucherId)
-      .single();
+const validateDisposableVoucher = async (codigo, tipoRefeicaoId) => {
+  const { data, error } = await supabase
+    .rpc('validate_and_use_voucher', {
+      p_codigo: codigo,
+      p_tipo_refeicao_id: tipoRefeicaoId
+    });
 
-    if (usoError) throw usoError;
-
-    if (!usoVoucher) {
-      logger.error('Registro de uso do voucher não encontrado para sincronização');
-      return;
-    }
-
-    // Buscar dados complementares
-    const { data: empresa } = await supabase
-      .from('empresas')
-      .select('nome')
-      .eq('id', usoVoucher.usuarios?.empresa_id)
-      .single();
-
-    const { data: setor } = await supabase
-      .from('setores')
-      .select('nome')
-      .eq('id', usoVoucher.usuarios?.setor_id)
-      .single();
-
-    const reportData = {
-      data_uso: usoVoucher.usado_em,
-      usuario_id: usoVoucher.usuario_id,
-      nome_usuario: usoVoucher.usuarios?.nome,
-      cpf: usoVoucher.usuarios?.cpf,
-      empresa_id: usoVoucher.usuarios?.empresa_id,
-      nome_empresa: empresa?.nome,
-      turno: usoVoucher.usuarios?.turno,
-      setor_id: usoVoucher.usuarios?.setor_id,
-      nome_setor: setor?.nome,
-      tipo_refeicao: usoVoucher.tipos_refeicao?.nome,
-      valor: usoVoucher.tipos_refeicao?.valor,
-      observacao: usoVoucher.observacao
+  if (error) {
+    logger.error('Erro na validação do voucher descartável:', error);
+    return { 
+      success: false, 
+      error: error.message,
+      voucherType: 'descartavel'
     };
-
-    const { error: insertError } = await supabase
-      .from('relatorio_uso_voucher')
-      .upsert([reportData]);
-
-    if (insertError) {
-      logger.error('Erro ao sincronizar relatório:', insertError);
-      throw insertError;
-    }
-
-    logger.info('Relatório sincronizado com sucesso:', reportData);
-  } catch (error) {
-    logger.error('Erro na sincronização do relatório:', error);
-    throw error;
   }
+
+  return { 
+    success: true,
+    voucherType: 'descartavel',
+    message: 'Voucher descartável validado com sucesso'
+  };
+};
+
+const validateCommonVoucher = async (codigo, tipoRefeicaoId, usuario) => {
+  const { data, error } = await supabase
+    .rpc('validate_and_use_voucher', {
+      p_codigo: codigo,
+      p_tipo_refeicao_id: tipoRefeicaoId
+    });
+
+  if (error) {
+    logger.error('Erro na validação:', error);
+    return { 
+      success: false, 
+      error: error.message,
+      voucherType: 'comum'
+    };
+  }
+
+  return {
+    success: true,
+    voucherType: 'comum',
+    user: usuario,
+    message: 'Voucher comum validado com sucesso'
+  };
+};
+
+const findDisposableVoucher = async (codigo) => {
+  return await supabase
+    .from('vouchers_descartaveis')
+    .select('*')
+    .eq('codigo', codigo)
+    .single();
+};
+
+const findCommonVoucher = async (codigo) => {
+  return await supabase
+    .from('usuarios')
+    .select('*')
+    .eq('voucher', codigo)
+    .single();
 };
 
 export const validateVoucher = async (codigo, tipoRefeicaoId) => {
@@ -92,66 +82,19 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
     const voucherCode = String(codigo);
     
     // Tentar validar como voucher descartável primeiro
-    const { data: voucherDescartavel } = await supabase
-      .from('vouchers_descartaveis')
-      .select('*')
-      .eq('codigo', voucherCode)
-      .single();
+    const { data: voucherDescartavel } = await findDisposableVoucher(voucherCode);
 
     if (voucherDescartavel) {
       logger.info('Voucher identificado como descartável');
-      const { data, error } = await supabase
-        .rpc('validate_and_use_voucher', {
-          p_codigo: voucherCode,
-          p_tipo_refeicao_id: tipoRefeicaoId
-        });
-
-      if (error) {
-        logger.error('Erro na validação do voucher descartável:', error);
-        return { 
-          success: false, 
-          error: error.message,
-          voucherType: 'descartavel'
-        };
-      }
-
-      return { 
-        success: true,
-        voucherType: 'descartavel',
-        message: 'Voucher descartável validado com sucesso'
-      };
+      return await validateDisposableVoucher(voucherCode, tipoRefeicaoId);
     }
 
     // Se não for descartável, tentar como voucher comum
-    const { data: usuario } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('voucher', voucherCode)
-      .single();
+    const { data: usuario } = await findCommonVoucher(voucherCode);
 
     if (usuario) {
       logger.info('Voucher identificado como comum');
-      const { data, error } = await supabase
-        .rpc('validate_and_use_voucher', {
-          p_codigo: voucherCode,
-          p_tipo_refeicao_id: tipoRefeicaoId
-        });
-
-      if (error) {
-        logger.error('Erro na validação:', error);
-        return { 
-          success: false, 
-          error: error.message,
-          voucherType: 'comum'
-        };
-      }
-
-      return {
-        success: true,
-        voucherType: 'comum',
-        user: usuario,
-        message: 'Voucher comum validado com sucesso'
-      };
+      return await validateCommonVoucher(voucherCode, tipoRefeicaoId, usuario);
     }
 
     logger.info('Tipo de voucher não identificado');
