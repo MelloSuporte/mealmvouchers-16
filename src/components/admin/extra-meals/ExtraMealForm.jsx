@@ -232,7 +232,7 @@ const ExtraMealForm = () => {
 
         <Button 
           type="submit" 
-          className="w-full"
+          className="w-fit px-4"
           disabled={selectedUsers.length === 0}
         >
           Registrar Refeição Extra
