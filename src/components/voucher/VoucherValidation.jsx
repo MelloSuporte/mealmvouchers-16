@@ -91,31 +91,7 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
     // Garantir que o código seja uma string
     const voucherCode = String(codigo);
     
-    // Identificar o tipo de voucher
-    const { data: usuario } = await supabase
-      .from('usuarios')
-      .select('voucher')
-      .eq('voucher', voucherCode)
-      .single();
-
-    if (usuario) {
-      logger.info('Voucher identificado como comum');
-      const { data, error } = await supabase
-        .rpc('validate_and_use_voucher', {
-          p_codigo: voucherCode,
-          p_tipo_refeicao_id: tipoRefeicaoId
-        });
-
-      if (error) {
-        logger.error('Erro na validação:', error);
-        throw error;
-      }
-
-      logger.info('Resposta da validação:', data);
-      return data;
-    }
-
-    // Tentar validar como voucher descartável
+    // Tentar validar como voucher descartável primeiro
     const { data: voucherDescartavel } = await supabase
       .from('vouchers_descartaveis')
       .select('*')
@@ -132,10 +108,50 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
 
       if (error) {
         logger.error('Erro na validação do voucher descartável:', error);
-        throw error;
+        return { 
+          success: false, 
+          error: error.message,
+          voucherType: 'descartavel'
+        };
       }
 
-      return data;
+      return { 
+        success: true,
+        voucherType: 'descartavel',
+        message: 'Voucher descartável validado com sucesso'
+      };
+    }
+
+    // Se não for descartável, tentar como voucher comum
+    const { data: usuario } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('voucher', voucherCode)
+      .single();
+
+    if (usuario) {
+      logger.info('Voucher identificado como comum');
+      const { data, error } = await supabase
+        .rpc('validate_and_use_voucher', {
+          p_codigo: voucherCode,
+          p_tipo_refeicao_id: tipoRefeicaoId
+        });
+
+      if (error) {
+        logger.error('Erro na validação:', error);
+        return { 
+          success: false, 
+          error: error.message,
+          voucherType: 'comum'
+        };
+      }
+
+      return {
+        success: true,
+        voucherType: 'comum',
+        user: usuario,
+        message: 'Voucher comum validado com sucesso'
+      };
     }
 
     logger.info('Tipo de voucher não identificado');
