@@ -12,12 +12,13 @@ import { useAdmin } from '../../../contexts/AdminContext';
 import { useForm } from 'react-hook-form';
 import logger from '../../../config/logger';
 import { X } from 'lucide-react';
+import EditMealDialog from './EditMealDialog';
 
 const ExtraMealForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { searchUser } = useUserSearch();
   const [selectedUsers, setSelectedUsers] = React.useState([]);
-  const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError } = useRefeicoes();
+  const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError, refetch: refetchRefeicoes } = useRefeicoes();
   const { adminId } = useAdmin();
 
   const selectedRefeicaoId = watch('refeicoes');
@@ -92,11 +93,9 @@ const ExtraMealForm = () => {
 
       logger.info('Dados da refeição selecionada:', refeicao);
 
-      // Garantir que a data seja mantida exatamente como selecionada
       const [year, month, day] = data.data_consumo.split('-');
       const dataConsumo = `${year}-${month}-${day}`;
 
-      // Registrar refeição para cada usuário selecionado
       for (const user of selectedUsers) {
         const { error: insertError } = await supabase
           .from('refeicoes_extras')
@@ -119,7 +118,6 @@ const ExtraMealForm = () => {
         }
       }
 
-      // Gerar PDF com a data exata selecionada
       generatePDF({ ...data, usuarios: selectedUsers, data_consumo: dataConsumo });
 
       logger.info('Refeições extras registradas com sucesso');
@@ -183,18 +181,26 @@ const ExtraMealForm = () => {
 
           <div className="space-y-2">
             <Label htmlFor="refeicao">Refeição</Label>
-            <select
-              {...register("refeicoes", { required: true })}
-              className="w-full p-2 border rounded"
-              disabled={isLoadingRefeicoes}
-            >
-              <option value="">Selecione...</option>
-              {refeicoes?.map((refeicao) => (
-                <option key={refeicao.id} value={refeicao.id}>
-                  {refeicao.nome} - R$ {Number(refeicao.valor).toFixed(2)}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <select
+                {...register("refeicoes", { required: true })}
+                className="w-full p-2 border rounded"
+                disabled={isLoadingRefeicoes}
+              >
+                <option value="">Selecione...</option>
+                {refeicoes?.map((refeicao) => (
+                  <option key={refeicao.id} value={refeicao.id}>
+                    {refeicao.nome} - R$ {Number(refeicao.valor).toFixed(2)}
+                  </option>
+                ))}
+              </select>
+              {selectedRefeicao && (
+                <EditMealDialog 
+                  meal={selectedRefeicao} 
+                  onUpdate={refetchRefeicoes}
+                />
+              )}
+            </div>
             {errors.refeicoes && (
               <span className="text-red-500">Selecione uma refeição</span>
             )}
