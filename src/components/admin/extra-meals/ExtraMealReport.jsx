@@ -57,6 +57,12 @@ const ExtraMealReport = () => {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedMeals = meals?.slice(startIndex, startIndex + ITEMS_PER_PAGE) || [];
 
+  // Format date function
+  const formatDate = (dateString) => {
+    const date = new Date(dateString + 'T12:00:00');
+    return date.toLocaleDateString('pt-BR');
+  };
+
   return (
     <Card className="p-6">
       <div className="space-y-4">
@@ -118,7 +124,7 @@ const ExtraMealReport = () => {
                   {paginatedMeals.map((meal) => (
                     <tr key={meal.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {new Date(meal.data_consumo).toLocaleDateString()}
+                        {formatDate(meal.data_consumo)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {meal.usuarios?.nome}
