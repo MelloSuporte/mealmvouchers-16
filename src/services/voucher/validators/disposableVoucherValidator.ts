@@ -22,6 +22,7 @@ export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: 
       .eq('codigo', codigo)
       .eq('tipo_refeicao_id', tipoRefeicaoId)
       .is('usado_em', null)
+      .is('data_uso', null)
       .gte('data_expiracao', new Date().toISOString().split('T')[0])
       .single();
 
