@@ -8,19 +8,22 @@ export const generatePDF = (data) => {
   
   // Title
   doc.setFontSize(16);
-  doc.text('Refeição Extra', 14, 20);
+  doc.text('Requisição de Refeição Extra', 14, 20);
   
   // Add date
   doc.setFontSize(12);
-  doc.text(`Data: ${format(new Date(data.data_consumo), "dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
+  doc.text(`Data de Consumo: ${format(new Date(data.data_consumo), "dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
   
   // Add meal info
   doc.text(`Refeição: ${data.nome_refeicao}`, 14, 40);
   doc.text(`Valor: R$ ${Number(data.valor).toFixed(2)}`, 14, 50);
   doc.text(`Quantidade: ${data.quantidade || 1}`, 14, 60);
   
+  // Add requester info (admin who authorized)
+  doc.text(`Solicitante: ${data.requesterName || 'Não informado'}`, 14, 70);
+  
   if (data.observacao) {
-    doc.text(`Observação: ${data.observacao}`, 14, 70);
+    doc.text(`Observação: ${data.observacao}`, 14, 80);
   }
   
   // Add users table
@@ -30,7 +33,7 @@ export const generatePDF = (data) => {
   ]);
 
   doc.autoTable({
-    startY: data.observacao ? 80 : 70,
+    startY: data.observacao ? 90 : 80,
     head: [['Nome', 'CPF']],
     body: tableData,
     theme: 'grid',
@@ -39,7 +42,7 @@ export const generatePDF = (data) => {
     }
   });
   
-  doc.save('refeicao-extra.pdf');
+  doc.save('requisicao-refeicao-extra.pdf');
 };
 
 export const generateReportPDF = (meals, dateRange, selectedMeal, mealTypes) => {

@@ -19,7 +19,7 @@ const ExtraMealForm = () => {
   const { searchUser } = useUserSearch();
   const [selectedUsers, setSelectedUsers] = React.useState([]);
   const { data: refeicoes, isLoading: isLoadingRefeicoes, error: refeicoesError, refetch: refetchRefeicoes } = useRefeicoes();
-  const { adminId } = useAdmin();
+  const { adminId, adminName } = useAdmin();
 
   const selectedRefeicaoId = watch('refeicoes');
   const selectedRefeicao = refeicoes?.find(ref => ref.id === selectedRefeicaoId);
@@ -118,7 +118,12 @@ const ExtraMealForm = () => {
         }
       }
 
-      generatePDF({ ...data, usuarios: selectedUsers, data_consumo: dataConsumo });
+      generatePDF({ 
+        ...data, 
+        usuarios: selectedUsers, 
+        data_consumo: dataConsumo,
+        requesterName: adminName // Adding the requester's name
+      });
 
       logger.info('Refeições extras registradas com sucesso');
       toast.success("Refeições extras registradas com sucesso!");
