@@ -1,12 +1,11 @@
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 
-export const validateMealTimeAndInterval = async (tipoRefeicaoId, usuarioId) => {
+export const validateMealTimeAndInterval = async (tipoRefeicaoId) => {
   try {
     const { data, error } = await supabase
       .rpc('validate_meal_time', {
-        p_tipo_refeicao_id: tipoRefeicaoId,
-        p_usuario_id: usuarioId
+        p_tipo_refeicao_id: tipoRefeicaoId
       });
 
     if (error) {
@@ -30,15 +29,31 @@ export const validateDisposableVoucher = async (codigo, tipoRefeicaoId) => {
       throw new Error('Código do voucher e tipo de refeição são obrigatórios');
     }
 
-    const { data, error } = await supabase
+    // Use maybeSingle() instead of single()
+    const { data: voucher, error } = await supabase
+      .from('vouchers_descartaveis')
+      .select('*')
+      .eq('codigo', codigo)
+      .maybeSingle();
+
+    if (error) {
+      logger.error('Erro ao validar voucher descartável:', error);
+      throw error;
+    }
+
+    if (!voucher) {
+      return { success: false, error: 'Voucher descartável não encontrado' };
+    }
+
+    const { data, error: usageError } = await supabase
       .rpc('validate_and_use_voucher', {
         p_codigo: codigo,
         p_tipo_refeicao_id: tipoRefeicaoId
       });
 
-    if (error) {
-      logger.error('Erro ao validar voucher descartável:', error);
-      throw error;
+    if (usageError) {
+      logger.error('Erro ao validar voucher descartável:', usageError);
+      throw usageError;
     }
 
     return data;

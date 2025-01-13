@@ -36,7 +36,7 @@ const UserConfirmation = () => {
     if (storedData) {
       setUserData(JSON.parse(storedData));
     } else {
-      navigate('/');
+      navigate('/voucher');
     }
 
     fetchBackgroundImage();
@@ -56,8 +56,7 @@ const UserConfirmation = () => {
       
       const { data: validationResult, error: validationError } = await supabase
         .rpc('validate_meal_time', {
-          p_tipo_refeicao_id: mealTypeData.id,
-          p_usuario_id: userData.userId
+          p_tipo_refeicao_id: mealTypeData.id
         });
 
       if (validationError) {
