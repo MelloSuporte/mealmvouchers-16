@@ -5,6 +5,7 @@ import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 import { toast } from "sonner";
 import UserDataDisplay from '../components/confirmation/UserDataDisplay';
+import ConfirmationActions from '../components/confirmation/ConfirmationActions';
 
 const UserConfirmation = () => {
   const navigate = useNavigate();
@@ -39,12 +40,14 @@ const UserConfirmation = () => {
     if (storedData) {
       const parsedData = JSON.parse(storedData);
       setUserData(parsedData);
+      logger.info('Dados do usuário carregados:', parsedData);
     } else {
       navigate('/voucher');
     }
 
     if (currentMealType) {
       setMealType(JSON.parse(currentMealType));
+      logger.info('Tipo de refeição carregado:', currentMealType);
     }
 
     fetchBackgroundImage();
@@ -60,13 +63,24 @@ const UserConfirmation = () => {
         return;
       }
 
+      if (!userData?.turno?.id) {
+        toast.error('Turno do usuário não encontrado');
+        logger.error('Turno não encontrado:', userData);
+        return;
+      }
+
       const mealTypeData = JSON.parse(currentMealType);
+
+      logger.info('Validando horário para:', {
+        turnoId: userData.turno.id,
+        tipoRefeicaoId: mealTypeData.id
+      });
 
       // Validate meal time considering user's shift
       const { data: validationResult, error: validationError } = await supabase
-        .rpc('validate_meal_time', {
+        .rpc('check_meal_time_and_shift', {
           p_tipo_refeicao_id: mealTypeData.id,
-          p_turno_id: userData?.turno?.id
+          p_turno_id: userData.turno.id
         });
 
       if (validationError) {
@@ -75,8 +89,8 @@ const UserConfirmation = () => {
         return;
       }
 
-      if (!validationResult?.success) {
-        toast.error(validationResult?.message || 'Horário não permitido para este turno');
+      if (!validationResult) {
+        toast.error('Horário não permitido para este turno');
         return;
       }
 
@@ -111,32 +125,18 @@ const UserConfirmation = () => {
           Confirmar Usuário
         </h2>
         
-        <div className="space-y-4">
-          <UserDataDisplay 
-            userName={userData.userName}
-            cpf={userData.cpf}
-            turno={userData.turno?.tipo_turno || 'Não definido'}
-            mealName={mealType?.nome || 'Não definido'}
-          />
-          
-          <div className="flex space-x-4">
-            <Button
-              onClick={handleCancel}
-              className="flex-1 bg-red-500 hover:bg-red-600"
-              disabled={isConfirming}
-            >
-              Cancelar
-            </Button>
-            
-            <Button
-              onClick={handleConfirm}
-              className="flex-1"
-              disabled={isConfirming}
-            >
-              Confirmar
-            </Button>
-          </div>
-        </div>
+        <UserDataDisplay 
+          userName={userData.userName}
+          cpf={userData.cpf}
+          turno={userData.turno?.tipo_turno || 'Não definido'}
+          mealName={mealType?.nome || 'Não definido'}
+        />
+        
+        <ConfirmationActions
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+          isLoading={isConfirming}
+        />
       </div>
     </div>
   );
