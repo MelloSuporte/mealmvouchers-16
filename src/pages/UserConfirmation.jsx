@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 import { toast } from "sonner";
+import UserDataDisplay from '../components/confirmation/UserDataDisplay';
 
 const UserConfirmation = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [backgroundImage, setBackgroundImage] = useState('');
   const [isConfirming, setIsConfirming] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [mealType, setMealType] = useState(null);
 
   useEffect(() => {
     const fetchBackgroundImage = async () => {
@@ -33,10 +34,17 @@ const UserConfirmation = () => {
     };
 
     const storedData = localStorage.getItem('commonVoucher');
+    const currentMealType = localStorage.getItem('currentMealType');
+    
     if (storedData) {
-      setUserData(JSON.parse(storedData));
+      const parsedData = JSON.parse(storedData);
+      setUserData(parsedData);
     } else {
       navigate('/voucher');
+    }
+
+    if (currentMealType) {
+      setMealType(JSON.parse(currentMealType));
     }
 
     fetchBackgroundImage();
@@ -68,7 +76,6 @@ const UserConfirmation = () => {
         return;
       }
 
-      // Navigate to bom-apetite after successful confirmation
       navigate('/bom-apetite');
     } catch (error) {
       logger.error('Erro na confirmação:', error);
@@ -101,11 +108,12 @@ const UserConfirmation = () => {
         </h2>
         
         <div className="space-y-4">
-          <div className="text-center">
-            <p className="text-lg font-semibold">{userData.userName}</p>
-            <p className="text-gray-600">CPF: {userData.cpf}</p>
-            <p className="text-gray-600">Turno: {userData.turno || 'Não definido'}</p>
-          </div>
+          <UserDataDisplay 
+            userName={userData.userName}
+            cpf={userData.cpf}
+            turno={userData.turno?.tipo_turno || 'Não definido'}
+            mealName={mealType?.nome || 'Não definido'}
+          />
           
           <div className="flex space-x-4">
             <Button
