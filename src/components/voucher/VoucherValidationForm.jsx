@@ -72,6 +72,7 @@ const VoucherValidationForm = () => {
           }));
         }
 
+        // Always navigate to self-services first
         navigate('/self-services');
       } else {
         toast.error(result.error || 'Erro ao validar voucher');

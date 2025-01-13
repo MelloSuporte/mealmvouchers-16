@@ -41,7 +41,7 @@ const SelfServices = () => {
     const redirectTimer = setTimeout(() => {
       toast.error('Nenhuma refeição selecionada');
       navigate('/voucher');
-    }, 5000); // Alterado de 3000 para 5000 milissegundos
+    }, 5000);
 
     // Buscar imagem de fundo
     const fetchBackgroundImage = async () => {
@@ -64,7 +64,6 @@ const SelfServices = () => {
 
     fetchBackgroundImage();
 
-    // Limpar o timer quando o componente for desmontado ou uma refeição for selecionada
     return () => clearTimeout(redirectTimer);
   }, [navigate]);
 
@@ -91,6 +90,7 @@ const SelfServices = () => {
           return;
         }
 
+        // Navegação direta para bom-apetite para vouchers descartáveis
         navigate('/bom-apetite', { 
           state: { 
             mealType: meal.id,
@@ -112,6 +112,7 @@ const SelfServices = () => {
           return;
         }
 
+        // Navegação para user-confirmation para vouchers comuns
         navigate('/user-confirmation', { 
           state: { 
             userName: commonVoucher.userName,
