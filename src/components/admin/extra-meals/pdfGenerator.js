@@ -65,10 +65,15 @@ export const generateReportPDF = (meals, dateRange) => {
   doc.text('Relatório de Refeições Extras', 14, 20);
   
   doc.setFontSize(12);
-  doc.text(`Período: ${format(new Date(dateRange.start), "EEEE, dd/MM/yyyy", { locale: ptBR })} a ${format(new Date(dateRange.end), "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
+  doc.text(`Período: ${format(new Date(dateRange.start), "dd/MM/yyyy", { locale: ptBR })} a ${format(new Date(dateRange.end), "dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
   
+  const formatDate = (dateString) => {
+    const date = new Date(dateString + 'T12:00:00');
+    return date.toLocaleDateString('pt-BR');
+  };
+
   const tableData = meals.map(meal => [
-    format(new Date(meal.data_consumo), "EEEE, dd/MM/yyyy", { locale: ptBR }),
+    formatDate(meal.data_consumo),
     meal.usuarios?.nome || '-',
     meal.refeicoes?.nome || '-',
     meal.quantidade?.toString() || '0',
