@@ -93,7 +93,12 @@ export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: 
       return { success: false, error: 'Erro ao registrar uso do voucher' };
     }
 
-    logger.info('Voucher validado com sucesso:', { codigo });
+    logger.info('Voucher validado com sucesso:', { 
+      codigo,
+      usado_em: now,
+      data_uso: now
+    });
+    
     return { 
       success: true, 
       message: 'Voucher validado com sucesso',
