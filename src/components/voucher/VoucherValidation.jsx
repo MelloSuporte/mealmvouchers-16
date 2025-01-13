@@ -124,8 +124,8 @@ export const validateVoucher = async (voucherCode, mealType) => {
     // Validar voucher com base no tipo
     const { data, error } = await supabase
       .rpc('validate_and_use_voucher', {
-        p_voucher_code: voucherCode,
-        p_meal_type: mealType
+        p_codigo: voucherCode,
+        p_tipo_refeicao_id: mealType
       });
 
     if (error) {
