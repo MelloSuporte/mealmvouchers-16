@@ -91,13 +91,7 @@ const SelfServices = () => {
         }
 
         // Navegação direta para bom-apetite para vouchers descartáveis
-        navigate('/bom-apetite', { 
-          state: { 
-            mealType: meal.id,
-            mealName: meal.nome,
-            userName: 'Visitante'
-          }
-        });
+        navigate('/bom-apetite');
       } 
       // Se for voucher comum
       else if (commonVoucher.code) {

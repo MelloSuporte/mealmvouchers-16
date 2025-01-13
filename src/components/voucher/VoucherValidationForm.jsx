@@ -62,8 +62,8 @@ const VoucherValidationForm = () => {
             mealTypeId: currentMealType.id,
             mealName: currentMealType.nome
           }));
-          // Navigate directly to bom-apetite for disposable vouchers
-          navigate('/bom-apetite');
+          // For disposable vouchers, navigate to self-services first
+          navigate('/self-services');
         } else if (result.voucherType === 'comum') {
           localStorage.setItem('commonVoucher', JSON.stringify({
             code: voucherCode,
