@@ -21,16 +21,17 @@ const UserConfirmation = () => {
           .from('background_images')
           .select('image_url')
           .eq('page', 'userConfirmation')
-          .eq('is_active', true)
-          .maybeSingle();
+          .eq('is_active', true);
 
         if (error) throw error;
         
-        if (data?.image_url) {
-          setBackgroundImage(data.image_url);
+        // Check if we have any results before accessing the first one
+        if (data && data.length > 0) {
+          setBackgroundImage(data[0].image_url);
         }
       } catch (error) {
         logger.error('Erro ao buscar imagem de fundo:', error);
+        // Continue without background image if there's an error
       }
     };
 
