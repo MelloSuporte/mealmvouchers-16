@@ -1,20 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
 import { supabase } from '../../config/supabase';
-import { 
-  identifyVoucherType,
-  validateCommonVoucher, 
-  validateDisposableVoucher,
-  validateMealTimeAndInterval
-} from '../../services/voucherValidationService';
+import { validateVoucher } from '../../services/voucherValidationService';
 import logger from '../../config/logger';
 
 const VoucherValidationForm = () => {
   const navigate = useNavigate();
-  const [voucherCode, setVoucherCode] = React.useState('');
-  const [isValidating, setIsValidating] = React.useState(false);
+  const [voucherCode, setVoucherCode] = useState('');
+  const [isValidating, setIsValidating] = useState(false);
+  const [currentMealType, setCurrentMealType] = useState(null);
+
+  useEffect(() => {
+    const getCurrentMealType = async () => {
+      try {
+        const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+        const { data: mealTypes, error: mealTypesError } = await supabase
+          .from('tipos_refeicao')
+          .select('*')
+          .eq('ativo', true)
+          .gte('horario_fim', currentTime)
+          .lte('horario_inicio', currentTime);
+
+        if (mealTypesError) {
+          console.error('Erro ao buscar tipo de refeição:', mealTypesError);
+          return;
+        }
+
+        if (mealTypes && mealTypes.length > 0) {
+          setCurrentMealType(mealTypes[0]);
+        }
+      } catch (error) {
+        console.error('Erro ao determinar tipo de refeição:', error);
+      }
+    };
+
+    getCurrentMealType();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,74 +46,19 @@ const VoucherValidationForm = () => {
     try {
       setIsValidating(true);
       console.log('Iniciando validação do voucher:', voucherCode);
-      
-      // Identificar tipo de voucher
-      const voucherType = await identifyVoucherType(voucherCode);
-      console.log('Tipo de voucher identificado:', voucherType);
 
-      if (!voucherType) {
-        toast.error('Voucher inválido');
-        return;
-      }
-
-      // Get current meal type based on time
-      const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false });
-      const { data: mealTypes, error: mealTypesError } = await supabase
-        .from('tipos_refeicao')
-        .select('*')
-        .eq('ativo', true)
-        .gte('horario_fim', currentTime)
-        .lte('horario_inicio', currentTime);
-
-      if (mealTypesError) {
-        console.error('Erro ao buscar tipo de refeição:', mealTypesError);
-        toast.error('Erro ao validar horário da refeição');
-        return;
-      }
-
-      if (!mealTypes || mealTypes.length === 0) {
+      if (!currentMealType) {
         toast.error('Nenhum tipo de refeição disponível neste horário');
         return;
       }
 
-      const currentMealType = mealTypes[0];
-
-      // Validar baseado no tipo
-      if (voucherType === 'descartavel') {
-        const result = await validateDisposableVoucher(voucherCode, currentMealType.id);
-        console.log('Resultado validação voucher descartável:', result);
-        
-        if (result.success) {
-          localStorage.setItem('disposableVoucher', JSON.stringify({
-            code: voucherCode,
-            mealTypeId: currentMealType.id,
-            mealType: currentMealType.nome
-          }));
-          navigate('/self-services');
-          return;
-        }
-        toast.error(result.error);
-      } else if (voucherType === 'comum') {
-        const result = await validateCommonVoucher(voucherCode);
-        console.log('Resultado validação voucher comum:', result);
-        
-        if (result.success) {
-          const { user } = result;
-          localStorage.setItem('commonVoucher', JSON.stringify({
-            code: voucherCode,
-            userName: user.nome,
-            turno: user.turnos?.tipo_turno,
-            cpf: user.cpf,
-            userId: user.id
-          }));
-          navigate('/self-services');
-          return;
-        }
-        toast.error(result.error);
+      const result = await validateVoucher(voucherCode, currentMealType.id);
+      
+      if (result.success) {
+        navigate('/self-services');
       } else {
-        toast.error('Tipo de voucher não suportado no momento');
+        toast.error(result.error || 'Erro ao validar voucher');
       }
-
     } catch (error) {
       console.error('Erro ao validar voucher:', error);
       toast.error(error.message || "Erro ao validar o voucher");
