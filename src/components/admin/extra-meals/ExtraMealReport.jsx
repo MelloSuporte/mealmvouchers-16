@@ -6,12 +6,23 @@ import { Card } from "@/components/ui/card";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../../config/supabase';
 import { generateReportPDF } from './pdfGenerator';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const ITEMS_PER_PAGE = 10;
 
 const ExtraMealReport = () => {
   const [dateRange, setDateRange] = useState({
     start: '',
     end: ''
   });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: meals } = useQuery({
     queryKey: ['extraMeals', dateRange],
@@ -40,6 +51,11 @@ const ExtraMealReport = () => {
       generateReportPDF(meals, dateRange);
     }
   };
+
+  // Pagination logic
+  const totalPages = meals ? Math.ceil(meals.length / ITEMS_PER_PAGE) : 0;
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedMeals = meals?.slice(startIndex, startIndex + ITEMS_PER_PAGE) || [];
 
   return (
     <Card className="p-6">
@@ -74,7 +90,7 @@ const ExtraMealReport = () => {
           Gerar Relatório PDF
         </Button>
 
-        {meals?.length > 0 && (
+        {paginatedMeals?.length > 0 && (
           <div className="mt-6">
             <h3 className="text-lg font-semibold mb-4">Refeições Encontradas</h3>
             <div className="overflow-x-auto">
@@ -99,7 +115,7 @@ const ExtraMealReport = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {meals.map((meal) => (
+                  {paginatedMeals.map((meal) => (
                     <tr key={meal.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {new Date(meal.data_consumo).toLocaleDateString()}
@@ -121,6 +137,39 @@ const ExtraMealReport = () => {
                 </tbody>
               </table>
             </div>
+
+            {totalPages > 1 && (
+              <div className="mt-4 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </div>
         )}
       </div>
