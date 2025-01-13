@@ -37,23 +37,39 @@ const UserConfirmation = () => {
     const currentMealType = localStorage.getItem('currentMealType');
     
     if (storedData) {
-      const parsedData = JSON.parse(storedData);
-      // Ensure turno data is properly structured
-      if (parsedData.turno && typeof parsedData.turno === 'object') {
+      try {
+        const parsedData = JSON.parse(storedData);
+        
+        // Validate turno data structure
+        if (!parsedData.turno) {
+          throw new Error('Dados do turno não encontrados');
+        }
+
+        // Ensure turno has the required properties
+        if (!parsedData.turno.id || !parsedData.turno.tipo_turno) {
+          throw new Error('Estrutura do turno inválida');
+        }
+
         setUserData(parsedData);
         logger.info('Dados do usuário carregados:', parsedData);
-      } else {
-        logger.error('Dados do turno inválidos:', parsedData);
+      } catch (error) {
+        logger.error('Erro ao processar dados do turno:', error);
         toast.error('Erro ao carregar dados do turno');
         navigate('/voucher');
+        return;
       }
     } else {
       navigate('/voucher');
     }
 
     if (currentMealType) {
-      setMealType(JSON.parse(currentMealType));
-      logger.info('Tipo de refeição carregado:', currentMealType);
+      try {
+        const parsedMealType = JSON.parse(currentMealType);
+        setMealType(parsedMealType);
+        logger.info('Tipo de refeição carregado:', parsedMealType);
+      } catch (error) {
+        logger.error('Erro ao processar tipo de refeição:', error);
+      }
     }
 
     fetchBackgroundImage();
