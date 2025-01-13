@@ -127,7 +127,7 @@ const MealRegistrationForm = () => {
         <Label htmlFor="ativo">Refeição Ativa</Label>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" className="w-fit px-4" disabled={isSubmitting}>
         {isSubmitting ? 'Cadastrando...' : 'Cadastrar Refeição'}
       </Button>
     </form>
