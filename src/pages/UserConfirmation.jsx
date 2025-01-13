@@ -61,18 +61,22 @@ const UserConfirmation = () => {
       }
 
       const mealTypeData = JSON.parse(currentMealType);
-      
+
+      // Validate meal time considering user's shift
       const { data: validationResult, error: validationError } = await supabase
         .rpc('validate_meal_time', {
-          p_tipo_refeicao_id: mealTypeData.id
+          p_tipo_refeicao_id: mealTypeData.id,
+          p_turno_id: userData?.turno?.id
         });
 
       if (validationError) {
-        throw validationError;
+        logger.error('Erro na validação do horário:', validationError);
+        toast.error('Erro na validação do horário');
+        return;
       }
 
       if (!validationResult?.success) {
-        toast.error(validationResult?.message || 'Erro na validação do horário');
+        toast.error(validationResult?.message || 'Horário não permitido para este turno');
         return;
       }
 
