@@ -149,7 +149,10 @@ export const validateVoucher = async (voucherCode, mealType) => {
       await syncReportData(data.uso_voucher_id);
     }
 
-    return data;
+    return {
+      ...data,
+      voucherType // Include the voucher type in the response
+    };
   } catch (error) {
     logger.error('Erro na validação do voucher:', error);
     throw error;

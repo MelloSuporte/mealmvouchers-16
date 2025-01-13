@@ -55,6 +55,23 @@ const VoucherValidationForm = () => {
       const result = await validateVoucher(voucherCode, currentMealType.id);
       
       if (result.success) {
+        // Store voucher info in localStorage based on type
+        if (result.voucherType === 'descartavel') {
+          localStorage.setItem('disposableVoucher', JSON.stringify({
+            code: voucherCode,
+            mealTypeId: currentMealType.id,
+            mealName: currentMealType.nome
+          }));
+        } else {
+          localStorage.setItem('commonVoucher', JSON.stringify({
+            code: voucherCode,
+            userName: result.user?.nome || 'Usuário',
+            turno: result.user?.turno,
+            cpf: result.user?.cpf,
+            userId: result.user?.id
+          }));
+        }
+        
         navigate('/self-services');
       } else {
         toast.error(result.error || 'Erro ao validar voucher');
