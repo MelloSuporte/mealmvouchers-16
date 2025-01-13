@@ -129,7 +129,7 @@ const ExtraMealReport = () => {
         <Button 
           onClick={handleGenerateReport}
           disabled={!meals?.length}
-          className="w-full"
+          className="w-fit px-4"
         >
           Gerar Relatório PDF
         </Button>
