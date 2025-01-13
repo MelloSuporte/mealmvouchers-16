@@ -17,6 +17,7 @@ const UserConfirmation = () => {
   useEffect(() => {
     const fetchBackgroundImage = async () => {
       try {
+        logger.info('Iniciando busca da imagem de fundo...');
         const { data, error } = await supabase
           .from('background_images')
           .select('image_url')
@@ -24,12 +25,22 @@ const UserConfirmation = () => {
           .eq('is_active', true)
           .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          logger.error('Erro ao buscar imagem de fundo:', error);
+          return;
+        }
+
+        logger.info('Resultado da busca da imagem:', data);
         if (data) {
           setBackgroundImage(data.image_url);
         }
       } catch (error) {
-        logger.error('Erro ao buscar imagem de fundo:', error);
+        logger.error('Erro ao buscar imagem de fundo:', {
+          message: error.message,
+          details: error.stack,
+          hint: error.hint || '',
+          code: error.code || ''
+        });
       }
     };
 
