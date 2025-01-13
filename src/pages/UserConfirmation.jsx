@@ -11,8 +11,33 @@ const UserConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState('');
 
   useEffect(() => {
+    const fetchBackgroundImage = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('background_images')
+          .select('image_url')
+          .eq('page', 'userConfirmation')
+          .eq('is_active', true)
+          .maybeSingle(); // Using maybeSingle() instead of single()
+
+        if (error) {
+          logger.error('Erro ao buscar imagem de fundo:', error);
+          return;
+        }
+
+        if (data?.image_url) {
+          setBackgroundImage(data.image_url);
+        }
+      } catch (error) {
+        logger.error('Erro ao buscar imagem de fundo:', error);
+      }
+    };
+
+    fetchBackgroundImage();
+
     if (!location.state) {
       toast.error('Dados da refeição não encontrados');
       navigate('/');
@@ -53,7 +78,6 @@ const UserConfirmation = () => {
       if (error) {
         logger.error('Erro na validação:', error);
         
-        // Check if error message contains shift time error
         if (error.message?.includes('Fora do horário') || 
             error.message?.includes('horário não permitido')) {
           throw new Error('Fora do Horário de Turno');
@@ -78,7 +102,6 @@ const UserConfirmation = () => {
     } catch (error) {
       logger.error('Erro na validação:', error);
       
-      // Check if error is related to shift time
       if (error.message?.includes('Fora do horário') || 
           error.message === 'Fora do Horário de Turno') {
         toast.error('Fora do Horário de Turno');
@@ -100,7 +123,13 @@ const UserConfirmation = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-red-700">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'linear-gradient(to bottom, #ff6b6b, #ee5253)',
+        backgroundColor: '#ff6b6b'
+      }}
+    >
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full space-y-6">
         <ConfirmationHeader />
         

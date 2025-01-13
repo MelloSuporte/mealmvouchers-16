@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { supabase } from '../config/supabase';
+import logger from '../config/logger';
 
 const BomApetite = () => {
   const navigate = useNavigate();
@@ -14,31 +15,40 @@ const BomApetite = () => {
   useEffect(() => {
     const fetchBackgroundImage = async () => {
       try {
+        logger.info('Iniciando busca da imagem de fundo...');
+        
         const { data, error } = await supabase
           .from('background_images')
           .select('image_url')
           .eq('page', 'bomApetite')
           .eq('is_active', true)
-          .single();
+          .maybeSingle(); // Using maybeSingle() instead of single()
 
         if (error) {
-          console.error('Erro ao buscar imagem de fundo:', error);
+          logger.error('Erro ao buscar imagem de fundo:', error);
           return;
         }
+        
+        logger.info('Resultado da busca da imagem:', data);
         
         if (data?.image_url) {
           setBackgroundImage(data.image_url);
         }
       } catch (error) {
-        console.error('Erro ao buscar imagem de fundo:', error);
+        logger.error('Erro ao buscar imagem de fundo:', {
+          message: error.message,
+          details: error.stack,
+          hint: error.hint || '',
+          code: error.code || ''
+        });
       }
     };
 
     fetchBackgroundImage();
 
     // Verifica se tem userName
-    if (!location.state?.userName) {
-      console.log('Redirecionando para /voucher - Dados inválidos:', { userName: location.state?.userName });
+    if (!location.state?.userName && !location.state?.isDisposable) {
+      logger.info('Redirecionando para /voucher - Dados inválidos:', { userName: location.state?.userName });
       toast.error("Dados inválidos. Redirecionando...");
       navigate('/voucher');
       return;
@@ -53,7 +63,7 @@ const BomApetite = () => {
       setCountdown((prevCount) => {
         if (prevCount <= 1) {
           clearInterval(timer);
-          console.log('Redirecionando para /voucher após countdown');
+          logger.info('Redirecionando para /voucher após countdown');
           navigate('/voucher');
           return 0;
         }
@@ -63,7 +73,6 @@ const BomApetite = () => {
 
     return () => {
       clearInterval(timer);
-      // Garante que o localStorage está limpo mesmo se o componente for desmontado
       localStorage.removeItem('disposableVoucher');
       localStorage.removeItem('commonVoucher');
       localStorage.removeItem('extraVoucher');
@@ -80,7 +89,9 @@ const BomApetite = () => {
     >
       <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-8 max-w-md w-full text-center">
         <h1 className="text-4xl font-bold text-[#6E59A5] mb-4">Bom Apetite!</h1>
-        <p className="text-xl mb-4">Olá, {userName}!</p>
+        <p className="text-xl mb-4">
+          {location.state?.isDisposable ? 'Visitante' : `Olá, ${userName}!`}
+        </p>
         <p className="text-lg mb-6">
           Aproveite sua refeição!
         </p>
