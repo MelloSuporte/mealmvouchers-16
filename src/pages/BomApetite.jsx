@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
+import { toast } from 'sonner';
 
 const BomApetite = () => {
   const [backgroundImage, setBackgroundImage] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBackgroundImage = async () => {
@@ -22,11 +25,20 @@ const BomApetite = () => {
         }
       } catch (error) {
         logger.error('Erro ao buscar imagem de fundo:', error);
+        toast.error('Erro ao carregar imagem de fundo');
       }
     };
 
     fetchBackgroundImage();
-  }, []);
+
+    // Set timeout to redirect after 3 seconds
+    const redirectTimer = setTimeout(() => {
+      navigate('/voucher');
+    }, 3000);
+
+    // Cleanup timer on component unmount
+    return () => clearTimeout(redirectTimer);
+  }, [navigate]);
 
   return (
     <div 
@@ -35,7 +47,8 @@ const BomApetite = () => {
         backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined
       }}
     >
-      <h2 className="text-3xl font-bold text-white">Bom Apetite!</h2>
+      <h2 className="text-3xl font-bold text-white mb-4">Bom Apetite!</h2>
+      <p className="text-white text-lg">Redirecionando em alguns segundos...</p>
     </div>
   );
 };
