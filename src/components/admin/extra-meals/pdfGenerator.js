@@ -1,72 +1,24 @@
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
-export const generatePDF = (data) => {
+export const generateReportPDF = (meals, dateRange, selectedMeal, mealTypes) => {
   const doc = new jsPDF();
-  const adminName = localStorage.getItem('adminName') || 'Não identificado';
-  
-  doc.setFontSize(16);
-  doc.text('Requisição de Refeição Extra', 14, 20);
-  
-  doc.setFontSize(12);
-  doc.text(`Data: ${format(new Date(), "dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
 
-  // Adiciona todos os usuários selecionados
-  if (Array.isArray(data.usuarios) && data.usuarios.length > 0) {
-    doc.text('Usuários:', 14, 40);
-    let yPosition = 50;
-    data.usuarios.forEach((usuario, index) => {
-      doc.text(`${index + 1}. Nome: ${usuario.nome || '-'}`, 20, yPosition);
-      yPosition += 10;
-    });
-    yPosition += 10;
-    doc.text(`Solicitante: ${adminName}`, 14, yPosition);
-    doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, yPosition + 10);
-    doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, yPosition + 20);
-    
-    // Criar a data a partir da string YYYY-MM-DD
-    const dataConsumo = new Date(data.data_consumo + 'T12:00:00');
-    doc.text(`Data de Consumo: ${format(dataConsumo, "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, yPosition + 30);
-    
-    if (data.observacao) {
-      doc.text('Observação:', 14, yPosition + 40);
-      doc.setFontSize(10);
-      const splitObservacao = doc.splitTextToSize(data.observacao, 180);
-      doc.text(splitObservacao, 14, yPosition + 50);
-    }
-  } else {
-    // Fallback para caso de usuário único (mantendo compatibilidade)
-    doc.text(`Usuário: ${data.usuario?.nome || '-'}`, 14, 40);
-    doc.text(`Solicitante: ${adminName}`, 14, 50);
-    doc.text(`Refeição: ${data.nome_refeicao || '-'}`, 14, 60);
-    doc.text(`Quantidade: ${data.quantidade || '0'}`, 14, 70);
-    
-    // Criar a data a partir da string YYYY-MM-DD
-    const dataConsumo = new Date(data.data_consumo + 'T12:00:00');
-    doc.text(`Data de Consumo: ${format(dataConsumo, "EEEE, dd/MM/yyyy", { locale: ptBR })}`, 14, 80);
-    
-    if (data.observacao) {
-      doc.text('Observação:', 14, 90);
-      doc.setFontSize(10);
-      const splitObservacao = doc.splitTextToSize(data.observacao, 180);
-      doc.text(splitObservacao, 14, 100);
-    }
-  }
-  
-  doc.save('requisicao-refeicao-extra.pdf');
-};
-
-export const generateReportPDF = (meals, dateRange) => {
-  const doc = new jsPDF();
-  
+  // Title
   doc.setFontSize(16);
   doc.text('Relatório de Refeições Extras', 14, 20);
   
   doc.setFontSize(12);
   doc.text(`Período: ${format(new Date(dateRange.start), "dd/MM/yyyy", { locale: ptBR })} a ${format(new Date(dateRange.end), "dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
   
+  // Add meal type filter info
+  if (selectedMeal !== 'all') {
+    const selectedMealName = mealTypes?.find(m => m.id === selectedMeal)?.nome || 'Não especificada';
+    doc.text(`Refeição: ${selectedMealName}`, 14, 40);
+  }
+
   const formatDate = (dateString) => {
     const date = new Date(dateString + 'T12:00:00');
     return date.toLocaleDateString('pt-BR');
@@ -77,28 +29,35 @@ export const generateReportPDF = (meals, dateRange) => {
     meal.usuarios?.nome || '-',
     meal.refeicoes?.nome || '-',
     meal.quantidade?.toString() || '0',
-    `R$ ${meal.valor?.toFixed(2)}` || 'R$ 0,00',
+    `R$ ${meal.valor.toFixed(2)}`
   ]);
-  
-  // Calcular quantidade total e valor total
-  const totalQuantity = meals.reduce((acc, meal) => acc + (meal.quantidade || 0), 0);
-  const totalValue = meals.reduce((acc, meal) => acc + (meal.valor || 0), 0);
-  
+
+  // Calculate totals
+  const totalQuantity = meals.reduce((sum, meal) => sum + (meal.quantidade || 0), 0);
+  const totalValue = meals.reduce((sum, meal) => sum + (meal.valor || 0), 0);
+
+  // Add totals to table data
+  tableData.push([
+    'Total',
+    '',
+    '',
+    totalQuantity.toString(),
+    `R$ ${totalValue.toFixed(2)}`
+  ]);
+
   doc.autoTable({
-    startY: 40,
-    head: [['Data', 'Usuário', 'Refeição', 'Qtd', 'Valor']],
+    startY: selectedMeal !== 'all' ? 45 : 35,
+    head: [['Data', 'Usuário', 'Refeição', 'Quantidade', 'Valor']],
     body: tableData,
-    foot: [['', '', 'Totais:', totalQuantity.toString(), `R$ ${totalValue.toFixed(2)}`]],
-    theme: 'grid',
+    theme: 'striped',
     headStyles: {
-      fillColor: [51, 51, 51],
-      textColor: [255, 255, 255],
-      fontSize: 10
+      fillColor: [66, 66, 66],
+      textColor: [255, 255, 255]
     },
+    foot: [['Total', '', '', totalQuantity.toString(), `R$ ${totalValue.toFixed(2)}`]],
     footStyles: {
       fillColor: [240, 240, 240],
       textColor: [0, 0, 0],
-      fontSize: 10,
       fontStyle: 'bold'
     }
   });

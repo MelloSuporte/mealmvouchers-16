@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../../config/supabase';
 import { generateReportPDF } from './pdfGenerator';
@@ -22,14 +23,28 @@ const ExtraMealReport = () => {
     start: '',
     end: ''
   });
+  const [selectedMeal, setSelectedMeal] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
 
+  const { data: mealTypes } = useQuery({
+    queryKey: ['mealTypes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('refeicoes')
+        .select('id, nome')
+        .eq('ativo', true);
+
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   const { data: meals } = useQuery({
-    queryKey: ['extraMeals', dateRange],
+    queryKey: ['extraMeals', dateRange, selectedMeal],
     queryFn: async () => {
       if (!dateRange.start || !dateRange.end) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('refeicoes_extras')
         .select(`
           *,
@@ -40,6 +55,12 @@ const ExtraMealReport = () => {
         .lte('data_consumo', dateRange.end)
         .order('data_consumo', { ascending: false });
 
+      if (selectedMeal !== 'all') {
+        query = query.eq('refeicao_id', selectedMeal);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
       return data;
     },
@@ -48,7 +69,7 @@ const ExtraMealReport = () => {
 
   const handleGenerateReport = () => {
     if (meals?.length) {
-      generateReportPDF(meals, dateRange);
+      generateReportPDF(meals, dateRange, selectedMeal, mealTypes);
     }
   };
 
@@ -66,7 +87,7 @@ const ExtraMealReport = () => {
   return (
     <Card className="p-6">
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="start_date">Data Inicial</Label>
             <Input
@@ -85,6 +106,23 @@ const ExtraMealReport = () => {
               value={dateRange.end}
               onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Refeição</Label>
+            <Select value={selectedMeal} onValueChange={setSelectedMeal}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a refeição" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {mealTypes?.map((meal) => (
+                  <SelectItem key={meal.id} value={meal.id}>
+                    {meal.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
