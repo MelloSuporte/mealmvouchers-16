@@ -44,46 +44,56 @@ const UserConfirmation = () => {
       }
     };
 
-    const storedData = localStorage.getItem('commonVoucher');
-    const currentMealType = localStorage.getItem('currentMealType');
-    
-    if (storedData) {
+    const loadStoredData = () => {
       try {
-        const parsedData = JSON.parse(storedData);
+        const storedData = localStorage.getItem('commonVoucher');
+        const currentMealType = localStorage.getItem('currentMealType');
         
-        // Validate turno data structure
-        if (!parsedData.turno) {
-          throw new Error('Dados do turno não encontrados');
+        if (!storedData) {
+          navigate('/voucher');
+          return;
         }
 
-        // Ensure turno has the required properties
+        const parsedData = JSON.parse(storedData);
+        logger.info('Dados carregados do localStorage:', parsedData);
+
+        // Validação específica para o turno
+        if (!parsedData.turno) {
+          logger.error('Dados do turno ausentes no objeto:', parsedData);
+          toast.error('Dados do turno não encontrados');
+          navigate('/voucher');
+          return;
+        }
+
+        // Validação da estrutura do turno
         if (!parsedData.turno.id || !parsedData.turno.tipo_turno) {
-          throw new Error('Estrutura do turno inválida');
+          logger.error('Estrutura do turno inválida:', parsedData.turno);
+          toast.error('Estrutura do turno inválida');
+          navigate('/voucher');
+          return;
         }
 
         setUserData(parsedData);
-        logger.info('Dados do usuário carregados:', parsedData);
-      } catch (error) {
-        logger.error('Erro ao processar dados do turno:', error);
-        toast.error('Erro ao carregar dados do turno');
-        navigate('/voucher');
-        return;
-      }
-    } else {
-      navigate('/voucher');
-    }
 
-    if (currentMealType) {
-      try {
-        const parsedMealType = JSON.parse(currentMealType);
-        setMealType(parsedMealType);
-        logger.info('Tipo de refeição carregado:', parsedMealType);
+        if (currentMealType) {
+          try {
+            const parsedMealType = JSON.parse(currentMealType);
+            setMealType(parsedMealType);
+            logger.info('Tipo de refeição carregado:', parsedMealType);
+          } catch (error) {
+            logger.error('Erro ao processar tipo de refeição:', error);
+            toast.error('Erro ao carregar tipo de refeição');
+          }
+        }
       } catch (error) {
-        logger.error('Erro ao processar tipo de refeição:', error);
+        logger.error('Erro ao processar dados armazenados:', error);
+        toast.error('Erro ao carregar dados do usuário');
+        navigate('/voucher');
       }
-    }
+    };
 
     fetchBackgroundImage();
+    loadStoredData();
   }, [navigate]);
 
   const handleConfirm = async () => {
@@ -96,7 +106,7 @@ const UserConfirmation = () => {
         return;
       }
 
-      // Validate turno data
+      // Validação do turno antes de prosseguir
       if (!userData?.turno?.id) {
         logger.error('Turno não encontrado:', userData);
         toast.error('Turno do usuário não encontrado');
@@ -145,7 +155,10 @@ const UserConfirmation = () => {
   if (!userData) return null;
 
   const getTurnoLabel = (turno) => {
-    if (!turno) return 'Não definido';
+    if (!turno || !turno.tipo_turno) {
+      logger.warn('Dados do turno inválidos:', turno);
+      return 'Não definido';
+    }
     
     const labels = {
       'central': 'Administrativo',
