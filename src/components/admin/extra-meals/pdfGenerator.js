@@ -26,15 +26,14 @@ export const generatePDF = (data) => {
     doc.text(`Observação: ${data.observacao}`, 14, 80);
   }
   
-  // Add users table
+  // Add users table - removed CPF column
   const tableData = data.usuarios.map(user => [
-    user.nome,
-    user.cpf
+    user.nome
   ]);
 
   doc.autoTable({
     startY: data.observacao ? 90 : 80,
-    head: [['Nome', 'CPF']],
+    head: [['Nome']],
     body: tableData,
     theme: 'grid',
     styles: {
