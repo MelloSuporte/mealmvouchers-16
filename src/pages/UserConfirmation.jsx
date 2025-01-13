@@ -21,17 +21,15 @@ const UserConfirmation = () => {
           .from('background_images')
           .select('image_url')
           .eq('page', 'userConfirmation')
-          .eq('is_active', true);
+          .eq('is_active', true)
+          .maybeSingle();
 
         if (error) throw error;
-        
-        // Check if we have any results before accessing the first one
-        if (data && data.length > 0) {
-          setBackgroundImage(data[0].image_url);
+        if (data) {
+          setBackgroundImage(data.image_url);
         }
       } catch (error) {
         logger.error('Erro ao buscar imagem de fundo:', error);
-        // Continue without background image if there's an error
       }
     };
 
@@ -40,8 +38,15 @@ const UserConfirmation = () => {
     
     if (storedData) {
       const parsedData = JSON.parse(storedData);
-      setUserData(parsedData);
-      logger.info('Dados do usuário carregados:', parsedData);
+      // Ensure turno data is properly structured
+      if (parsedData.turno && typeof parsedData.turno === 'object') {
+        setUserData(parsedData);
+        logger.info('Dados do usuário carregados:', parsedData);
+      } else {
+        logger.error('Dados do turno inválidos:', parsedData);
+        toast.error('Erro ao carregar dados do turno');
+        navigate('/voucher');
+      }
     } else {
       navigate('/voucher');
     }
@@ -64,9 +69,10 @@ const UserConfirmation = () => {
         return;
       }
 
+      // Validate turno data
       if (!userData?.turno?.id) {
-        toast.error('Turno do usuário não encontrado');
         logger.error('Turno não encontrado:', userData);
+        toast.error('Turno do usuário não encontrado');
         return;
       }
 
@@ -77,7 +83,6 @@ const UserConfirmation = () => {
         tipoRefeicaoId: mealTypeData.id
       });
 
-      // Validate meal time considering user's shift
       const { data: validationResult, error: validationError } = await supabase
         .rpc('check_meal_time_and_shift', {
           p_tipo_refeicao_id: mealTypeData.id,
@@ -112,6 +117,19 @@ const UserConfirmation = () => {
 
   if (!userData) return null;
 
+  const getTurnoLabel = (turno) => {
+    if (!turno) return 'Não definido';
+    
+    const labels = {
+      'central': 'Administrativo',
+      'primeiro': '1º Turno',
+      'segundo': '2º Turno',
+      'terceiro': '3º Turno'
+    };
+    
+    return labels[turno.tipo_turno] || turno.tipo_turno;
+  };
+
   return (
     <div 
       className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4"
@@ -129,7 +147,7 @@ const UserConfirmation = () => {
         <UserDataDisplay 
           userName={userData.userName}
           cpf={userData.cpf}
-          turno={userData.turno?.tipo_turno || 'Não definido'}
+          turno={getTurnoLabel(userData.turno)}
           mealName={mealType?.nome || 'Não definido'}
         />
         
