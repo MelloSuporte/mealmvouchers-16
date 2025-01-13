@@ -24,7 +24,7 @@ const VoucherValidationForm = () => {
           .lte('horario_inicio', currentTime);
 
         if (mealTypesError) {
-          console.error('Erro ao buscar tipo de refeição:', mealTypesError);
+          logger.error('Erro ao buscar tipo de refeição:', mealTypesError);
           return;
         }
 
@@ -32,7 +32,7 @@ const VoucherValidationForm = () => {
           setCurrentMealType(mealTypes[0]);
         }
       } catch (error) {
-        console.error('Erro ao determinar tipo de refeição:', error);
+        logger.error('Erro ao determinar tipo de refeição:', error);
       }
     };
 
@@ -45,7 +45,7 @@ const VoucherValidationForm = () => {
     
     try {
       setIsValidating(true);
-      console.log('Iniciando validação do voucher:', voucherCode);
+      logger.info('Iniciando validação do voucher:', voucherCode);
 
       if (!currentMealType) {
         toast.error('Nenhum tipo de refeição disponível neste horário');
@@ -55,32 +55,22 @@ const VoucherValidationForm = () => {
       const result = await validateVoucher(voucherCode, currentMealType.id);
       
       if (result.success) {
-        // Store voucher info in localStorage based on type
-        if (result.voucherType === 'descartavel') {
-          localStorage.setItem('disposableVoucher', JSON.stringify({
-            code: voucherCode,
-            mealTypeId: currentMealType.id,
-            mealName: currentMealType.nome
-          }));
-          // For disposable vouchers, navigate to self-services first
-          navigate('/self-services');
-        } else if (result.voucherType === 'comum') {
+        if (result.voucherType === 'comum') {
           localStorage.setItem('commonVoucher', JSON.stringify({
             code: voucherCode,
             userName: result.user?.nome || 'Usuário',
-            turno: result.user?.turno,
+            turno: result.user?.turnos,
             cpf: result.user?.cpf,
             userId: result.user?.id
           }));
           localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
-          // Navigate to self-services for common vouchers
-          navigate('/self-services');
+          navigate('/user-confirmation');
         }
       } else {
         toast.error(result.error || 'Erro ao validar voucher');
       }
     } catch (error) {
-      console.error('Erro ao validar voucher:', error);
+      logger.error('Erro ao validar voucher:', error);
       toast.error(error.message || "Erro ao validar o voucher");
     } finally {
       setIsValidating(false);

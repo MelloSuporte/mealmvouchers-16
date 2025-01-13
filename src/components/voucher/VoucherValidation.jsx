@@ -33,22 +33,6 @@ const findCommonVoucher = async (codigo) => {
   }
 };
 
-const findDisposableVoucher = async (codigo) => {
-  try {
-    const { data, error } = await supabase
-      .from('vouchers_descartaveis')
-      .select('*')
-      .eq('codigo', codigo)
-      .maybeSingle();
-
-    if (error) throw error;
-    return { data, error: null };
-  } catch (error) {
-    logger.error('Erro ao buscar voucher descartável:', error);
-    return { data: null, error };
-  }
-};
-
 export const validateVoucher = async (codigo, tipoRefeicaoId) => {
   try {
     await logSystemEvent({
@@ -62,7 +46,7 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
     // Garantir que o código seja uma string
     const voucherCode = String(codigo);
     
-    // Tentar validar como voucher comum primeiro
+    // Tentar validar como voucher comum
     const { data: usuario, error: userError } = await findCommonVoucher(voucherCode);
 
     if (usuario) {
@@ -84,38 +68,19 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
         };
       }
 
-      return {
-        success: true,
-        voucherType: 'comum',
-        user: usuario,
-        message: 'Voucher comum validado com sucesso'
-      };
-    }
-
-    // Se não for comum, tentar como descartável
-    const { data: voucherDescartavel } = await findDisposableVoucher(voucherCode);
-
-    if (voucherDescartavel) {
-      logger.info('Voucher identificado como descartável');
-      // Validar voucher descartável
-      const { data: validationResult, error: validationError } = await supabase
-        .rpc('validate_and_use_voucher', {
-          p_codigo: voucherCode,
-          p_tipo_refeicao_id: tipoRefeicaoId
-        });
-
-      if (validationError) {
-        return { 
-          success: false, 
-          error: validationError.message,
-          voucherType: 'descartavel'
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: validationResult.error || 'Erro na validação do voucher',
+          voucherType: 'comum'
         };
       }
 
       return {
         success: true,
-        voucherType: 'descartavel',
-        message: 'Voucher descartável validado com sucesso'
+        voucherType: 'comum',
+        user: usuario,
+        message: validationResult.message || 'Voucher comum validado com sucesso'
       };
     }
 
