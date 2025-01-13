@@ -10,7 +10,8 @@ export const useMealTypes = () => {
       const { data, error } = await supabase
         .from('tipos_refeicao')
         .select('*')
-        .eq('ativo', true);
+        .eq('ativo', true)
+        .order('nome');
 
       if (error) {
         console.error('Erro ao buscar tipos de refeição:', error);
