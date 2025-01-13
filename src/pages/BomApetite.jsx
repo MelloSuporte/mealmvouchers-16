@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 import { toast } from 'sonner';
 
 const BomApetite = () => {
-  const [backgroundImage, setBackgroundImage] = useState('');
+  const [backgroundImage, setBackgroundImage] = React.useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,10 +31,16 @@ const BomApetite = () => {
 
     fetchBackgroundImage();
 
-    // Set timeout to redirect after 3 seconds
-    const redirectTimer = setTimeout(() => {
+    // Clear localStorage data
+    const clearDataAndRedirect = () => {
+      localStorage.removeItem('commonVoucher');
+      localStorage.removeItem('disposableVoucher');
+      localStorage.removeItem('currentMealType');
       navigate('/voucher');
-    }, 3000);
+    };
+
+    // Set timeout to redirect after 3 seconds
+    const redirectTimer = setTimeout(clearDataAndRedirect, 3000);
 
     // Cleanup timer on component unmount
     return () => clearTimeout(redirectTimer);

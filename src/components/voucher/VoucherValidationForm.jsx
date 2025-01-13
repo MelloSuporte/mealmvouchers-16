@@ -62,6 +62,8 @@ const VoucherValidationForm = () => {
             mealTypeId: currentMealType.id,
             mealName: currentMealType.nome
           }));
+          // Navigate directly to bom-apetite for disposable vouchers
+          navigate('/bom-apetite');
         } else if (result.voucherType === 'comum') {
           localStorage.setItem('commonVoucher', JSON.stringify({
             code: voucherCode,
@@ -70,10 +72,10 @@ const VoucherValidationForm = () => {
             cpf: result.user?.cpf,
             userId: result.user?.id
           }));
+          localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
+          // Navigate to self-services for common vouchers
+          navigate('/self-services');
         }
-
-        // Always navigate to self-services first
-        navigate('/self-services');
       } else {
         toast.error(result.error || 'Erro ao validar voucher');
       }

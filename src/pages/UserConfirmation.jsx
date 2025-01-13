@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 const UserConfirmation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [backgroundImage, setBackgroundImage] = useState('');
   const [isConfirming, setIsConfirming] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -68,7 +69,8 @@ const UserConfirmation = () => {
         return;
       }
 
-      navigate('/self-services');
+      // Navigate to bom-apetite after successful confirmation
+      navigate('/bom-apetite');
     } catch (error) {
       logger.error('Erro na confirmação:', error);
       toast.error(error.message || 'Erro ao confirmar usuário');
@@ -80,7 +82,7 @@ const UserConfirmation = () => {
   const handleCancel = () => {
     localStorage.removeItem('commonVoucher');
     localStorage.removeItem('currentMealType');
-    navigate('/');
+    navigate('/voucher');
   };
 
   if (!userData) return null;
