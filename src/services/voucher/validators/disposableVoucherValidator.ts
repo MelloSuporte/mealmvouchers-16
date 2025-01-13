@@ -23,7 +23,7 @@ export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: 
       .eq('tipo_refeicao_id', tipoRefeicaoId)
       .is('usado_em', null)
       .gte('data_expiracao', new Date().toISOString().split('T')[0])
-      .maybeSingle();
+      .single();
 
     if (error) {
       logger.error('Erro ao buscar voucher descartável:', error);
@@ -69,7 +69,8 @@ export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: 
         usado: true
       })
       .eq('id', voucher.id)
-      .is('usado_em', null);
+      .is('usado_em', null)
+      .is('data_uso', null);
 
     if (updateError) {
       logger.error('Erro ao marcar voucher como usado:', updateError);
