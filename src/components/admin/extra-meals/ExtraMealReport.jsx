@@ -56,7 +56,7 @@ const ExtraMealReport = () => {
         .order('data_consumo', { ascending: false });
 
       if (selectedMeal !== 'all') {
-        query = query.eq('refeicao_id', selectedMeal);
+        query = query.eq('tipo_refeicao_id', selectedMeal); // Changed from refeicao_id to tipo_refeicao_id
       }
 
       const { data, error } = await query;
