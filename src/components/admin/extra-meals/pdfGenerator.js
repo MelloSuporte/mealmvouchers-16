@@ -3,6 +3,45 @@ import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+export const generatePDF = (data) => {
+  const doc = new jsPDF();
+  
+  // Title
+  doc.setFontSize(16);
+  doc.text('Refeição Extra', 14, 20);
+  
+  // Add date
+  doc.setFontSize(12);
+  doc.text(`Data: ${format(new Date(data.data_consumo), "dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
+  
+  // Add meal info
+  doc.text(`Refeição: ${data.nome_refeicao}`, 14, 40);
+  doc.text(`Valor: R$ ${Number(data.valor).toFixed(2)}`, 14, 50);
+  doc.text(`Quantidade: ${data.quantidade || 1}`, 14, 60);
+  
+  if (data.observacao) {
+    doc.text(`Observação: ${data.observacao}`, 14, 70);
+  }
+  
+  // Add users table
+  const tableData = data.usuarios.map(user => [
+    user.nome,
+    user.cpf
+  ]);
+
+  doc.autoTable({
+    startY: data.observacao ? 80 : 70,
+    head: [['Nome', 'CPF']],
+    body: tableData,
+    theme: 'grid',
+    styles: {
+      fontSize: 10
+    }
+  });
+  
+  doc.save('refeicao-extra.pdf');
+};
+
 export const generateReportPDF = (meals, dateRange, selectedMeal, mealTypes) => {
   const doc = new jsPDF();
 
@@ -11,7 +50,7 @@ export const generateReportPDF = (meals, dateRange, selectedMeal, mealTypes) => 
   doc.text('Relatório de Refeições Extras', 14, 20);
   
   doc.setFontSize(12);
-  doc.text(`Período: ${format(new Date(dateRange.start), "dd/MM/yyyy", { locale: ptBR })} a ${format(new Date(dateRange.end), "dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
+  doc.text(`Período: ${format(new Date(dateRange.start + 'T12:00:00'), "dd/MM/yyyy", { locale: ptBR })} a ${format(new Date(dateRange.end + 'T12:00:00'), "dd/MM/yyyy", { locale: ptBR })}`, 14, 30);
   
   // Add meal type filter info
   if (selectedMeal !== 'all') {
@@ -21,7 +60,7 @@ export const generateReportPDF = (meals, dateRange, selectedMeal, mealTypes) => 
 
   const formatDate = (dateString) => {
     const date = new Date(dateString + 'T12:00:00');
-    return date.toLocaleDateString('pt-BR');
+    return format(date, "dd/MM/yyyy", { locale: ptBR });
   };
 
   const tableData = meals.map(meal => [
@@ -35,15 +74,6 @@ export const generateReportPDF = (meals, dateRange, selectedMeal, mealTypes) => 
   // Calculate totals
   const totalQuantity = meals.reduce((sum, meal) => sum + (meal.quantidade || 0), 0);
   const totalValue = meals.reduce((sum, meal) => sum + (meal.valor || 0), 0);
-
-  // Add totals to table data
-  tableData.push([
-    'Total',
-    '',
-    '',
-    totalQuantity.toString(),
-    `R$ ${totalValue.toFixed(2)}`
-  ]);
 
   doc.autoTable({
     startY: selectedMeal !== 'all' ? 45 : 35,
