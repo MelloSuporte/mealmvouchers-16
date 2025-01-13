@@ -42,22 +42,20 @@ export const validateDisposableVoucher = async (codigo: string, tipoRefeicaoId: 
     }
 
     // Verificar horário da refeição
-    const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false });
-    const endTime = new Date();
-    const [hours, minutes] = voucher.tipos_refeicao.horario_fim.split(':');
-    endTime.setHours(parseInt(hours), parseInt(minutes) + (voucher.tipos_refeicao.minutos_tolerancia || 0));
-    
-    if (!(currentTime >= voucher.tipos_refeicao.horario_inicio && 
-          currentTime <= endTime.toLocaleTimeString('pt-BR', { hour12: false }))) {
-      logger.info('Fora do horário permitido:', {
-        currentTime,
-        inicio: voucher.tipos_refeicao.horario_inicio,
-        fim: voucher.tipos_refeicao.horario_fim,
-        tolerancia: voucher.tipos_refeicao.minutos_tolerancia
+    const { data: timeValidation, error: timeError } = await supabase
+      .rpc('validate_meal_time', {
+        p_tipo_refeicao_id: tipoRefeicaoId
       });
+
+    if (timeError || !timeValidation) {
+      logger.error('Erro ao validar horário:', timeError);
+      return { success: false, error: 'Erro ao validar horário da refeição' };
+    }
+
+    if (!timeValidation.is_valid) {
       return { 
         success: false, 
-        error: `Esta refeição só pode ser utilizada entre ${voucher.tipos_refeicao.horario_inicio} e ${voucher.tipos_refeicao.horario_fim}`
+        error: timeValidation.message || 'Fora do horário permitido para esta refeição'
       };
     }
 
