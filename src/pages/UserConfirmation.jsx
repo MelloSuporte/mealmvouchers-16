@@ -1,17 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { toast } from "sonner";
-import logger from '../config/logger';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
 import { supabase } from '../config/supabase';
-import ConfirmationHeader from '../components/confirmation/ConfirmationHeader';
-import UserDataDisplay from '../components/confirmation/UserDataDisplay';
-import ConfirmationActions from '../components/confirmation/ConfirmationActions';
+import logger from '../config/logger';
+import { toast } from "sonner";
 
 const UserConfirmation = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [isLoading, setIsLoading] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState('');
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     const fetchBackgroundImage = async () => {
@@ -21,13 +19,10 @@ const UserConfirmation = () => {
           .select('image_url')
           .eq('page', 'userConfirmation')
           .eq('is_active', true)
-          .maybeSingle(); // Using maybeSingle() instead of single()
+          .maybeSingle();
 
-        if (error) {
-          logger.error('Erro ao buscar imagem de fundo:', error);
-          return;
-        }
-
+        if (error) throw error;
+        
         if (data?.image_url) {
           setBackgroundImage(data.image_url);
         }
@@ -36,120 +31,99 @@ const UserConfirmation = () => {
       }
     };
 
+    const storedData = localStorage.getItem('commonVoucher');
+    if (storedData) {
+      setUserData(JSON.parse(storedData));
+    } else {
+      navigate('/');
+    }
+
     fetchBackgroundImage();
-
-    if (!location.state) {
-      toast.error('Dados da refeição não encontrados');
-      navigate('/');
-      return;
-    }
-
-    const { mealType, mealName, voucherCode } = location.state;
-    
-    if (!mealType || !mealName || !voucherCode) {
-      toast.error('Dados incompletos para confirmação');
-      navigate('/');
-    }
-  }, [location.state, navigate]);
+  }, [navigate]);
 
   const handleConfirm = async () => {
-    if (isLoading || !location.state) return;
-    
-    setIsLoading(true);
     try {
-      const { mealType, voucherCode } = location.state;
+      setIsConfirming(true);
+      const currentMealType = localStorage.getItem('currentMealType');
       
-      if (!mealType || !voucherCode) {
-        throw new Error('Dados incompletos para validação');
-      }
-      
-      logger.info('Iniciando confirmação com dados:', {
-        mealType,
-        mealName: location.state.mealName,
-        voucherCode
-      });
-
-      // Validate and use voucher using RPC function
-      const { data, error } = await supabase.rpc('validate_and_use_voucher', {
-        p_codigo: voucherCode,
-        p_tipo_refeicao_id: mealType
-      });
-
-      if (error) {
-        logger.error('Erro na validação:', error);
-        
-        if (error.message?.includes('Fora do horário') || 
-            error.message?.includes('horário não permitido')) {
-          throw new Error('Fora do Horário de Turno');
-        }
-        
-        throw error;
+      if (!currentMealType) {
+        toast.error('Tipo de refeição não encontrado');
+        return;
       }
 
-      if (!data?.success) {
-        throw new Error(data?.error || 'Erro ao validar voucher');
+      const mealTypeData = JSON.parse(currentMealType);
+      
+      const { data: validationResult, error: validationError } = await supabase
+        .rpc('validate_meal_time', {
+          p_tipo_refeicao_id: mealTypeData.id,
+          p_usuario_id: userData.userId
+        });
+
+      if (validationError) {
+        throw validationError;
       }
 
-      localStorage.removeItem('commonVoucher');
-      
-      navigate('/bom-apetite', { 
-        state: { 
-          userName: location.state.userName,
-          turno: location.state.userTurno
-        } 
-      });
+      if (!validationResult?.success) {
+        toast.error(validationResult?.message || 'Erro na validação do horário');
+        return;
+      }
 
+      navigate('/self-services');
     } catch (error) {
-      logger.error('Erro na validação:', error);
-      
-      if (error.message?.includes('Fora do horário') || 
-          error.message === 'Fora do Horário de Turno') {
-        toast.error('Fora do Horário de Turno');
-      } else {
-        toast.error(error.message || 'Erro ao validar voucher');
-      }
+      logger.error('Erro na confirmação:', error);
+      toast.error(error.message || 'Erro ao confirmar usuário');
     } finally {
-      setIsLoading(false);
+      setIsConfirming(false);
     }
   };
 
   const handleCancel = () => {
     localStorage.removeItem('commonVoucher');
+    localStorage.removeItem('currentMealType');
     navigate('/');
   };
 
-  if (!location.state) {
-    return null;
-  }
+  if (!userData) return null;
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
+      className="min-h-screen bg-blue-600 flex flex-col items-center justify-center p-4"
       style={{
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'linear-gradient(to bottom, #ff6b6b, #ee5253)',
-        backgroundColor: '#ff6b6b'
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
       }}
     >
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full space-y-6">
-        <ConfirmationHeader />
+        <h2 className="text-2xl font-bold text-center text-blue-600">
+          Confirmar Usuário
+        </h2>
         
-        <UserDataDisplay 
-          userName={location.state?.userName}
-          mealName={location.state?.mealName}
-        />
-
-        <div className="flex items-center gap-2 text-gray-600">
-          <span className="text-blue-600">ℹ</span>
-          <p className="text-sm">
-            Ao confirmar, seu voucher será validado e você será redirecionado para a próxima etapa.
-          </p>
+        <div className="space-y-4">
+          <div className="text-center">
+            <p className="text-lg font-semibold">{userData.userName}</p>
+            <p className="text-gray-600">CPF: {userData.cpf}</p>
+            <p className="text-gray-600">Turno: {userData.turno || 'Não definido'}</p>
+          </div>
+          
+          <div className="flex space-x-4">
+            <Button
+              onClick={handleCancel}
+              className="flex-1 bg-red-500 hover:bg-red-600"
+              disabled={isConfirming}
+            >
+              Cancelar
+            </Button>
+            
+            <Button
+              onClick={handleConfirm}
+              className="flex-1"
+              disabled={isConfirming}
+            >
+              Confirmar
+            </Button>
+          </div>
         </div>
-
-        <ConfirmationActions 
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-          isLoading={isLoading}
-        />
       </div>
     </div>
   );

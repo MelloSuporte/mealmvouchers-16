@@ -1,6 +1,29 @@
 import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 
+export const validateMealTimeAndInterval = async (tipoRefeicaoId, usuarioId) => {
+  try {
+    const { data, error } = await supabase
+      .rpc('validate_meal_time', {
+        p_tipo_refeicao_id: tipoRefeicaoId,
+        p_usuario_id: usuarioId
+      });
+
+    if (error) {
+      logger.error('Erro ao validar horário e intervalo:', error);
+      throw error;
+    }
+
+    return data || { success: true };
+  } catch (error) {
+    logger.error('Erro ao validar horário e intervalo:', error);
+    return { 
+      success: false, 
+      error: error.message || 'Erro ao validar horário e intervalo da refeição'
+    };
+  }
+};
+
 export const validateDisposableVoucher = async (codigo, tipoRefeicaoId) => {
   try {
     if (!codigo || !tipoRefeicaoId) {
@@ -109,28 +132,5 @@ export const identifyVoucherType = async (codigo) => {
   } catch (error) {
     logger.error('Erro ao identificar tipo de voucher:', error);
     return null;
-  }
-};
-
-export const validateMealTimeAndInterval = async (userId, mealTypeId) => {
-  try {
-    const { data, error } = await supabase
-      .rpc('validate_meal_time_and_interval', {
-        p_usuario_id: userId,
-        p_tipo_refeicao_id: mealTypeId
-      });
-
-    if (error) {
-      logger.error('Erro ao validar horário e intervalo:', error);
-      throw error;
-    }
-
-    return data || { success: true };
-  } catch (error) {
-    logger.error('Erro ao validar horário e intervalo:', error);
-    return { 
-      success: false, 
-      error: error.message || 'Erro ao validar horário e intervalo da refeição'
-    };
   }
 };
