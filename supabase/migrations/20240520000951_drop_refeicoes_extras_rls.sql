@@ -1,14 +1,14 @@
 -- Drop existing policies
-DROP POLICY IF EXISTS "refeicoes_extras_insert_policy" ON refeicoes_extras;
-DROP POLICY IF EXISTS "refeicoes_extras_select_policy" ON refeicoes_extras;
-DROP POLICY IF EXISTS "refeicoes_extras_update_policy" ON refeicoes_extras;
+DROP POLICY IF EXISTS "vouchers_extras_select_policy" ON vouchers_extras;
+DROP POLICY IF EXISTS "vouchers_extras_insert_policy" ON vouchers_extras;
+DROP POLICY IF EXISTS "vouchers_extras_update_policy" ON vouchers_extras;
 
 -- Disable RLS
-ALTER TABLE refeicoes_extras DISABLE ROW LEVEL SECURITY;
+ALTER TABLE vouchers_extras DISABLE ROW LEVEL SECURITY;
 
 -- Grant necessary permissions
-GRANT ALL ON refeicoes_extras TO authenticated;
-GRANT ALL ON refeicoes_extras TO anon;
+GRANT ALL ON vouchers_extras TO authenticated;
+GRANT ALL ON vouchers_extras TO anon;
 
 -- Add helpful comment
-COMMENT ON TABLE refeicoes_extras IS 'Tabela de refeições extras sem RLS para permitir registros de refeições extras';
+COMMENT ON TABLE vouchers_extras IS 'Tabela de vouchers extras sem RLS para permitir registros de vouchers extras';
