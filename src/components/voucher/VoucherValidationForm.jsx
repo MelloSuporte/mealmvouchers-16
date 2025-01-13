@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
 import { supabase } from '../../config/supabase';
-import { validateVoucher } from '../../services/voucherValidationService';
+import { validateVoucher } from './VoucherValidation';
 import logger from '../../config/logger';
 
 const VoucherValidationForm = () => {
