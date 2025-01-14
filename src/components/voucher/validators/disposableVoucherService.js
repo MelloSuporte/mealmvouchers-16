@@ -40,16 +40,18 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     }
 
     // Mark voucher as used with correct timezone
-    const timestamp = formatInTimeZone(new Date(), 'America/Sao_Paulo', "yyyy-MM-dd'T'HH:mm:ssXXX");
+    const now = new Date();
+    const timestamp = formatInTimeZone(now, 'America/Sao_Paulo', "yyyy-MM-dd'T'HH:mm:ssXXX");
 
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({ 
-        usado_em: timestamp,
-        data_uso: timestamp 
+        usado: true,
+        data_uso: timestamp,
+        usado_em: timestamp
       })
       .eq('id', voucherDescartavel.id)
-      .is('usado_em', null);
+      .is('usado', false);
 
     if (updateError) {
       logger.error('Erro ao marcar voucher como usado:', updateError);
