@@ -40,11 +40,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     }
 
     // Mark voucher as used with correct timezone
-    const timestamp = formatInTimeZone(
-      new Date(),
-      'America/Sao_Paulo',
-      "yyyy-MM-dd'T'HH:mm:ssXXX"
-    );
+    const timestamp = formatInTimeZone(new Date(), 'America/Sao_Paulo', "yyyy-MM-dd'T'HH:mm:ssXXX");
 
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
