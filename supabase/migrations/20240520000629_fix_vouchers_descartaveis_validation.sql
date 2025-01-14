@@ -10,11 +10,7 @@ ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
 DO $$ 
 BEGIN
     ALTER TABLE vouchers_descartaveis 
-    ALTER COLUMN usado_em TYPE TIMESTAMP WITH TIME ZONE USING 
-    CASE 
-        WHEN usado_em::text::boolean THEN CURRENT_TIMESTAMP 
-        ELSE NULL 
-    END;
+    ALTER COLUMN usado_em TYPE TIMESTAMP WITH TIME ZONE;
 EXCEPTION
     WHEN others THEN
         NULL;
