@@ -38,26 +38,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Register usage in uso_voucher table first
-    const { error: usageError } = await supabase
-      .from('uso_voucher')
-      .insert({
-        voucher_descartavel_id: voucherDescartavel.id,
-        tipo_refeicao_id: tipoRefeicaoId,
-        tipo_voucher: 'descartavel',
-        usado_em: new Date().toISOString()
-      });
-
-    if (usageError) {
-      logger.error('Erro ao registrar uso do voucher:', usageError);
-      return {
-        success: false,
-        error: 'Erro ao registrar uso do voucher',
-        voucherType: 'descartavel'
-      };
-    }
-
-    // Then mark voucher as used
+    // Mark voucher as used first
     const timestamp = new Date().toISOString();
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
@@ -65,13 +46,42 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
         usado_em: timestamp,
         data_uso: timestamp 
       })
-      .eq('id', voucherDescartavel.id);
+      .eq('id', voucherDescartavel.id)
+      .eq('usado_em', null);
 
     if (updateError) {
       logger.error('Erro ao marcar voucher como usado:', updateError);
       return {
         success: false,
         error: 'Erro ao marcar voucher como usado',
+        voucherType: 'descartavel'
+      };
+    }
+
+    // Then register usage
+    const { error: usageError } = await supabase
+      .from('uso_voucher')
+      .insert({
+        voucher_descartavel_id: voucherDescartavel.id,
+        tipo_refeicao_id: tipoRefeicaoId,
+        tipo_voucher: 'descartavel',
+        usado_em: timestamp
+      });
+
+    if (usageError) {
+      logger.error('Erro ao registrar uso do voucher:', usageError);
+      // Rollback voucher status if usage registration fails
+      await supabase
+        .from('vouchers_descartaveis')
+        .update({ 
+          usado_em: null,
+          data_uso: null 
+        })
+        .eq('id', voucherDescartavel.id);
+        
+      return {
+        success: false,
+        error: 'Erro ao registrar uso do voucher',
         voucherType: 'descartavel'
       };
     }
