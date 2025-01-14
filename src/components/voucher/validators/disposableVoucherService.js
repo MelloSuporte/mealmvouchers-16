@@ -38,27 +38,8 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Mark voucher as used
+    // Register usage first
     const timestamp = new Date().toISOString();
-    const { error: updateError } = await supabase
-      .from('vouchers_descartaveis')
-      .update({ 
-        usado_em: timestamp,
-        data_uso: timestamp 
-      })
-      .eq('id', voucherDescartavel.id)
-      .is('usado_em', null);
-
-    if (updateError) {
-      logger.error('Erro ao marcar voucher como usado:', updateError);
-      return {
-        success: false,
-        error: 'Erro ao marcar voucher como usado',
-        voucherType: 'descartavel'
-      };
-    }
-
-    // Register usage
     const { error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
@@ -70,18 +51,35 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
 
     if (usageError) {
       logger.error('Erro ao registrar uso do voucher:', usageError);
-      // Rollback voucher status if usage registration fails
-      await supabase
-        .from('vouchers_descartaveis')
-        .update({ 
-          usado_em: null,
-          data_uso: null 
-        })
-        .eq('id', voucherDescartavel.id);
-        
       return {
         success: false,
         error: 'Erro ao registrar uso do voucher',
+        voucherType: 'descartavel'
+      };
+    }
+
+    // Then mark voucher as used
+    const { error: updateError } = await supabase
+      .from('vouchers_descartaveis')
+      .update({ 
+        usado_em: timestamp,
+        data_uso: timestamp 
+      })
+      .eq('id', voucherDescartavel.id)
+      .is('usado_em', null);
+
+    if (updateError) {
+      logger.error('Erro ao marcar voucher como usado:', updateError);
+      // Rollback usage registration if update fails
+      await supabase
+        .from('uso_voucher')
+        .delete()
+        .eq('voucher_descartavel_id', voucherDescartavel.id)
+        .eq('usado_em', timestamp);
+        
+      return {
+        success: false,
+        error: 'Erro ao marcar voucher como usado',
         voucherType: 'descartavel'
       };
     }
