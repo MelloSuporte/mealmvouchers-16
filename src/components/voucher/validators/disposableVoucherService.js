@@ -60,12 +60,31 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     const now = new Date();
     const timestamp = formatInTimeZone(now, 'America/Sao_Paulo', "yyyy-MM-dd'T'HH:mm:ssXXX");
 
+    // Register usage in uso_voucher table first
+    const { error: usageError } = await supabase
+      .from('uso_voucher')
+      .insert({
+        voucher_descartavel_id: voucherDescartavel.id,
+        tipo_refeicao_id: tipoRefeicaoId,
+        tipo_voucher: 'descartavel',
+        usado_em: timestamp
+      });
+
+    if (usageError) {
+      logger.error('Erro ao registrar uso do voucher:', usageError);
+      return {
+        success: false,
+        error: 'Erro ao registrar uso do voucher',
+        voucherType: 'descartavel'
+      };
+    }
+
     // Atualizar o voucher
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({
-        data_uso: timestamp,
-        usado_em: timestamp
+        usado_em: timestamp,
+        data_uso: timestamp
       })
       .eq('id', voucherDescartavel.id)
       .is('usado_em', null);
