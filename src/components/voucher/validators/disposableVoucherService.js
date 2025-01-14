@@ -39,32 +39,13 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Register usage first with correct timezone
+    // Mark voucher as used with correct timezone
     const timestamp = formatInTimeZone(
       new Date(),
       'America/Sao_Paulo',
       "yyyy-MM-dd'T'HH:mm:ssXXX"
     );
 
-    const { error: usageError } = await supabase
-      .from('uso_voucher')
-      .insert({
-        voucher_descartavel_id: voucherDescartavel.id,
-        tipo_refeicao_id: tipoRefeicaoId,
-        tipo_voucher: 'descartavel',
-        usado_em: timestamp
-      });
-
-    if (usageError) {
-      logger.error('Erro ao registrar uso do voucher:', usageError);
-      return {
-        success: false,
-        error: 'Erro ao registrar uso do voucher',
-        voucherType: 'descartavel'
-      };
-    }
-
-    // Then mark voucher as used
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({ 
@@ -76,13 +57,6 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
 
     if (updateError) {
       logger.error('Erro ao marcar voucher como usado:', updateError);
-      // Rollback usage registration if update fails
-      await supabase
-        .from('uso_voucher')
-        .delete()
-        .eq('voucher_descartavel_id', voucherDescartavel.id)
-        .eq('usado_em', timestamp);
-        
       return {
         success: false,
         error: 'Erro ao marcar voucher como usado',
