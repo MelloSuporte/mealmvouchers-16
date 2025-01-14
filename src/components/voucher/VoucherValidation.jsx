@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { supabase } from '../../config/supabase';
 import logger from '../../config/logger';
 import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
@@ -73,45 +73,19 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       // Validar tipo de refeição
       const typeValidation = validateDisposableVoucherType(voucherDescartavel, tipoRefeicaoId);
       if (!typeValidation.success) {
-        logger.error('Erro na validação do tipo de refeição:', typeValidation.error);
-        toast.error(typeValidation.error);
+        const errorMsg = typeValidation.error || 'Erro na validação do tipo de refeição';
+        logger.error('Erro na validação do tipo de refeição:', errorMsg);
+        toast.error(errorMsg);
         return typeValidation;
       }
 
       // Validar horário
-      const timeValidation = validateDisposableVoucherTime(voucherDescartavel);
+      const timeValidation = await validateDisposableVoucherTime(voucherDescartavel);
       if (!timeValidation.success) {
-        logger.error('Erro na validação do horário:', timeValidation.error);
-        toast.error(timeValidation.error);
+        const errorMsg = timeValidation.error || 'Erro na validação do horário';
+        logger.error('Erro na validação do horário:', errorMsg);
+        toast.error(errorMsg);
         return timeValidation;
-      }
-
-      // Validar voucher descartável usando RPC
-      const { data: validationResult, error: validationError } = await supabase
-        .rpc('validate_disposable_voucher', {
-          p_codigo: voucherCode,
-          p_tipo_refeicao_id: tipoRefeicaoId
-        });
-
-      if (validationError) {
-        logger.error('Erro na validação do voucher descartável:', validationError);
-        toast.error('Erro na validação do voucher descartável: ' + validationError.message);
-        return { 
-          success: false, 
-          error: validationError.message,
-          voucherType: 'descartavel'
-        };
-      }
-
-      if (!validationResult.success) {
-        const errorMessage = validationResult.error || 'Erro na validação do voucher';
-        logger.error('Falha na validação:', errorMessage);
-        toast.error(errorMessage);
-        return {
-          success: false,
-          error: errorMessage,
-          voucherType: 'descartavel'
-        };
       }
 
       // Marcar voucher como usado
@@ -125,27 +99,50 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
         .is('usado_em', null);
 
       if (updateError) {
-        logger.error('Erro ao marcar voucher como usado:', updateError);
-        toast.error('Erro ao marcar voucher como usado');
+        const errorMsg = 'Erro ao marcar voucher como usado';
+        logger.error(errorMsg, updateError);
+        toast.error(errorMsg);
         return {
           success: false,
-          error: 'Erro ao marcar voucher como usado',
+          error: errorMsg,
           voucherType: 'descartavel'
         };
       }
 
-      logger.info('Voucher descartável validado com sucesso:', voucherCode);
-      toast.success('Voucher descartável validado com sucesso');
+      // Registrar uso do voucher
+      const { error: usageError } = await supabase
+        .from('uso_voucher')
+        .insert({
+          voucher_descartavel_id: voucherDescartavel.id,
+          tipo_refeicao_id: tipoRefeicaoId,
+          usado_em: new Date().toISOString()
+        });
+
+      if (usageError) {
+        const errorMsg = 'Erro ao registrar uso do voucher';
+        logger.error(errorMsg, usageError);
+        toast.error(errorMsg);
+        return {
+          success: false,
+          error: errorMsg,
+          voucherType: 'descartavel'
+        };
+      }
+
+      const successMsg = 'Voucher descartável validado com sucesso';
+      logger.info(successMsg, voucherCode);
+      toast.success(successMsg);
       return {
         success: true,
         voucherType: 'descartavel',
-        message: validationResult.message || 'Voucher descartável validado com sucesso'
+        message: successMsg
       };
     }
 
+    const notFoundMsg = 'Voucher inválido ou não encontrado';
     logger.info('Tipo de voucher não identificado');
-    toast.error('Voucher inválido ou não encontrado');
-    return { success: false, error: 'Voucher inválido ou não encontrado' };
+    toast.error(notFoundMsg);
+    return { success: false, error: notFoundMsg };
 
   } catch (error) {
     logger.error('Erro na validação do voucher:', error);
@@ -155,11 +152,11 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       detalhes: error,
       nivel: 'error'
     });
-    const errorMessage = error.message || 'Erro ao validar voucher';
-    toast.error(errorMessage);
+    const errorMsg = error.message || 'Erro ao validar voucher';
+    toast.error(errorMsg);
     return { 
       success: false, 
-      error: errorMessage
+      error: errorMsg
     };
   }
 };
