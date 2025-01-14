@@ -64,10 +64,10 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     const { error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
-        voucher_descartavel_id: voucherDescartavel.id,
         tipo_refeicao_id: tipoRefeicaoId,
         tipo_voucher: 'descartavel',
-        usado_em: timestamp
+        usado_em: timestamp,
+        voucher_extra_id: voucherDescartavel.id
       });
 
     if (usageError) {
@@ -92,7 +92,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       await supabase
         .from('uso_voucher')
         .delete()
-        .eq('voucher_descartavel_id', voucherDescartavel.id)
+        .eq('voucher_extra_id', voucherDescartavel.id)
         .eq('usado_em', timestamp);
 
       return {
