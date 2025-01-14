@@ -22,26 +22,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Register usage in uso_voucher table first
-    const { error: usageError } = await supabase
-      .from('uso_voucher')
-      .insert({
-        voucher_descartavel_id: voucherDescartavel.id,
-        tipo_refeicao_id: tipoRefeicaoId,
-        tipo_voucher: 'descartavel',
-        usado_em: new Date().toISOString()
-      });
-
-    if (usageError) {
-      logger.error('Erro ao registrar uso do voucher:', usageError);
-      return {
-        success: false,
-        error: 'Erro ao registrar uso do voucher',
-        voucherType: 'descartavel'
-      };
-    }
-
-    // Then mark voucher as used
+    // Mark voucher as used directly in vouchers_descartaveis table
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({ 
