@@ -1,90 +1,83 @@
 import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
 
-export const findDisposableVoucher = async (codigo) => {
+export const findDisposableVoucher = async (code) => {
   try {
-    logger.info('Buscando voucher descartável:', codigo);
+    logger.info('Buscando voucher descartável:', code);
     
     const { data, error } = await supabase
       .from('vouchers_descartaveis')
-      .select(`
-        id,
-        codigo,
-        tipo_refeicao_id,
-        data_expiracao,
-        usado_em,
-        tipos_refeicao (
-          id,
-          nome,
-          ativo,
-          valor,
-          horario_inicio,
-          horario_fim,
-          minutos_tolerancia
-        )
-      `)
-      .eq('codigo', codigo)
+      .select('*')
+      .eq('codigo', code)
       .is('usado_em', null)
-      .gte('data_expiracao', new Date().toISOString().split('T')[0])
-      .maybeSingle();
+      .single();
 
     if (error) {
-      logger.error('Erro na consulta do voucher descartável:', error);
+      logger.error('Erro ao buscar voucher descartável:', error);
       throw error;
     }
 
     if (!data) {
-      logger.info('Voucher descartável não encontrado ou expirado:', codigo);
-    } else {
-      logger.info('Voucher descartável encontrado:', data);
+      logger.info('Voucher descartável não encontrado ou expirado:', code);
+      return { data: null };
     }
 
-    return { data, error: null };
+    return { data };
   } catch (error) {
     logger.error('Erro ao buscar voucher descartável:', error);
-    return { data: null, error };
+    throw error;
   }
 };
 
-export const validateDisposableVoucherType = (voucherDescartavel, tipoRefeicaoId) => {
-  if (voucherDescartavel.tipo_refeicao_id !== tipoRefeicaoId) {
-    logger.error('Tipo de refeição não corresponde:', {
-      voucher: voucherDescartavel.tipo_refeicao_id,
-      requested: tipoRefeicaoId
-    });
+export const validateDisposableVoucherType = (voucher, tipoRefeicaoId) => {
+  if (voucher.tipo_refeicao_id !== tipoRefeicaoId) {
     return {
       success: false,
-      error: 'Este voucher não é válido para este tipo de refeição',
+      error: 'Tipo de refeição não corresponde ao voucher descartável',
       voucherType: 'descartavel'
     };
   }
   return { success: true };
 };
 
-export const validateDisposableVoucherTime = (voucherDescartavel) => {
-  const tipoRefeicao = voucherDescartavel.tipos_refeicao;
-  if (!tipoRefeicao.ativo) {
-    return {
-      success: false,
-      error: 'Tipo de refeição inativo',
-      voucherType: 'descartavel'
-    };
+export const validateDisposableVoucherTime = async (voucher) => {
+  try {
+    const { data: tipoRefeicao } = await supabase
+      .from('tipos_refeicao')
+      .select('*')
+      .eq('id', voucher.tipo_refeicao_id)
+      .single();
+
+    if (!tipoRefeicao) {
+      return {
+        success: false,
+        error: 'Tipo de refeição não encontrado',
+        voucherType: 'descartavel'
+      };
+    }
+
+    const currentTime = new Date();
+    const startTime = new Date();
+    const endTime = new Date();
+    
+    const [startHour, startMinute] = tipoRefeicao.horario_inicio.split(':');
+    const [endHour, endMinute] = tipoRefeicao.horario_fim.split(':');
+    
+    startTime.setHours(parseInt(startHour), parseInt(startMinute), 0);
+    endTime.setHours(parseInt(endHour), parseInt(endMinute), 0);
+    endTime.setMinutes(endTime.getMinutes() + tipoRefeicao.minutos_tolerancia);
+
+    if (currentTime < startTime || currentTime > endTime) {
+      return {
+        success: false,
+        error: `Esta refeição só pode ser utilizada entre ${tipoRefeicao.horario_inicio} e ${tipoRefeicao.horario_fim}`,
+        voucherType: 'descartavel'
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    logger.error('Erro ao validar horário do voucher descartável:', error);
+    throw error;
   }
-
-  const now = new Date();
-  const currentTime = now.toTimeString().slice(0, 5);
-  const startTime = tipoRefeicao.horario_inicio;
-  const endTime = new Date(`2000-01-01T${tipoRefeicao.horario_fim}`);
-  endTime.setMinutes(endTime.getMinutes() + (tipoRefeicao.minutos_tolerancia || 0));
-  const endTimeStr = endTime.toTimeString().slice(0, 5);
-
-  if (currentTime < startTime || currentTime > endTimeStr) {
-    return {
-      success: false,
-      error: `Esta refeição só pode ser utilizada entre ${startTime} e ${tipoRefeicao.horario_fim} (tolerância de ${tipoRefeicao.minutos_tolerancia} minutos)`,
-      voucherType: 'descartavel'
-    };
-  }
-
-  return { success: true };
 };

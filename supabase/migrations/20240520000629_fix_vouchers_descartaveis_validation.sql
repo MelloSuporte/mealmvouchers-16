@@ -1,78 +1,78 @@
--- Drop existing policies and function
-DROP POLICY IF EXISTS "vouchers_descartaveis_select_policy" ON vouchers_descartaveis;
-DROP POLICY IF EXISTS "vouchers_descartaveis_update_policy" ON vouchers_descartaveis;
-DROP FUNCTION IF EXISTS validate_disposable_voucher;
+-- Drop existing function if it exists
+DROP FUNCTION IF EXISTS validate_disposable_voucher CASCADE;
 
--- Enable RLS
-ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
-
--- Ensure usado_em is timestamp with time zone
+-- First fix the column type
 DO $$ 
 BEGIN
+    -- First create a temporary column
     ALTER TABLE vouchers_descartaveis 
-    ALTER COLUMN usado_em TYPE TIMESTAMP WITH TIME ZONE;
+    ADD COLUMN usado_em_temp TIMESTAMP WITH TIME ZONE;
+
+    -- Update the temporary column
+    UPDATE vouchers_descartaveis 
+    SET usado_em_temp = CASE 
+        WHEN usado_em = true THEN CURRENT_TIMESTAMP 
+        ELSE NULL 
+    END;
+
+    -- Drop the old column
+    ALTER TABLE vouchers_descartaveis 
+    DROP COLUMN usado_em;
+
+    -- Rename the temporary column
+    ALTER TABLE vouchers_descartaveis 
+    RENAME COLUMN usado_em_temp TO usado_em;
 EXCEPTION
     WHEN others THEN
-        NULL;
+        -- Log the error but continue
+        RAISE NOTICE 'Error during column migration: %', SQLERRM;
 END $$;
 
--- Create select policy with proper validation
-CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
-    FOR SELECT TO authenticated, anon
-    USING (
-        -- Voucher não usado e dentro da validade
-        usado_em IS NULL 
-        AND data_uso IS NULL
-        AND CURRENT_DATE <= data_expiracao::date
-        AND codigo IS NOT NULL
-    );
-
--- Create update policy with proper validation
-CREATE POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis
-    FOR UPDATE TO authenticated, anon
-    USING (
-        -- Voucher não usado e dentro da validade
-        usado_em IS NULL 
-        AND data_uso IS NULL
-        AND CURRENT_DATE <= data_expiracao::date
-    )
-    WITH CHECK (
-        -- Garantir que o voucher está sendo marcado como usado
-        usado_em IS NOT NULL
-        AND data_uso IS NOT NULL
-    );
-
--- Create function to validate voucher with better error handling
+-- Create or replace the validation function
 CREATE OR REPLACE FUNCTION validate_disposable_voucher(
-    p_codigo VARCHAR(4),
+    p_codigo VARCHAR,
     p_tipo_refeicao_id UUID
-)
-RETURNS JSONB
+) RETURNS JSONB
+LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-LANGUAGE plpgsql
 AS $$
 DECLARE
     v_voucher RECORD;
     v_tipo_refeicao RECORD;
 BEGIN
-    -- Buscar tipo de refeição primeiro
+    -- Get voucher details
     SELECT *
-    INTO v_tipo_refeicao
-    FROM tipos_refeicao
-    WHERE id = p_tipo_refeicao_id
-    AND ativo = true;
+    INTO v_voucher
+    FROM vouchers_descartaveis
+    WHERE codigo = p_codigo
+    AND tipo_refeicao_id = p_tipo_refeicao_id
+    FOR UPDATE;
 
     IF NOT FOUND THEN
         RETURN jsonb_build_object(
             'success', false,
-            'error', 'Tipo de refeição inválido ou inativo'
+            'error', 'Voucher descartável não encontrado'
         );
     END IF;
 
-    -- Verificar horário da refeição
+    -- Check if already used
+    IF v_voucher.usado_em IS NOT NULL THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Voucher descartável já foi utilizado'
+        );
+    END IF;
+
+    -- Get meal type details
+    SELECT *
+    INTO v_tipo_refeicao
+    FROM tipos_refeicao
+    WHERE id = p_tipo_refeicao_id;
+
+    -- Validate time
     IF NOT (CURRENT_TIME BETWEEN v_tipo_refeicao.horario_inicio 
-        AND (v_tipo_refeicao.horario_fim + (v_tipo_refeicao.minutos_tolerancia || ' minutes')::INTERVAL)) THEN
+        AND v_tipo_refeicao.horario_fim + (v_tipo_refeicao.minutos_tolerancia || ' minutes')::INTERVAL) THEN
         RETURN jsonb_build_object(
             'success', false,
             'error', format('Esta refeição só pode ser utilizada entre %s e %s',
@@ -82,62 +82,18 @@ BEGIN
         );
     END IF;
 
-    -- Buscar voucher válido com lock
-    SELECT *
-    INTO v_voucher
-    FROM vouchers_descartaveis
-    WHERE codigo = p_codigo
-    AND tipo_refeicao_id = p_tipo_refeicao_id
-    AND usado_em IS NULL
-    AND data_uso IS NULL
-    AND CURRENT_DATE <= data_expiracao::date
-    FOR UPDATE SKIP LOCKED;
-
-    IF NOT FOUND THEN
-        RETURN jsonb_build_object(
-            'success', false,
-            'error', 'Voucher não encontrado ou já utilizado'
-        );
-    END IF;
-
-    -- Marcar voucher como usado
+    -- Mark as used
     UPDATE vouchers_descartaveis
-    SET 
-        usado_em = CURRENT_TIMESTAMP,
-        data_uso = CURRENT_TIMESTAMP
-    WHERE id = v_voucher.id
-    AND usado_em IS NULL
-    AND data_uso IS NULL;
-
-    IF NOT FOUND THEN
-        RETURN jsonb_build_object(
-            'success', false,
-            'error', 'Voucher já foi utilizado'
-        );
-    END IF;
+    SET usado_em = CURRENT_TIMESTAMP
+    WHERE codigo = p_codigo;
 
     RETURN jsonb_build_object(
         'success', true,
-        'message', 'Voucher validado com sucesso',
-        'tipo_refeicao', jsonb_build_object(
-            'id', v_tipo_refeicao.id,
-            'nome', v_tipo_refeicao.nome
-        )
+        'message', 'Voucher descartável validado com sucesso'
     );
 END;
 $$;
 
 -- Grant necessary permissions
-GRANT SELECT, UPDATE ON vouchers_descartaveis TO anon;
-GRANT SELECT ON tipos_refeicao TO anon;
-GRANT EXECUTE ON FUNCTION validate_disposable_voucher TO anon;
-
--- Add helpful comments
-COMMENT ON POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis IS 
-'Permite visualizar apenas vouchers válidos, não utilizados e dentro do horário permitido';
-
-COMMENT ON POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis IS 
-'Permite apenas marcar vouchers como usados quando dentro do horário permitido';
-
-COMMENT ON FUNCTION validate_disposable_voucher IS 
-'Valida e marca como usado um voucher descartável';
+GRANT EXECUTE ON FUNCTION validate_disposable_voucher(VARCHAR, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION validate_disposable_voucher(VARCHAR, UUID) TO anon;
