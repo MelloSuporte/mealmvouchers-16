@@ -10,14 +10,17 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     });
 
     // Validate meal type
-    if (voucherDescartavel.tipo_refeicao_id !== tipoRefeicaoId) {
-      logger.error('Tipo de refeição não corresponde:', {
-        voucherTipo: voucherDescartavel.tipo_refeicao_id,
-        solicitadoTipo: tipoRefeicaoId
-      });
+    const { data: mealType, error: mealTypeError } = await supabase
+      .from('tipos_refeicao')
+      .select('*')
+      .eq('id', tipoRefeicaoId)
+      .single();
+
+    if (mealTypeError || !mealType) {
+      logger.error('Erro ao validar tipo de refeição:', mealTypeError);
       return {
         success: false,
-        error: 'Tipo de refeição não corresponde ao voucher descartável',
+        error: 'Tipo de refeição inválido',
         voucherType: 'descartavel'
       };
     }
@@ -25,7 +28,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     // Mark voucher as used directly in vouchers_descartaveis table
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
-      .update({ 
+      .update({
         usado_em: new Date().toISOString(),
         data_uso: new Date().toISOString()
       })
@@ -41,11 +44,16 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    logger.info('Voucher descartável validado e registrado com sucesso');
+    logger.info('Voucher marcado como usado com sucesso:', {
+      id: voucherDescartavel.id,
+      codigo: voucherDescartavel.codigo,
+      usado_em: new Date().toISOString()
+    });
+
     return {
       success: true,
       voucherType: 'descartavel',
-      message: 'Voucher descartável validado com sucesso'
+      message: 'Voucher validado com sucesso'
     };
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
