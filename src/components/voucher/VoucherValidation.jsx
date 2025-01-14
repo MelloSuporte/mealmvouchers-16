@@ -58,6 +58,7 @@ const findDisposableVoucher = async (codigo) => {
       `)
       .eq('codigo', codigo)
       .is('usado_em', null)
+      .is('data_uso', null)
       .gte('data_expiracao', new Date().toISOString().split('T')[0])
       .maybeSingle();
 
@@ -136,6 +137,19 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
     if (voucherDescartavel) {
       logger.info('Voucher identificado como descartável');
       
+      // Validar se o tipo de refeição corresponde
+      if (voucherDescartavel.tipo_refeicao_id !== tipoRefeicaoId) {
+        logger.error('Tipo de refeição não corresponde:', {
+          voucher: voucherDescartavel.tipo_refeicao_id,
+          requested: tipoRefeicaoId
+        });
+        return {
+          success: false,
+          error: 'Este voucher não é válido para este tipo de refeição',
+          voucherType: 'descartavel'
+        };
+      }
+
       // Validar voucher descartável usando RPC
       const { data: validationResult, error: validationError } = await supabase
         .rpc('validate_disposable_voucher', {
