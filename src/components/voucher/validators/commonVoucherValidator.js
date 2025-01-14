@@ -1,36 +1,33 @@
 import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
 
-export const validateCommonVoucher = async (codigo) => {
+export const findCommonVoucher = async (codigo) => {
   try {
-    logger.info('Validando voucher comum:', codigo);
-    
-    const { data: usuario, error } = await supabase
+    const { data, error } = await supabase
       .from('usuarios')
-      .select('*, empresas(*), turnos(*)')
-      .eq('voucher', String(codigo))
-      .single();
+      .select(`
+        id,
+        nome,
+        cpf,
+        turno_id,
+        empresa_id,
+        empresas (
+          nome,
+          ativo
+        ),
+        turnos (
+          tipo_turno,
+          horario_inicio,
+          horario_fim
+        )
+      `)
+      .eq('voucher', codigo)
+      .maybeSingle();
 
-    if (error || !usuario) {
-      logger.info('Voucher comum inválido');
-      return { success: false, error: 'Voucher comum inválido' };
-    }
-
-    logger.info('Voucher comum válido:', usuario);
-
-    // Verificar se o usuário está suspenso
-    if (usuario.suspenso) {
-      return { success: false, error: 'Usuário suspenso' };
-    }
-
-    // Verificar se a empresa está ativa
-    if (!usuario.empresas?.ativo) {
-      return { success: false, error: 'Empresa inativa' };
-    }
-
-    return { success: true, user: usuario };
+    if (error) throw error;
+    return { data, error: null };
   } catch (error) {
-    logger.error('Erro ao validar voucher comum:', error);
-    throw error;
+    logger.error('Erro ao buscar voucher comum:', error);
+    return { data: null, error };
   }
 };
