@@ -24,13 +24,13 @@ const VoucherTable = ({ vouchers = [] }) => {
         voucher.codigo,
         voucher.tipos_refeicao?.nome || '',
         format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-        voucher.data_uso ? format(new Date(voucher.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
+        voucher.nome_pessoa || '-',
         format(new Date(voucher.data_expiracao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-        voucher.usado_em || voucher.data_uso ? 'Sim' : 'Não'
+        voucher.nome_empresa || '-'
       ]);
 
       doc.autoTable({
-        head: [['Código', 'Tipo de Refeição', 'Data Criação', 'Data Uso', 'Data Expiração', 'Usado']],
+        head: [['Código', 'Tipo de Refeição', 'Data Criação', 'Nome', 'Data Expiração', 'Empresa']],
         body: tableData,
         startY: 25,
         theme: 'grid',
