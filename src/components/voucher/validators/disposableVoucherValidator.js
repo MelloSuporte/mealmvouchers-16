@@ -10,7 +10,7 @@ export const findDisposableVoucher = async (code) => {
       .select('*')
       .eq('codigo', code)
       .is('usado_em', null)
-      .single();
+      .maybeSingle(); // Changed from single() to maybeSingle()
 
     if (error) {
       logger.error('Erro ao buscar voucher descartável:', error);
@@ -18,7 +18,7 @@ export const findDisposableVoucher = async (code) => {
     }
 
     if (!data) {
-      logger.info('Voucher descartável não encontrado ou expirado:', code);
+      logger.info('Voucher descartável não encontrado ou já utilizado:', code);
       return { data: null };
     }
 
@@ -46,7 +46,7 @@ export const validateDisposableVoucherTime = async (voucher) => {
       .from('tipos_refeicao')
       .select('*')
       .eq('id', voucher.tipo_refeicao_id)
-      .single();
+      .maybeSingle(); // Changed from single() to maybeSingle()
 
     if (!tipoRefeicao) {
       return {
