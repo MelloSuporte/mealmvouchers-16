@@ -80,6 +80,49 @@ const findDisposableVoucher = async (codigo) => {
   }
 };
 
+const validateDisposableVoucherType = (voucherDescartavel, tipoRefeicaoId) => {
+  if (voucherDescartavel.tipo_refeicao_id !== tipoRefeicaoId) {
+    logger.error('Tipo de refeição não corresponde:', {
+      voucher: voucherDescartavel.tipo_refeicao_id,
+      requested: tipoRefeicaoId
+    });
+    return {
+      success: false,
+      error: 'Este voucher não é válido para este tipo de refeição',
+      voucherType: 'descartavel'
+    };
+  }
+  return { success: true };
+};
+
+const validateDisposableVoucherTime = (voucherDescartavel) => {
+  const tipoRefeicao = voucherDescartavel.tipos_refeicao;
+  if (!tipoRefeicao.ativo) {
+    return {
+      success: false,
+      error: 'Tipo de refeição inativo',
+      voucherType: 'descartavel'
+    };
+  }
+
+  const now = new Date();
+  const currentTime = now.toTimeString().slice(0, 5);
+  const startTime = tipoRefeicao.horario_inicio;
+  const endTime = new Date(`2000-01-01T${tipoRefeicao.horario_fim}`);
+  endTime.setMinutes(endTime.getMinutes() + (tipoRefeicao.minutos_tolerancia || 0));
+  const endTimeStr = endTime.toTimeString().slice(0, 5);
+
+  if (currentTime < startTime || currentTime > endTimeStr) {
+    return {
+      success: false,
+      error: `Esta refeição só pode ser utilizada entre ${startTime} e ${tipoRefeicao.horario_fim} (tolerância de ${tipoRefeicao.minutos_tolerancia} minutos)`,
+      voucherType: 'descartavel'
+    };
+  }
+
+  return { success: true };
+};
+
 export const validateVoucher = async (codigo, tipoRefeicaoId) => {
   try {
     await logSystemEvent({
@@ -137,17 +180,16 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
     if (voucherDescartavel) {
       logger.info('Voucher identificado como descartável');
       
-      // Validar se o tipo de refeição corresponde
-      if (voucherDescartavel.tipo_refeicao_id !== tipoRefeicaoId) {
-        logger.error('Tipo de refeição não corresponde:', {
-          voucher: voucherDescartavel.tipo_refeicao_id,
-          requested: tipoRefeicaoId
-        });
-        return {
-          success: false,
-          error: 'Este voucher não é válido para este tipo de refeição',
-          voucherType: 'descartavel'
-        };
+      // Validar tipo de refeição
+      const typeValidation = validateDisposableVoucherType(voucherDescartavel, tipoRefeicaoId);
+      if (!typeValidation.success) {
+        return typeValidation;
+      }
+
+      // Validar horário
+      const timeValidation = validateDisposableVoucherTime(voucherDescartavel);
+      if (!timeValidation.success) {
+        return timeValidation;
       }
 
       // Validar voucher descartável usando RPC
