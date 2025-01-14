@@ -69,24 +69,6 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
 
     if (voucherDescartavel) {
       logger.info('Voucher identificado como descartável');
-      
-      // Validar tipo de refeição
-      const typeValidation = validateDisposableVoucherType(voucherDescartavel, tipoRefeicaoId);
-      if (!typeValidation.success) {
-        const errorMsg = typeValidation.error || 'Erro na validação do tipo de refeição';
-        logger.error('Erro na validação do tipo de refeição:', errorMsg);
-        toast.error(errorMsg);
-        return typeValidation;
-      }
-
-      // Validar horário
-      const timeValidation = await validateDisposableVoucherTime(voucherDescartavel);
-      if (!timeValidation.success) {
-        const errorMsg = timeValidation.error || 'Erro na validação do horário';
-        logger.error('Erro na validação do horário:', errorMsg);
-        toast.error(errorMsg);
-        return timeValidation;
-      }
 
       // Primeiro registrar o uso na tabela uso_voucher
       const { error: usageError } = await supabase

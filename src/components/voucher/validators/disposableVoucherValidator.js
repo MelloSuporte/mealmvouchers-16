@@ -7,10 +7,13 @@ export const findDisposableVoucher = async (code) => {
     
     const { data, error } = await supabase
       .from('vouchers_descartaveis')
-      .select('*')
+      .select(`
+        *,
+        tipos_refeicao (*)
+      `)
       .eq('codigo', code)
       .is('usado_em', null)
-      .maybeSingle(); // Changed from single() to maybeSingle()
+      .maybeSingle();
 
     if (error) {
       logger.error('Erro ao buscar voucher descartável:', error);
@@ -46,7 +49,7 @@ export const validateDisposableVoucherTime = async (voucher) => {
       .from('tipos_refeicao')
       .select('*')
       .eq('id', voucher.tipo_refeicao_id)
-      .maybeSingle(); // Changed from single() to maybeSingle()
+      .maybeSingle();
 
     if (!tipoRefeicao) {
       return {
