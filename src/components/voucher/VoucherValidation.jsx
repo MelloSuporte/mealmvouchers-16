@@ -33,6 +33,29 @@ const findCommonVoucher = async (codigo) => {
   }
 };
 
+const findDisposableVoucher = async (codigo) => {
+  try {
+    const { data, error } = await supabase
+      .from('vouchers_descartaveis')
+      .select(`
+        id,
+        codigo,
+        tipo_refeicao_id,
+        data_expiracao,
+        usado_em,
+        data_uso
+      `)
+      .eq('codigo', codigo)
+      .maybeSingle();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    logger.error('Erro ao buscar voucher descartável:', error);
+    return { data: null, error };
+  }
+};
+
 export const validateVoucher = async (codigo, tipoRefeicaoId) => {
   try {
     await logSystemEvent({
@@ -81,6 +104,43 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
         voucherType: 'comum',
         user: usuario,
         message: validationResult.message || 'Voucher comum validado com sucesso'
+      };
+    }
+
+    // Se não for comum, tentar como descartável
+    const { data: voucherDescartavel, error: descartavelError } = await findDisposableVoucher(voucherCode);
+
+    if (voucherDescartavel) {
+      logger.info('Voucher identificado como descartável');
+      
+      // Validar voucher descartável usando RPC
+      const { data: validationResult, error: validationError } = await supabase
+        .rpc('validate_disposable_voucher', {
+          p_codigo: voucherCode,
+          p_tipo_refeicao_id: tipoRefeicaoId
+        });
+
+      if (validationError) {
+        logger.error('Erro na validação do voucher descartável:', validationError);
+        return { 
+          success: false, 
+          error: validationError.message,
+          voucherType: 'descartavel'
+        };
+      }
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: validationResult.error || 'Erro na validação do voucher',
+          voucherType: 'descartavel'
+        };
+      }
+
+      return {
+        success: true,
+        voucherType: 'descartavel',
+        message: validationResult.message || 'Voucher descartável validado com sucesso'
       };
     }
 
