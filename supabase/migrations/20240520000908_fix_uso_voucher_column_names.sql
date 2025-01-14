@@ -1,11 +1,11 @@
--- Drop existing policies
+-- Remove políticas existentes
 DROP POLICY IF EXISTS "uso_voucher_insert_policy" ON uso_voucher;
 DROP POLICY IF EXISTS "uso_voucher_select_policy" ON uso_voucher;
 
--- Enable RLS
+-- Habilita RLS
 ALTER TABLE uso_voucher ENABLE ROW LEVEL SECURITY;
 
--- Add voucher_descartavel_id column if it doesn't exist
+-- Adiciona coluna voucher_descartavel_id se não existir
 DO $$ 
 BEGIN
     IF NOT EXISTS (
@@ -18,18 +18,18 @@ BEGIN
     END IF;
 END $$;
 
--- Create unified insert policy with proper column references
+-- Cria política unificada de inserção com referências corretas de colunas
 CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
     FOR INSERT TO authenticated, anon
     WITH CHECK (
-        -- Allow system to register voucher usage
+        -- Permite que o sistema registre uso de voucher
         EXISTS (
             SELECT 1 FROM admin_users au
             WHERE au.id = auth.uid()
             AND au.permissoes->>'sistema' = 'true'
         )
         OR
-        -- Allow anonymous users to register disposable voucher usage
+        -- Permite que usuários anônimos registrem uso de voucher descartável
         EXISTS (
             SELECT 1 FROM vouchers_descartaveis vd
             WHERE vd.id = voucher_descartavel_id
@@ -45,14 +45,14 @@ CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
         )
     );
 
--- Create select policy
+-- Cria política de seleção
 CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
     FOR SELECT TO authenticated, anon
     USING (
-        -- Authenticated users can see their own records
+        -- Usuários autenticados podem ver seus próprios registros
         (auth.uid() IS NOT NULL AND usuario_id = auth.uid())
         OR
-        -- Admins can see all records
+        -- Administradores podem ver todos os registros
         (
             EXISTS (
                 SELECT 1 FROM admin_users au
@@ -62,22 +62,22 @@ CREATE POLICY "uso_voucher_select_policy" ON uso_voucher
             )
         )
         OR
-        -- Anonymous users can see disposable voucher usage
+        -- Usuários anônimos podem ver uso de voucher descartável
         (
             auth.uid() IS NULL 
             AND voucher_descartavel_id IS NOT NULL
         )
     );
 
--- Create index for better performance
+-- Cria índice para melhor performance
 CREATE INDEX IF NOT EXISTS idx_uso_voucher_descartavel_id 
 ON uso_voucher(voucher_descartavel_id);
 
--- Grant necessary permissions
+-- Concede permissões necessárias
 GRANT SELECT, INSERT ON uso_voucher TO anon;
 GRANT SELECT ON tipos_refeicao TO anon;
 
--- Add helpful comments
+-- Adiciona comentários explicativos
 COMMENT ON POLICY "uso_voucher_insert_policy" ON uso_voucher IS 
 'Permite que o sistema e usuários anônimos registrem uso de vouchers com validações específicas';
 
