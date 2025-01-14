@@ -39,13 +39,31 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Mark voucher as used with correct timezone
+    // Primeiro verificar se o voucher já não foi usado
+    const { data: voucherAtual, error: checkError } = await supabase
+      .from('vouchers_descartaveis')
+      .select('*')
+      .eq('id', voucherDescartavel.id)
+      .is('usado', false)
+      .single();
+
+    if (checkError || !voucherAtual) {
+      logger.error('Voucher já utilizado ou não encontrado:', checkError);
+      return {
+        success: false,
+        error: 'Voucher já utilizado ou não encontrado',
+        voucherType: 'descartavel'
+      };
+    }
+
+    // Preparar timestamp no fuso horário correto
     const now = new Date();
     const timestamp = formatInTimeZone(now, 'America/Sao_Paulo', "yyyy-MM-dd'T'HH:mm:ssXXX");
 
+    // Atualizar o voucher
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
-      .update({ 
+      .update({
         usado: true,
         data_uso: timestamp,
         usado_em: timestamp
