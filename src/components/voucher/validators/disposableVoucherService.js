@@ -75,31 +75,56 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Registrar uso do voucher em uma única transação
-    const { data: updateResult, error: updateError } = await supabase.rpc('validate_and_use_voucher', {
-      p_codigo: voucherDescartavel.codigo,
-      p_tipo_refeicao_id: tipoRefeicaoId
-    });
+    // Registrar uso do voucher
+    const timestamp = new Date().toISOString();
 
-    if (updateError) {
-      logger.error('Erro ao registrar uso do voucher:', updateError);
+    const { error: usageError } = await supabase
+      .from('uso_voucher')
+      .insert({
+        tipo_refeicao_id: tipoRefeicaoId,
+        tipo_voucher: 'descartavel',
+        usado_em: timestamp,
+        voucher_descartavel_id: voucherDescartavel.id
+      });
+
+    if (usageError) {
+      logger.error('Erro ao registrar uso do voucher:', usageError);
       return {
         success: false,
         error: 'Erro ao registrar uso do voucher'
       };
     }
 
-    if (!updateResult?.success) {
+    // Marcar voucher como usado
+    const { error: updateError } = await supabase
+      .from('vouchers_descartaveis')
+      .update({ 
+        usado_em: timestamp,
+        data_uso: timestamp 
+      })
+      .eq('id', voucherDescartavel.id);
+
+    if (updateError) {
+      logger.error('Erro ao atualizar status do voucher:', updateError);
+      
+      // Tentar reverter o registro de uso
+      await supabase
+        .from('uso_voucher')
+        .delete()
+        .eq('voucher_descartavel_id', voucherDescartavel.id)
+        .eq('usado_em', timestamp);
+
       return {
         success: false,
-        error: updateResult?.error || 'Erro ao validar voucher'
+        error: 'Erro ao atualizar status do voucher'
       };
     }
 
+    logger.info('Voucher utilizado com sucesso:', voucherDescartavel.codigo);
     toast.success('Voucher validado com sucesso');
     return {
       success: true,
-      message: 'Voucher validado com sucesso'
+      message: 'Voucher utilizado com sucesso'
     };
 
   } catch (error) {
