@@ -3,11 +3,8 @@ import { supabase } from '../../config/supabase';
 import logger from '../../config/logger';
 import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
 import { findCommonVoucher } from './validators/commonVoucherValidator';
-import { 
-  findDisposableVoucher, 
-  validateDisposableVoucherType, 
-  validateDisposableVoucherTime 
-} from './validators/disposableVoucherValidator';
+import { findDisposableVoucher } from './validators/disposableVoucherValidator';
+import { validateAndUseDisposableVoucher } from './validators/disposableVoucherService';
 import { toast } from "sonner";
 
 export const validateVoucher = async (codigo, tipoRefeicaoId) => {
@@ -69,57 +66,16 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
 
     if (voucherDescartavel) {
       logger.info('Voucher identificado como descartável');
-
-      // Primeiro registrar o uso na tabela uso_voucher
-      const { error: usageError } = await supabase
-        .from('uso_voucher')
-        .insert({
-          voucher_descartavel_id: voucherDescartavel.id,
-          tipo_refeicao_id: tipoRefeicaoId,
-          tipo_voucher: 'descartavel',
-          usado_em: new Date().toISOString()
-        });
-
-      if (usageError) {
-        const errorMsg = 'Erro ao registrar uso do voucher';
-        logger.error(errorMsg, usageError);
-        toast.error(errorMsg);
-        return {
-          success: false,
-          error: errorMsg,
-          voucherType: 'descartavel'
-        };
+      
+      const result = await validateAndUseDisposableVoucher(voucherDescartavel, tipoRefeicaoId);
+      
+      if (!result.success) {
+        toast.error(result.error);
+        return result;
       }
 
-      // Depois marcar o voucher como usado
-      const { error: updateError } = await supabase
-        .from('vouchers_descartaveis')
-        .update({ 
-          usado_em: new Date().toISOString(),
-          data_uso: new Date().toISOString()
-        })
-        .eq('id', voucherDescartavel.id)
-        .is('usado_em', null);
-
-      if (updateError) {
-        const errorMsg = 'Erro ao marcar voucher como usado';
-        logger.error(errorMsg, updateError);
-        toast.error(errorMsg);
-        return {
-          success: false,
-          error: errorMsg,
-          voucherType: 'descartavel'
-        };
-      }
-
-      const successMsg = 'Voucher descartável validado com sucesso';
-      logger.info(successMsg, voucherCode);
-      toast.success(successMsg);
-      return {
-        success: true,
-        voucherType: 'descartavel',
-        message: successMsg
-      };
+      toast.success(result.message);
+      return result;
     }
 
     const notFoundMsg = 'Voucher inválido ou não encontrado';
