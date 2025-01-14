@@ -88,19 +88,19 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
         return timeValidation;
       }
 
-      // Marcar voucher como usado
-      const { error: updateError } = await supabase
-        .from('vouchers_descartaveis')
-        .update({ 
-          usado_em: new Date().toISOString(),
-          data_uso: new Date().toISOString()
-        })
-        .eq('codigo', voucherCode)
-        .is('usado_em', null);
+      // Primeiro registrar o uso na tabela uso_voucher
+      const { error: usageError } = await supabase
+        .from('uso_voucher')
+        .insert({
+          voucher_descartavel_id: voucherDescartavel.id,
+          tipo_refeicao_id: tipoRefeicaoId,
+          tipo_voucher: 'descartavel',
+          usado_em: new Date().toISOString()
+        });
 
-      if (updateError) {
-        const errorMsg = 'Erro ao marcar voucher como usado';
-        logger.error(errorMsg, updateError);
+      if (usageError) {
+        const errorMsg = 'Erro ao registrar uso do voucher';
+        logger.error(errorMsg, usageError);
         toast.error(errorMsg);
         return {
           success: false,
@@ -109,18 +109,19 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
         };
       }
 
-      // Registrar uso do voucher
-      const { error: usageError } = await supabase
-        .from('uso_voucher')
-        .insert({
-          voucher_descartavel_id: voucherDescartavel.id,
-          tipo_refeicao_id: tipoRefeicaoId,
-          usado_em: new Date().toISOString()
-        });
+      // Depois marcar o voucher como usado
+      const { error: updateError } = await supabase
+        .from('vouchers_descartaveis')
+        .update({ 
+          usado_em: new Date().toISOString(),
+          data_uso: new Date().toISOString()
+        })
+        .eq('id', voucherDescartavel.id)
+        .is('usado_em', null);
 
-      if (usageError) {
-        const errorMsg = 'Erro ao registrar uso do voucher';
-        logger.error(errorMsg, usageError);
+      if (updateError) {
+        const errorMsg = 'Erro ao marcar voucher como usado';
+        logger.error(errorMsg, updateError);
         toast.error(errorMsg);
         return {
           success: false,
