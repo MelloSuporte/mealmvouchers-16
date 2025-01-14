@@ -45,7 +45,6 @@ const findDisposableVoucher = async (codigo) => {
         tipo_refeicao_id,
         data_expiracao,
         usado_em,
-        data_uso,
         tipos_refeicao (
           id,
           nome,
@@ -58,7 +57,6 @@ const findDisposableVoucher = async (codigo) => {
       `)
       .eq('codigo', codigo)
       .is('usado_em', null)
-      .is('data_uso', null)
       .gte('data_expiracao', new Date().toISOString().split('T')[0])
       .maybeSingle();
 
