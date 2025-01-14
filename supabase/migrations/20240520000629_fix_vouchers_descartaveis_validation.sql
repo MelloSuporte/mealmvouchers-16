@@ -6,6 +6,20 @@ DROP FUNCTION IF EXISTS validate_disposable_voucher;
 -- Enable RLS
 ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
 
+-- Ensure usado_em is timestamp with time zone
+DO $$ 
+BEGIN
+    ALTER TABLE vouchers_descartaveis 
+    ALTER COLUMN usado_em TYPE TIMESTAMP WITH TIME ZONE USING 
+    CASE 
+        WHEN usado_em::text::boolean THEN CURRENT_TIMESTAMP 
+        ELSE NULL 
+    END;
+EXCEPTION
+    WHEN others THEN
+        NULL;
+END $$;
+
 -- Create select policy with proper validation
 CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
     FOR SELECT TO authenticated, anon
