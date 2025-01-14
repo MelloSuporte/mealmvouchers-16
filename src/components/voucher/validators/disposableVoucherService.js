@@ -1,5 +1,6 @@
 import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRefeicaoId) => {
   try {
@@ -38,8 +39,13 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Register usage first
-    const timestamp = new Date().toISOString();
+    // Register usage first with correct timezone
+    const timestamp = formatInTimeZone(
+      new Date(),
+      'America/Sao_Paulo',
+      "yyyy-MM-dd'T'HH:mm:ssXXX"
+    );
+
     const { error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
