@@ -3,8 +3,18 @@ import logger from '../../../config/logger';
 
 export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRefeicaoId) => {
   try {
+    logger.info('Validando voucher descartável:', {
+      voucherId: voucherDescartavel.id,
+      tipoRefeicaoId: tipoRefeicaoId,
+      voucherTipoRefeicaoId: voucherDescartavel.tipo_refeicao_id
+    });
+
     // Validate meal type
     if (voucherDescartavel.tipo_refeicao_id !== tipoRefeicaoId) {
+      logger.error('Tipo de refeição não corresponde:', {
+        voucherTipo: voucherDescartavel.tipo_refeicao_id,
+        solicitadoTipo: tipoRefeicaoId
+      });
       return {
         success: false,
         error: 'Tipo de refeição não corresponde ao voucher descartável',
@@ -12,7 +22,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Register usage in uso_voucher table
+    // Register usage in uso_voucher table first
     const { error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
@@ -31,7 +41,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Mark voucher as used
+    // Then mark voucher as used
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({ 
@@ -50,6 +60,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
+    logger.info('Voucher descartável validado e registrado com sucesso');
     return {
       success: true,
       voucherType: 'descartavel',

@@ -9,7 +9,14 @@ export const findDisposableVoucher = async (code) => {
       .from('vouchers_descartaveis')
       .select(`
         *,
-        tipos_refeicao (*)
+        tipos_refeicao (
+          id,
+          nome,
+          horario_inicio,
+          horario_fim,
+          minutos_tolerancia,
+          ativo
+        )
       `)
       .eq('codigo', code)
       .is('usado_em', null)
@@ -25,6 +32,7 @@ export const findDisposableVoucher = async (code) => {
       return { data: null };
     }
 
+    logger.info('Voucher descartável encontrado:', data);
     return { data };
   } catch (error) {
     logger.error('Erro ao buscar voucher descartável:', error);
