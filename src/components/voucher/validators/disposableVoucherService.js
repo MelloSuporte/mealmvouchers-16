@@ -1,5 +1,6 @@
 import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
+import { toast } from "sonner";
 
 export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRefeicaoId) => {
   try {
@@ -74,53 +75,33 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Registrar uso do voucher
-    const timestamp = new Date().toISOString();
+    // Registrar uso do voucher em uma única transação
+    const { data: updateResult, error: updateError } = await supabase.rpc('validate_and_use_voucher', {
+      p_codigo: voucherDescartavel.codigo,
+      p_tipo_refeicao_id: tipoRefeicaoId
+    });
 
-    const { error: usageError } = await supabase
-      .from('uso_voucher')
-      .insert({
-        tipo_refeicao_id: tipoRefeicaoId,
-        tipo_voucher: 'descartavel',
-        usado_em: timestamp,
-        voucher_extra_id: voucherDescartavel.id
-      });
-
-    if (usageError) {
-      logger.error('Erro ao registrar uso do voucher:', usageError);
+    if (updateError) {
+      logger.error('Erro ao registrar uso do voucher:', updateError);
       return {
         success: false,
         error: 'Erro ao registrar uso do voucher'
       };
     }
 
-    // Marcar voucher como usado
-    const { error: updateError } = await supabase
-      .from('vouchers_descartaveis')
-      .update({ usado_em: timestamp })
-      .eq('id', voucherDescartavel.id);
-
-    if (updateError) {
-      logger.error('Erro ao atualizar status do voucher:', updateError);
-      
-      // Tentar reverter o registro de uso
-      await supabase
-        .from('uso_voucher')
-        .delete()
-        .eq('voucher_extra_id', voucherDescartavel.id)
-        .eq('usado_em', timestamp);
-
+    if (!updateResult?.success) {
       return {
         success: false,
-        error: 'Erro ao atualizar status do voucher'
+        error: updateResult?.error || 'Erro ao validar voucher'
       };
     }
 
-    logger.info('Voucher utilizado com sucesso:', voucherDescartavel.codigo);
+    toast.success('Voucher validado com sucesso');
     return {
       success: true,
-      message: 'Voucher utilizado com sucesso'
+      message: 'Voucher validado com sucesso'
     };
+
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
     return {
