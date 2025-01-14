@@ -39,12 +39,12 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Primeiro verificar se o voucher já não foi usado
+    // Verificar se o voucher já não foi usado
     const { data: voucherAtual, error: checkError } = await supabase
       .from('vouchers_descartaveis')
       .select('*')
       .eq('id', voucherDescartavel.id)
-      .is('usado', false)
+      .is('usado_em', null)
       .single();
 
     if (checkError || !voucherAtual) {
@@ -64,12 +64,11 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({
-        usado: true,
         data_uso: timestamp,
         usado_em: timestamp
       })
       .eq('id', voucherDescartavel.id)
-      .is('usado', false);
+      .is('usado_em', null);
 
     if (updateError) {
       logger.error('Erro ao marcar voucher como usado:', updateError);
