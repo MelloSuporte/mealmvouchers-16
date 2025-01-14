@@ -75,15 +75,48 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Registrar uso do voucher usando RPC
-    const { data: usageResult, error: usageError } = await supabase
-      .rpc('register_disposable_voucher_usage', {
-        p_voucher_id: voucherDescartavel.id,
-        p_tipo_refeicao_id: tipoRefeicaoId
+    // Registrar uso do voucher diretamente
+    const timestamp = new Date().toISOString();
+    
+    const { error: updateError } = await supabase
+      .from('vouchers_descartaveis')
+      .update({ 
+        usado_em: timestamp,
+        data_uso: timestamp 
+      })
+      .eq('id', voucherDescartavel.id)
+      .is('usado_em', null);
+
+    if (updateError) {
+      logger.error('Erro ao atualizar status do voucher:', updateError);
+      return {
+        success: false,
+        error: 'Erro ao atualizar status do voucher'
+      };
+    }
+
+    // Registrar o uso após atualizar o voucher
+    const { error: usageError } = await supabase
+      .from('uso_voucher')
+      .insert({
+        tipo_refeicao_id: tipoRefeicaoId,
+        tipo_voucher: 'descartavel',
+        usado_em: timestamp,
+        voucher_descartavel_id: voucherDescartavel.id
       });
 
     if (usageError) {
       logger.error('Erro ao registrar uso do voucher:', usageError);
+      
+      // Reverter a atualização do voucher em caso de erro
+      await supabase
+        .from('vouchers_descartaveis')
+        .update({ 
+          usado_em: null,
+          data_uso: null 
+        })
+        .eq('id', voucherDescartavel.id);
+
       return {
         success: false,
         error: 'Erro ao registrar uso do voucher'
