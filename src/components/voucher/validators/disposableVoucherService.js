@@ -60,26 +60,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     const now = new Date();
     const timestamp = formatInTimeZone(now, 'America/Sao_Paulo', "yyyy-MM-dd'T'HH:mm:ssXXX");
 
-    // Register usage in uso_voucher table first
-    const { error: usageError } = await supabase
-      .from('uso_voucher')
-      .insert({
-        voucher_descartavel_id: voucherDescartavel.id,
-        tipo_refeicao_id: tipoRefeicaoId,
-        tipo_voucher: 'descartavel',
-        usado_em: timestamp
-      });
-
-    if (usageError) {
-      logger.error('Erro ao registrar uso do voucher:', usageError);
-      return {
-        success: false,
-        error: 'Erro ao registrar uso do voucher',
-        voucherType: 'descartavel'
-      };
-    }
-
-    // Atualizar o voucher
+    // Atualizar o voucher primeiro
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({
@@ -94,6 +75,34 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       return {
         success: false,
         error: 'Erro ao marcar voucher como usado',
+        voucherType: 'descartavel'
+      };
+    }
+
+    // Depois registrar o uso na tabela uso_voucher
+    const { error: usageError } = await supabase
+      .from('uso_voucher')
+      .insert({
+        voucher_descartavel_id: voucherDescartavel.id,
+        tipo_refeicao_id: tipoRefeicaoId,
+        tipo_voucher: 'descartavel',
+        usado_em: timestamp
+      });
+
+    if (usageError) {
+      logger.error('Erro ao registrar uso do voucher:', usageError);
+      // Tentar reverter a atualização do voucher em caso de erro
+      await supabase
+        .from('vouchers_descartaveis')
+        .update({
+          usado_em: null,
+          data_uso: null
+        })
+        .eq('id', voucherDescartavel.id);
+
+      return {
+        success: false,
+        error: 'Erro ao registrar uso do voucher',
         voucherType: 'descartavel'
       };
     }
