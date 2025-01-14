@@ -61,12 +61,11 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     const timestamp = formatInTimeZone(now, 'America/Sao_Paulo', "yyyy-MM-dd'T'HH:mm:ssXXX");
 
     try {
-      // Iniciar uma transação manual
+      // Primeiro atualizar o voucher
       const { error: updateError } = await supabase
         .from('vouchers_descartaveis')
         .update({
-          usado_em: timestamp,
-          data_uso: timestamp
+          usado_em: timestamp
         })
         .eq('id', voucherDescartavel.id)
         .is('usado_em', null);
@@ -90,8 +89,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
         await supabase
           .from('vouchers_descartaveis')
           .update({
-            usado_em: null,
-            data_uso: null
+            usado_em: null
           })
           .eq('id', voucherDescartavel.id);
 
