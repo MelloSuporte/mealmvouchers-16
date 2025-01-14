@@ -25,31 +25,47 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // First check if voucher is still available
-    const { data: checkVoucher, error: checkError } = await supabase
-      .from('vouchers_descartaveis')
-      .select()
-      .eq('id', voucherDescartavel.id)
-      .is('usado_em', null)
-      .single();
-
-    if (checkError || !checkVoucher) {
-      logger.error('Voucher não disponível ou já utilizado:', checkError);
+    // Validate if voucher matches meal type
+    if (voucherDescartavel.tipo_refeicao_id !== tipoRefeicaoId) {
+      logger.error('Tipo de refeição não corresponde:', {
+        voucherTipo: voucherDescartavel.tipo_refeicao_id,
+        solicitadoTipo: tipoRefeicaoId
+      });
       return {
         success: false,
-        error: 'Voucher não disponível ou já utilizado',
+        error: 'Tipo de refeição não corresponde ao voucher descartável',
         voucherType: 'descartavel'
       };
     }
 
-    // Update the voucher with timestamp
+    // Register usage in uso_voucher table first
+    const { error: usageError } = await supabase
+      .from('uso_voucher')
+      .insert({
+        voucher_descartavel_id: voucherDescartavel.id,
+        tipo_refeicao_id: tipoRefeicaoId,
+        tipo_voucher: 'descartavel',
+        usado_em: new Date().toISOString()
+      });
+
+    if (usageError) {
+      logger.error('Erro ao registrar uso do voucher:', usageError);
+      return {
+        success: false,
+        error: 'Erro ao registrar uso do voucher',
+        voucherType: 'descartavel'
+      };
+    }
+
+    // Then mark voucher as used
+    const timestamp = new Date().toISOString();
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
-      .update({
-        usado_em: new Date().toISOString()
+      .update({ 
+        usado_em: timestamp,
+        data_uso: timestamp 
       })
-      .eq('id', voucherDescartavel.id)
-      .is('usado_em', null);
+      .eq('id', voucherDescartavel.id);
 
     if (updateError) {
       logger.error('Erro ao marcar voucher como usado:', updateError);
@@ -64,7 +80,7 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     return {
       success: true,
       voucherType: 'descartavel',
-      message: 'Voucher validado com sucesso'
+      message: 'Voucher descartável validado com sucesso'
     };
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
