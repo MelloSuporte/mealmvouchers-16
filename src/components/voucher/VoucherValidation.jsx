@@ -46,12 +46,20 @@ const findDisposableVoucher = async (codigo) => {
         data_expiracao,
         usado_em,
         data_uso,
-        tipos_refeicao (*)
+        tipos_refeicao (
+          id,
+          nome,
+          ativo,
+          valor,
+          horario_inicio,
+          horario_fim,
+          minutos_tolerancia
+        )
       `)
       .eq('codigo', codigo)
       .is('usado_em', null)
       .gte('data_expiracao', new Date().toISOString().split('T')[0])
-      .maybeSingle();
+      .single();
 
     if (error) {
       logger.error('Erro na consulta do voucher descartável:', error);
