@@ -1,0 +1,168 @@
+import { supabase } from
+
+1. First, let's update the dispos '../../../config/supabaseable voucher validator service:
+
+';
+import logger from '../../../config/logger';
+
+export<lov-write file_path="src/components const validateAndUseDisposable/voucher/validators/disposableVoucher = async (voucherDescVoucherService.js">
+import { suartavel, tipabase } from '../../../config/supabasepoRefeicao';
+import logger from '../../../configId) => {/logger';
+
+export const validateAndU
+  try {seDisposableVoucher = async (
+    logger.info('Validando voucher descartável:', {
+      voucherId: voucvoucherDescartavel, tiherDescartavel.id,poRefeicaoId) => {
+      tipoRefeicaoId: tipoRe
+  try {
+    logger.info('ValifeicaoId,
+      voucherTipoRefeicdando voucher descartável:', {
+      vouaoId: vouccher: voucherDescartavel,herDescartavel.tipo_re
+      tipoRefeicaoIdfeicao_id
+    });
+
+    
+    });
+
+    // Validate meal type
+    const// Validate meal type
+    if { data: mealType, error: meal (voucherDescTypeError } = await supabase
+      artavel.tipo_refeic.from('tipos_refeicaoao_id !== tipoRefeicaoId)')
+      .select('*')
+      .eq {
+      logger.error('('id', tipoRefeicaoITipo de refeição não corresponde:',d)
+      .single();
+
+    if (mealTypeError || {
+        voucherT !mealType) {
+      loggeripo: voucher.error('Erro ao validar tipo deDescartavel.tipo_refe refeição:', mealTypeError);icao_id,
+        solicita
+      return {
+        success: falsedoTipo: tipoRefe,
+        error: 'TipoicaoId
+      });
+       de refeição inválido',return {
+        success
+        voucherType: 'desc: false,
+        errorartavel'
+      };
+    }: 'Tipo de refeição não corresponde
+
+    // Validate if voucher matches ao voucher descartável', meal type
+    if (voucherDesc
+        voucherType: artavel.tipo_refeicao_i'descartaveld !== tipoRefeicaoId) {'
+      };
+    }
+      logger.error('Tipo
+
+    // Register usage in uso de refeição não corresponde:',_voucher {
+        voucherT table first
+    const { erroripo: voucherDescartavel.tipo_: usrefeicao_id,
+        solageError } =icitadoTipo: tipoRefe await supabase
+      .from('icaoId
+      });
+      return {uso_voucher')
+      .
+        success: false,
+        error:insert({
+        vou 'Tipo de refeição não corresponcher_descartavel_ide ao voucher descartável',
+        d: voucherDescartavel.voucherType: 'descartavelid,
+        tipo_refe'
+      };
+    }
+
+    //icao_id: tipoRefeicaoId, Register usage in uso_voucher table
+        tipo_voucher:
+    const { error: usageError } = await 'descartavel supabase
+      .from('uso_',
+        usado_em: new Datevoucher')
+      .insert({
+        voucher_descartavel_id: v().toISOStringoucherDescartavel.id,
+        ()
+      });
+
+    if (tipo_refeicao_id: tiusageError) {
+      loggerpoRefeicaoId,
+        tipo.error('Erro ao registrar uso _voucher: 'descartavel',
+        usado voucher:', usageError);
+      return {do_em: new Date().toISOString()
+        success: false,
+        error: '
+      });
+
+    if (usageErrorErro ao registrar) {
+      logger.error('Erro uso do voucher',
+        v ao registrar uso do voucher:', usageoucherType: 'descartError);
+      return {
+        success:avel'
+      };
+    } false,
+        error: 'Erro
+
+    // Then ao registrar uso do voucher',
+         mark vouvoucherType: 'descartavelcher as used
+    const'
+      };
+    }
+
+    // { error: updateError } = await supabase Mark voucher as used
+    const { error:
+      .from('vouchers updateError } = await supabase
+      ._descartaveisfrom('vouchers_descartaveis')')
+      .update({ 
+      .update({ 
+        usado_
+        usado_em: new Date().toISOem: new Date().toISOString(),
+        usaString(),
+        usado:do: true
+      })
+      .eq('i true
+      })
+      .eqd', voucherDescartavel.id)('id', voucherDescartavel.id)
+      .is
+      .is('usado_em', null);('usa
+
+    if (updateError) {
+      loggerdo_em', null);
+
+    if.error('Erro ao marcar voucher (updateError) {
+      logger como usado:', updateError);
+      return {.error('Erro ao marcar voucher como usa
+        success: false,
+        error: 'Erro aodo:', updateError); marcar voucher como usado',
+        v
+      return {
+        success: false,
+        oucherType: 'descartavel'error: 'Erro ao mar
+      };
+    }
+
+    logger.car voucher como usado',
+        info('Voucher descartável validavoucherType: 'descartavel'do e registrado com sucesso');
+    return {
+      };
+    }
+
+    logger
+      success: true,
+      voucher.info('Voucher descartável validado eType: 'descartavel',
+      message:  registrado com sucesso');'Voucher descartável validado com
+    return {
+      success: sucesso'
+    };
+  } catch true,
+      v (error) {
+    logger.error('oucherType:Erro ao validar voucher descartável:', 'descart error);
+    return {
+      success:avel',
+      message: 'Voucher descartável validado com sucesso'
+    };
+   false,
+      error: error.message || 'Erro ao} catch (error) {
+     validar voucher descartável',
+      logger.error('Erro ao valivoucherType: 'descartaveldar voucher descartável:', error'
+    };
+  }
+};);
+    return {
+      success
