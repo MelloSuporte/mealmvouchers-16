@@ -35,6 +35,8 @@ const findCommonVoucher = async (codigo) => {
 
 const findDisposableVoucher = async (codigo) => {
   try {
+    logger.info('Buscando voucher descartável:', codigo);
+    
     const { data, error } = await supabase
       .from('vouchers_descartaveis')
       .select(`
@@ -46,9 +48,21 @@ const findDisposableVoucher = async (codigo) => {
         data_uso
       `)
       .eq('codigo', codigo)
+      .is('usado_em', null)
+      .gte('data_expiracao', new Date().toISOString().split('T')[0])
       .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Erro na consulta do voucher descartável:', error);
+      throw error;
+    }
+
+    if (!data) {
+      logger.info('Voucher descartável não encontrado ou expirado:', codigo);
+    } else {
+      logger.info('Voucher descartável encontrado:', data);
+    }
+
     return { data, error: null };
   } catch (error) {
     logger.error('Erro ao buscar voucher descartável:', error);
