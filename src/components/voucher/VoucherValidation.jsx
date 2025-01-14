@@ -45,7 +45,8 @@ const findDisposableVoucher = async (codigo) => {
         tipo_refeicao_id,
         data_expiracao,
         usado_em,
-        data_uso
+        data_uso,
+        tipos_refeicao (*)
       `)
       .eq('codigo', codigo)
       .is('usado_em', null)
