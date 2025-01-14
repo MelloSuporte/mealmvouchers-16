@@ -28,11 +28,28 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     // Mark voucher as used
     const timestamp = new Date().toISOString();
     
+    // Primeiro verificar se o voucher ainda está disponível
+    const { data: checkVoucher, error: checkError } = await supabase
+      .from('vouchers_descartaveis')
+      .select('*')
+      .eq('id', voucherDescartavel.id)
+      .is('usado_em', null)
+      .single();
+
+    if (checkError || !checkVoucher) {
+      logger.error('Voucher não encontrado ou já utilizado');
+      return {
+        success: false,
+        error: 'Voucher não encontrado ou já utilizado',
+        voucherType: 'descartavel'
+      };
+    }
+
+    // Atualizar o voucher
     const { data: updatedVoucher, error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({ usado_em: timestamp })
-      .match({ id: voucherDescartavel.id })
-      .is('usado_em', null)
+      .eq('id', voucherDescartavel.id)
       .select()
       .single();
 
@@ -46,10 +63,10 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
     }
 
     if (!updatedVoucher) {
-      logger.error('Voucher não encontrado ou já utilizado');
+      logger.error('Erro ao atualizar voucher');
       return {
         success: false,
-        error: 'Voucher não encontrado ou já utilizado',
+        error: 'Erro ao atualizar voucher',
         voucherType: 'descartavel'
       };
     }
