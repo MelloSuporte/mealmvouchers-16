@@ -56,27 +56,11 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       };
     }
 
-    // Preparar timestamp no fuso horário correto
+    // Preparar timestamp
     const now = new Date();
     const timestamp = formatInTimeZone(now, 'America/Sao_Paulo', "yyyy-MM-dd'T'HH:mm:ssXXX");
 
-    // Atualizar o voucher
-    const { error: updateError } = await supabase
-      .from('vouchers_descartaveis')
-      .update({ usado_em: timestamp })
-      .eq('id', voucherDescartavel.id)
-      .is('usado_em', null);
-
-    if (updateError) {
-      logger.error('Erro ao atualizar voucher:', updateError);
-      return {
-        success: false,
-        error: 'Erro ao processar voucher',
-        voucherType: 'descartavel'
-      };
-    }
-
-    // Registrar o uso
+    // Registrar o uso primeiro
     const { error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
@@ -87,16 +71,33 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       });
 
     if (usageError) {
-      // Se houver erro ao registrar o uso, reverter a atualização do voucher
-      logger.error('Erro ao registrar uso, revertendo atualização:', usageError);
-      await supabase
-        .from('vouchers_descartaveis')
-        .update({ usado_em: null })
-        .eq('id', voucherDescartavel.id);
-
+      logger.error('Erro ao registrar uso do voucher:', usageError);
       return {
         success: false,
         error: 'Erro ao registrar uso do voucher',
+        voucherType: 'descartavel'
+      };
+    }
+
+    // Depois marcar o voucher como usado
+    const { error: updateError } = await supabase
+      .from('vouchers_descartaveis')
+      .update({ usado_em: timestamp })
+      .eq('id', voucherDescartavel.id)
+      .is('usado_em', null);
+
+    if (updateError) {
+      logger.error('Erro ao atualizar voucher:', updateError);
+      // Tentar reverter o registro de uso
+      await supabase
+        .from('uso_voucher')
+        .delete()
+        .eq('voucher_descartavel_id', voucherDescartavel.id)
+        .eq('usado_em', timestamp);
+
+      return {
+        success: false,
+        error: 'Erro ao processar voucher',
         voucherType: 'descartavel'
       };
     }
