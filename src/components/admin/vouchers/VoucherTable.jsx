@@ -80,9 +80,9 @@ const VoucherTable = ({ vouchers = [] }) => {
               <TableHead>Código</TableHead>
               <TableHead>Tipo Refeição</TableHead>
               <TableHead>Data Criação</TableHead>
-              <TableHead>Data Uso</TableHead>
+              <TableHead>Nome</TableHead>
               <TableHead>Data Expiração</TableHead>
-              <TableHead>Usado</TableHead>
+              <TableHead>Empresa</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -100,16 +100,11 @@ const VoucherTable = ({ vouchers = [] }) => {
                   <TableCell>
                     {format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                   </TableCell>
-                  <TableCell>
-                    {voucher.data_uso ? 
-                      format(new Date(voucher.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : 
-                      '-'
-                    }
-                  </TableCell>
+                  <TableCell>{voucher.nome_pessoa || '-'}</TableCell>
                   <TableCell>
                     {format(new Date(voucher.data_expiracao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                   </TableCell>
-                  <TableCell>{voucher.usado_em || voucher.data_uso ? 'Sim' : 'Não'}</TableCell>
+                  <TableCell>{voucher.nome_empresa || '-'}</TableCell>
                 </TableRow>
               ))
             )}
