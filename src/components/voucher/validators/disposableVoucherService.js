@@ -1,66 +1,82 @@
 import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
-import { formatInTimeZone } from 'date-fns-tz';
 
 export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRefeicaoId) => {
   try {
-    logger.info('Validando voucher descartável:', {
-      voucherId: voucherDescartavel.id,
-      tipoRefeicaoId: tipoRefeicaoId,
-      voucherTipoRefeicaoId: voucherDescartavel.tipo_refeicao_id
-    });
+    if (!voucherDescartavel || !tipoRefeicaoId) {
+      throw new Error('Voucher e tipo de refeição são obrigatórios');
+    }
 
-    // Validate meal type
-    const { data: mealType, error: mealTypeError } = await supabase
+    // Verificar se o voucher já foi usado
+    if (voucherDescartavel.usado_em) {
+      logger.warn('Tentativa de usar voucher já utilizado:', voucherDescartavel.codigo);
+      return {
+        success: false,
+        error: 'Este voucher já foi utilizado'
+      };
+    }
+
+    // Verificar data de expiração
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expirationDate = new Date(voucherDescartavel.data_expiracao);
+    expirationDate.setHours(0, 0, 0, 0);
+
+    if (expirationDate < today) {
+      logger.warn('Tentativa de usar voucher expirado:', voucherDescartavel.codigo);
+      return {
+        success: false,
+        error: 'Este voucher está expirado'
+      };
+    }
+
+    if (expirationDate > today) {
+      const formattedDate = expirationDate.toLocaleDateString('pt-BR');
+      logger.warn('Tentativa de usar voucher antes da data:', voucherDescartavel.codigo);
+      return {
+        success: false,
+        error: `Este voucher é válido apenas para ${formattedDate}`
+      };
+    }
+
+    // Verificar tipo de refeição
+    const { data: tipoRefeicao, error: tipoRefeicaoError } = await supabase
       .from('tipos_refeicao')
       .select('*')
       .eq('id', tipoRefeicaoId)
       .single();
 
-    if (mealTypeError || !mealType) {
-      logger.error('Erro ao validar tipo de refeição:', mealTypeError);
+    if (tipoRefeicaoError || !tipoRefeicao) {
+      logger.error('Erro ao buscar tipo de refeição:', tipoRefeicaoError);
       return {
         success: false,
-        error: 'Tipo de refeição inválido',
-        voucherType: 'descartavel'
+        error: 'Tipo de refeição não encontrado'
       };
     }
 
-    // Validate if voucher matches meal type
-    if (voucherDescartavel.tipo_refeicao_id !== tipoRefeicaoId) {
-      logger.error('Tipo de refeição não corresponde:', {
-        voucherTipo: voucherDescartavel.tipo_refeicao_id,
-        solicitadoTipo: tipoRefeicaoId
-      });
-      return {
-        success: false,
-        error: 'Tipo de refeição não corresponde ao voucher descartável',
-        voucherType: 'descartavel'
-      };
-    }
-
-    // Verificar se o voucher já não foi usado
-    const { data: voucherAtual, error: checkError } = await supabase
-      .from('vouchers_descartaveis')
-      .select('*')
-      .eq('id', voucherDescartavel.id)
-      .is('usado_em', null)
-      .single();
-
-    if (checkError || !voucherAtual) {
-      logger.error('Voucher já utilizado ou não encontrado:', checkError);
-      return {
-        success: false,
-        error: 'Voucher já utilizado ou não encontrado',
-        voucherType: 'descartavel'
-      };
-    }
-
-    // Preparar timestamp
+    // Verificar horário
+    const currentTime = new Date().toTimeString().slice(0, 5);
+    const [startHour, startMinute] = tipoRefeicao.horario_inicio.split(':');
+    const [endHour, endMinute] = tipoRefeicao.horario_fim.split(':');
+    
     const now = new Date();
-    const timestamp = formatInTimeZone(now, 'America/Sao_Paulo', "yyyy-MM-dd'T'HH:mm:ssXXX");
+    const startTime = new Date(now.setHours(parseInt(startHour), parseInt(startMinute), 0));
+    const endTime = new Date(now.setHours(parseInt(endHour), parseInt(endMinute) + (tipoRefeicao.minutos_tolerancia || 15), 0));
+    
+    const currentDateTime = new Date();
+    currentDateTime.setHours(parseInt(currentTime.split(':')[0]), parseInt(currentTime.split(':')[1]), 0);
 
-    // Registrar o uso primeiro
+    if (currentDateTime < startTime || currentDateTime > endTime) {
+      logger.warn('Tentativa de uso fora do horário permitido:', currentTime);
+      return {
+        success: false,
+        error: `${tipoRefeicao.nome} só pode ser utilizado entre ${tipoRefeicao.horario_inicio} e ${tipoRefeicao.horario_fim} (tolerância de ${tipoRefeicao.minutos_tolerancia || 15} minutos)`
+      };
+    }
+
+    // Registrar uso do voucher
+    const timestamp = new Date().toISOString();
+
     const { error: usageError } = await supabase
       .from('uso_voucher')
       .insert({
@@ -74,20 +90,19 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       logger.error('Erro ao registrar uso do voucher:', usageError);
       return {
         success: false,
-        error: 'Erro ao registrar uso do voucher',
-        voucherType: 'descartavel'
+        error: 'Erro ao registrar uso do voucher'
       };
     }
 
-    // Depois marcar o voucher como usado
+    // Marcar voucher como usado
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({ usado_em: timestamp })
-      .eq('id', voucherDescartavel.id)
-      .is('usado_em', null);
+      .eq('id', voucherDescartavel.id);
 
     if (updateError) {
-      logger.error('Erro ao atualizar voucher:', updateError);
+      logger.error('Erro ao atualizar status do voucher:', updateError);
+      
       // Tentar reverter o registro de uso
       await supabase
         .from('uso_voucher')
@@ -97,24 +112,20 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
 
       return {
         success: false,
-        error: 'Erro ao processar voucher',
-        voucherType: 'descartavel'
+        error: 'Erro ao atualizar status do voucher'
       };
     }
 
-    logger.info('Voucher descartável validado e registrado com sucesso');
+    logger.info('Voucher utilizado com sucesso:', voucherDescartavel.codigo);
     return {
       success: true,
-      voucherType: 'descartavel',
-      message: 'Voucher descartável validado com sucesso'
+      message: 'Voucher utilizado com sucesso'
     };
-
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
     return {
       success: false,
-      error: error.message || 'Erro ao validar voucher descartável',
-      voucherType: 'descartavel'
+      error: error.message || 'Erro ao validar voucher'
     };
   }
 };
