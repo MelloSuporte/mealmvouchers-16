@@ -34,23 +34,22 @@ export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRe
       .single();
 
     if (checkError || !checkVoucher) {
-      logger.error('Voucher não encontrado ou já utilizado');
+      logger.error('Voucher não disponível ou já utilizado:', checkError);
       return {
         success: false,
-        error: 'Voucher não encontrado ou já utilizado',
+        error: 'Voucher não disponível ou já utilizado',
         voucherType: 'descartavel'
       };
     }
 
-    // Update the voucher in a separate transaction
-    const { data: updatedVoucher, error: updateError } = await supabase
+    // Update the voucher with timestamp
+    const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({
         usado_em: new Date().toISOString()
       })
       .eq('id', voucherDescartavel.id)
-      .select()
-      .single();
+      .is('usado_em', null);
 
     if (updateError) {
       logger.error('Erro ao marcar voucher como usado:', updateError);
