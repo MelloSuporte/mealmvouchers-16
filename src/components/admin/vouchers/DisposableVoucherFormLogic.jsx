@@ -13,6 +13,8 @@ export const useDisposableVoucherFormLogic = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
+  const [personName, setPersonName] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const queryClient = useQueryClient();
   const { data: mealTypes, isLoading } = useMealTypes();
   const { data: allVouchers } = useVouchers();
@@ -25,7 +27,9 @@ export const useDisposableVoucherFormLogic = () => {
       const { data, error } = await supabase.rpc('insert_voucher_descartavel', {
         p_codigo: code,
         p_tipo_refeicao_id: mealTypeId,
-        p_data_expiracao: expirationDate
+        p_data_expiracao: expirationDate,
+        p_nome_pessoa: personName,
+        p_nome_empresa: companyName
       });
 
       if (error) {
@@ -54,6 +58,11 @@ export const useDisposableVoucherFormLogic = () => {
   };
 
   const handleGenerateVouchers = async () => {
+    if (!personName || !companyName) {
+      toast.error('Nome da pessoa e empresa são obrigatórios');
+      return;
+    }
+
     try {
       for (const mealTypeId of selectedMealTypes) {
         for (const date of selectedDates) {
@@ -77,6 +86,10 @@ export const useDisposableVoucherFormLogic = () => {
     selectedMealTypes,
     selectedDates,
     setSelectedDates,
+    personName,
+    setPersonName,
+    companyName,
+    setCompanyName,
     mealTypes,
     isLoading,
     isGenerating: generateMutation.isPending,

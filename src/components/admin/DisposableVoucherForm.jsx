@@ -19,6 +19,10 @@ const DisposableVoucherForm = () => {
     isLoading,
     isGenerating,
     allVouchers,
+    personName,
+    setPersonName,
+    companyName,
+    setCompanyName,
     handleMealTypeToggle,
     handleGenerateVouchers
   } = useDisposableVoucherFormLogic();
@@ -35,6 +39,32 @@ const DisposableVoucherForm = () => {
         <CardContent className="p-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">
+                  Nome da Pessoa
+                </label>
+                <Input
+                  type="text"
+                  value={personName}
+                  onChange={(e) => setPersonName(e.target.value)}
+                  placeholder="Digite o nome da pessoa"
+                  className="h-8 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">
+                  Nome da Empresa
+                </label>
+                <Input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Digite o nome da empresa"
+                  className="h-8 text-sm"
+                />
+              </div>
+
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1 block">
                   Quantidade de Vouchers por Data/Refeição
@@ -97,7 +127,7 @@ const DisposableVoucherForm = () => {
           <div className="flex justify-center mt-6">
             <Button 
               onClick={handleGenerateVouchers}
-              disabled={!selectedMealTypes.length || quantity < 1 || !selectedDates.length || isGenerating}
+              disabled={!selectedMealTypes.length || quantity < 1 || !selectedDates.length || !personName || !companyName || isGenerating}
               className="w-full md:w-auto px-8 py-2 text-sm"
             >
               {isGenerating ? 'Gerando...' : 'Gerar Vouchers Descartáveis'}
