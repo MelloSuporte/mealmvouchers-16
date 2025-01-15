@@ -9,12 +9,10 @@ export const useReportsTData = (filters) => {
     queryKey: ['reports-data', filters],
     queryFn: async () => {
       try {
-        // Verificar registros
         await checkVoucherRecords();
 
         logger.info('Iniciando busca de dados do relatório com filtros:', filters);
 
-        // Construir query base usando a view correta
         let query = supabase
           .from('vw_uso_voucher_detalhado')
           .select(`
@@ -30,10 +28,11 @@ export const useReportsTData = (filters) => {
             nome_setor,
             tipo_refeicao,
             valor_refeicao,
-            observacao
+            observacao,
+            codigo_voucher,
+            tipo_voucher
           `);
 
-        // Aplicar filtros
         if (filters.startDate) {
           const startDate = new Date(filters.startDate);
           startDate.setHours(0, 0, 0, 0);
@@ -62,7 +61,6 @@ export const useReportsTData = (filters) => {
           query = query.eq('tipo_refeicao', filters.mealType);
         }
 
-        // Executar query
         const { data, error } = await query;
 
         if (error) {

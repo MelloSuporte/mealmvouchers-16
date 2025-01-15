@@ -12,6 +12,8 @@ export const mapVoucherData = (data) => {
     nome_setor: item.nome_setor || 'N/A',
     tipo_refeicao: item.tipo_refeicao || 'N/A',
     valor: item.valor_refeicao || 0,
-    observacao: item.observacao || ''
+    observacao: item.observacao || '',
+    codigo_voucher: item.codigo_voucher || 'N/A',
+    tipo_voucher: item.tipo_voucher || 'comum'
   })) || [];
 };

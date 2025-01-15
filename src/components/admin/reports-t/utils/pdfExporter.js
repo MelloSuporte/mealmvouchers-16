@@ -7,6 +7,14 @@ import { formatCurrency, formatDate } from './formatters';
 
 export const exportToPDF = async (data, filters, adminName) => {
   try {
+    logger.info('Iniciando geração do PDF:', { 
+      metrics: {
+        totalRegistros: data?.length,
+        totalCost: data?.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0)
+      }, 
+      filters 
+    });
+
     const doc = new jsPDF();
     
     // Título
@@ -14,68 +22,68 @@ export const exportToPDF = async (data, filters, adminName) => {
     doc.text("Relatório de Uso de Vouchers", 14, 15);
     
     // Informações do usuário que exportou
+    doc.setFontSize(8);
+    const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    const nomeUsuario = adminName || 'Usuário do Sistema';
+    doc.text(`Exportado por: ${nomeUsuario} em ${dataExportacao}`, 14, 22);
+    
+    // Informações dos filtros
     doc.setFontSize(10);
-    const currentUser = adminName || 'Usuário não identificado';
-    const exportDate = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    doc.text(`Exportado por: ${currentUser} em ${exportDate}`, 14, 25);
-
-    // Informações do Relatório
-    doc.setFontSize(12);
-    doc.text("Informações do Relatório:", 14, 35);
-
+    doc.text("Informações do Relatório:", 14, 30);
+    
     // Empresa
-    const empresaNome = filters.company === 'all' ? 'Todas as Empresas' : data?.[0]?.nome_empresa || 'Empresa não especificada';
-    doc.text(`Empresa: ${empresaNome}`, 14, 45);
-
+    const empresaNome = filters.companyName || (filters.company === 'all' ? 'Todas as Empresas' : 'Empresa não especificada');
+    doc.text(`Empresa: ${empresaNome}`, 14, 40);
+    
     // Período
-    const startDate = filters.startDate ? format(new Date(filters.startDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
-    const endDate = filters.endDate ? format(new Date(filters.endDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
-    doc.text(`Período: ${startDate} a ${endDate}`, 14, 55);
-
+    const startDate = filters.startDate ? formatDate(filters.startDate) : '-';
+    const endDate = filters.endDate ? formatDate(filters.endDate) : '-';
+    doc.text(`Período: ${startDate} a ${endDate}`, 14, 50);
+    
     // Turno
-    const turnoNome = filters.shift === 'all' ? 'Todos os Turnos' : data?.[0]?.turno || 'Turno não especificado';
-    doc.text(`Turno: ${turnoNome}`, 14, 65);
-
+    const turnoNome = filters.shiftName || (filters.shift === 'all' ? 'Todos os Turnos' : 'Turno não especificado');
+    doc.text(`Turno: ${turnoNome}`, 14, 60);
+    
     // Setor
-    const setorNome = filters.sector === 'all' ? 'Todos os Setores' : data?.[0]?.nome_setor || 'Setor não especificado';
-    doc.text(`Setor: ${setorNome}`, 14, 75);
-
+    const setorNome = filters.sectorName || (filters.sector === 'all' ? 'Todos os Setores' : 'Setor não especificado');
+    doc.text(`Setor: ${setorNome}`, 14, 70);
+    
     // Tipo de Refeição
-    const tipoRefeicao = filters.mealType === 'all' ? 'Todos os Tipos' : data?.[0]?.tipo_refeicao || 'Tipo não especificado';
-    doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, 85);
-
+    const tipoRefeicao = filters.mealTypeName || (filters.mealType === 'all' ? 'Todos os Tipos' : 'Tipo não especificado');
+    doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, 80);
+    
     // Valor Total
-    const totalValue = data?.reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0) || 0;
-    doc.text(`Valor Total: ${formatCurrency(totalValue)}`, 14, 95);
+    const valorTotal = data?.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0) || 0;
+    doc.text(`Valor Total: ${formatCurrency(valorTotal)}`, 14, 90);
 
     // Quantidade de Refeições
     const totalMeals = data?.length || 0;
-    doc.text(`Quantidade de Refeições: ${totalMeals}`, 14, 105);
+    doc.text(`Quantidade de Refeições: ${totalMeals}`, 14, 100);
 
     if (!data || data.length === 0) {
-      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 115);
+      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 110);
       return doc;
     }
 
     // Tabelas
     doc.setFontSize(14);
-    doc.text("Vouchers Utilizados", 14, 125);
+    doc.text("Vouchers Utilizados", 14, 120);
 
-    // Processar dados para a tabela
     const tableData = data.map(item => [
       formatDate(item.data_uso),
       item.nome_usuario || '-',
       item.cpf || '-',
+      item.codigo_voucher || '-',
+      item.tipo_voucher || 'comum',
       item.tipo_refeicao || '-',
-      formatCurrency(item.valor || 0),
+      formatCurrency(item.valor_refeicao || 0),
       item.turno || '-',
-      item.nome_setor || '-',
-      item.tipo_voucher || 'comum'
+      item.nome_setor || '-'
     ]);
 
     doc.autoTable({
-      startY: 135,
-      head: [['Data/Hora', 'Usuário', 'CPF', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
+      startY: 130,
+      head: [['Data/Hora', 'Usuário', 'CPF', 'Código', 'Tipo Voucher', 'Refeição', 'Valor', 'Turno', 'Setor']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -91,11 +99,12 @@ export const exportToPDF = async (data, filters, adminName) => {
         0: { cellWidth: 25 },
         1: { cellWidth: 35 },
         2: { cellWidth: 25 },
-        3: { cellWidth: 25 },
+        3: { cellWidth: 20 },
         4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
+        5: { cellWidth: 25 },
         6: { cellWidth: 20 },
-        7: { cellWidth: 20 }
+        7: { cellWidth: 20 },
+        8: { cellWidth: 20 }
       }
     });
 
