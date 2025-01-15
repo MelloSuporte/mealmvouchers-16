@@ -28,9 +28,7 @@ export const useReportsTData = (filters) => {
             nome_setor,
             tipo_refeicao,
             valor_refeicao,
-            observacao,
-            codigo_voucher,
-            tipo_voucher
+            observacao
           `);
 
         if (filters.startDate) {

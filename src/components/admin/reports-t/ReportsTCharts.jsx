@@ -25,8 +25,7 @@ const ReportsTCharts = ({ filters }) => {
   const usageData = data.map(item => ({
     data: new Date(item.data_uso).toLocaleDateString(),
     total: 1,
-    valor: parseFloat(item.valor_refeicao) || 0,
-    tipo: item.tipo_voucher || 'comum'
+    valor: parseFloat(item.valor_refeicao) || 0
   })).reduce((acc, curr) => {
     const existing = acc.find(item => item.data === curr.data);
     if (existing) {
@@ -39,7 +38,7 @@ const ReportsTCharts = ({ filters }) => {
   }, []);
 
   const distributionData = data.reduce((acc, curr) => {
-    const tipo = curr.tipo_voucher || 'comum';
+    const tipo = curr.tipo_refeicao || 'Não especificado';
     const existing = acc.find(item => item.name === tipo);
     if (existing) {
       existing.value += 1;
@@ -52,8 +51,7 @@ const ReportsTCharts = ({ filters }) => {
   const trendData = data.map((item, index) => ({
     x: index,
     y: parseFloat(item.valor_refeicao) || 0,
-    data: new Date(item.data_uso).toLocaleDateString(),
-    tipo: item.tipo_voucher || 'comum'
+    data: new Date(item.data_uso).toLocaleDateString()
   }));
 
   return (
