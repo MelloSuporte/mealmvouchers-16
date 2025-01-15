@@ -29,7 +29,7 @@ export const useReportsTData = (filters) => {
             setor_id,
             nome_setor,
             tipo_refeicao,
-            valor_refeicao,
+            valor,
             observacao,
             voucher_descartavel_id,
             voucher_extra_id
