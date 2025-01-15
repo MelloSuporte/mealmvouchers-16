@@ -25,7 +25,8 @@ const ReportsTCharts = ({ filters }) => {
   const usageData = data.map(item => ({
     data: new Date(item.data_uso).toLocaleDateString(),
     total: 1,
-    valor: parseFloat(item.valor_refeicao) || 0
+    valor: parseFloat(item.valor_refeicao) || 0,
+    tipo: item.tipo || 'comum'
   })).reduce((acc, curr) => {
     const existing = acc.find(item => item.data === curr.data);
     if (existing) {
@@ -38,7 +39,7 @@ const ReportsTCharts = ({ filters }) => {
   }, []);
 
   const distributionData = data.reduce((acc, curr) => {
-    const tipo = curr.tipo_refeicao || 'Não especificado';
+    const tipo = curr.tipo || 'comum';
     const existing = acc.find(item => item.name === tipo);
     if (existing) {
       existing.value += 1;
@@ -51,7 +52,8 @@ const ReportsTCharts = ({ filters }) => {
   const trendData = data.map((item, index) => ({
     x: index,
     y: parseFloat(item.valor_refeicao) || 0,
-    data: new Date(item.data_uso).toLocaleDateString()
+    data: new Date(item.data_uso).toLocaleDateString(),
+    tipo: item.tipo || 'comum'
   }));
 
   return (
@@ -87,7 +89,7 @@ const ReportsTCharts = ({ filters }) => {
               cx="50%"
               cy="50%"
               outerRadius={150}
-              label
+              label={({ name, value }) => `${name}: ${value}`}
             >
               {distributionData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
