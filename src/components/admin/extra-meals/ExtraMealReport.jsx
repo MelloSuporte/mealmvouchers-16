@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../../config/supabase';
 import { generateReportPDF } from './pdfGenerator';
+import { FileDown, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import {
   Pagination,
   PaginationContent,
@@ -73,12 +75,30 @@ const ExtraMealReport = () => {
     }
   };
 
-  // Pagination logic
+  const handleGenerateExcel = () => {
+    if (meals?.length) {
+      const workbook = XLSX.utils.book_new();
+      
+      const formattedData = meals.map(meal => ({
+        'Data': formatDate(meal.data_consumo),
+        'Usuário': meal.usuarios?.nome || '-',
+        'Refeição': meal.refeicoes?.nome || '-',
+        'Quantidade': meal.quantidade || 0,
+        'Valor': `R$ ${meal.valor.toFixed(2)}`
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Refeições Extras');
+      
+      const fileName = `relatorio-refeicoes-extras-${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+    }
+  };
+
   const totalPages = meals ? Math.ceil(meals.length / ITEMS_PER_PAGE) : 0;
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedMeals = meals?.slice(startIndex, startIndex + ITEMS_PER_PAGE) || [];
 
-  // Format date function
   const formatDate = (dateString) => {
     const date = new Date(dateString + 'T12:00:00');
     return date.toLocaleDateString('pt-BR');
@@ -126,13 +146,25 @@ const ExtraMealReport = () => {
           </div>
         </div>
 
-        <Button 
-          onClick={handleGenerateReport}
-          disabled={!meals?.length}
-          className="w-fit px-4"
-        >
-          Gerar Relatório PDF
-        </Button>
+        <div className="flex gap-4">
+          <Button 
+            onClick={handleGenerateReport}
+            disabled={!meals?.length}
+            className="w-fit px-4"
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            Gerar PDF
+          </Button>
+
+          <Button 
+            onClick={handleGenerateExcel}
+            disabled={!meals?.length}
+            className="w-fit px-4"
+          >
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Gerar Excel
+          </Button>
+        </div>
 
         {paginatedMeals?.length > 0 && (
           <div className="mt-6">
