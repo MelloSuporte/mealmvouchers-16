@@ -57,7 +57,6 @@ export const exportToPDF = async (data, filters, adminName) => {
     doc.text(`Quantidade de Refeições: ${totalMeals}`, 14, 90);
 
     if (!data || data.length === 0) {
-      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 100);
       return doc;
     }
 
