@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 
 export const AdminPermissionsForm = ({ permissions, onPermissionChange }) => {
   const permissionLabels = {
-    gerenciar_vouchers_extra: "Gerenciar Vouchers Extra",
     gerenciar_vouchers_descartaveis: "Gerenciar Vouchers Descartáveis",
     gerenciar_usuarios: "Usuários",
     gerenciar_empresas: "Empresas",
