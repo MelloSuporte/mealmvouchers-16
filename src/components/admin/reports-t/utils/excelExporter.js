@@ -13,12 +13,28 @@ export const exportToExcel = (data) => {
       'Refeição': item.tipo_refeicao || '-',
       'Valor': formatCurrency(item.valor_refeicao || 0),
       'Turno': item.turno || '-',
-      'Setor': item.nome_setor || '-'
+      'Setor': item.nome_setor || '-',
+      'Tipo Voucher': item.tipo_voucher || 'comum' // Adicionando tipo do voucher
     })) || [];
 
     // Criar workbook e worksheet
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
+
+    // Ajustar largura das colunas
+    const wscols = [
+      { wch: 20 }, // Data/Hora
+      { wch: 30 }, // Usuário
+      { wch: 15 }, // CPF
+      { wch: 30 }, // Empresa
+      { wch: 20 }, // Refeição
+      { wch: 15 }, // Valor
+      { wch: 15 }, // Turno
+      { wch: 20 }, // Setor
+      { wch: 15 }  // Tipo Voucher
+    ];
+
+    ws['!cols'] = wscols;
 
     return { wb, ws };
   } catch (error) {
