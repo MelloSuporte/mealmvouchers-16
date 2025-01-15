@@ -1,7 +1,7 @@
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import logger from '@/config/logger';
 import { formatCurrency, formatDate } from './formatters';
 
@@ -68,12 +68,13 @@ export const exportToPDF = async (data, filters, adminName) => {
       item.tipo_refeicao || '-',
       formatCurrency(item.valor_refeicao || 0),
       item.turno || '-',
-      item.nome_setor || '-'
+      item.nome_setor || '-',
+      item.tipo_voucher || 'comum'
     ]);
 
     doc.autoTable({
       startY: 135,
-      head: [['Data/Hora', 'Usuário', 'CPF', 'Refeição', 'Valor', 'Turno', 'Setor']],
+      head: [['Data/Hora', 'Usuário', 'CPF', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -92,7 +93,8 @@ export const exportToPDF = async (data, filters, adminName) => {
         3: { cellWidth: 25 },
         4: { cellWidth: 20 },
         5: { cellWidth: 20 },
-        6: { cellWidth: 20 }
+        6: { cellWidth: 20 },
+        7: { cellWidth: 20 }
       }
     });
 

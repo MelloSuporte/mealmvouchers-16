@@ -14,7 +14,7 @@ export const exportToExcel = (data) => {
       'Valor': formatCurrency(item.valor_refeicao || 0),
       'Turno': item.turno || '-',
       'Setor': item.nome_setor || '-',
-      'Tipo Voucher': item.tipo_voucher || 'comum' // Adicionando tipo do voucher
+      'Tipo Voucher': item.tipo_voucher || 'comum'
     })) || [];
 
     // Criar workbook e worksheet
