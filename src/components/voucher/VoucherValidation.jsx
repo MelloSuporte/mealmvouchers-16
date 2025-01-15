@@ -6,7 +6,6 @@ import { findCommonVoucher } from './validators/commonVoucherValidator';
 import { findDisposableVoucher } from './validators/disposableVoucherValidator';
 import { validateAndUseDisposableVoucher } from './validators/disposableVoucherService';
 import { toast } from "sonner";
-import { useNavigate } from 'react-router-dom';
 
 export const validateVoucher = async (codigo, tipoRefeicaoId) => {
   try {

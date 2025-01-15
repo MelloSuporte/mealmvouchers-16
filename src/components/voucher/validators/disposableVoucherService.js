@@ -1,74 +1,40 @@
 import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
 
-export const validateAndUseDisposableVoucher = async (voucherDescartavel, tipoRefeicaoId) => {
+export const validateAndUseDisposableVoucher = async (voucher, tipoRefeicaoId) => {
   try {
-    logger.info('Validando voucher descartável:', {
-      voucherId: voucherDescartavel.id,
-      tipoRefeicaoId
-    });
+    logger.info('Validando voucher descartável:', voucher);
 
-    // Validate meal type
-    const { data: mealType, error: mealTypeError } = await supabase
-      .from('tipos_refeicao')
-      .select('*')
-      .eq('id', tipoRefeicaoId)
+    // Atualizar o voucher como usado
+    const { data: updatedVoucher, error: updateError } = await supabase
+      .from('vouchers_descartaveis')
+      .update({
+        usado_em: new Date().toISOString(),
+        data_uso: new Date().toISOString()
+      })
+      .eq('id', voucher.id)
+      .is('usado_em', null)
+      .select()
       .single();
 
-    if (mealTypeError || !mealType) {
-      logger.error('Erro ao validar tipo de refeição:', mealTypeError);
-      return {
-        success: false,
-        error: 'Tipo de refeição inválido',
-        voucherType: 'descartavel'
-      };
-    }
-
-    // Validate if voucher matches meal type
-    if (voucherDescartavel.tipo_refeicao_id !== tipoRefeicaoId) {
-      logger.error('Tipo de refeição não corresponde:', {
-        voucherTipo: voucherDescartavel.tipo_refeicao_id,
-        solicitadoTipo: tipoRefeicaoId
-      });
-      return {
-        success: false,
-        error: 'Tipo de refeição não corresponde ao voucher descartável',
-        voucherType: 'descartavel'
-      };
-    }
-
-    // Mark voucher as used
-    const { error: updateError } = await supabase
-      .from('vouchers_descartaveis')
-      .update({ 
-        usado_em: new Date().toISOString(),
-        usado: true
-      })
-      .eq('id', voucherDescartavel.id)
-      .is('usado_em', null);
-
     if (updateError) {
-      logger.error('Erro ao marcar voucher como usado:', updateError);
-      return {
-        success: false,
-        error: 'Erro ao marcar voucher como usado',
-        voucherType: 'descartavel'
-      };
+      logger.error('Erro ao atualizar voucher descartável:', updateError);
+      throw updateError;
     }
 
-    // Store data for confirmation page
-    localStorage.setItem('disposableVoucher', JSON.stringify({
-      code: voucherDescartavel.codigo,
-      mealType: mealType
-    }));
+    if (!updatedVoucher) {
+      throw new Error('Voucher já utilizado ou não encontrado');
+    }
 
-    logger.info('Voucher descartável validado e registrado com sucesso');
+    logger.info('Voucher descartável validado com sucesso:', updatedVoucher);
     return {
       success: true,
       voucherType: 'descartavel',
-      message: 'Voucher descartável validado com sucesso',
+      message: 'Voucher validado com sucesso',
+      voucher: updatedVoucher,
       shouldNavigate: true
     };
+
   } catch (error) {
     logger.error('Erro ao validar voucher descartável:', error);
     return { 
