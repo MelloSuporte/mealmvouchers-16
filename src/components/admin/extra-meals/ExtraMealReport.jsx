@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../../config/supabase';
 import { generateReportPDF } from './pdfGenerator';
-import { FileDown, FileSpreadsheet } from 'lucide-react';
+import { FileDown, FileSpreadsheet, Calendar, ListFilter, Table } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import {
   Pagination,
@@ -109,7 +109,10 @@ const ExtraMealReport = () => {
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="start_date">Data Inicial</Label>
+            <Label htmlFor="start_date" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Data Inicial
+            </Label>
             <Input
               type="date"
               id="start_date"
@@ -119,7 +122,10 @@ const ExtraMealReport = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="end_date">Data Final</Label>
+            <Label htmlFor="end_date" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Data Final
+            </Label>
             <Input
               type="date"
               id="end_date"
@@ -129,7 +135,10 @@ const ExtraMealReport = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Refeição</Label>
+            <Label className="flex items-center gap-2">
+              <ListFilter className="h-4 w-4" />
+              Refeição
+            </Label>
             <Select value={selectedMeal} onValueChange={setSelectedMeal}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a refeição" />
@@ -168,7 +177,10 @@ const ExtraMealReport = () => {
 
         {paginatedMeals?.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-lg font-semibold mb-4">Refeições Encontradas</h3>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Table className="h-5 w-5" />
+              Refeições Encontradas
+            </h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
