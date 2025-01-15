@@ -29,7 +29,8 @@ export const useReportsTData = (filters) => {
             tipo_refeicao,
             valor_refeicao,
             observacao,
-            voucher_descartavel_id
+            voucher_descartavel_id,
+            codigo_voucher
           `);
 
         if (filters.startDate) {
@@ -91,21 +92,12 @@ export const useReportsTData = (filters) => {
                 const voucher = voucherMap.get(item.voucher_descartavel_id);
                 return {
                   ...item,
-                  tipo: 'descartável',
                   codigo: voucher?.codigo
                 };
               }
-              return {
-                ...item,
-                tipo: 'comum'
-              };
+              return item;
             });
           }
-        } else {
-          processedData = processedData.map(item => ({
-            ...item,
-            tipo: 'comum'
-          }));
         }
 
         logger.info('Consulta filtrada retornou', processedData?.length || 0, 'registros');
