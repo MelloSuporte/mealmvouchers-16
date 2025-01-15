@@ -83,13 +83,12 @@ export const exportToPDF = async (metrics, filters) => {
       const tableData = metrics.data.map(item => [
         formatDate(item.data_uso),
         item.nome_usuario || '-',
-        item.cpf || '-',
         item.nome_empresa || '-',
         item.tipo_refeicao || '-',
         formatCurrency(item.valor_refeicao || 0),
         item.turno || '-',
         item.nome_setor || '-',
-        item.tipo_voucher || 'comum' // Adicionando tipo do voucher
+        item.tipo_voucher || 'comum'
       ]);
 
       logger.info('Dados formatados para tabela:', { 
@@ -99,7 +98,7 @@ export const exportToPDF = async (metrics, filters) => {
 
       doc.autoTable({
         startY: 100,
-        head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
+        head: [['Data/Hora', 'Usuário', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
         body: tableData,
         theme: 'grid',
         styles: { 
@@ -115,12 +114,11 @@ export const exportToPDF = async (metrics, filters) => {
           0: { cellWidth: 25 },
           1: { cellWidth: 35 },
           2: { cellWidth: 25 },
-          3: { cellWidth: 25 },
+          3: { cellWidth: 20 },
           4: { cellWidth: 20 },
           5: { cellWidth: 20 },
           6: { cellWidth: 20 },
-          7: { cellWidth: 20 },
-          8: { cellWidth: 20 } // Estilo para a nova coluna
+          7: { cellWidth: 20 }
         }
       });
     } else {
