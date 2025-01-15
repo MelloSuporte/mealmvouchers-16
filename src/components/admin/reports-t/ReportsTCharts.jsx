@@ -24,11 +24,13 @@ const ReportsTCharts = ({ filters }) => {
 
   const usageData = data.map(item => ({
     data: new Date(item.data_uso).toLocaleDateString(),
-    total: 1
+    total: 1,
+    valor: parseFloat(item.valor_refeicao) || 0
   })).reduce((acc, curr) => {
     const existing = acc.find(item => item.data === curr.data);
     if (existing) {
       existing.total += curr.total;
+      existing.valor += curr.valor;
     } else {
       acc.push(curr);
     }
@@ -36,7 +38,7 @@ const ReportsTCharts = ({ filters }) => {
   }, []);
 
   const distributionData = data.reduce((acc, curr) => {
-    const tipo = curr.tipo_refeicao;
+    const tipo = curr.tipo_voucher || 'comum';
     const existing = acc.find(item => item.name === tipo);
     if (existing) {
       existing.value += 1;
@@ -48,7 +50,7 @@ const ReportsTCharts = ({ filters }) => {
 
   const trendData = data.map((item, index) => ({
     x: index,
-    y: 1,
+    y: parseFloat(item.valor_refeicao) || 0,
     data: new Date(item.data_uso).toLocaleDateString()
   }));
 
@@ -65,10 +67,12 @@ const ReportsTCharts = ({ filters }) => {
           <LineChart data={usageData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="data" />
-            <YAxis />
+            <YAxis yAxisId="left" />
+            <YAxis yAxisId="right" orientation="right" />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="total" stroke="#8884d8" name="Total de Usos" />
+            <Line yAxisId="left" type="monotone" dataKey="total" stroke="#8884d8" name="Total de Usos" />
+            <Line yAxisId="right" type="monotone" dataKey="valor" stroke="#82ca9d" name="Valor Total (R$)" />
           </LineChart>
         </ResponsiveContainer>
       </TabsContent>
@@ -100,9 +104,9 @@ const ReportsTCharts = ({ filters }) => {
           <ScatterChart>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="x" name="Dia" />
-            <YAxis dataKey="y" name="Uso" />
+            <YAxis dataKey="y" name="Valor (R$)" />
             <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-            <Scatter name="Usos" data={trendData} fill="#8884d8" />
+            <Scatter name="Valores" data={trendData} fill="#8884d8" />
           </ScatterChart>
         </ResponsiveContainer>
       </TabsContent>
