@@ -150,10 +150,10 @@ const ExtraMealReport = () => {
           <Button 
             onClick={handleGenerateReport}
             disabled={!meals?.length}
-            className="w-fit px-4"
+            className="w-fit px-4 bg-[#020817] hover:bg-[#020817]/90"
           >
             <FileDown className="mr-2 h-4 w-4" />
-            Gerar PDF
+            Exportar PDF
           </Button>
 
           <Button 
