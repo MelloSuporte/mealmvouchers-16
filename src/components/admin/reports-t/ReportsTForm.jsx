@@ -4,7 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, FileSpreadsheet, FilePdf, BarChart } from "lucide-react";
 import ReportsTCharts from './ReportsTCharts';
 import ReportsTFilters from './ReportsTFilters';
-import ExportTButton from './components/ExportTButton';
+import { ExportTButton } from './components/ExportTButton';
 
 const ReportsTForm = () => {
   const [filters, setFilters] = React.useState({});
