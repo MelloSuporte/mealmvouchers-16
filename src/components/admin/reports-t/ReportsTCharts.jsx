@@ -25,7 +25,8 @@ const ReportsTCharts = ({ filters }) => {
   const usageData = data.map(item => ({
     data: new Date(item.data_uso).toLocaleDateString(),
     total: 1,
-    valor: parseFloat(item.valor_refeicao) || 0
+    valor: parseFloat(item.valor_refeicao) || 0,
+    tipo: item.tipo_voucher || 'comum'
   })).reduce((acc, curr) => {
     const existing = acc.find(item => item.data === curr.data);
     if (existing) {
@@ -51,7 +52,8 @@ const ReportsTCharts = ({ filters }) => {
   const trendData = data.map((item, index) => ({
     x: index,
     y: parseFloat(item.valor_refeicao) || 0,
-    data: new Date(item.data_uso).toLocaleDateString()
+    data: new Date(item.data_uso).toLocaleDateString(),
+    tipo: item.tipo_voucher || 'comum'
   }));
 
   return (
