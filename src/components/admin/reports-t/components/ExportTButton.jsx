@@ -1,25 +1,26 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { FileText, FileSpreadsheet } from 'lucide-react';
 import { toast } from "sonner";
 import { useReportsTData } from '../hooks/useReportsTData';
 import logger from '@/config/logger';
 import { exportToExcel } from '../utils/excelExporter';
 import { exportToPDF } from '../utils/pdfExporter';
 import * as XLSX from 'xlsx';
+import { useAdmin } from '@/contexts/AdminContext';
 
 const ExportTButton = ({ filters }) => {
   const { data: reportData } = useReportsTData(filters);
+  const { adminUser } = useAdmin();
 
-  const handleExportPDF = async () => {
+  const handlePDFExport = async () => {
     try {
-      if (!reportData || reportData.length === 0) {
+      if (!reportData) {
         toast.error('Nenhum dado disponível para exportar');
         return;
       }
 
       logger.info('Iniciando exportação PDF...');
-      const doc = await exportToPDF(reportData, filters);
+      const doc = await exportToPDF(reportData, filters, adminUser?.nome);
       doc.save(`relatorio_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success('Relatório PDF gerado com sucesso!');
     } catch (error) {
@@ -28,9 +29,9 @@ const ExportTButton = ({ filters }) => {
     }
   };
 
-  const handleExportExcel = async () => {
+  const handleExcelExport = async () => {
     try {
-      if (!reportData || reportData.length === 0) {
+      if (!reportData) {
         toast.error('Nenhum dado disponível para exportar');
         return;
       }
@@ -48,22 +49,11 @@ const ExportTButton = ({ filters }) => {
 
   return (
     <div className="flex gap-2">
-      <Button
-        onClick={handleExportExcel}
-        className="bg-green-600 hover:bg-green-700 text-white"
-        size="sm"
-      >
-        <FileSpreadsheet className="mr-2 h-4 w-4" />
-        Exportar Excel
-      </Button>
-      
-      <Button
-        onClick={handleExportPDF}
-        className="bg-primary hover:bg-primary/90 text-white"
-        size="sm"
-      >
-        <FileText className="mr-2 h-4 w-4" />
+      <Button onClick={handlePDFExport} variant="outline" size="sm">
         Exportar PDF
+      </Button>
+      <Button onClick={handleExcelExport} variant="outline" size="sm">
+        Exportar Excel
       </Button>
     </div>
   );
