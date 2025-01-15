@@ -29,7 +29,7 @@ export const useReportsTData = (filters) => {
             tipo_refeicao,
             valor_refeicao,
             observacao,
-            voucher_descartavel_id,
+            tipo_voucher,
             codigo_voucher
           `);
 
@@ -69,39 +69,8 @@ export const useReportsTData = (filters) => {
           throw error;
         }
 
-        // Buscar informações adicionais dos vouchers descartáveis
-        const voucherIds = data
-          ?.filter(item => item.voucher_descartavel_id)
-          .map(item => item.voucher_descartavel_id) || [];
-
-        let processedData = [...(data || [])];
-
-        if (voucherIds.length > 0) {
-          const { data: vouchersData, error: vouchersError } = await supabase
-            .from('vouchers_descartaveis')
-            .select('id, codigo')
-            .in('id', voucherIds);
-
-          if (vouchersError) {
-            logger.error('Erro ao buscar vouchers descartáveis:', vouchersError);
-          } else if (vouchersData) {
-            const voucherMap = new Map(vouchersData.map(v => [v.id, v]));
-            
-            processedData = processedData.map(item => {
-              if (item.voucher_descartavel_id) {
-                const voucher = voucherMap.get(item.voucher_descartavel_id);
-                return {
-                  ...item,
-                  codigo: voucher?.codigo
-                };
-              }
-              return item;
-            });
-          }
-        }
-
-        logger.info('Consulta filtrada retornou', processedData?.length || 0, 'registros');
-        return processedData;
+        logger.info('Consulta filtrada retornou', data?.length || 0, 'registros');
+        return data || [];
       } catch (error) {
         logger.error('Erro ao buscar dados:', error);
         toast.error('Erro ao carregar dados do relatório');
