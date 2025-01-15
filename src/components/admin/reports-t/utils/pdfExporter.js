@@ -60,17 +60,28 @@ export const exportToPDF = async (data, filters, adminName) => {
     // Tabelas
     doc.setFontSize(14);
     doc.text("Vouchers Utilizados", 14, 125);
-    
-    const tableData = data.map(item => [
-      formatDate(item.data_uso),
-      item.nome_usuario || '-',
-      item.cpf || '-',
-      item.tipo_refeicao || '-',
-      formatCurrency(item.valor_refeicao || 0),
-      item.turno || '-',
-      item.nome_setor || '-',
-      item.tipo_voucher || 'comum'
-    ]);
+
+    // Processar dados para a tabela
+    const tableData = data.map(item => {
+      // Determinar o tipo de voucher
+      let tipoVoucher = 'comum';
+      if (item.voucher_descartavel_id) {
+        tipoVoucher = 'descartável';
+      } else if (item.voucher_extra_id) {
+        tipoVoucher = 'extra';
+      }
+
+      return [
+        formatDate(item.data_uso),
+        item.nome_usuario || '-',
+        item.cpf || '-',
+        item.tipo_refeicao || '-',
+        formatCurrency(item.valor_refeicao || 0),
+        item.turno || '-',
+        item.nome_setor || '-',
+        tipoVoucher
+      ];
+    });
 
     doc.autoTable({
       startY: 135,
