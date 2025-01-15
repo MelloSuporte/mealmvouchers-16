@@ -14,9 +14,9 @@ export const useReportsTData = (filters) => {
 
         logger.info('Iniciando busca de dados do relatório com filtros:', filters);
 
-        // Construir query base
+        // Construir query base usando a view correta
         let query = supabase
-          .from('relatorio_uso_voucher')
+          .from('vw_uso_voucher_detalhado')
           .select(`
             id,
             data_uso,
