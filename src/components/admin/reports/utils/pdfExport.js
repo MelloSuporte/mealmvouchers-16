@@ -3,24 +3,7 @@ import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import logger from '@/config/logger';
-
-const formatCurrency = (value) => {
-  if (!value || isNaN(value)) return 'R$ 0,00';
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  }).format(value);
-};
-
-const formatDate = (date) => {
-  if (!date) return '-';
-  try {
-    return format(new Date(date), 'dd/MM/yyyy HH:mm', { locale: ptBR });
-  } catch (error) {
-    logger.error('Erro ao formatar data:', error, { date });
-    return '-';
-  }
-};
+import { formatCurrency, formatDate } from './formatters';
 
 export const exportToPDF = async (metrics, filters) => {
   try {
@@ -35,7 +18,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     const doc = new jsPDF();
     
-    // Cabeçalho
+    // Título
     doc.setFontSize(16);
     doc.text("Relatório de Uso de Vouchers", 14, 15);
     
@@ -45,7 +28,7 @@ export const exportToPDF = async (metrics, filters) => {
     const nomeUsuario = filters.userName || 'Usuário do Sistema';
     doc.text(`Exportado por: ${nomeUsuario} em ${dataExportacao}`, 14, 22);
     
-    // Informações dos filtros
+    // Informações do Relatório
     doc.setFontSize(10);
     doc.text("Informações do Relatório:", 14, 30);
     
@@ -70,69 +53,53 @@ export const exportToPDF = async (metrics, filters) => {
     const valorTotal = formatCurrency(metrics?.totalCost || 0);
     doc.text(`Valor Total: ${valorTotal}`, 14, 80);
 
-    // Se houver dados, adiciona a tabela detalhada
-    if (metrics?.data && metrics.data.length > 0) {
-      logger.info('Processando dados para tabela:', { 
-        quantidade: metrics.data.length 
-      });
-
-      const tableData = metrics.data.map(item => [
-        formatDate(item.data_uso),
-        item.nome_usuario || '-',
-        item.tipo_refeicao || '-',
-        formatCurrency(item.valor_refeicao || 0),
-        item.turno || '-',
-        item.nome_setor || '-',
-        item.tipo_voucher || 'comum'
-      ]);
-
-      logger.info('Dados formatados para tabela:', { 
-        linhas: tableData.length,
-        primeiraLinha: tableData[0]
-      });
-
-      doc.autoTable({
-        startY: 90,
-        head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
-        body: tableData,
-        theme: 'grid',
-        styles: { 
-          fontSize: 8,
-          cellPadding: 2
-        },
-        headStyles: { 
-          fillColor: [66, 66, 66],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold'
-        },
-        columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 25 },
-          3: { cellWidth: 20 },
-          4: { cellWidth: 20 },
-          5: { cellWidth: 20 },
-          6: { cellWidth: 20 }
-        }
-      });
-    } else {
-      logger.info('Nenhum dado encontrado para o período');
-      // Mensagem quando não há dados
+    if (!metrics?.data || metrics.data.length === 0) {
       doc.text("Nenhum registro encontrado para o período selecionado.", 14, 90);
+      return doc;
     }
 
-    const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
-    
-    logger.info('Salvando arquivo:', { fileName });
-    doc.save(fileName);
-    
-    return fileName;
-  } catch (error) {
-    logger.error('Erro ao gerar PDF:', error, {
-      stack: error.stack,
-      metrics,
-      filters
+    // Tabelas
+    doc.setFontSize(14);
+    doc.text("Vouchers Utilizados", 14, 100);
+
+    const tableData = metrics.data.map(item => [
+      formatDate(item.data_uso),
+      item.nome_usuario || '-',
+      item.tipo_refeicao || '-',
+      formatCurrency(item.valor_refeicao || 0),
+      item.turno || '-',
+      item.nome_setor || '-',
+      item.voucher_descartavel_id ? 'descartável' : 'comum'
+    ]);
+
+    doc.autoTable({
+      startY: 110,
+      head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
+      body: tableData,
+      theme: 'grid',
+      styles: { 
+        fontSize: 8,
+        cellPadding: 2
+      },
+      headStyles: { 
+        fillColor: [66, 66, 66],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 20 }
+      }
     });
+
+    return doc;
+  } catch (error) {
+    logger.error('Erro ao gerar PDF:', error);
     throw error;
   }
 };
