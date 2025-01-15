@@ -159,10 +159,10 @@ const ExtraMealReport = () => {
           <Button 
             onClick={handleGenerateExcel}
             disabled={!meals?.length}
-            className="w-fit px-4"
+            className="w-fit px-4 bg-green-500 hover:bg-green-600"
           >
             <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Gerar Excel
+            Exportar Excel
           </Button>
         </div>
 
