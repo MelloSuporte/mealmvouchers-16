@@ -81,6 +81,9 @@ export const useReportsTData = (filters) => {
         toast.error('Erro ao carregar dados do relatório');
         throw error;
       }
-    }
+    },
+    retry: 1,
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
 };
