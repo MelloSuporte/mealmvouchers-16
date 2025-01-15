@@ -4,6 +4,9 @@ import { FileText, FileSpreadsheet } from 'lucide-react';
 import { toast } from "sonner";
 import { useReportsTData } from '../hooks/useReportsTData';
 import logger from '@/config/logger';
+import { exportToExcel } from '../utils/excelExporter';
+import { exportToPDF } from '../utils/pdfExporter';
+import * as XLSX from 'xlsx';
 
 const ExportTButton = ({ filters }) => {
   const { data: reportData } = useReportsTData(filters);
@@ -16,6 +19,8 @@ const ExportTButton = ({ filters }) => {
       }
 
       logger.info('Iniciando exportação PDF...');
+      const doc = await exportToPDF(reportData, filters);
+      doc.save(`relatorio_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success('Relatório PDF gerado com sucesso!');
     } catch (error) {
       logger.error('Erro ao exportar PDF:', error);
@@ -31,6 +36,9 @@ const ExportTButton = ({ filters }) => {
       }
 
       logger.info('Iniciando exportação Excel...');
+      const { wb, ws } = exportToExcel(reportData);
+      XLSX.utils.book_append_sheet(wb, ws, "Relatório");
+      XLSX.writeFile(wb, `relatorio_${new Date().toISOString().split('T')[0]}.xlsx`);
       toast.success('Relatório Excel gerado com sucesso!');
     } catch (error) {
       logger.error('Erro ao exportar Excel:', error);
