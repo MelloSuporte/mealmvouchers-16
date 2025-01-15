@@ -1,10 +1,11 @@
 import React from 'react';
-import ReportsTFilters from './ReportsTFilters';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, FileSpreadsheet, FileText, BarChart } from "lucide-react";
 import ReportsTCharts from './ReportsTCharts';
+import ReportsTFilters from './ReportsTFilters';
 import { useReportsTFilters } from './hooks/useReportsTFilters';
 import ExportTButton from './components/ExportTButton';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 
 const ReportsTForm = () => {
   const { filters, handleFilterChange, data, isLoading, error } = useReportsTFilters();
@@ -33,8 +34,6 @@ const ReportsTForm = () => {
     );
   }
 
-  const showNoDataMessage = !data || data.length === 0;
-
   return (
     <div className="space-y-6 p-4">
       <div className="flex justify-between items-center">
@@ -44,9 +43,7 @@ const ReportsTForm = () => {
       
       <ReportsTFilters onFilterChange={handleFilterChange} filters={filters} />
       
-      {!showNoDataMessage && (
-        <ReportsTCharts filters={filters} />
-      )}
+      <ReportsTCharts filters={filters} />
     </div>
   );
 };

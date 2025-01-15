@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { FileDown, FileSpreadsheet } from 'lucide-react';
+import { FileText, FileSpreadsheet } from 'lucide-react';
 import { toast } from "sonner";
 import { useReportsTData } from '../hooks/useReportsTData';
 import logger from '@/config/logger';
@@ -70,7 +70,7 @@ const ExportTButton = ({ filters }) => {
         className="bg-primary hover:bg-primary/90 text-white"
         size="sm"
       >
-        <FileDown className="mr-2 h-4 w-4" />
+        <FileText className="mr-2 h-4 w-4" />
         Exportar PDF
       </Button>
       
