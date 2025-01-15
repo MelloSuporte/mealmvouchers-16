@@ -18,13 +18,11 @@ SELECT
     tr.valor as valor_refeicao,
     uv.observacao,
     CASE 
-        WHEN uv.tipo_voucher = 'descartavel' THEN 'descartavel'
-        WHEN uv.tipo_voucher = 'extra' THEN 'extra'
+        WHEN uv.voucher_descartavel_id IS NOT NULL THEN 'descartavel'
         ELSE 'comum'
     END as tipo_voucher,
     CASE 
-        WHEN uv.tipo_voucher = 'descartavel' THEN vd.codigo
-        WHEN uv.tipo_voucher = 'extra' THEN ve.codigo
+        WHEN uv.voucher_descartavel_id IS NOT NULL THEN vd.codigo
         ELSE u.voucher
     END as codigo_voucher
 FROM uso_voucher uv
@@ -33,8 +31,7 @@ LEFT JOIN empresas e ON u.empresa_id = e.id
 LEFT JOIN turnos t ON u.turno_id = t.id
 LEFT JOIN setores s ON u.setor_id = s.id
 LEFT JOIN tipos_refeicao tr ON uv.tipo_refeicao_id = tr.id
-LEFT JOIN vouchers_descartaveis vd ON uv.voucher_descartavel_id = vd.id
-LEFT JOIN vouchers_extras ve ON uv.voucher_extra_id = ve.id;
+LEFT JOIN vouchers_descartaveis vd ON uv.voucher_descartavel_id = vd.id;
 
 -- Set permissions
 ALTER VIEW vw_uso_voucher_detalhado OWNER TO postgres;
@@ -45,4 +42,3 @@ COMMENT ON VIEW vw_uso_voucher_detalhado IS 'View detalhada do uso de vouchers c
 
 -- Create indexes to improve query performance
 CREATE INDEX IF NOT EXISTS idx_uso_voucher_data_uso ON uso_voucher(usado_em);
-CREATE INDEX IF NOT EXISTS idx_uso_voucher_tipo ON uso_voucher(tipo_voucher);
