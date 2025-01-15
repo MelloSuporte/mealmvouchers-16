@@ -26,7 +26,7 @@ const ReportsTCharts = ({ filters }) => {
     data: new Date(item.data_uso).toLocaleDateString(),
     total: 1,
     valor: parseFloat(item.valor_refeicao) || 0,
-    tipo: item.tipo || 'comum'
+    tipo: item.tipo
   })).reduce((acc, curr) => {
     const existing = acc.find(item => item.data === curr.data);
     if (existing) {
@@ -39,7 +39,7 @@ const ReportsTCharts = ({ filters }) => {
   }, []);
 
   const distributionData = data.reduce((acc, curr) => {
-    const tipo = curr.tipo || 'comum';
+    const tipo = curr.tipo;
     const existing = acc.find(item => item.name === tipo);
     if (existing) {
       existing.value += 1;
@@ -53,7 +53,7 @@ const ReportsTCharts = ({ filters }) => {
     x: index,
     y: parseFloat(item.valor_refeicao) || 0,
     data: new Date(item.data_uso).toLocaleDateString(),
-    tipo: item.tipo || 'comum'
+    tipo: item.tipo
   }));
 
   return (
