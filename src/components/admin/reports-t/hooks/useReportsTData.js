@@ -32,7 +32,8 @@ export const useReportsTData = (filters) => {
             valor,
             observacao,
             voucher_descartavel_id,
-            voucher_extra_id
+            voucher_extra_id,
+            tipo_voucher
           `);
 
         // Aplicar filtros
