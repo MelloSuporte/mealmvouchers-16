@@ -6,6 +6,7 @@ import { findCommonVoucher } from './validators/commonVoucherValidator';
 import { findDisposableVoucher } from './validators/disposableVoucherValidator';
 import { validateAndUseDisposableVoucher } from './validators/disposableVoucherService';
 import { toast } from "sonner";
+import { useNavigate } from 'react-router-dom';
 
 export const validateVoucher = async (codigo, tipoRefeicaoId) => {
   try {
@@ -75,7 +76,10 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
       }
 
       toast.success(result.message);
-      return result;
+      return {
+        ...result,
+        shouldNavigate: true
+      };
     }
 
     const notFoundMsg = 'Voucher inválido ou não encontrado';

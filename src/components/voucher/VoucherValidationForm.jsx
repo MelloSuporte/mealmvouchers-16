@@ -65,6 +65,9 @@ const VoucherValidationForm = () => {
           }));
           localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
           navigate('/user-confirmation');
+        } else if (result.voucherType === 'descartavel' && result.shouldNavigate) {
+          localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
+          navigate('/bom-apetite');
         }
       } else {
         toast.error(result.error || 'Erro ao validar voucher');
