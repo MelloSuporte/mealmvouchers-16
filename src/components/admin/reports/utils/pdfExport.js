@@ -49,30 +49,26 @@ export const exportToPDF = async (metrics, filters) => {
     doc.setFontSize(10);
     doc.text("Informações do Relatório:", 14, 30);
     
-    // Empresa
-    const empresaNome = filters.companyName || (filters.company === 'all' ? 'Todas as Empresas' : 'Empresa não especificada');
-    doc.text(`Empresa: ${empresaNome}`, 14, 40);
-    
     // Período
     const startDate = filters.startDate ? formatDate(filters.startDate) : '-';
     const endDate = filters.endDate ? formatDate(filters.endDate) : '-';
-    doc.text(`Período: ${startDate} a ${endDate}`, 14, 50);
+    doc.text(`Período: ${startDate} a ${endDate}`, 14, 40);
     
     // Turno
     const turnoNome = filters.shiftName || (filters.shift === 'all' ? 'Todos os Turnos' : 'Turno não especificado');
-    doc.text(`Turno: ${turnoNome}`, 14, 60);
+    doc.text(`Turno: ${turnoNome}`, 14, 50);
     
     // Setor
     const setorNome = filters.sectorName || (filters.sector === 'all' ? 'Todos os Setores' : 'Setor não especificado');
-    doc.text(`Setor: ${setorNome}`, 14, 70);
+    doc.text(`Setor: ${setorNome}`, 14, 60);
     
     // Tipo de Refeição
     const tipoRefeicao = filters.mealTypeName || (filters.mealType === 'all' ? 'Todos os Tipos' : 'Tipo não especificado');
-    doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, 80);
+    doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, 70);
     
     // Valor Total
     const valorTotal = formatCurrency(metrics?.totalCost || 0);
-    doc.text(`Valor Total: ${valorTotal}`, 14, 90);
+    doc.text(`Valor Total: ${valorTotal}`, 14, 80);
 
     // Se houver dados, adiciona a tabela detalhada
     if (metrics?.data && metrics.data.length > 0) {
@@ -96,7 +92,7 @@ export const exportToPDF = async (metrics, filters) => {
       });
 
       doc.autoTable({
-        startY: 100,
+        startY: 90,
         head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
         body: tableData,
         theme: 'grid',
@@ -122,7 +118,7 @@ export const exportToPDF = async (metrics, filters) => {
     } else {
       logger.info('Nenhum dado encontrado para o período');
       // Mensagem quando não há dados
-      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 100);
+      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 90);
     }
 
     const fileName = `relatorio-vouchers-${format(new Date(), 'dd-MM-yyyy-HH-mm', { locale: ptBR })}.pdf`;
