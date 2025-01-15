@@ -1,13 +1,8 @@
 import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
-import { toast } from "sonner";
 
 export const validateAndUseDisposableVoucher = async (voucher, tipoRefeicaoId) => {
   try {
-    if (!voucher || !tipoRefeicaoId) {
-      throw new Error('Voucher e tipo de refeição são obrigatórios');
-    }
-
     logger.info('Validando voucher descartável:', voucher);
 
     // Atualizar o voucher como usado
