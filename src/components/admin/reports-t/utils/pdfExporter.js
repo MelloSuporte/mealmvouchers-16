@@ -73,17 +73,17 @@ export const exportToPDF = async (data, filters, adminName) => {
       formatDate(item.data_uso),
       item.nome_usuario || '-',
       item.cpf || '-',
-      item.voucher_descartavel_id ? (item.codigo || '-') : (item.codigo_voucher || '-'),
-      item.voucher_descartavel_id ? 'descartável' : 'comum',
+      item.nome_empresa || '-',
       item.tipo_refeicao || '-',
       formatCurrency(item.valor_refeicao || 0),
       item.turno || '-',
-      item.nome_setor || '-'
+      item.nome_setor || '-',
+      item.voucher_descartavel_id ? 'descartável' : 'comum'
     ]);
 
     doc.autoTable({
       startY: 130,
-      head: [['Data/Hora', 'Usuário', 'CPF', 'Código', 'Tipo Voucher', 'Refeição', 'Valor', 'Turno', 'Setor']],
+      head: [['Data/Hora', 'Usuário', 'CPF', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -99,9 +99,9 @@ export const exportToPDF = async (data, filters, adminName) => {
         0: { cellWidth: 25 },
         1: { cellWidth: 35 },
         2: { cellWidth: 25 },
-        3: { cellWidth: 20 },
+        3: { cellWidth: 25 },
         4: { cellWidth: 20 },
-        5: { cellWidth: 25 },
+        5: { cellWidth: 20 },
         6: { cellWidth: 20 },
         7: { cellWidth: 20 },
         8: { cellWidth: 20 }
