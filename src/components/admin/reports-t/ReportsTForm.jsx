@@ -44,16 +44,7 @@ const ReportsTForm = () => {
       
       <ReportsTFilters onFilterChange={handleFilterChange} filters={filters} />
       
-      {showNoDataMessage ? (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Nenhum registro encontrado para o período selecionado.
-            <br />
-            Tente ajustar os filtros ou selecione um período diferente.
-          </AlertDescription>
-        </Alert>
-      ) : (
+      {!showNoDataMessage && (
         <ReportsTCharts filters={filters} />
       )}
     </div>
