@@ -83,7 +83,6 @@ export const exportToPDF = async (metrics, filters) => {
       const tableData = metrics.data.map(item => [
         formatDate(item.data_uso),
         item.nome_usuario || '-',
-        item.nome_empresa || '-',
         item.tipo_refeicao || '-',
         formatCurrency(item.valor_refeicao || 0),
         item.turno || '-',
@@ -98,7 +97,7 @@ export const exportToPDF = async (metrics, filters) => {
 
       doc.autoTable({
         startY: 100,
-        head: [['Data/Hora', 'Usuário', 'Empresa', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
+        head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
         body: tableData,
         theme: 'grid',
         styles: { 
@@ -117,8 +116,7 @@ export const exportToPDF = async (metrics, filters) => {
           3: { cellWidth: 20 },
           4: { cellWidth: 20 },
           5: { cellWidth: 20 },
-          6: { cellWidth: 20 },
-          7: { cellWidth: 20 }
+          6: { cellWidth: 20 }
         }
       });
     } else {
