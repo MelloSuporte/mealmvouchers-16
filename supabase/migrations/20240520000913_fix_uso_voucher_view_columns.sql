@@ -13,17 +13,22 @@ SELECT
     e.nome as nome_empresa,
     t.tipo_turno as turno,
     s.id as setor_id,
-    s.nome as nome_setor,
+    s.nome_setor,
     tr.nome as tipo_refeicao,
     tr.valor as valor_refeicao,
     uv.observacao,
-    uv.tipo_voucher,
+    uv.voucher_descartavel_id,
+    uv.voucher_extra_id,
     CASE 
-        WHEN uv.tipo_voucher = 'comum' THEN u.voucher
-        WHEN uv.tipo_voucher = 'descartavel' THEN vd.codigo
-        ELSE ve.codigo
-    END as codigo_voucher,
-    vd.id as voucher_descartavel_id
+        WHEN uv.voucher_descartavel_id IS NOT NULL THEN 'descartavel'
+        WHEN uv.voucher_extra_id IS NOT NULL THEN 'extra'
+        ELSE 'comum'
+    END as tipo_voucher,
+    CASE 
+        WHEN uv.voucher_descartavel_id IS NOT NULL THEN vd.codigo
+        WHEN uv.voucher_extra_id IS NOT NULL THEN ve.codigo
+        ELSE u.voucher
+    END as codigo_voucher
 FROM uso_voucher uv
 LEFT JOIN usuarios u ON uv.usuario_id = u.id
 LEFT JOIN empresas e ON u.empresa_id = e.id
