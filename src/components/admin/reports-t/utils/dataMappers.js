@@ -11,7 +11,7 @@ export const mapVoucherData = (data) => {
     setor_id: item.setor_id,
     nome_setor: item.nome_setor || 'N/A',
     tipo_refeicao: item.tipo_refeicao || 'N/A',
-    valor: item.valor || 0,
+    valor: item.valor_refeicao || 0,
     observacao: item.observacao || '',
     tipo_voucher: item.tipo_voucher || (
       item.voucher_descartavel_id ? 'descartável' :
