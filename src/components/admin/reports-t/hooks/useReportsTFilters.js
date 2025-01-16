@@ -9,7 +9,8 @@ export const useReportsTFilters = () => {
     endDate: endOfDay(new Date()),
     shift: 'all',
     sector: 'all',
-    mealType: 'all'
+    mealType: 'all',
+    voucherType: 'all'
   });
 
   const handleFilterChange = (filterType, value) => {

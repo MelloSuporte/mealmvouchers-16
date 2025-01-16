@@ -61,6 +61,10 @@ export const useReportsTData = (filters) => {
           query = query.eq('tipo_refeicao', filters.mealType);
         }
 
+        if (filters.voucherType && filters.voucherType !== 'all') {
+          query = query.eq('tipo_voucher', filters.voucherType);
+        }
+
         const { data, error } = await query;
 
         if (error) {

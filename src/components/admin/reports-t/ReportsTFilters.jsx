@@ -75,6 +75,23 @@ const ReportsTFilters = ({ onFilterChange, filters }) => {
         </div>
 
         <div className="space-y-2">
+          <Label>Tipo de Voucher</Label>
+          <Select
+            value={filters.voucherType}
+            onValueChange={(value) => onFilterChange('voucherType', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="comum">Comum</SelectItem>
+              <SelectItem value="descartavel">Descartável</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
           <Label>Empresa</Label>
           <Select
             value={filters.company}
