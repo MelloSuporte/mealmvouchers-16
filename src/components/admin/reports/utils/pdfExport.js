@@ -18,7 +18,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     const doc = new jsPDF();
     
-    // Título
+    // Título e cabeçalho
     doc.setFontSize(16);
     doc.text("Relatório de Uso de Vouchers", 14, 15);
     
@@ -28,39 +28,66 @@ export const exportToPDF = async (metrics, filters) => {
     const nomeUsuario = filters.userName || 'Usuário do Sistema';
     doc.text(`Exportado por: ${nomeUsuario} em ${dataExportacao}`, 14, 22);
     
-    // Informações do Relatório
+    // Período do relatório
     doc.setFontSize(10);
-    doc.text("Informações do Relatório:", 14, 30);
-    
-    // Período
     const startDate = filters.startDate ? formatDate(filters.startDate) : '-';
     const endDate = filters.endDate ? formatDate(filters.endDate) : '-';
-    doc.text(`Período: ${startDate} a ${endDate}`, 14, 40);
-    
-    // Turno
-    const turnoNome = filters.shiftName || (filters.shift === 'all' ? 'Todos os Turnos' : 'Turno não especificado');
-    doc.text(`Turno: ${turnoNome}`, 14, 50);
-    
-    // Setor
-    const setorNome = filters.sectorName || (filters.sector === 'all' ? 'Todos os Setores' : 'Setor não especificado');
-    doc.text(`Setor: ${setorNome}`, 14, 60);
-    
-    // Tipo de Refeição
-    const tipoRefeicao = filters.mealTypeName || (filters.mealType === 'all' ? 'Todos os Tipos' : 'Tipo não especificado');
-    doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, 70);
-    
-    // Valor Total
-    const valorTotal = formatCurrency(metrics?.totalCost || 0);
-    doc.text(`Valor Total: ${valorTotal}`, 14, 80);
+    doc.text(`Período: ${startDate} a ${endDate}`, 14, 32);
 
-    if (!metrics?.data || metrics.data.length === 0) {
-      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 90);
-      return doc;
+    // Seção de Filtros Aplicados
+    let yPos = 42;
+    doc.text("Filtros Aplicados:", 14, yPos);
+    yPos += 8;
+
+    // Empresa
+    if (filters.companyName && filters.company !== 'all') {
+      doc.text(`• Empresa: ${filters.companyName}`, 20, yPos);
+      yPos += 8;
     }
 
-    // Tabelas
+    // Setor
+    if (filters.sectorName && filters.sector !== 'all') {
+      doc.text(`• Setor: ${filters.sectorName}`, 20, yPos);
+      yPos += 8;
+    }
+
+    // Turno
+    if (filters.shiftName && filters.shift !== 'all') {
+      doc.text(`• Turno: ${filters.shiftName}`, 20, yPos);
+      yPos += 8;
+    }
+
+    // Tipo de Refeição
+    if (filters.mealTypeName && filters.mealType !== 'all') {
+      doc.text(`• Tipo de Refeição: ${filters.mealTypeName}`, 20, yPos);
+      yPos += 8;
+    }
+
+    // Se nenhum filtro foi aplicado
+    if ((!filters.company || filters.company === 'all') && 
+        (!filters.sector || filters.sector === 'all') && 
+        (!filters.shift || filters.shift === 'all') && 
+        (!filters.mealType || filters.mealType === 'all')) {
+      doc.text(`• Nenhum filtro aplicado`, 20, yPos);
+      yPos += 8;
+    }
+
+    // Valor Total
+    yPos += 8;
+    const valorTotal = formatCurrency(metrics?.totalCost || 0);
+    doc.text(`Valor Total: ${valorTotal}`, 14, yPos);
+
+    if (!metrics?.data || metrics.data.length === 0) {
+      yPos += 10;
+      doc.text("Nenhum registro encontrado para o período selecionado.", 14, yPos);
+      doc.save('relatorio-vouchers.pdf');
+      return;
+    }
+
+    // Tabela de dados
+    yPos += 10;
     doc.setFontSize(14);
-    doc.text("Vouchers Utilizados", 14, 100);
+    doc.text("Vouchers Utilizados", 14, yPos);
 
     const tableData = metrics.data.map(item => [
       formatDate(item.data_uso),
@@ -69,12 +96,12 @@ export const exportToPDF = async (metrics, filters) => {
       formatCurrency(item.valor_refeicao || 0),
       item.turno || '-',
       item.nome_setor || '-',
-      item.voucher_descartavel_id ? 'descartável' : 'comum'
+      item.voucher_descartavel_id ? 'Descartável' : 'Comum'
     ]);
 
     doc.autoTable({
-      startY: 110,
-      head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
+      startY: yPos + 10,
+      head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -97,6 +124,7 @@ export const exportToPDF = async (metrics, filters) => {
       }
     });
 
+    doc.save('relatorio-vouchers.pdf');
     return doc;
   } catch (error) {
     logger.error('Erro ao gerar PDF:', error);
