@@ -24,7 +24,8 @@ export const exportToPDF = async (data, filters, adminName) => {
     // Informações do usuário que exportou
     doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    doc.text(`Exportado por: ${adminName || 'Usuário do Sistema'} em ${dataExportacao}`, 14, 22);
+    const nomeAdmin = adminName || 'Usuário do Sistema';
+    doc.text(`Exportado por: ${nomeAdmin} em ${dataExportacao}`, 14, 22);
     
     // Informações do Relatório
     doc.setFontSize(10);
