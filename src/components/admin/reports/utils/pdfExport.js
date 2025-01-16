@@ -7,87 +7,53 @@ import { formatCurrency, formatDate } from './formatters';
 
 export const exportToPDF = async (metrics, filters) => {
   try {
-    logger.info('Iniciando geração do PDF:', { 
-      metrics: {
-        totalRegistros: metrics?.data?.length,
-        totalCost: metrics?.totalCost,
-        averageCost: metrics?.averageCost
-      }, 
-      filters 
-    });
+    logger.info('Iniciando geração do PDF:', { metrics, filters });
 
     const doc = new jsPDF();
     
-    // Título e cabeçalho
+    // Título
     doc.setFontSize(16);
     doc.text("Relatório de Uso de Vouchers", 14, 15);
     
     // Informações do usuário que exportou
     doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    const nomeUsuario = filters.userName || 'Usuário do Sistema';
-    doc.text(`Exportado por: ${nomeUsuario} em ${dataExportacao}`, 14, 22);
+    doc.text(`Exportado em ${dataExportacao}`, 14, 22);
     
-    // Período do relatório
+    // Informações do Relatório
     doc.setFontSize(10);
+    doc.text("Informações do Relatório:", 14, 30);
+    
+    // Período
     const startDate = filters.startDate ? formatDate(filters.startDate) : '-';
     const endDate = filters.endDate ? formatDate(filters.endDate) : '-';
-    doc.text(`Período: ${startDate} a ${endDate}`, 14, 32);
-
-    // Seção de Filtros Aplicados
-    let yPos = 42;
-    doc.text("Filtros Aplicados:", 14, yPos);
-    yPos += 8;
-
-    // Empresa
-    if (filters.companyName && filters.company !== 'all') {
-      doc.text(`• Empresa: ${filters.companyName}`, 20, yPos);
-      yPos += 8;
-    }
-
-    // Setor
-    if (filters.sectorName && filters.sector !== 'all') {
-      doc.text(`• Setor: ${filters.sectorName}`, 20, yPos);
-      yPos += 8;
-    }
-
+    doc.text(`Período: ${startDate} a ${endDate}`, 14, 40);
+    
     // Turno
-    if (filters.shiftName && filters.shift !== 'all') {
-      doc.text(`• Turno: ${filters.shiftName}`, 20, yPos);
-      yPos += 8;
-    }
-
+    const turnoNome = filters.shiftName || (filters.shift === 'all' ? 'Todos os Turnos' : 'Turno não especificado');
+    doc.text(`Turno: ${turnoNome}`, 14, 50);
+    
+    // Setor
+    const setorNome = filters.sectorName || (filters.sector === 'all' ? 'Todos os Setores' : 'Setor não especificado');
+    doc.text(`Setor: ${setorNome}`, 14, 60);
+    
     // Tipo de Refeição
-    if (filters.mealTypeName && filters.mealType !== 'all') {
-      doc.text(`• Tipo de Refeição: ${filters.mealTypeName}`, 20, yPos);
-      yPos += 8;
-    }
-
-    // Se nenhum filtro foi aplicado
-    if ((!filters.company || filters.company === 'all') && 
-        (!filters.sector || filters.sector === 'all') && 
-        (!filters.shift || filters.shift === 'all') && 
-        (!filters.mealType || filters.mealType === 'all')) {
-      doc.text(`• Nenhum filtro aplicado`, 20, yPos);
-      yPos += 8;
-    }
-
+    const tipoRefeicao = filters.mealTypeName || (filters.mealType === 'all' ? 'Todos os Tipos' : 'Tipo não especificado');
+    doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, 70);
+    
     // Valor Total
-    yPos += 8;
     const valorTotal = formatCurrency(metrics?.totalCost || 0);
-    doc.text(`Valor Total: ${valorTotal}`, 14, yPos);
+    doc.text(`Valor Total: ${valorTotal}`, 14, 80);
 
     if (!metrics?.data || metrics.data.length === 0) {
-      yPos += 10;
-      doc.text("Nenhum registro encontrado para o período selecionado.", 14, yPos);
+      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 90);
       doc.save('relatorio-vouchers.pdf');
       return;
     }
 
-    // Tabela de dados
-    yPos += 10;
+    // Tabelas
     doc.setFontSize(14);
-    doc.text("Vouchers Utilizados", 14, yPos);
+    doc.text("Vouchers Utilizados", 14, 100);
 
     const tableData = metrics.data.map(item => [
       formatDate(item.data_uso),
@@ -100,7 +66,7 @@ export const exportToPDF = async (metrics, filters) => {
     ]);
 
     doc.autoTable({
-      startY: yPos + 10,
+      startY: 110,
       head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo']],
       body: tableData,
       theme: 'grid',
