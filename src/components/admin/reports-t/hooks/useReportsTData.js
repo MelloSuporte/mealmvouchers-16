@@ -14,23 +14,18 @@ export const useReportsTData = (filters) => {
         logger.info('Iniciando busca de dados do relatório com filtros:', filters);
 
         let query = supabase
-          .from('vw_uso_voucher_detalhado')
+          .from('vouchers_descartaveis')
           .select(`
             id,
+            codigo,
             data_uso,
-            usuario_id,
-            nome_usuario,
-            cpf,
-            empresa_id,
+            nome_pessoa,
             nome_empresa,
-            turno,
-            setor_id,
-            nome_setor,
-            tipo_refeicao,
             valor_refeicao,
-            observacao,
-            tipo_voucher,
-            codigo_voucher
+            empresa_nome,
+            tipos_refeicao (
+              nome
+            )
           `);
 
         if (filters.startDate) {
@@ -46,23 +41,7 @@ export const useReportsTData = (filters) => {
         }
 
         if (filters.company && filters.company !== 'all') {
-          query = query.eq('empresa_id', filters.company);
-        }
-
-        if (filters.shift && filters.shift !== 'all') {
-          query = query.eq('turno', filters.shift);
-        }
-
-        if (filters.sector && filters.sector !== 'all') {
-          query = query.eq('setor_id', filters.sector);
-        }
-
-        if (filters.mealType && filters.mealType !== 'all') {
-          query = query.eq('tipo_refeicao', filters.mealType);
-        }
-
-        if (filters.voucherType && filters.voucherType !== 'all') {
-          query = query.eq('tipo_voucher', filters.voucherType);
+          query = query.eq('empresa_nome', filters.company);
         }
 
         const { data, error } = await query;
@@ -73,8 +52,14 @@ export const useReportsTData = (filters) => {
           throw error;
         }
 
-        logger.info('Consulta filtrada retornou', data?.length || 0, 'registros');
-        return data || [];
+        const formattedData = data?.map(item => ({
+          ...item,
+          tipo_refeicao: item.tipos_refeicao?.nome,
+          valor_refeicao: parseFloat(item.valor_refeicao || 0)
+        })) || [];
+
+        logger.info('Consulta filtrada retornou', formattedData.length, 'registros');
+        return formattedData;
       } catch (error) {
         logger.error('Erro ao buscar dados:', error);
         toast.error('Erro ao carregar dados do relatório');
