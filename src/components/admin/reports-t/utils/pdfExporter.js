@@ -12,7 +12,8 @@ export const exportToPDF = async (data, filters, adminName) => {
         totalRegistros: data?.length,
         totalCost: data?.reduce((sum, item) => sum + (parseFloat(item.tipos_refeicao?.valor) || 0), 0)
       }, 
-      filters 
+      filters,
+      adminName 
     });
 
     const doc = new jsPDF();
@@ -24,7 +25,7 @@ export const exportToPDF = async (data, filters, adminName) => {
     // Informações do usuário que exportou
     doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    const nomeAdmin = adminName || 'Usuário do Sistema';
+    const nomeAdmin = localStorage.getItem('adminName') || adminName || 'Usuário do Sistema';
     doc.text(`Exportado por: ${nomeAdmin} em ${dataExportacao}`, 14, 22);
     
     // Informações do Relatório
