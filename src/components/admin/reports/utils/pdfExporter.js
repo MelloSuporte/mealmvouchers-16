@@ -7,14 +7,7 @@ import { formatCurrency, formatDate } from './formatters';
 
 export const exportToPDF = async (metrics, filters) => {
   try {
-    logger.info('Iniciando geração do PDF:', { 
-      metrics: {
-        totalRegistros: metrics?.data?.length,
-        totalCost: metrics?.totalCost,
-        averageCost: metrics?.averageCost
-      }, 
-      filters 
-    });
+    logger.info('Iniciando geração do PDF:', { metrics, filters });
 
     const doc = new jsPDF();
     
