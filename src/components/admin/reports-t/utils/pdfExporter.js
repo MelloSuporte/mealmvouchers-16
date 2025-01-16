@@ -63,13 +63,12 @@ export const exportToPDF = async (data, filters, adminName) => {
       item.nome_empresa || '-',
       item.tipos_refeicao?.nome || '-',
       formatCurrency(item.tipos_refeicao?.valor || 0),
-      item.codigo || '-',
-      formatCurrency(item.tipos_refeicao?.valor || 0)
+      item.codigo || '-'
     ]);
 
     doc.autoTable({
       startY: 86,
-      head: [['Data/Hora', 'Nome', 'Empresa', 'Refeição', 'Valor', 'Código', 'Valor']],
+      head: [['Data/Hora', 'Nome', 'Empresa', 'Refeição', 'Valor', 'Código']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -87,8 +86,7 @@ export const exportToPDF = async (data, filters, adminName) => {
         2: { cellWidth: 35 },
         3: { cellWidth: 25 },
         4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 20 }
+        5: { cellWidth: 20 }
       }
     });
 
