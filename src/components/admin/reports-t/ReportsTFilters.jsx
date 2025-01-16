@@ -1,37 +1,14 @@
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { DatePickerWithRange } from "@/components/ui/date-picker";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DateRangeFilter from './filters/DateRangeFilter';
+import VoucherTypeFilter from './filters/VoucherTypeFilter';
+import CompanyFilter from './filters/CompanyFilter';
+import ShiftFilter from './filters/ShiftFilter';
 
 const ReportsTFilters = ({ onFilterChange, filters }) => {
-  const { data: companies } = useQuery({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('empresas')
-        .select('*')
-        .eq('ativo', true)
-        .order('nome');
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const { data: shifts } = useQuery({
-    queryKey: ['shifts'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('turnos')
-        .select('*')
-        .eq('ativo', true)
-        .order('id');
-      if (error) throw error;
-      return data;
-    }
-  });
-
   const { data: sectors } = useQuery({
     queryKey: ['sectors'],
     queryFn: async () => {
@@ -60,76 +37,25 @@ const ReportsTFilters = ({ onFilterChange, filters }) => {
   return (
     <div className="space-y-4 p-4 bg-white rounded-lg border">
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Período</Label>
-          <DatePickerWithRange 
-            date={{
-              from: filters.startDate,
-              to: filters.endDate
-            }}
-            onSelect={(range) => {
-              onFilterChange('startDate', range?.from);
-              onFilterChange('endDate', range?.to);
-            }}
-          />
-        </div>
+        <DateRangeFilter 
+          filters={filters} 
+          onFilterChange={onFilterChange} 
+        />
+        
+        <VoucherTypeFilter 
+          value={filters.voucherType}
+          onChange={(value) => onFilterChange('voucherType', value)}
+        />
 
-        <div className="space-y-2">
-          <Label>Tipo de Voucher</Label>
-          <Select
-            value={filters.voucherType}
-            onValueChange={(value) => onFilterChange('voucherType', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="comum">Comum</SelectItem>
-              <SelectItem value="descartavel">Descartável</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <CompanyFilter 
+          value={filters.company}
+          onChange={(value) => onFilterChange('company', value)}
+        />
 
-        <div className="space-y-2">
-          <Label>Empresa</Label>
-          <Select
-            value={filters.company}
-            onValueChange={(value) => onFilterChange('company', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione a empresa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              {companies?.map((company) => (
-                <SelectItem key={company.id} value={company.id}>
-                  {company.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Turno</Label>
-          <Select
-            value={filters.shift}
-            onValueChange={(value) => onFilterChange('shift', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o turno" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {shifts?.map((shift) => (
-                <SelectItem key={shift.id} value={shift.tipo_turno}>
-                  {shift.tipo_turno}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <ShiftFilter 
+          value={filters.shift}
+          onChange={(value) => onFilterChange('shift', value)}
+        />
 
         <div className="space-y-2">
           <Label>Setor</Label>
