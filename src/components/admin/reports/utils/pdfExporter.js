@@ -67,10 +67,10 @@ export const exportToPDF = async (metrics, filters) => {
     }
 
     // Se nenhum filtro foi aplicado
-    if (!filters.company || filters.company === 'all' && 
-        !filters.sector || filters.sector === 'all' && 
-        !filters.shift || filters.shift === 'all' && 
-        !filters.mealType || filters.mealType === 'all') {
+    if ((!filters.company || filters.company === 'all') && 
+        (!filters.sector || filters.sector === 'all') && 
+        (!filters.shift || filters.shift === 'all') && 
+        (!filters.mealType || filters.mealType === 'all')) {
       doc.text(`• Nenhum filtro aplicado`, 20, currentY);
       currentY += 8;
     }
