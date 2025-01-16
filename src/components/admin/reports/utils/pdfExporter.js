@@ -18,8 +18,7 @@ export const exportToPDF = async (metrics, filters) => {
     // Informações do usuário que exportou
     doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    const nomeUsuario = filters.userName || 'Usuário do Sistema';
-    doc.text(`Exportado por: ${nomeUsuario} em ${dataExportacao}`, 14, 22);
+    doc.text(`Exportado em ${dataExportacao}`, 14, 22);
     
     // Informações do Relatório
     doc.setFontSize(10);
@@ -90,13 +89,12 @@ export const exportToPDF = async (metrics, filters) => {
       item.tipo_refeicao || '-',
       formatCurrency(item.valor_refeicao || 0),
       item.turno || '-',
-      item.nome_setor || '-',
-      item.voucher_descartavel_id ? 'descartável' : 'comum'
+      item.nome_setor || '-'
     ]);
 
     doc.autoTable({
       startY: currentY + 10,
-      head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
+      head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -114,8 +112,7 @@ export const exportToPDF = async (metrics, filters) => {
         2: { cellWidth: 25 },
         3: { cellWidth: 20 },
         4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 20 }
+        5: { cellWidth: 20 }
       }
     });
 
