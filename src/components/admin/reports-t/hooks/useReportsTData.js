@@ -18,30 +18,30 @@ export const useReportsTData = (filters) => {
           .select(`
             id,
             codigo,
-            data_uso,
+            usado_em,
             nome_pessoa,
             nome_empresa,
-            valor_refeicao,
-            empresa_nome,
             tipos_refeicao (
-              nome
+              id,
+              nome,
+              valor
             )
           `);
 
         if (filters.startDate) {
           const startDate = new Date(filters.startDate);
           startDate.setHours(0, 0, 0, 0);
-          query = query.gte('data_uso', startDate.toISOString());
+          query = query.gte('usado_em', startDate.toISOString());
         }
 
         if (filters.endDate) {
           const endDate = new Date(filters.endDate);
           endDate.setHours(23, 59, 59, 999);
-          query = query.lte('data_uso', endDate.toISOString());
+          query = query.lte('usado_em', endDate.toISOString());
         }
 
         if (filters.company && filters.company !== 'all') {
-          query = query.eq('empresa_nome', filters.company);
+          query = query.eq('nome_empresa', filters.company);
         }
 
         const { data, error } = await query;
@@ -55,7 +55,7 @@ export const useReportsTData = (filters) => {
         const formattedData = data?.map(item => ({
           ...item,
           tipo_refeicao: item.tipos_refeicao?.nome,
-          valor_refeicao: parseFloat(item.valor_refeicao || 0)
+          valor_refeicao: parseFloat(item.tipos_refeicao?.valor || 0)
         })) || [];
 
         logger.info('Consulta filtrada retornou', formattedData.length, 'registros');
