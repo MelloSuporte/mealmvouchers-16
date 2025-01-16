@@ -40,31 +40,42 @@ export const exportToPDF = async (metrics, filters) => {
     // Filtros Aplicados
     let currentY = 50;
     doc.text("Filtros Aplicados:", 14, currentY);
-    currentY += 10;
+    currentY += 8;
 
     // Empresa
     if (filters.company && filters.company !== 'all') {
-      doc.text(`Empresa: ${filters.companyName || filters.company}`, 14, currentY);
-      currentY += 10;
+      doc.text(`• Empresa: ${filters.companyName || filters.company}`, 20, currentY);
+      currentY += 8;
     }
 
     // Setor
     if (filters.sector && filters.sector !== 'all') {
-      doc.text(`Setor: ${filters.sectorName || filters.sector}`, 14, currentY);
-      currentY += 10;
+      doc.text(`• Setor: ${filters.sectorName || filters.sector}`, 20, currentY);
+      currentY += 8;
     }
 
     // Turno
     if (filters.shift && filters.shift !== 'all') {
-      doc.text(`Turno: ${filters.shiftName || filters.shift}`, 14, currentY);
-      currentY += 10;
+      doc.text(`• Turno: ${filters.shiftName || filters.shift}`, 20, currentY);
+      currentY += 8;
     }
 
     // Tipo de Refeição
     if (filters.mealType && filters.mealType !== 'all') {
-      doc.text(`Tipo de Refeição: ${filters.mealTypeName || filters.mealType}`, 14, currentY);
-      currentY += 10;
+      doc.text(`• Tipo de Refeição: ${filters.mealTypeName || filters.mealType}`, 20, currentY);
+      currentY += 8;
     }
+
+    // Se nenhum filtro foi aplicado
+    if (!filters.company || filters.company === 'all' && 
+        !filters.sector || filters.sector === 'all' && 
+        !filters.shift || filters.shift === 'all' && 
+        !filters.mealType || filters.mealType === 'all') {
+      doc.text(`• Nenhum filtro aplicado`, 20, currentY);
+      currentY += 8;
+    }
+    
+    currentY += 8;
     
     // Valor Total
     const valorTotal = formatCurrency(metrics?.totalCost || 0);
