@@ -5,70 +5,113 @@ import 'jspdf-autotable';
 import logger from '@/config/logger';
 import { formatCurrency, formatDate } from './formatters';
 
-export const exportToPDF = async (data, filters, adminName) => {
+export const exportToPDF = async (metrics, filters) => {
   try {
-    logger.info('Iniciando geração do PDF:', { 
-      metrics: {
-        totalRegistros: data?.length,
-        totalCost: data?.reduce((sum, item) => sum + (parseFloat(item.tipos_refeicao?.valor) || 0), 0)
-      }, 
-      filters,
-      adminName 
-    });
+    logger.info('Iniciando exportação PDF...');
+    logger.info('Iniciando geração do PDF:', { metrics, filters });
 
     const doc = new jsPDF();
+    let yPos = 15; // Posição inicial Y
     
     // Título
     doc.setFontSize(16);
-    doc.text("Relatório de Uso de Vouchers Descartáveis", 14, 15);
+    doc.text("Relatório de Uso de Vouchers", 14, yPos);
+    yPos += 10;
     
-    // Informações do usuário que exportou
+    // Data de exportação
     doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    const nomeAdmin = localStorage.getItem('adminName') || adminName || 'Usuário do Sistema';
-    doc.text(`Exportado por: ${nomeAdmin} em ${dataExportacao}`, 14, 22);
+    doc.text(`Exportado em ${dataExportacao}`, 14, yPos);
+    yPos += 15;
     
-    // Informações do Relatório
+    // Cabeçalho do relatório
     doc.setFontSize(10);
-    doc.text("Informações do Relatório:", 14, 30);
+    doc.text("Informações do Relatório:", 14, yPos);
+    yPos += 10;
     
     // Período
-    const startDate = filters.startDate ? formatDate(filters.startDate) : '-';
-    const endDate = filters.endDate ? formatDate(filters.endDate) : '-';
-    doc.text(`Período: ${startDate} a ${endDate}`, 14, 38);
-    
-    // Métricas Gerais
-    doc.text("Métricas Gerais:", 14, 46);
-    
+    const startDate = filters?.startDate ? formatDate(filters.startDate) : '-';
+    const endDate = filters?.endDate ? formatDate(filters.endDate) : '-';
+    doc.text(`Período: ${startDate} a ${endDate}`, 14, yPos);
+    yPos += 10;
+
+    // Filtros Aplicados
+    doc.text("Filtros Aplicados:", 14, yPos);
+    yPos += 8;
+
+    let filtrosAplicados = false;
+
+    // Empresa
+    if (filters?.company && filters.company !== 'all') {
+      doc.text(`• Empresa: ${filters.companyName || filters.company}`, 20, yPos);
+      yPos += 8;
+      filtrosAplicados = true;
+    }
+
+    // Setor
+    if (filters?.sector && filters.sector !== 'all') {
+      doc.text(`• Setor: ${filters.sectorName || filters.sector}`, 20, yPos);
+      yPos += 8;
+      filtrosAplicados = true;
+    }
+
+    // Turno
+    if (filters?.shift && filters.shift !== 'all') {
+      doc.text(`• Turno: ${filters.shiftName || filters.shift}`, 20, yPos);
+      yPos += 8;
+      filtrosAplicados = true;
+    }
+
+    // Tipo de Refeição
+    if (filters?.mealType && filters.mealType !== 'all') {
+      doc.text(`• Tipo de Refeição: ${filters.mealTypeName || filters.mealType}`, 20, yPos);
+      yPos += 8;
+      filtrosAplicados = true;
+    }
+
+    // Tipo de Voucher
+    if (filters?.voucherType && filters.voucherType !== 'all') {
+      doc.text(`• Tipo de Voucher: ${filters.voucherType === 'comum' ? 'Comum' : 'Descartável'}`, 20, yPos);
+      yPos += 8;
+      filtrosAplicados = true;
+    }
+
+    if (!filtrosAplicados) {
+      doc.text(`• Nenhum filtro aplicado`, 20, yPos);
+      yPos += 8;
+    }
+
+    yPos += 8;
+
     // Valor Total
-    const valorTotal = data?.reduce((sum, item) => sum + (parseFloat(item.tipos_refeicao?.valor) || 0), 0) || 0;
-    doc.text(`Valor Total: ${formatCurrency(valorTotal)}`, 14, 54);
+    const valorTotal = formatCurrency(metrics?.totalCost || 0);
+    doc.text(`Valor Total: ${valorTotal}`, 14, yPos);
+    yPos += 15;
 
-    // Quantidade de Refeições
-    const totalMeals = data?.length || 0;
-    doc.text(`Quantidade de Refeições: ${totalMeals}`, 14, 62);
-
-    if (!data || data.length === 0) {
-      doc.text("Nenhum registro encontrado para o período selecionado.", 14, 70);
+    if (!metrics?.data || metrics.data.length === 0) {
+      doc.text("Nenhum registro encontrado para o período selecionado.", 14, yPos);
+      doc.save('relatorio-vouchers.pdf');
       return doc;
     }
 
     // Tabela de Vouchers
     doc.setFontSize(14);
-    doc.text("Vouchers Utilizados", 14, 78);
+    doc.text("Vouchers Utilizados", 14, yPos);
+    yPos += 10;
 
-    const tableData = data.map(item => [
-      formatDate(item.usado_em),
-      item.nome_pessoa || '-',
-      item.nome_empresa || '-',
-      item.tipos_refeicao?.nome || '-',
-      formatCurrency(item.tipos_refeicao?.valor || 0),
-      item.codigo || '-'
+    const tableData = metrics.data.map(item => [
+      formatDate(item.data_uso),
+      item.nome_usuario || '-',
+      item.tipo_refeicao || '-',
+      formatCurrency(item.valor_refeicao || 0),
+      item.turno || '-',
+      item.nome_setor || '-',
+      item.voucher_descartavel_id ? 'Descartável' : 'Comum'
     ]);
 
     doc.autoTable({
-      startY: 86,
-      head: [['Data/Hora', 'Nome', 'Empresa', 'Refeição', 'Valor', 'Código']],
+      startY: yPos,
+      head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -83,13 +126,15 @@ export const exportToPDF = async (data, filters, adminName) => {
       columnStyles: {
         0: { cellWidth: 25 },
         1: { cellWidth: 35 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 25 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 20 },
         4: { cellWidth: 20 },
-        5: { cellWidth: 20 }
+        5: { cellWidth: 20 },
+        6: { cellWidth: 20 }
       }
     });
 
+    doc.save('relatorio-vouchers.pdf');
     return doc;
   } catch (error) {
     logger.error('Erro ao gerar PDF:', error);
