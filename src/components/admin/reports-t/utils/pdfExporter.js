@@ -24,8 +24,7 @@ export const exportToPDF = async (data, filters, adminName) => {
     // Informações do usuário que exportou
     doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    const nomeUsuario = adminName || 'Usuário do Sistema';
-    doc.text(`Exportado por: ${nomeUsuario} em ${dataExportacao}`, 14, 22);
+    doc.text(`Exportado por: ${adminName || 'Usuário do Sistema'} em ${dataExportacao}`, 14, 22);
     
     // Informações do Relatório
     doc.setFontSize(10);
@@ -62,14 +61,13 @@ export const exportToPDF = async (data, filters, adminName) => {
       item.nome_empresa || '-',
       item.tipos_refeicao?.nome || '-',
       formatCurrency(item.tipos_refeicao?.valor || 0),
-      item.nome_empresa || '-',
       item.codigo || '-',
       formatCurrency(item.tipos_refeicao?.valor || 0)
     ]);
 
     doc.autoTable({
       startY: 86,
-      head: [['Data/Hora', 'Nome', 'Empresa Voucher', 'Refeição', 'Valor', 'Empresa', 'Código', 'Valor']],
+      head: [['Data/Hora', 'Nome', 'Empresa', 'Refeição', 'Valor', 'Código', 'Valor']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -83,13 +81,12 @@ export const exportToPDF = async (data, filters, adminName) => {
       },
       columnStyles: {
         0: { cellWidth: 25 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 20 },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 25 },
         4: { cellWidth: 20 },
-        5: { cellWidth: 30 },
-        6: { cellWidth: 20 },
-        7: { cellWidth: 20 }
+        5: { cellWidth: 20 },
+        6: { cellWidth: 20 }
       }
     });
 
