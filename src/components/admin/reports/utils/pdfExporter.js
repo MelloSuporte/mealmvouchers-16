@@ -5,15 +5,15 @@ import 'jspdf-autotable';
 import logger from '@/config/logger';
 import { formatCurrency, formatDate } from './formatters';
 
-export const exportToPDF = async (data, filters, adminName) => {
+export const exportToPDF = async (metrics, filters) => {
   try {
     logger.info('Iniciando geração do PDF:', { 
       metrics: {
-        totalRegistros: data?.length,
-        totalCost: data?.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0)
+        totalRegistros: metrics?.data?.length,
+        totalCost: metrics?.totalCost,
+        averageCost: metrics?.averageCost
       }, 
-      filters,
-      adminName
+      filters 
     });
 
     const doc = new jsPDF();
@@ -25,8 +25,8 @@ export const exportToPDF = async (data, filters, adminName) => {
     // Informações do usuário que exportou
     doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    const nomeAdmin = localStorage.getItem('adminName') || adminName || 'Usuário do Sistema';
-    doc.text(`Exportado por: ${nomeAdmin} em ${dataExportacao}`, 14, 22);
+    const nomeUsuario = filters.userName || 'Usuário do Sistema';
+    doc.text(`Exportado por: ${nomeUsuario} em ${dataExportacao}`, 14, 22);
     
     // Informações do Relatório
     doc.setFontSize(10);
@@ -37,9 +37,8 @@ export const exportToPDF = async (data, filters, adminName) => {
     const endDate = filters.endDate ? formatDate(filters.endDate) : '-';
     doc.text(`Período: ${startDate} a ${endDate}`, 14, 40);
 
-    let currentY = 50;
-
     // Filtros Aplicados
+    let currentY = 50;
     doc.text("Filtros Aplicados:", 14, currentY);
     currentY += 10;
 
@@ -68,16 +67,12 @@ export const exportToPDF = async (data, filters, adminName) => {
     }
     
     // Valor Total
-    const valorTotal = data?.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0) || 0;
-    doc.text(`Valor Total: ${formatCurrency(valorTotal)}`, 14, currentY);
-    currentY += 10;
-
-    // Quantidade de Refeições
-    const totalMeals = data?.length || 0;
-    doc.text(`Quantidade de Refeições: ${totalMeals}`, 14, currentY);
+    const valorTotal = formatCurrency(metrics?.totalCost || 0);
+    doc.text(`Valor Total: ${valorTotal}`, 14, currentY);
     currentY += 20;
 
-    if (!data || data.length === 0) {
+    if (!metrics?.data || metrics.data.length === 0) {
+      doc.text("Nenhum registro encontrado para o período selecionado.", 14, currentY);
       return doc;
     }
 
@@ -85,7 +80,7 @@ export const exportToPDF = async (data, filters, adminName) => {
     doc.setFontSize(14);
     doc.text("Vouchers Utilizados", 14, currentY);
 
-    const tableData = data.map(item => [
+    const tableData = metrics.data.map(item => [
       formatDate(item.data_uso),
       item.nome_usuario || '-',
       item.tipo_refeicao || '-',
