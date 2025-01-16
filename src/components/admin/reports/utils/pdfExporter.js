@@ -12,7 +12,8 @@ export const exportToPDF = async (data, filters, adminName) => {
         totalRegistros: data?.length,
         totalCost: data?.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0)
       }, 
-      filters 
+      filters,
+      adminName
     });
 
     const doc = new jsPDF();
@@ -24,8 +25,8 @@ export const exportToPDF = async (data, filters, adminName) => {
     // Informações do usuário que exportou
     doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    const nomeUsuario = adminName || 'Usuário do Sistema';
-    doc.text(`Exportado por: ${nomeUsuario} em ${dataExportacao}`, 14, 22);
+    const nomeAdmin = localStorage.getItem('adminName') || adminName || 'Usuário do Sistema';
+    doc.text(`Exportado por: ${nomeAdmin} em ${dataExportacao}`, 14, 22);
     
     // Informações do Relatório
     doc.setFontSize(10);
@@ -35,26 +36,46 @@ export const exportToPDF = async (data, filters, adminName) => {
     const startDate = filters.startDate ? formatDate(filters.startDate) : '-';
     const endDate = filters.endDate ? formatDate(filters.endDate) : '-';
     doc.text(`Período: ${startDate} a ${endDate}`, 14, 40);
-    
-    // Turno
-    const turnoNome = filters.shiftName || (filters.shift === 'all' ? 'Todos os Turnos' : 'Turno não especificado');
-    doc.text(`Turno: ${turnoNome}`, 14, 50);
-    
+
+    let currentY = 50;
+
+    // Filtros Aplicados
+    doc.text("Filtros Aplicados:", 14, currentY);
+    currentY += 10;
+
+    // Empresa
+    if (filters.company && filters.company !== 'all') {
+      doc.text(`Empresa: ${filters.companyName || filters.company}`, 14, currentY);
+      currentY += 10;
+    }
+
     // Setor
-    const setorNome = filters.sectorName || (filters.sector === 'all' ? 'Todos os Setores' : 'Setor não especificado');
-    doc.text(`Setor: ${setorNome}`, 14, 60);
-    
+    if (filters.sector && filters.sector !== 'all') {
+      doc.text(`Setor: ${filters.sectorName || filters.sector}`, 14, currentY);
+      currentY += 10;
+    }
+
+    // Turno
+    if (filters.shift && filters.shift !== 'all') {
+      doc.text(`Turno: ${filters.shiftName || filters.shift}`, 14, currentY);
+      currentY += 10;
+    }
+
     // Tipo de Refeição
-    const tipoRefeicao = filters.mealTypeName || (filters.mealType === 'all' ? 'Todos os Tipos' : 'Tipo não especificado');
-    doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, 70);
+    if (filters.mealType && filters.mealType !== 'all') {
+      doc.text(`Tipo de Refeição: ${filters.mealTypeName || filters.mealType}`, 14, currentY);
+      currentY += 10;
+    }
     
     // Valor Total
     const valorTotal = data?.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0) || 0;
-    doc.text(`Valor Total: ${formatCurrency(valorTotal)}`, 14, 80);
+    doc.text(`Valor Total: ${formatCurrency(valorTotal)}`, 14, currentY);
+    currentY += 10;
 
     // Quantidade de Refeições
     const totalMeals = data?.length || 0;
-    doc.text(`Quantidade de Refeições: ${totalMeals}`, 14, 90);
+    doc.text(`Quantidade de Refeições: ${totalMeals}`, 14, currentY);
+    currentY += 20;
 
     if (!data || data.length === 0) {
       return doc;
@@ -62,7 +83,7 @@ export const exportToPDF = async (data, filters, adminName) => {
 
     // Tabelas
     doc.setFontSize(14);
-    doc.text("Vouchers Utilizados", 14, 110);
+    doc.text("Vouchers Utilizados", 14, currentY);
 
     const tableData = data.map(item => [
       formatDate(item.data_uso),
@@ -75,7 +96,7 @@ export const exportToPDF = async (data, filters, adminName) => {
     ]);
 
     doc.autoTable({
-      startY: 120,
+      startY: currentY + 10,
       head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo Voucher']],
       body: tableData,
       theme: 'grid',
