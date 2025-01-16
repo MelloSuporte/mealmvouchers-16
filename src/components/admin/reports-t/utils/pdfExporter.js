@@ -10,7 +10,7 @@ export const exportToPDF = async (data, filters, adminName) => {
     logger.info('Iniciando geração do PDF:', { 
       metrics: {
         totalRegistros: data?.length,
-        totalCost: data?.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0)
+        totalCost: data?.reduce((sum, item) => sum + (parseFloat(item.tipos_refeicao?.valor) || 0), 0)
       }, 
       filters 
     });
@@ -40,7 +40,7 @@ export const exportToPDF = async (data, filters, adminName) => {
     doc.text("Métricas Gerais:", 14, 46);
     
     // Valor Total
-    const valorTotal = data?.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0) || 0;
+    const valorTotal = data?.reduce((sum, item) => sum + (parseFloat(item.tipos_refeicao?.valor) || 0), 0) || 0;
     doc.text(`Valor Total: ${formatCurrency(valorTotal)}`, 14, 54);
 
     // Quantidade de Refeições
@@ -57,14 +57,14 @@ export const exportToPDF = async (data, filters, adminName) => {
     doc.text("Vouchers Utilizados", 14, 78);
 
     const tableData = data.map(item => [
-      formatDate(item.data_uso),
+      formatDate(item.usado_em),
       item.nome_pessoa || '-',
       item.nome_empresa || '-',
-      item.tipo_refeicao || '-',
-      formatCurrency(item.valor_refeicao || 0),
-      item.empresa_nome || '-',
+      item.tipos_refeicao?.nome || '-',
+      formatCurrency(item.tipos_refeicao?.valor || 0),
+      item.nome_empresa || '-',
       item.codigo || '-',
-      formatCurrency(item.valor_refeicao || 0)
+      formatCurrency(item.tipos_refeicao?.valor || 0)
     ]);
 
     doc.autoTable({

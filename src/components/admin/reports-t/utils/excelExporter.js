@@ -5,16 +5,14 @@ import { formatCurrency, formatDate } from './formatters';
 export const exportToExcel = (data) => {
   try {
     const excelData = data?.map(item => ({
-      'Data/Hora': formatDate(item.data_uso),
-      'Usuário': item.nome_usuario || '-',
-      'CPF': item.cpf || '-',
-      'Código': item.voucher_descartavel_id ? (item.codigo || '-') : (item.codigo_voucher || '-'),
-      'Tipo Voucher': item.voucher_descartavel_id ? 'descartável' : 'comum',
+      'Data/Hora': formatDate(item.usado_em),
+      'Nome': item.nome_pessoa || '-',
+      'Empresa Voucher': item.nome_empresa || '-',
+      'Refeição': item.tipos_refeicao?.nome || '-',
+      'Valor': formatCurrency(item.tipos_refeicao?.valor || 0),
       'Empresa': item.nome_empresa || '-',
-      'Refeição': item.tipo_refeicao || '-',
-      'Valor': formatCurrency(item.valor_refeicao || 0),
-      'Turno': item.turno || '-',
-      'Setor': item.nome_setor || '-'
+      'Código': item.codigo || '-',
+      'Valor': formatCurrency(item.tipos_refeicao?.valor || 0)
     })) || [];
 
     const wb = XLSX.utils.book_new();
@@ -22,15 +20,13 @@ export const exportToExcel = (data) => {
 
     const wscols = [
       { wch: 20 }, // Data/Hora
-      { wch: 30 }, // Usuário
-      { wch: 15 }, // CPF
-      { wch: 15 }, // Código
-      { wch: 15 }, // Tipo Voucher
-      { wch: 30 }, // Empresa
+      { wch: 30 }, // Nome
+      { wch: 30 }, // Empresa Voucher
       { wch: 20 }, // Refeição
       { wch: 15 }, // Valor
-      { wch: 15 }, // Turno
-      { wch: 20 }  // Setor
+      { wch: 30 }, // Empresa
+      { wch: 15 }, // Código
+      { wch: 15 }  // Valor
     ];
 
     ws['!cols'] = wscols;

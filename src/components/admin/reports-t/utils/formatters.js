@@ -10,7 +10,13 @@ export const formatCurrency = (value) => {
 };
 
 export const formatDate = (date) => {
-  return format(new Date(date), "dd/MM/yyyy HH:mm", { locale: ptBR });
+  if (!date) return '-';
+  try {
+    return format(new Date(date), "dd/MM/yyyy HH:mm", { locale: ptBR });
+  } catch (error) {
+    console.error('Erro ao formatar data:', error);
+    return '-';
+  }
 };
 
 export const getFileName = () => {
