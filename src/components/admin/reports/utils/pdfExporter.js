@@ -23,7 +23,7 @@ export const exportToPDF = async (metrics, filters) => {
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
     doc.text(`Relatório gerado por ${adminName} em ${dataExportacao}`, 14, yPos);
     yPos += 10;
-
+    
     // Seção de Filtros Aplicados
     doc.setFontSize(12);
     doc.text("Filtros Aplicados:", 14, yPos);
