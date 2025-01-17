@@ -37,7 +37,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     if (!metrics?.data || metrics.data.length === 0) {
       doc.text("Nenhum registro encontrado para o período selecionado.", 14, yPos);
-      doc.save('relatorio-vouchers-comuns.pdf');
+      doc.save('relatorio-vouchers.pdf');
       return doc;
     }
 
@@ -91,7 +91,7 @@ export const exportToPDF = async (metrics, filters) => {
     });
 
     // Salvar o PDF
-    doc.save('relatorio-vouchers-comuns.pdf');
+    doc.save('relatorio-vouchers.pdf');
     return doc;
   } catch (error) {
     logger.error('Erro ao gerar PDF:', error);
