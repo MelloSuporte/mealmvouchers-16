@@ -14,6 +14,7 @@ export const exportToPDF = async (filters) => {
     let query = supabase
       .from('vouchers_descartaveis')
       .select(`
+        id,
         data_uso,
         nome_pessoa,
         nome_empresa,
