@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, FileSpreadsheet, FileText } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import ReportsTCharts from './ReportsTCharts';
 import ReportsTFilters from './ReportsTFilters';
 import { useReportsTFilters } from './hooks/useReportsTFilters';

@@ -1,25 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import logger from '@/config/logger';
-import { checkVoucherRecords } from '../utils/databaseChecks';
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 export const useReportsTData = (filters) => {
   return useQuery({
     queryKey: ['reports-data', filters],
     queryFn: async () => {
       try {
-        await checkVoucherRecords();
-
-        logger.info('Iniciando busca de dados do relatório com filtros:', filters);
+        logger.info('Iniciando busca de dados com filtros:', filters);
 
         let query = supabase
           .from('vw_uso_voucher_detalhado')
           .select(`
             id,
             data_uso,
-            codigo_voucher,
-            tipo_voucher,
             nome_usuario,
             cpf,
             empresa_id,
@@ -28,10 +23,13 @@ export const useReportsTData = (filters) => {
             setor_id,
             nome_setor,
             tipo_refeicao,
-            valor_refeicao
+            valor_refeicao,
+            codigo_voucher,
+            tipo_voucher
           `)
           .eq('tipo_voucher', 'comum');
 
+        // Aplicar filtros
         if (filters.startDate) {
           const startDate = new Date(filters.startDate);
           startDate.setHours(0, 0, 0, 0);
@@ -82,7 +80,7 @@ export const useReportsTData = (filters) => {
           setor: item.nome_setor
         })) || [];
 
-        logger.info('Consulta filtrada retornou', formattedData.length, 'registros');
+        logger.info('Dados formatados:', formattedData);
         return formattedData;
 
       } catch (error) {

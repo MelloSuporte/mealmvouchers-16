@@ -84,13 +84,13 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text("Vouchers Utilizados", 14, currentY);
 
     const tableData = metrics.data.map(item => [
-      formatDate(item.data_uso),
-      item.codigo_voucher || '-',
-      item.nome_usuario || '-',
-      item.tipo_refeicao || '-',
-      formatCurrency(item.valor_refeicao || 0),
-      item.turno || '-',
-      item.nome_setor || '-'
+      formatDate(item.usado_em),
+      item.codigo,
+      item.nome_pessoa,
+      item.tipos_refeicao.nome,
+      formatCurrency(item.tipos_refeicao.valor),
+      item.turno,
+      item.setor
     ]);
 
     doc.autoTable({
