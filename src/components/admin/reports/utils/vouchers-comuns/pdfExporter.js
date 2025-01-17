@@ -16,12 +16,12 @@ export const exportToPDF = async (metrics, filters) => {
     const doc = new jsPDF();
     let yPos = 20;
 
-    // Cabeçalho com informações do administrador
+    // Título do relatório
     doc.setFontSize(16);
     doc.text("Relatório de Vouchers Comuns", 14, yPos);
     yPos += 10;
 
-    // Informações do administrador
+    // Informações do administrador e data/hora
     doc.setFontSize(10);
     const adminName = localStorage.getItem('adminName') || 'Usuário não identificado';
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
