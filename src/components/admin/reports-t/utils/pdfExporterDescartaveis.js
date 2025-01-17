@@ -11,11 +11,11 @@ export const exportToPDF = async (metrics, filters) => {
 
     const adminName = localStorage.getItem('adminName') || 'Administrador';
     const doc = new jsPDF();
-    let yPos = 15; // Posição inicial Y
+    let yPos = 15;
     
     // Título
     doc.setFontSize(16);
-    doc.text("Relatório Consumo de Refeições", 14, yPos);
+    doc.text("Relatório de Vouchers Descartáveis", 14, yPos);
     yPos += 10;
     
     // Informações do relatório
@@ -27,21 +27,18 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text(`Data de exportação: ${dataExportacao}`, 14, yPos);
     yPos += 10;
 
-    // Tipo de Voucher
-    doc.text("Tipo de Voucher: Descartável", 14, yPos);
-    yPos += 10;
-
-    // Tipo de Refeição (se filtrado)
-    if (filters?.mealType && filters.mealType !== 'all') {
-      doc.text(`Tipo de Refeição: ${filters.mealType}`, 14, yPos);
-      yPos += 10;
+    // Filtros aplicados
+    if (filters?.startDate || filters?.endDate) {
+      const startDate = filters?.startDate ? formatDate(filters.startDate) : '-';
+      const endDate = filters?.endDate ? formatDate(filters.endDate) : '-';
+      doc.text(`Período: ${startDate} a ${endDate}`, 14, yPos);
+      yPos += 5;
     }
 
-    // Período
-    const startDate = filters?.startDate ? formatDate(filters.startDate) : '-';
-    const endDate = filters?.endDate ? formatDate(filters.endDate) : '-';
-    doc.text(`Período: ${startDate} a ${endDate}`, 14, yPos);
-    yPos += 10;
+    if (filters?.mealType && filters.mealType !== 'all') {
+      doc.text(`Tipo de Refeição: ${filters.mealType}`, 14, yPos);
+      yPos += 5;
+    }
 
     // Totalizadores
     doc.text("Totalizadores:", 14, yPos);
@@ -63,11 +60,11 @@ export const exportToPDF = async (metrics, filters) => {
 
     // Tabela de Vouchers
     doc.setFontSize(14);
-    doc.text("Vouchers Descartáveis Utilizados", 14, yPos);
+    doc.text("Detalhamento dos Vouchers", 14, yPos);
     yPos += 10;
 
     const tableData = metrics.data.map(item => [
-      formatDate(item.data_uso),
+      formatDate(item.usado_em),
       item.nome_pessoa || '-',
       item.nome_empresa || '-',
       item.tipos_refeicao?.nome || '-',
@@ -76,7 +73,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     doc.autoTable({
       startY: yPos,
-      head: [['Data/Hora', 'Nome', 'Empresa', 'Refeição', 'Valor']],
+      head: [['Data/Hora Uso', 'Nome', 'Empresa', 'Refeição', 'Valor']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -89,11 +86,11 @@ export const exportToPDF = async (metrics, filters) => {
         fontStyle: 'bold'
       },
       columnStyles: {
-        0: { cellWidth: 30 }, // Data/Hora
-        1: { cellWidth: 40 }, // Nome
-        2: { cellWidth: 40 }, // Empresa
-        3: { cellWidth: 40 }, // Refeição
-        4: { cellWidth: 25 }  // Valor
+        0: { cellWidth: 30 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 40 },
+        4: { cellWidth: 25 }
       }
     });
 
