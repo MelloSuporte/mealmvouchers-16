@@ -3,7 +3,7 @@ import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import logger from '@/config/logger';
-import { formatCurrency, formatDate } from './formatters';
+import { formatCurrency } from './formatters';
 
 export const exportToPDF = async (metrics, filters) => {
   try {
@@ -11,19 +11,29 @@ export const exportToPDF = async (metrics, filters) => {
 
     const doc = new jsPDF();
     let yPos = 20;
-    
+
     // Título
     doc.setFontSize(16);
-    doc.text("Relatório de Uso de Vouchers", 14, yPos);
+    doc.text("Relatório de Vouchers", 14, yPos);
     yPos += 10;
-    
-    // Informações do usuário que exportou
+
+    // Informações do administrador que gerou
     const adminName = localStorage.getItem('adminName') || 'Usuário não identificado';
     doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
     doc.text(`Relatório gerado por ${adminName} em ${dataExportacao}`, 14, yPos);
     yPos += 10;
+
+    // Totalizadores no topo
+    doc.setFontSize(10);
+    const totalRegistros = metrics?.data?.length || 0;
+    const valorTotal = metrics?.data?.reduce((sum, item) => sum + (Number(item.valor_refeicao) || 0), 0) || 0;
     
+    doc.text(`Total de Registros: ${totalRegistros}`, 14, yPos);
+    yPos += 6;
+    doc.text(`Valor Total: ${formatCurrency(valorTotal)}`, 14, yPos);
+    yPos += 10;
+
     // Seção de Filtros Aplicados
     doc.setFontSize(12);
     doc.text("Filtros Aplicados:", 14, yPos);
@@ -31,56 +41,43 @@ export const exportToPDF = async (metrics, filters) => {
 
     doc.setFontSize(10);
     
-    // Período
-    if (filters.startDate && filters.endDate) {
-      const startDate = formatDate(filters.startDate);
-      const endDate = formatDate(filters.endDate);
-      doc.text(`Período: ${startDate} a ${endDate}`, 14, yPos);
-      yPos += 6;
-    }
-
     // Empresa (quando filtrada)
-    if (filters.company && filters.company !== 'all') {
+    if (filters?.company && filters.company !== 'all') {
       doc.text(`Empresa: ${filters.companyName || filters.company}`, 14, yPos);
       yPos += 6;
     }
 
     // Setor (quando filtrado)
-    if (filters.sector && filters.sector !== 'all') {
+    if (filters?.sector && filters.sector !== 'all') {
       doc.text(`Setor: ${filters.sectorName || filters.sector}`, 14, yPos);
       yPos += 6;
     }
 
     // Turno (quando filtrado)
-    if (filters.shift && filters.shift !== 'all') {
+    if (filters?.shift && filters.shift !== 'all') {
       doc.text(`Turno: ${filters.shiftName || filters.shift}`, 14, yPos);
       yPos += 6;
     }
 
     // Tipo de Refeição (quando filtrado)
-    if (filters.mealType && filters.mealType !== 'all') {
+    if (filters?.mealType && filters.mealType !== 'all') {
       doc.text(`Tipo de Refeição: ${filters.mealTypeName || filters.mealType}`, 14, yPos);
       yPos += 6;
     }
 
-    // Totais
-    const totalRegistros = metrics?.data?.length || 0;
-    const valorTotal = metrics?.data?.reduce((sum, item) => sum + (Number(item.valor_refeicao) || 0), 0) || 0;
-
-    doc.text(`Total de Registros: ${totalRegistros}`, 14, yPos);
-    yPos += 6;
-    doc.text(`Valor Total: ${formatCurrency(valorTotal)}`, 14, yPos);
     yPos += 10;
 
+    // Verificar se há dados
     if (!metrics?.data || metrics.data.length === 0) {
-      doc.text("Nenhum registro encontrado para o período selecionado.", 14, yPos);
+      doc.setFontSize(12);
+      doc.text("Nenhum registro encontrado para os filtros selecionados.", 14, yPos);
       doc.save('relatorio-vouchers.pdf');
       return;
     }
 
     // Tabela de dados
     const tableData = metrics.data.map(item => [
-      formatDate(item.data_uso),
+      format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
       item.nome_usuario || '-',
       item.codigo || '-',
       item.tipo_refeicao || '-',
