@@ -113,7 +113,9 @@ export const useReportsTData = (filters) => {
             tipos_refeicao: {
               nome: item.tipo_refeicao,
               valor: item.valor_refeicao
-            }
+            },
+            turno: item.turno,
+            setor: item.nome_setor
           })) || [];
 
           logger.info('Consulta filtrada retornou', formattedData.length, 'registros');
