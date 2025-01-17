@@ -7,8 +7,8 @@ import { formatCurrency, formatDate } from './formatters';
 
 export const exportToPDF = async (metrics, filters) => {
   try {
-    logger.info('Iniciando geração do PDF:', { metrics, filters });
-
+    logger.info('Iniciando exportação PDF...');
+    
     const doc = new jsPDF();
     let yPos = 15;
     
@@ -23,53 +23,12 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text(`Exportado em ${dataExportacao}`, 14, yPos);
     yPos += 15;
     
-    // Informações do Relatório
+    // Período do relatório
     doc.setFontSize(10);
-    doc.text("Informações do Relatório:", 14, yPos);
-    yPos += 10;
-    
-    // Período
     const startDate = filters?.startDate ? formatDate(filters.startDate) : '-';
     const endDate = filters?.endDate ? formatDate(filters.endDate) : '-';
     doc.text(`Período: ${startDate} a ${endDate}`, 14, yPos);
     yPos += 10;
-
-    // Filtros Aplicados
-    doc.text("Filtros Aplicados:", 14, yPos);
-    yPos += 8;
-
-    let filtrosAplicados = false;
-
-    if (filters?.company && filters.company !== 'all') {
-      doc.text(`• Empresa: ${metrics?.data?.[0]?.nome_empresa || filters.company}`, 20, yPos);
-      yPos += 8;
-      filtrosAplicados = true;
-    }
-
-    if (filters?.sector && filters.sector !== 'all') {
-      doc.text(`• Setor: ${metrics?.data?.[0]?.nome_setor || filters.sector}`, 20, yPos);
-      yPos += 8;
-      filtrosAplicados = true;
-    }
-
-    if (filters?.shift && filters.shift !== 'all') {
-      doc.text(`• Turno: ${metrics?.data?.[0]?.turno || filters.shift}`, 20, yPos);
-      yPos += 8;
-      filtrosAplicados = true;
-    }
-
-    if (filters?.mealType && filters.mealType !== 'all') {
-      doc.text(`• Tipo de Refeição: ${metrics?.data?.[0]?.tipo_refeicao || filters.mealType}`, 20, yPos);
-      yPos += 8;
-      filtrosAplicados = true;
-    }
-
-    if (!filtrosAplicados) {
-      doc.text(`• Nenhum filtro aplicado`, 20, yPos);
-      yPos += 8;
-    }
-
-    yPos += 8;
 
     // Valor Total
     const valorTotal = formatCurrency(metrics?.totalCost || 0);
@@ -87,6 +46,7 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text("Informações de Consumo", 14, yPos);
     yPos += 10;
 
+    // Preparar dados para a tabela
     const tableData = metrics.data.map(item => [
       formatDate(item.data_uso),
       item.nome_usuario || '-',
@@ -96,22 +56,23 @@ export const exportToPDF = async (metrics, filters) => {
       formatCurrency(item.valor_refeicao || 0)
     ]);
 
+    // Configurar e gerar a tabela
     doc.autoTable({
       startY: yPos,
       head: [['Data de Consumo', 'Nome', 'Turno', 'Setor', 'Refeição', 'Valor']],
       body: tableData,
       theme: 'grid',
-      styles: { 
+      styles: {
         fontSize: 8,
         cellPadding: 2
       },
-      headStyles: { 
+      headStyles: {
         fillColor: [66, 66, 66],
         textColor: [255, 255, 255],
         fontStyle: 'bold'
       },
       columnStyles: {
-        0: { cellWidth: 25 }, // Data
+        0: { cellWidth: 25 }, // Data de Consumo
         1: { cellWidth: 40 }, // Nome
         2: { cellWidth: 20 }, // Turno
         3: { cellWidth: 35 }, // Setor
@@ -120,6 +81,7 @@ export const exportToPDF = async (metrics, filters) => {
       }
     });
 
+    // Salvar o PDF
     doc.save('relatorio-vouchers-comuns.pdf');
     return doc;
   } catch (error) {
