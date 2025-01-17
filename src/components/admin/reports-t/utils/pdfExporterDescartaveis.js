@@ -8,23 +8,23 @@ import { supabase } from '@/config/supabase';
 
 export const exportToPDF = async (filters) => {
   try {
-    logger.info('Iniciando exportação PDF de vouchers descartáveis...');
+    logger.info('Iniciando exportação PDF de vouchers descartáveis...', filters);
 
     // Buscar dados dos vouchers descartáveis
     let query = supabase
       .from('vouchers_descartaveis')
       .select(`
         id,
-        data_uso,
+        usado_em,
         nome_pessoa,
         nome_empresa,
         tipos_refeicao (
+          id,
           nome,
           valor
         )
       `)
-      .not('data_uso', 'is', null) // Apenas vouchers utilizados
-      .order('data_uso', { ascending: false });
+      .not('usado_em', 'is', null); // Apenas vouchers utilizados
 
     // Aplicar filtro de tipo de refeição se especificado
     if (filters?.mealType && filters.mealType !== 'all') {
@@ -33,10 +33,10 @@ export const exportToPDF = async (filters) => {
 
     // Aplicar filtros de data
     if (filters?.startDate) {
-      query = query.gte('data_uso', filters.startDate);
+      query = query.gte('usado_em', filters.startDate);
     }
     if (filters?.endDate) {
-      query = query.lte('data_uso', filters.endDate);
+      query = query.lte('usado_em', filters.endDate);
     }
 
     const { data: vouchers, error } = await query;
@@ -105,7 +105,7 @@ export const exportToPDF = async (filters) => {
 
     // Tabela de Vouchers
     const tableData = vouchers.map(voucher => [
-      voucher.data_uso ? format(new Date(voucher.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
+      voucher.usado_em ? format(new Date(voucher.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       voucher.nome_pessoa || '-',
       voucher.nome_empresa || '-',
       voucher.tipos_refeicao?.nome || '-',
