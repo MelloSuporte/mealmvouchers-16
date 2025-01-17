@@ -7,26 +7,30 @@ import logger from '@/config/logger';
 export const exportToPDF = async (metrics, filters) => {
   try {
     logger.info('Iniciando geração do PDF:', { metrics, filters });
+    
+    if (!metrics || !Array.isArray(metrics.data)) {
+      logger.error('Dados inválidos recebidos:', metrics);
+      throw new Error('Dados inválidos para geração do PDF');
+    }
 
     const doc = new jsPDF();
     let yPos = 20;
 
-    // Título
+    // Cabeçalho com informações do administrador
     doc.setFontSize(16);
     doc.text("Relatório de Vouchers", 14, yPos);
     yPos += 10;
 
-    // Informações do administrador que gerou
+    // Informações do administrador
+    doc.setFontSize(10);
     const adminName = localStorage.getItem('adminName') || 'Usuário não identificado';
-    doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
     doc.text(`Relatório gerado por ${adminName} em ${dataExportacao}`, 14, yPos);
     yPos += 10;
 
     // Totalizadores no topo
-    doc.setFontSize(10);
-    const totalRegistros = metrics?.data?.length || 0;
-    const valorTotal = metrics?.data?.reduce((sum, item) => sum + (Number(item.valor_refeicao) || 0), 0) || 0;
+    const totalRegistros = metrics.data.length;
+    const valorTotal = metrics.data.reduce((sum, item) => sum + (Number(item.valor_refeicao) || 0), 0);
     
     doc.text(`Total de Registros: ${totalRegistros}`, 14, yPos);
     yPos += 6;
@@ -73,7 +77,7 @@ export const exportToPDF = async (metrics, filters) => {
     yPos += 10;
 
     // Verificar se há dados
-    if (!metrics?.data || metrics.data.length === 0) {
+    if (!metrics.data || metrics.data.length === 0) {
       doc.setFontSize(12);
       doc.text("Nenhum registro encontrado para os filtros selecionados.", 14, yPos);
       doc.save('relatorio-vouchers.pdf');
@@ -84,11 +88,11 @@ export const exportToPDF = async (metrics, filters) => {
     const tableData = metrics.data.map(item => [
       format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
       item.nome_usuario || '-',
-      item.codigo || '-',
       item.tipo_refeicao || '-',
       new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor_refeicao || 0),
       item.turno || '-',
-      item.nome_setor || '-'
+      item.nome_setor || '-',
+      item.tipo || '-'
     ]);
 
     doc.autoTable({
@@ -124,5 +128,3 @@ export const exportToPDF = async (metrics, filters) => {
     throw error;
   }
 };
-
-<lov-delete file_path="src/components/admin/reports/utils/pdfExporterComuns.js" />
