@@ -3,43 +3,55 @@ import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import logger from '@/config/logger';
-import { formatCurrency, formatDate } from './formatters';
 
-export const exportToPDF = async (metrics, filters) => {
+export const generatePDFComuns = (metrics, filters) => {
   try {
-    logger.info('Iniciando exportação PDF...');
-    
+    logger.info('Gerando PDF de vouchers comuns:', { 
+      totalRegistros: metrics?.data?.length,
+      filtros: filters 
+    });
+
     const doc = new jsPDF();
-    let yPos = 15;
-    
-    // Título
+    let yPos = 20;
+
+    // Cabeçalho
     doc.setFontSize(16);
-    doc.text("Relatório de Uso de Vouchers", 14, yPos);
+    doc.text("Relatório de Vouchers Comuns", 14, yPos);
     yPos += 10;
-    
-    // Data de exportação
-    doc.setFontSize(8);
-    const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    doc.text(`Exportado em ${dataExportacao}`, 14, yPos);
-    yPos += 15;
-    
-    // Período do relatório
+
+    // Filtros aplicados
     doc.setFontSize(10);
-    const startDate = filters?.startDate ? formatDate(filters.startDate) : '-';
-    const endDate = filters?.endDate ? formatDate(filters.endDate) : '-';
-    doc.text(`Período: ${startDate} a ${endDate}`, 14, yPos);
+    if (filters?.startDate) {
+      doc.text(`Período: ${format(new Date(filters.startDate), 'dd/MM/yyyy')} a ${format(new Date(filters.endDate), 'dd/MM/yyyy')}`, 14, yPos);
+      yPos += 6;
+    }
+    if (filters?.company) {
+      doc.text(`Empresa: ${filters.company}`, 14, yPos);
+      yPos += 6;
+    }
+    if (filters?.shift) {
+      doc.text(`Turno: ${filters.shift}`, 14, yPos);
+      yPos += 6;
+    }
+    if (filters?.sector) {
+      doc.text(`Setor: ${filters.sector}`, 14, yPos);
+      yPos += 6;
+    }
+
     yPos += 10;
 
-    // Valor Total
-    const valorTotal = formatCurrency(metrics?.totalCost || 0);
-    doc.text(`Valor Total: ${valorTotal}`, 14, yPos);
-    yPos += 15;
+    const formatDate = (date) => {
+      if (!date) return '-';
+      return format(new Date(date), "dd/MM/yyyy HH:mm", { locale: ptBR });
+    };
 
-    if (!metrics?.data || metrics.data.length === 0) {
-      doc.text("Nenhum registro encontrado para o período selecionado.", 14, yPos);
-      doc.save('relatorio-vouchers.pdf');
-      return doc;
-    }
+    const formatCurrency = (value) => {
+      if (!value && value !== 0) return 'R$ 0,00';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value);
+    };
 
     // Tabela de Vouchers
     doc.setFontSize(14);
@@ -48,53 +60,49 @@ export const exportToPDF = async (metrics, filters) => {
 
     // Preparar dados para a tabela
     const tableData = metrics.data.map(item => [
-      formatDate(item.usado_em),
-      item.nome_pessoa || '-',
+      formatDate(item.data_uso),
+      item.nome_usuario || '-',
       item.turno || '-',
-      item.setor || '-',
-      item.tipos_refeicao?.nome || '-',
-      formatCurrency(item.tipos_refeicao?.valor || 0)
+      item.nome_setor || '-',
+      item.tipo_refeicao || '-',
+      formatCurrency(item.valor || 0)
     ]);
 
     // Configurar e gerar a tabela
     doc.autoTable({
       startY: yPos,
-      head: [['Data de Consumo', 'Nome', 'Turno', 'Setor', 'Refeição', 'Valor']],
+      head: [['Data Consumo', 'Nome', 'Turno', 'Setor', 'Refeição', 'Valor']],
       body: tableData,
       theme: 'grid',
       styles: {
         fontSize: 8,
         cellPadding: 2,
-        halign: 'left'
-      },
-      headStyles: {
-        fillColor: [66, 66, 66],
-        textColor: [255, 255, 255],
-        fontStyle: 'bold',
-        halign: 'left'
+        overflow: 'linebreak',
+        cellWidth: 'wrap'
       },
       columnStyles: {
-        0: { cellWidth: 30 }, // Data de Consumo
+        0: { cellWidth: 35 }, // Data
         1: { cellWidth: 50 }, // Nome
-        2: { cellWidth: 20 }, // Turno
-        3: { cellWidth: 35 }, // Setor
-        4: { cellWidth: 35 }, // Refeição
-        5: { cellWidth: 20, halign: 'right' }  // Valor
+        2: { cellWidth: 25 }, // Turno
+        3: { cellWidth: 30 }, // Setor
+        4: { cellWidth: 25 }, // Refeição
+        5: { cellWidth: 25 }  // Valor
       },
-      didDrawCell: (data) => {
-        // Ajusta o alinhamento do valor para a direita apenas na coluna de valor
-        if (data.column.index === 5 && data.cell.section === 'body') {
-          const cell = data.cell;
-          cell.styles.halign = 'right';
-        }
+      headStyles: {
+        fillColor: [51, 51, 51],
+        textColor: 255,
+        fontSize: 8,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
       }
     });
 
-    // Salvar o PDF
-    doc.save('relatorio-vouchers.pdf');
     return doc;
   } catch (error) {
-    logger.error('Erro ao gerar PDF:', error);
+    logger.error('Erro ao gerar PDF de vouchers comuns:', error);
     throw error;
   }
 };
