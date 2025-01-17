@@ -34,35 +34,40 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text("Filtros Aplicados:", 14, currentY);
     currentY += 8;
 
-    // Empresa
-    if (filters.company && filters.company !== 'all') {
-      doc.text(`• Empresa: ${filters.companyName || filters.company}`, 20, currentY);
+    let filtrosAplicados = false;
+
+    // Empresa - Agora usando o nome da empresa dos dados
+    if (filters.company && filters.company !== 'all' && metrics?.data?.length > 0) {
+      // Pegamos o nome da empresa do primeiro registro dos dados
+      const nomeEmpresa = metrics.data[0].nome_empresa;
+      doc.text(`• Empresa: ${nomeEmpresa || 'Não especificada'}`, 20, currentY);
       currentY += 8;
+      filtrosAplicados = true;
     }
 
     // Setor
     if (filters.sector && filters.sector !== 'all') {
       doc.text(`• Setor: ${filters.sectorName || filters.sector}`, 20, currentY);
       currentY += 8;
+      filtrosAplicados = true;
     }
 
     // Turno
     if (filters.shift && filters.shift !== 'all') {
       doc.text(`• Turno: ${filters.shiftName || filters.shift}`, 20, currentY);
       currentY += 8;
+      filtrosAplicados = true;
     }
 
     // Tipo de Refeição
     if (filters.mealType && filters.mealType !== 'all') {
       doc.text(`• Tipo de Refeição: ${filters.mealTypeName || filters.mealType}`, 20, currentY);
       currentY += 8;
+      filtrosAplicados = true;
     }
 
     // Se nenhum filtro foi aplicado
-    if ((!filters.company || filters.company === 'all') && 
-        (!filters.sector || filters.sector === 'all') && 
-        (!filters.shift || filters.shift === 'all') && 
-        (!filters.mealType || filters.mealType === 'all')) {
+    if (!filtrosAplicados) {
       doc.text(`• Nenhum filtro aplicado`, 20, currentY);
       currentY += 8;
     }
@@ -76,7 +81,8 @@ export const exportToPDF = async (metrics, filters) => {
 
     if (!metrics?.data || metrics.data.length === 0) {
       doc.text("Nenhum registro encontrado para o período selecionado.", 14, currentY);
-      return doc;
+      doc.save('relatorio-vouchers.pdf');
+      return;
     }
 
     // Tabelas
@@ -118,6 +124,7 @@ export const exportToPDF = async (metrics, filters) => {
       }
     });
 
+    doc.save('relatorio-vouchers.pdf');
     return doc;
   } catch (error) {
     logger.error('Erro ao gerar PDF:', error);
