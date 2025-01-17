@@ -6,7 +6,7 @@ import logger from '@/config/logger';
 
 export const exportToPDF = async (metrics, filters) => {
   try {
-    logger.info('Iniciando geração do PDF:', { metrics, filters });
+    logger.info('Iniciando geração do PDF de vouchers descartáveis:', { metrics, filters });
     
     if (!metrics || !Array.isArray(metrics.data)) {
       logger.error('Dados inválidos recebidos:', metrics);
@@ -18,7 +18,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     // Cabeçalho com informações do administrador
     doc.setFontSize(16);
-    doc.text("Relatório de Vouchers", 14, yPos);
+    doc.text("Relatório de Vouchers Descartáveis", 14, yPos);
     yPos += 10;
 
     // Informações do administrador
@@ -56,18 +56,6 @@ export const exportToPDF = async (metrics, filters) => {
       yPos += 6;
     }
 
-    // Setor
-    if (filters?.sector && filters.sector !== 'all') {
-      doc.text(`Setor: ${filters.sectorName || filters.sector}`, 14, yPos);
-      yPos += 6;
-    }
-
-    // Turno
-    if (filters?.shift && filters.shift !== 'all') {
-      doc.text(`Turno: ${filters.shiftName || filters.shift}`, 14, yPos);
-      yPos += 6;
-    }
-
     // Tipo de Refeição
     if (filters?.mealType && filters.mealType !== 'all') {
       doc.text(`Tipo de Refeição: ${filters.mealTypeName || filters.mealType}`, 14, yPos);
@@ -80,31 +68,30 @@ export const exportToPDF = async (metrics, filters) => {
     if (!metrics.data || metrics.data.length === 0) {
       doc.setFontSize(12);
       doc.text("Nenhum registro encontrado para os filtros selecionados.", 14, yPos);
-      doc.save('relatorio-vouchers.pdf');
+      doc.save('relatorio-vouchers-descartaveis.pdf');
       return doc;
     }
 
     // Tabela de dados
     const tableData = metrics.data.map(item => [
-      format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-      item.nome_usuario || '-',
-      item.tipo_refeicao || '-',
-      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor_refeicao || 0),
-      item.turno || '-',
-      item.nome_setor || '-',
-      item.tipo || '-'
+      format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      item.nome_pessoa || '-',
+      item.tipos_refeicao?.nome || '-',
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.tipos_refeicao?.valor || 0),
+      item.codigo || '-',
+      item.nome_empresa || '-'
     ]);
 
     doc.autoTable({
       startY: yPos,
-      head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo']],
+      head: [['Data/Hora', 'Pessoa', 'Refeição', 'Valor', 'Código', 'Empresa']],
       body: tableData,
       theme: 'grid',
-      styles: {
+      styles: { 
         fontSize: 8,
         cellPadding: 2
       },
-      headStyles: {
+      headStyles: { 
         fillColor: [66, 66, 66],
         textColor: [255, 255, 255],
         fontStyle: 'bold'
@@ -115,13 +102,12 @@ export const exportToPDF = async (metrics, filters) => {
         2: { cellWidth: 25 },
         3: { cellWidth: 20 },
         4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 20 }
+        5: { cellWidth: 30 }
       }
     });
 
-    logger.info('PDF gerado com sucesso');
-    doc.save('relatorio-vouchers.pdf');
+    logger.info('PDF de vouchers descartáveis gerado com sucesso');
+    doc.save('relatorio-vouchers-descartaveis.pdf');
     return doc;
   } catch (error) {
     logger.error('Erro ao gerar PDF:', error);
