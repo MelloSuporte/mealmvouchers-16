@@ -18,9 +18,10 @@ export const exportToPDF = async (metrics, filters) => {
     yPos += 10;
     
     // Informações do usuário que exportou
+    const adminName = localStorage.getItem('adminName') || 'Usuário não identificado';
     doc.setFontSize(8);
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    doc.text(`Exportado em ${dataExportacao}`, 14, yPos);
+    doc.text(`Relatório gerado por ${adminName} em ${dataExportacao}`, 14, yPos);
     yPos += 10;
 
     // Seção de Filtros Aplicados
