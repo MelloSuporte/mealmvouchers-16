@@ -25,13 +25,20 @@ export const exportToPDF = async (metrics, filters) => {
     doc.setFontSize(10);
     const adminName = localStorage.getItem('adminName') || 'Usuário não identificado';
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    doc.text(`Relatório gerado por ${adminName} em ${dataExportacao}`, 14, yPos);
+    doc.text(`Relatório gerado por ${adminName}`, 14, yPos);
+    yPos += 6;
+    doc.text(`Data de exportação: ${dataExportacao}`, 14, yPos);
     yPos += 10;
 
     // Totalizadores no topo
     const totalRegistros = metrics.data.length;
     const valorTotal = metrics.data.reduce((sum, item) => sum + (Number(item.valor_refeicao) || 0), 0);
     
+    doc.setFontSize(12);
+    doc.text("Totalizadores:", 14, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
     doc.text(`Total de Registros: ${totalRegistros}`, 14, yPos);
     yPos += 6;
     doc.text(`Valor Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}`, 14, yPos);
