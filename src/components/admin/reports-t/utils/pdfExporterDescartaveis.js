@@ -27,6 +27,10 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text(`Data de exportação: ${dataExportacao}`, 14, yPos);
     yPos += 10;
 
+    // Tipo de Voucher
+    doc.text("Tipo de Voucher: Descartável", 14, yPos);
+    yPos += 10;
+
     // Período
     const startDate = filters?.startDate ? formatDate(filters.startDate) : '-';
     const endDate = filters?.endDate ? formatDate(filters.endDate) : '-';
@@ -57,7 +61,7 @@ export const exportToPDF = async (metrics, filters) => {
     yPos += 10;
 
     const tableData = metrics.data.map(item => [
-      formatDate(item.usado_em),
+      formatDate(item.data_uso),
       item.nome_pessoa || '-',
       item.nome_empresa || '-',
       item.tipos_refeicao?.nome || '-',
