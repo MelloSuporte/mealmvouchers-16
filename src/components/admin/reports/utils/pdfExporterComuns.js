@@ -40,53 +40,37 @@ export const exportToPDF = async (metrics, filters) => {
 
     let filtrosAplicados = false;
 
-    // Empresa - Usando o nome da empresa dos dados
-    if (filters.company && filters.company !== 'all' && metrics?.data?.length > 0) {
-      const empresaFiltrada = metrics.data[0].nome_empresa;
-      if (empresaFiltrada) {
-        doc.text(`• Empresa: ${empresaFiltrada}`, 20, yPos);
-        yPos += 8;
-        filtrosAplicados = true;
-      }
+    if (filters?.company && filters.company !== 'all') {
+      doc.text(`• Empresa: ${metrics?.data?.[0]?.nome_empresa || filters.company}`, 20, yPos);
+      yPos += 8;
+      filtrosAplicados = true;
     }
 
-    // Setor
-    if (filters.sector && filters.sector !== 'all' && metrics?.data?.length > 0) {
-      const setorFiltrado = metrics.data[0].setor;
-      if (setorFiltrado) {
-        doc.text(`• Setor: ${setorFiltrado}`, 20, yPos);
-        yPos += 8;
-        filtrosAplicados = true;
-      }
+    if (filters?.sector && filters.sector !== 'all') {
+      doc.text(`• Setor: ${metrics?.data?.[0]?.nome_setor || filters.sector}`, 20, yPos);
+      yPos += 8;
+      filtrosAplicados = true;
     }
 
-    // Turno
-    if (filters.shift && filters.shift !== 'all' && metrics?.data?.length > 0) {
-      const turnoFiltrado = metrics.data[0].turno;
-      if (turnoFiltrado) {
-        doc.text(`• Turno: ${turnoFiltrado}`, 20, yPos);
-        yPos += 8;
-        filtrosAplicados = true;
-      }
+    if (filters?.shift && filters.shift !== 'all') {
+      doc.text(`• Turno: ${metrics?.data?.[0]?.turno || filters.shift}`, 20, yPos);
+      yPos += 8;
+      filtrosAplicados = true;
     }
 
-    // Tipo de Refeição
-    if (filters.mealType && filters.mealType !== 'all' && metrics?.data?.length > 0) {
-      const tipoRefeicaoFiltrado = metrics.data[0].tipos_refeicao?.nome;
-      if (tipoRefeicaoFiltrado) {
-        doc.text(`• Tipo de Refeição: ${tipoRefeicaoFiltrado}`, 20, yPos);
-        yPos += 8;
-        filtrosAplicados = true;
-      }
+    if (filters?.mealType && filters.mealType !== 'all') {
+      doc.text(`• Tipo de Refeição: ${metrics?.data?.[0]?.tipo_refeicao || filters.mealType}`, 20, yPos);
+      yPos += 8;
+      filtrosAplicados = true;
     }
 
     if (!filtrosAplicados) {
       doc.text(`• Nenhum filtro aplicado`, 20, yPos);
       yPos += 8;
     }
-    
+
     yPos += 8;
-    
+
     // Valor Total
     const valorTotal = formatCurrency(metrics?.totalCost || 0);
     doc.text(`Valor Total: ${valorTotal}`, 14, yPos);
@@ -94,28 +78,27 @@ export const exportToPDF = async (metrics, filters) => {
 
     if (!metrics?.data || metrics.data.length === 0) {
       doc.text("Nenhum registro encontrado para o período selecionado.", 14, yPos);
-      doc.save('relatorio-vouchers.pdf');
+      doc.save('relatorio-vouchers-comuns.pdf');
       return doc;
     }
 
-    // Tabela de Vouchers
+    // Informações de Consumo
     doc.setFontSize(14);
-    doc.text("Vouchers Utilizados", 14, yPos);
+    doc.text("Informações de Consumo", 14, yPos);
     yPos += 10;
 
     const tableData = metrics.data.map(item => [
-      formatDate(item.usado_em),
-      item.codigo,
-      item.nome_pessoa,
-      item.tipos_refeicao?.nome || '-',
-      formatCurrency(item.tipos_refeicao?.valor || 0),
+      formatDate(item.data_uso),
+      item.nome_usuario || '-',
       item.turno || '-',
-      item.setor || '-'
+      item.nome_setor || '-',
+      item.tipo_refeicao || '-',
+      formatCurrency(item.valor_refeicao || 0)
     ]);
 
     doc.autoTable({
       startY: yPos,
-      head: [['Data/Hora', 'Código', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor']],
+      head: [['Data de Consumo', 'Nome', 'Turno', 'Setor', 'Refeição', 'Valor']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -128,17 +111,16 @@ export const exportToPDF = async (metrics, filters) => {
         fontStyle: 'bold'
       },
       columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 20 }
+        0: { cellWidth: 25 }, // Data
+        1: { cellWidth: 40 }, // Nome
+        2: { cellWidth: 20 }, // Turno
+        3: { cellWidth: 35 }, // Setor
+        4: { cellWidth: 35 }, // Refeição
+        5: { cellWidth: 20 }  // Valor
       }
     });
 
-    doc.save('relatorio-vouchers.pdf');
+    doc.save('relatorio-vouchers-comuns.pdf');
     return doc;
   } catch (error) {
     logger.error('Erro ao gerar PDF:', error);
