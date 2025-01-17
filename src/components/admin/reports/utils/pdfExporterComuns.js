@@ -7,10 +7,16 @@ import logger from '@/config/logger';
 export const generatePDFComuns = (metrics, filters) => {
   try {
     // Log inicial para debug
-    logger.info('Dados recebidos para gerar PDF:', { 
-      metrics: metrics,
-      filters: filters 
+    logger.info('Iniciando geração de PDF com dados:', {
+      totalRegistros: metrics?.length || 0,
+      primeiroRegistro: metrics?.[0],
+      filtros: filters
     });
+
+    if (!metrics || !Array.isArray(metrics)) {
+      logger.error('Dados inválidos recebidos:', metrics);
+      throw new Error('Dados inválidos para geração do PDF');
+    }
 
     const doc = new jsPDF();
     let yPos = 20;
@@ -20,70 +26,52 @@ export const generatePDFComuns = (metrics, filters) => {
     doc.text("Relatório de Vouchers Comuns", 14, yPos);
     yPos += 10;
 
-    // Filtros aplicados
+    // Informações do relatório
     doc.setFontSize(10);
     if (filters?.startDate && filters?.endDate) {
       doc.text(`Período: ${format(new Date(filters.startDate), 'dd/MM/yyyy')} a ${format(new Date(filters.endDate), 'dd/MM/yyyy')}`, 14, yPos);
       yPos += 6;
     }
 
-    if (filters?.company) {
+    if (filters?.company && filters.company !== 'all') {
       doc.text(`Empresa: ${filters.companyName || filters.company}`, 14, yPos);
       yPos += 6;
     }
 
-    if (filters?.shift) {
+    if (filters?.shift && filters.shift !== 'all') {
       doc.text(`Turno: ${filters.shiftName || filters.shift}`, 14, yPos);
       yPos += 6;
     }
 
-    if (filters?.sector) {
+    if (filters?.sector && filters.sector !== 'all') {
       doc.text(`Setor: ${filters.sectorName || filters.sector}`, 14, yPos);
       yPos += 6;
     }
 
     yPos += 10;
 
-    // Verificar se há dados para processar
-    if (!metrics || !Array.isArray(metrics) || metrics.length === 0) {
+    // Verificar se há dados
+    if (metrics.length === 0) {
       doc.setFontSize(12);
       doc.text("Nenhum registro encontrado para os filtros selecionados.", 14, yPos);
       doc.save('relatorio-vouchers-comuns.pdf');
-      return;
+      return doc;
     }
-
-    // Log para debug dos dados
-    logger.info('Preparando dados para tabela:', { 
-      primeiroRegistro: metrics[0],
-      totalRegistros: metrics.length 
-    });
 
     // Preparar dados para a tabela
     const tableData = metrics.map(item => {
       try {
-        const dataUso = item.usado_em 
-          ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) 
-          : '-';
-        const nomeUsuario = item.nome_pessoa || '-';
-        const codigo = item.codigo || '-';
-        const turno = item.turno || '-';
-        const setor = item.setor || '-';
-        const tipoRefeicao = item.tipos_refeicao?.nome || '-';
-        const valor = item.tipos_refeicao?.valor 
-          ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.tipos_refeicao.valor)
-          : 'R$ 0,00';
-
         return [
-          dataUso,
-          codigo,
-          nomeUsuario,
-          turno,
-          setor,
-          tipoRefeicao,
-          valor
+          item.data_uso ? format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
+          item.nome_usuario || '-',
+          item.tipo_refeicao || '-',
+          new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor_refeicao || 0),
+          item.turno || '-',
+          item.nome_setor || '-',
+          item.tipo_voucher || 'Comum'
         ];
       } catch (error) {
-        logger.error('Erro ao processar item para tabela:', { item, error });
+        logger.error('Erro ao processar item:', { item, error });
         return ['-', '-', '-', '-', '-', '-', '-'];
       }
     });
@@ -91,23 +79,12 @@ export const generatePDFComuns = (metrics, filters) => {
     // Configurar e gerar a tabela
     doc.autoTable({
       startY: yPos,
-      head: [['Data/Hora', 'Código', 'Nome', 'Turno', 'Setor', 'Refeição', 'Valor']],
+      head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo']],
       body: tableData,
       theme: 'grid',
       styles: {
         fontSize: 8,
-        cellPadding: 2,
-        overflow: 'linebreak',
-        cellWidth: 'wrap'
-      },
-      columnStyles: {
-        0: { cellWidth: 35 }, // Data
-        1: { cellWidth: 20 }, // Código
-        2: { cellWidth: 45 }, // Nome
-        3: { cellWidth: 25 }, // Turno
-        4: { cellWidth: 25 }, // Setor
-        5: { cellWidth: 25 }, // Refeição
-        6: { cellWidth: 20 }  // Valor
+        cellPadding: 2
       },
       headStyles: {
         fillColor: [51, 51, 51],
@@ -116,8 +93,14 @@ export const generatePDFComuns = (metrics, filters) => {
         fontStyle: 'bold',
         halign: 'center'
       },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245]
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 25 },
+        6: { cellWidth: 20 }
       }
     });
 
@@ -126,18 +109,13 @@ export const generatePDFComuns = (metrics, filters) => {
     doc.setFontSize(10);
     doc.text(`Total de Registros: ${metrics.length}`, 14, finalY + 10);
 
-    const totalValor = metrics.reduce((sum, item) => {
-      const valor = item.tipos_refeicao?.valor || 0;
-      return sum + valor;
-    }, 0);
-
+    const totalValor = metrics.reduce((sum, item) => sum + (Number(item.valor_refeicao) || 0), 0);
     doc.text(
       `Valor Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValor)}`,
       14,
       finalY + 20
     );
 
-    // Log final para confirmar geração
     logger.info('PDF gerado com sucesso:', {
       totalRegistros: metrics.length,
       valorTotal: totalValor
@@ -146,7 +124,7 @@ export const generatePDFComuns = (metrics, filters) => {
     doc.save('relatorio-vouchers-comuns.pdf');
     return doc;
   } catch (error) {
-    logger.error('Erro ao gerar PDF de vouchers comuns:', error);
+    logger.error('Erro ao gerar PDF:', error);
     throw error;
   }
 };
