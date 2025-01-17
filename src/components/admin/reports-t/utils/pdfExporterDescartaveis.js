@@ -16,12 +16,10 @@ export const exportToPDF = async (filters) => {
       .select(`
         *,
         tipos_refeicao (
-          id,
           nome,
           valor
         )
       `)
-      .is('usado_em', null)
       .order('data_uso', { ascending: false });
 
     // Aplicar filtro de tipo de refeição se especificado
@@ -120,7 +118,7 @@ export const exportToPDF = async (filters) => {
     });
 
     doc.save('relatorio-vouchers-descartaveis.pdf');
-    logger.info('PDF gerado com sucesso');
+    logger.info('PDF gerado com sucesso', { totalRegistros, valorTotal });
 
   } catch (error) {
     logger.error('Erro ao gerar PDF:', error);
