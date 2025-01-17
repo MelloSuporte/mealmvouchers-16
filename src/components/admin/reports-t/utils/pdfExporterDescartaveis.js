@@ -14,12 +14,15 @@ export const exportToPDF = async (filters) => {
     let query = supabase
       .from('vouchers_descartaveis')
       .select(`
-        *,
+        data_uso,
+        nome_pessoa,
+        nome_empresa,
         tipos_refeicao (
           nome,
           valor
         )
       `)
+      .not('data_uso', 'is', null) // Apenas vouchers utilizados
       .order('data_uso', { ascending: false });
 
     // Aplicar filtro de tipo de refeição se especificado
