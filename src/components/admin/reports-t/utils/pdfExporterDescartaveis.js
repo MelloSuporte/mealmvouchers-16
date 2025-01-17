@@ -31,6 +31,12 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text("Tipo de Voucher: Descartável", 14, yPos);
     yPos += 10;
 
+    // Tipo de Refeição (se filtrado)
+    if (filters?.mealType && filters.mealType !== 'all') {
+      doc.text(`Tipo de Refeição: ${filters.mealType}`, 14, yPos);
+      yPos += 10;
+    }
+
     // Período
     const startDate = filters?.startDate ? formatDate(filters.startDate) : '-';
     const endDate = filters?.endDate ? formatDate(filters.endDate) : '-';
