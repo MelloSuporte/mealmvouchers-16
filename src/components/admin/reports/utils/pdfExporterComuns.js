@@ -14,7 +14,7 @@ export const exportToPDF = async (metrics, filters) => {
     
     // Título
     doc.setFontSize(16);
-    doc.text("Relatório de Uso de Vouchers Comuns", 14, yPos);
+    doc.text("Relatório de Uso de Vouchers", 14, yPos);
     yPos += 10;
     
     // Data de exportação
@@ -64,20 +64,29 @@ export const exportToPDF = async (metrics, filters) => {
       theme: 'grid',
       styles: {
         fontSize: 8,
-        cellPadding: 2
+        cellPadding: 2,
+        halign: 'left'
       },
       headStyles: {
         fillColor: [66, 66, 66],
         textColor: [255, 255, 255],
-        fontStyle: 'bold'
+        fontStyle: 'bold',
+        halign: 'left'
       },
       columnStyles: {
-        0: { cellWidth: 25 }, // Data de Consumo
-        1: { cellWidth: 40 }, // Nome
+        0: { cellWidth: 30 }, // Data de Consumo
+        1: { cellWidth: 50 }, // Nome
         2: { cellWidth: 20 }, // Turno
         3: { cellWidth: 35 }, // Setor
         4: { cellWidth: 35 }, // Refeição
-        5: { cellWidth: 20 }  // Valor
+        5: { cellWidth: 20, halign: 'right' }  // Valor
+      },
+      didDrawCell: (data) => {
+        // Ajusta o alinhamento do valor para a direita apenas na coluna de valor
+        if (data.column.index === 5 && data.cell.section === 'body') {
+          const cell = data.cell;
+          cell.styles.halign = 'right';
+        }
       }
     });
 
