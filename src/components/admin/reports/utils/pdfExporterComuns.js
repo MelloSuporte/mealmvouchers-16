@@ -13,7 +13,7 @@ export const exportToPDF = async (metrics, filters) => {
     
     // Título
     doc.setFontSize(16);
-    doc.text("Relatório de Uso de Vouchers", 14, 15);
+    doc.text("Relatório de Uso de Vouchers Comuns", 14, 15);
     
     // Informações do usuário que exportou
     doc.setFontSize(8);
@@ -85,6 +85,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     const tableData = metrics.data.map(item => [
       formatDate(item.data_uso),
+      item.codigo_voucher || '-',
       item.nome_usuario || '-',
       item.tipo_refeicao || '-',
       formatCurrency(item.valor_refeicao || 0),
@@ -94,7 +95,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     doc.autoTable({
       startY: currentY + 10,
-      head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor']],
+      head: [['Data/Hora', 'Código', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -108,11 +109,12 @@ export const exportToPDF = async (metrics, filters) => {
       },
       columnStyles: {
         0: { cellWidth: 25 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 20 },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 25 },
         4: { cellWidth: 20 },
-        5: { cellWidth: 20 }
+        5: { cellWidth: 20 },
+        6: { cellWidth: 20 }
       }
     });
 
