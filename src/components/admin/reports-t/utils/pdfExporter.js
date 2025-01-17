@@ -51,7 +51,9 @@ export const exportToPDF = async (metrics, filters) => {
     }
 
     if (filters?.company && filters.company !== 'all') {
-      doc.text(`Empresa: ${filters.nome_empresa || 'N/A'}`, 14, yPos);
+      // Usando o nome da empresa do primeiro registro encontrado
+      const empresaNome = metrics.length > 0 ? metrics[0].nome_empresa : 'N/A';
+      doc.text(`Empresa: ${empresaNome}`, 14, yPos);
       yPos += 6;
     }
 
