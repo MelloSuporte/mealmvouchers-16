@@ -42,7 +42,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     // Empresa - Usando o nome da empresa dos dados
     if (filters.company && filters.company !== 'all' && metrics?.data?.length > 0) {
-      const empresaFiltrada = metrics.data.find(item => item.nome_empresa)?.nome_empresa;
+      const empresaFiltrada = metrics.data[0].nome_empresa;
       if (empresaFiltrada) {
         doc.text(`• Empresa: ${empresaFiltrada}`, 20, yPos);
         yPos += 8;
@@ -52,7 +52,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     // Setor
     if (filters.sector && filters.sector !== 'all' && metrics?.data?.length > 0) {
-      const setorFiltrado = metrics.data.find(item => item.setor)?.setor;
+      const setorFiltrado = metrics.data[0].setor;
       if (setorFiltrado) {
         doc.text(`• Setor: ${setorFiltrado}`, 20, yPos);
         yPos += 8;
@@ -62,7 +62,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     // Turno
     if (filters.shift && filters.shift !== 'all' && metrics?.data?.length > 0) {
-      const turnoFiltrado = metrics.data.find(item => item.turno)?.turno;
+      const turnoFiltrado = metrics.data[0].turno;
       if (turnoFiltrado) {
         doc.text(`• Turno: ${turnoFiltrado}`, 20, yPos);
         yPos += 8;
@@ -72,7 +72,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     // Tipo de Refeição
     if (filters.mealType && filters.mealType !== 'all' && metrics?.data?.length > 0) {
-      const tipoRefeicaoFiltrado = metrics.data.find(item => item.tipos_refeicao?.nome)?.tipos_refeicao?.nome;
+      const tipoRefeicaoFiltrado = metrics.data[0].tipos_refeicao?.nome;
       if (tipoRefeicaoFiltrado) {
         doc.text(`• Tipo de Refeição: ${tipoRefeicaoFiltrado}`, 20, yPos);
         yPos += 8;
