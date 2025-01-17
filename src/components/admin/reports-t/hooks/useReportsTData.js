@@ -50,8 +50,9 @@ export const useReportsTData = (filters) => {
           query = query.eq('turno', filters.shift);
         }
 
+        // Alterado para filtrar por nome_setor em vez de setor_id
         if (filters.sector && filters.sector !== 'all') {
-          query = query.eq('setor_id', filters.sector);
+          query = query.eq('nome_setor', filters.sector);
         }
 
         if (filters.mealType && filters.mealType !== 'all') {
