@@ -41,19 +41,19 @@ export const exportToPDF = async (metrics, filters) => {
       return doc;
     }
 
-    // Informações de Consumo
+    // Tabela de Vouchers
     doc.setFontSize(14);
-    doc.text("Informações de Consumo", 14, yPos);
+    doc.text("Vouchers Utilizados", 14, yPos);
     yPos += 10;
 
     // Preparar dados para a tabela
     const tableData = metrics.data.map(item => [
-      formatDate(item.data_uso),
-      item.nome_usuario || '-',
+      formatDate(item.usado_em),
+      item.nome_pessoa || '-',
       item.turno || '-',
-      item.nome_setor || '-',
-      item.tipo_refeicao || '-',
-      formatCurrency(item.valor_refeicao || 0)
+      item.setor || '-',
+      item.tipos_refeicao?.nome || '-',
+      formatCurrency(item.tipos_refeicao?.valor || 0)
     ]);
 
     // Configurar e gerar a tabela
