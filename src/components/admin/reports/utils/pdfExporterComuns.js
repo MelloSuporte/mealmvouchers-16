@@ -6,9 +6,10 @@ import logger from '@/config/logger';
 
 export const generatePDFComuns = (metrics, filters) => {
   try {
-    logger.info('Gerando PDF de vouchers comuns:', { 
-      totalRegistros: metrics?.length,
-      filtros: filters 
+    // Log inicial para debug
+    logger.info('Dados recebidos para gerar PDF:', { 
+      metrics: metrics,
+      filters: filters 
     });
 
     const doc = new jsPDF();
@@ -44,34 +45,47 @@ export const generatePDFComuns = (metrics, filters) => {
     yPos += 10;
 
     // Verificar se há dados para processar
-    if (!metrics || metrics.length === 0) {
+    if (!metrics || !Array.isArray(metrics) || metrics.length === 0) {
       doc.setFontSize(12);
       doc.text("Nenhum registro encontrado para os filtros selecionados.", 14, yPos);
       doc.save('relatorio-vouchers-comuns.pdf');
       return;
     }
 
+    // Log para debug dos dados
+    logger.info('Preparando dados para tabela:', { 
+      primeiroRegistro: metrics[0],
+      totalRegistros: metrics.length 
+    });
+
     // Preparar dados para a tabela
     const tableData = metrics.map(item => {
-      const dataUso = item.usado_em ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-';
-      const nomeUsuario = item.nome_pessoa || '-';
-      const codigo = item.codigo || '-';
-      const turno = item.turno || '-';
-      const setor = item.setor || '-';
-      const tipoRefeicao = item.tipos_refeicao?.nome || '-';
-      const valor = item.tipos_refeicao?.valor 
-        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.tipos_refeicao.valor)
-        : 'R$ 0,00';
+      try {
+        const dataUso = item.usado_em 
+          ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) 
+          : '-';
+        const nomeUsuario = item.nome_pessoa || '-';
+        const codigo = item.codigo || '-';
+        const turno = item.turno || '-';
+        const setor = item.setor || '-';
+        const tipoRefeicao = item.tipos_refeicao?.nome || '-';
+        const valor = item.tipos_refeicao?.valor 
+          ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.tipos_refeicao.valor)
+          : 'R$ 0,00';
 
-      return [
-        dataUso,
-        codigo,
-        nomeUsuario,
-        turno,
-        setor,
-        tipoRefeicao,
-        valor
-      ];
+        return [
+          dataUso,
+          codigo,
+          nomeUsuario,
+          turno,
+          setor,
+          tipoRefeicao,
+          valor
+        ];
+      } catch (error) {
+        logger.error('Erro ao processar item para tabela:', { item, error });
+        return ['-', '-', '-', '-', '-', '-', '-'];
+      }
     });
 
     // Configurar e gerar a tabela
@@ -112,12 +126,22 @@ export const generatePDFComuns = (metrics, filters) => {
     doc.setFontSize(10);
     doc.text(`Total de Registros: ${metrics.length}`, 14, finalY + 10);
 
-    const totalValor = metrics.reduce((sum, item) => sum + (item.tipos_refeicao?.valor || 0), 0);
+    const totalValor = metrics.reduce((sum, item) => {
+      const valor = item.tipos_refeicao?.valor || 0;
+      return sum + valor;
+    }, 0);
+
     doc.text(
       `Valor Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValor)}`,
       14,
       finalY + 20
     );
+
+    // Log final para confirmar geração
+    logger.info('PDF gerado com sucesso:', {
+      totalRegistros: metrics.length,
+      valorTotal: totalValor
+    });
 
     doc.save('relatorio-vouchers-comuns.pdf');
     return doc;
