@@ -1,104 +1,76 @@
-import React from 'react';
 import { supabase } from '../../config/supabase';
 import logger from '../../config/logger';
-import { logSystemEvent, LOG_TYPES } from '../../utils/systemLogs';
-import { findCommonVoucher } from './validators/commonVoucherValidator';
-import { findDisposableVoucher } from './validators/disposableVoucherValidator';
-import { validateAndUseDisposableVoucher } from './validators/disposableVoucherService';
 import { toast } from "sonner";
 
-export const validateVoucher = async (codigo, tipoRefeicaoId) => {
+export const validateVoucher = async (voucherCode, mealTypeId) => {
   try {
-    await logSystemEvent({
-      tipo: LOG_TYPES.TENTATIVA_VALIDACAO,
-      mensagem: `Iniciando validação do voucher: ${codigo}`,
-      detalhes: { codigo, tipoRefeicaoId }
+    logger.info('Iniciando validação do voucher:', { voucherCode, mealTypeId });
+
+    // Verificar se o tipo de refeição está ativo e dentro do horário permitido
+    const { data: mealType, error: mealTypeError } = await supabase
+      .from('tipos_refeicao')
+      .select('*')
+      .eq('id', mealTypeId)
+      .eq('ativo', true)
+      .single();
+
+    if (mealTypeError) {
+      logger.error('Erro ao buscar tipo de refeição:', mealTypeError);
+      throw new Error('Erro ao validar tipo de refeição');
+    }
+
+    if (!mealType) {
+      logger.warn('Tipo de refeição não encontrado ou inativo');
+      throw new Error('Tipo de refeição inválido ou inativo');
+    }
+
+    // Validar horário da refeição
+    const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+    const startTime = mealType.horario_inicio;
+    const endTime = mealType.horario_fim;
+    const toleranceMinutes = mealType.minutos_tolerancia || 0;
+
+    // Converter horários para minutos para facilitar comparação
+    const currentMinutes = timeToMinutes(currentTime);
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = timeToMinutes(endTime) + toleranceMinutes;
+
+    if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
+      const message = `Esta refeição só pode ser utilizada entre ${startTime} e ${endTime} (tolerância de ${toleranceMinutes} minutos)`;
+      logger.warn('Tentativa de uso fora do horário:', message);
+      throw new Error(message);
+    }
+
+    // Validar voucher
+    const { data: result, error } = await supabase.rpc('validate_and_use_voucher', {
+      p_codigo: voucherCode,
+      p_tipo_refeicao_id: mealTypeId
     });
 
-    logger.info('Iniciando validação do voucher:', codigo);
-
-    // Garantir que o código seja uma string
-    const voucherCode = String(codigo);
-    
-    // Tentar validar como voucher comum
-    const { data: usuario, error: userError } = await findCommonVoucher(voucherCode);
-
-    if (usuario) {
-      logger.info('Voucher identificado como comum');
-      
-      // Validar voucher comum usando RPC
-      const { data: validationResult, error: validationError } = await supabase
-        .rpc('validate_and_use_voucher', {
-          p_codigo: voucherCode,
-          p_tipo_refeicao_id: tipoRefeicaoId
-        });
-
-      if (validationError) {
-        logger.error('Erro na validação do voucher comum:', validationError);
-        toast.error('Erro na validação do voucher comum: ' + validationError.message);
-        return { 
-          success: false, 
-          error: validationError.message,
-          voucherType: 'comum'
-        };
-      }
-
-      if (!validationResult.success) {
-        toast.error(validationResult.error || 'Erro na validação do voucher');
-        return {
-          success: false,
-          error: validationResult.error || 'Erro na validação do voucher',
-          voucherType: 'comum'
-        };
-      }
-
-      toast.success('Voucher comum validado com sucesso');
-      return {
-        success: true,
-        voucherType: 'comum',
-        user: usuario,
-        message: validationResult.message || 'Voucher comum validado com sucesso'
-      };
+    if (error) {
+      logger.error('Erro ao validar voucher:', error);
+      throw new Error(error.message || 'Erro ao validar voucher');
     }
 
-    // Se não for comum, tentar como descartável
-    const { data: voucherDescartavel, error: descartavelError } = await findDisposableVoucher(voucherCode);
-
-    if (voucherDescartavel) {
-      logger.info('Voucher identificado como descartável');
-      
-      const result = await validateAndUseDisposableVoucher(voucherDescartavel, tipoRefeicaoId);
-      
-      if (!result.success) {
-        toast.error(result.error);
-        return result;
-      }
-
-      toast.success(result.message);
-      return {
-        ...result,
-        shouldNavigate: true
-      };
+    if (!result?.success) {
+      throw new Error(result?.error || 'Erro ao validar voucher');
     }
 
-    const notFoundMsg = 'Voucher inválido ou não encontrado';
-    logger.info('Tipo de voucher não identificado');
-    toast.error(notFoundMsg);
-    return { success: false, error: notFoundMsg };
+    return result;
 
   } catch (error) {
-    logger.error('Erro na validação do voucher:', error);
-    await logSystemEvent({
-      tipo: LOG_TYPES.ERRO_VALIDACAO_VOUCHER,
-      mensagem: 'Erro na validação',
-      detalhes: error,
-      nivel: 'error'
-    });
-    const errorMsg = error.message || 'Erro ao validar voucher';
-    toast.error(errorMsg);
-    return { 
-      success: false, 
-      error: errorMsg
+    logger.error('Erro na validação:', error);
+    toast.error(error.message || 'Erro ao validar voucher');
+    return {
+      success: false,
+      error: error.message || 'Erro ao validar voucher'
     };
   }
+};
+
+// Função auxiliar para converter horário em minutos
+const timeToMinutes = (time) => {
+  if (!time) return 0;
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
 };
