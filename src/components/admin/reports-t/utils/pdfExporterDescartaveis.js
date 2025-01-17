@@ -3,7 +3,7 @@ import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import logger from '@/config/logger';
-import { formatCurrency, formatDate } from './formatters';
+import { formatCurrency } from './formatters';
 
 export const exportToPDF = async (metrics, filters) => {
   try {
@@ -98,9 +98,23 @@ export const exportToPDF = async (metrics, filters) => {
     });
 
     doc.save('relatorio-vouchers-descartaveis.pdf');
+    logger.info('PDF gerado com sucesso:', {
+      totalRegistros,
+      valorTotal: metrics?.totalCost
+    });
     return doc;
   } catch (error) {
     logger.error('Erro ao gerar PDF:', error);
     throw error;
+  }
+};
+
+const formatDate = (date) => {
+  if (!date) return '-';
+  try {
+    return format(new Date(date), "dd/MM/yyyy HH:mm", { locale: ptBR });
+  } catch (error) {
+    logger.error('Erro ao formatar data:', error);
+    return '-';
   }
 };
