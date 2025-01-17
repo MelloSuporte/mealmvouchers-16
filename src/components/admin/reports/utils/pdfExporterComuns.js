@@ -21,52 +21,57 @@ export const generatePDFComuns = (metrics, filters) => {
 
     // Filtros aplicados
     doc.setFontSize(10);
-    if (filters?.startDate) {
+    if (filters?.startDate && filters?.endDate) {
       doc.text(`Período: ${format(new Date(filters.startDate), 'dd/MM/yyyy')} a ${format(new Date(filters.endDate), 'dd/MM/yyyy')}`, 14, yPos);
       yPos += 6;
     }
+
     if (filters?.company) {
-      doc.text(`Empresa: ${filters.company}`, 14, yPos);
+      doc.text(`Empresa: ${filters.companyName || filters.company}`, 14, yPos);
       yPos += 6;
     }
+
     if (filters?.shift) {
-      doc.text(`Turno: ${filters.shift}`, 14, yPos);
+      doc.text(`Turno: ${filters.shiftName || filters.shift}`, 14, yPos);
       yPos += 6;
     }
+
     if (filters?.sector) {
-      doc.text(`Setor: ${filters.sector}`, 14, yPos);
+      doc.text(`Setor: ${filters.sectorName || filters.sector}`, 14, yPos);
       yPos += 6;
     }
 
     yPos += 10;
 
-    const formatDate = (date) => {
-      if (!date) return '-';
-      return format(new Date(date), "dd/MM/yyyy HH:mm", { locale: ptBR });
-    };
-
-    const formatCurrency = (value) => {
-      if (!value && value !== 0) return 'R$ 0,00';
-      return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(value);
-    };
-
-    // Tabela de Vouchers
-    doc.setFontSize(14);
-    doc.text("Vouchers Utilizados", 14, yPos);
-    yPos += 10;
+    // Verificar se há dados para processar
+    if (!metrics?.data || metrics.data.length === 0) {
+      doc.setFontSize(12);
+      doc.text("Nenhum registro encontrado para os filtros selecionados.", 14, yPos);
+      doc.save('relatorio-vouchers-comuns.pdf');
+      return;
+    }
 
     // Preparar dados para a tabela
-    const tableData = metrics.data.map(item => [
-      formatDate(item.data_uso),
-      item.nome_usuario || '-',
-      item.turno || '-',
-      item.nome_setor || '-',
-      item.tipo_refeicao || '-',
-      formatCurrency(item.valor || 0)
-    ]);
+    const tableData = metrics.data.map(item => {
+      // Garantir que todos os campos existam, mesmo que vazios
+      const dataUso = item.data_uso ? format(new Date(item.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-';
+      const nomeUsuario = item.nome_usuario || '-';
+      const turno = item.turno || '-';
+      const setor = item.nome_setor || '-';
+      const tipoRefeicao = item.tipo_refeicao || '-';
+      const valor = item.valor_refeicao 
+        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor_refeicao)
+        : 'R$ 0,00';
+
+      return [
+        dataUso,
+        nomeUsuario,
+        turno,
+        setor,
+        tipoRefeicao,
+        valor
+      ];
+    });
 
     // Configurar e gerar a tabela
     doc.autoTable({
@@ -100,6 +105,19 @@ export const generatePDFComuns = (metrics, filters) => {
       }
     });
 
+    // Adicionar totalizadores
+    const finalY = doc.lastAutoTable.finalY || yPos;
+    doc.setFontSize(10);
+    doc.text(`Total de Registros: ${metrics.data.length}`, 14, finalY + 10);
+
+    const totalValor = metrics.data.reduce((sum, item) => sum + (parseFloat(item.valor_refeicao) || 0), 0);
+    doc.text(
+      `Valor Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValor)}`,
+      14,
+      finalY + 20
+    );
+
+    doc.save('relatorio-vouchers-comuns.pdf');
     return doc;
   } catch (error) {
     logger.error('Erro ao gerar PDF de vouchers comuns:', error);
