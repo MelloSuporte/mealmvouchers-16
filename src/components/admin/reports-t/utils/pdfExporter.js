@@ -21,8 +21,30 @@ export const exportToPDF = async (metrics, filters) => {
     doc.text("Relatório de Vouchers", 14, yPos);
     yPos += 10;
 
-    // Informações do relatório
+    // Informações do administrador e data/hora
     doc.setFontSize(10);
+    const adminName = localStorage.getItem('adminName') || 'Usuário não identificado';
+    const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    doc.text(`Relatório gerado por ${adminName}`, 14, yPos);
+    yPos += 6;
+    doc.text(`Data de exportação: ${dataExportacao}`, 14, yPos);
+    yPos += 10;
+
+    // Totalizadores no topo
+    const totalRegistros = metrics.length;
+    const valorTotal = metrics.reduce((sum, item) => sum + (Number(item.tipos_refeicao?.valor) || 0), 0);
+    
+    doc.setFontSize(12);
+    doc.text("Totalizadores:", 14, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    doc.text(`Total de Registros: ${totalRegistros}`, 14, yPos);
+    yPos += 6;
+    doc.text(`Valor Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}`, 14, yPos);
+    yPos += 10;
+
+    // Informações do relatório
     if (filters?.startDate && filters?.endDate) {
       doc.text(`Período: ${format(new Date(filters.startDate), 'dd/MM/yyyy')} a ${format(new Date(filters.endDate), 'dd/MM/yyyy')}`, 14, yPos);
       yPos += 6;
@@ -44,7 +66,6 @@ export const exportToPDF = async (metrics, filters) => {
     if (metrics.length === 0) {
       doc.setFontSize(12);
       doc.text("Nenhum registro encontrado para os filtros selecionados.", 14, yPos);
-      doc.save('relatorio-vouchers.pdf');
       return doc;
     }
 
@@ -95,24 +116,11 @@ export const exportToPDF = async (metrics, filters) => {
       }
     });
 
-    // Adicionar totalizadores
-    const finalY = doc.lastAutoTable.finalY || yPos;
-    doc.setFontSize(10);
-    doc.text(`Total de Registros: ${metrics.length}`, 14, finalY + 10);
-
-    const totalValor = metrics.reduce((sum, item) => sum + (Number(item.tipos_refeicao?.valor) || 0), 0);
-    doc.text(
-      `Valor Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValor)}`,
-      14,
-      finalY + 20
-    );
-
     console.log('PDF gerado com sucesso:', {
       totalRegistros: metrics.length,
-      valorTotal: totalValor
+      valorTotal: valorTotal
     });
 
-    doc.save('relatorio-vouchers.pdf');
     return doc;
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
