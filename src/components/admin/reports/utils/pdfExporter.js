@@ -3,7 +3,6 @@ import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import logger from '@/config/logger';
-import { formatCurrency } from './formatters';
 
 export const exportToPDF = async (metrics, filters) => {
   try {
@@ -31,7 +30,7 @@ export const exportToPDF = async (metrics, filters) => {
     
     doc.text(`Total de Registros: ${totalRegistros}`, 14, yPos);
     yPos += 6;
-    doc.text(`Valor Total: ${formatCurrency(valorTotal)}`, 14, yPos);
+    doc.text(`Valor Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}`, 14, yPos);
     yPos += 10;
 
     // Seção de Filtros Aplicados
@@ -41,25 +40,31 @@ export const exportToPDF = async (metrics, filters) => {
 
     doc.setFontSize(10);
     
-    // Empresa (quando filtrada)
+    // Período
+    if (filters?.startDate && filters?.endDate) {
+      doc.text(`Período: ${format(new Date(filters.startDate), 'dd/MM/yyyy')} a ${format(new Date(filters.endDate), 'dd/MM/yyyy')}`, 14, yPos);
+      yPos += 6;
+    }
+
+    // Empresa
     if (filters?.company && filters.company !== 'all') {
       doc.text(`Empresa: ${filters.companyName || filters.company}`, 14, yPos);
       yPos += 6;
     }
 
-    // Setor (quando filtrado)
+    // Setor
     if (filters?.sector && filters.sector !== 'all') {
       doc.text(`Setor: ${filters.sectorName || filters.sector}`, 14, yPos);
       yPos += 6;
     }
 
-    // Turno (quando filtrado)
+    // Turno
     if (filters?.shift && filters.shift !== 'all') {
       doc.text(`Turno: ${filters.shiftName || filters.shift}`, 14, yPos);
       yPos += 6;
     }
 
-    // Tipo de Refeição (quando filtrado)
+    // Tipo de Refeição
     if (filters?.mealType && filters.mealType !== 'all') {
       doc.text(`Tipo de Refeição: ${filters.mealTypeName || filters.mealType}`, 14, yPos);
       yPos += 6;
@@ -72,7 +77,7 @@ export const exportToPDF = async (metrics, filters) => {
       doc.setFontSize(12);
       doc.text("Nenhum registro encontrado para os filtros selecionados.", 14, yPos);
       doc.save('relatorio-vouchers.pdf');
-      return;
+      return doc;
     }
 
     // Tabela de dados
@@ -81,14 +86,14 @@ export const exportToPDF = async (metrics, filters) => {
       item.nome_usuario || '-',
       item.codigo || '-',
       item.tipo_refeicao || '-',
-      formatCurrency(item.valor_refeicao || 0),
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor_refeicao || 0),
       item.turno || '-',
       item.nome_setor || '-'
     ]);
 
     doc.autoTable({
       startY: yPos,
-      head: [['Data/Hora', 'Nome', 'Código', 'Refeição', 'Valor', 'Turno', 'Setor']],
+      head: [['Data/Hora', 'Usuário', 'Refeição', 'Valor', 'Turno', 'Setor', 'Tipo']],
       body: tableData,
       theme: 'grid',
       styles: {
@@ -103,19 +108,15 @@ export const exportToPDF = async (metrics, filters) => {
       columnStyles: {
         0: { cellWidth: 25 },
         1: { cellWidth: 35 },
-        2: { cellWidth: 20 },
-        3: { cellWidth: 25 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 20 },
         4: { cellWidth: 20 },
         5: { cellWidth: 20 },
-        6: { cellWidth: 25 }
+        6: { cellWidth: 20 }
       }
     });
 
-    logger.info('PDF gerado com sucesso:', {
-      totalRegistros,
-      valorTotal
-    });
-
+    logger.info('PDF gerado com sucesso');
     doc.save('relatorio-vouchers.pdf');
     return doc;
   } catch (error) {
@@ -123,3 +124,5 @@ export const exportToPDF = async (metrics, filters) => {
     throw error;
   }
 };
+
+<lov-delete file_path="src/components/admin/reports/utils/pdfExporterComuns.js" />
