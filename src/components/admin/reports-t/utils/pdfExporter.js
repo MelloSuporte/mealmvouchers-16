@@ -18,7 +18,7 @@ export const exportToPDF = async (metrics, filters) => {
 
     // Cabeçalho
     doc.setFontSize(16);
-    doc.text("Relatório de Vouchers", 14, yPos);
+    doc.text("Relatório Consumo de Refeições", 14, yPos);
     yPos += 10;
 
     // Informações do administrador e data/hora
@@ -75,7 +75,6 @@ export const exportToPDF = async (metrics, filters) => {
         return [
           format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
           item.nome_pessoa || '-',
-          item.codigo || '-',
           item.tipos_refeicao?.nome || '-',
           new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
             .format(item.tipos_refeicao?.valor || 0),
@@ -84,14 +83,14 @@ export const exportToPDF = async (metrics, filters) => {
         ];
       } catch (error) {
         console.error('Erro ao processar item:', { item, error });
-        return ['-', '-', '-', '-', '-', '-', '-'];
+        return ['-', '-', '-', '-', '-', '-'];
       }
     });
 
     // Configurar e gerar a tabela
     doc.autoTable({
       startY: yPos,
-      head: [['Data/Hora', 'Nome', 'Código', 'Refeição', 'Valor', 'Turno', 'Setor']],
+      head: [['Data/Hora', 'Nome', 'Refeição', 'Valor', 'Turno', 'Setor']],
       body: tableData,
       theme: 'grid',
       styles: {
@@ -108,11 +107,10 @@ export const exportToPDF = async (metrics, filters) => {
       columnStyles: {
         0: { cellWidth: 30 },
         1: { cellWidth: 40 },
-        2: { cellWidth: 20 },
+        2: { cellWidth: 25 },
         3: { cellWidth: 25 },
-        4: { cellWidth: 25 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 25 }
+        4: { cellWidth: 20 },
+        5: { cellWidth: 25 }
       }
     });
 
