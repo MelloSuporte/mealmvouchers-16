@@ -1,118 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
-import { findCommonVoucher } from './validators/commonVoucherValidator';
-import { findDisposableVoucher } from './validators/disposableVoucherValidator';
-import { supabase } from '../../config/supabase';
+import { validateCommonVoucher, validateDisposableVoucher, validateVoucherTime } from '../../services/voucher/voucherValidationService';
 import logger from '../../config/logger';
 
 const VoucherValidationForm = () => {
   const navigate = useNavigate();
   const [voucherCode, setVoucherCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-  const [currentMealType, setCurrentMealType] = useState(null);
-
-  useEffect(() => {
-    const getCurrentMealType = async () => {
-      try {
-        const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false });
-        const { data: mealTypes, error: mealTypesError } = await supabase
-          .from('tipos_refeicao')
-          .select('*')
-          .eq('ativo', true)
-          .lte('horario_inicio', currentTime)
-          .gte('horario_fim', currentTime);
-
-        if (mealTypesError) {
-          logger.error('Erro ao buscar tipo de refeição:', mealTypesError);
-          return;
-        }
-
-        if (mealTypes && mealTypes.length > 0) {
-          setCurrentMealType(mealTypes[0]);
-        }
-      } catch (error) {
-        logger.error('Erro ao determinar tipo de refeição:', error);
-      }
-    };
-
-    getCurrentMealType();
-  }, []);
-
-  const validateMealTime = (mealType, userTurno) => {
-    const currentTime = new Date();
-    const currentHour = currentTime.getHours();
-    const currentMinute = currentTime.getMinutes();
-
-    const [startHour, startMinute] = mealType.horario_inicio.split(':').map(Number);
-    const [endHour, endMinute] = mealType.horario_fim.split(':').map(Number);
-    const toleranceMinutes = mealType.minutos_tolerancia || 15;
-
-    const mealStartTime = new Date();
-    mealStartTime.setHours(startHour, startMinute, 0);
-
-    const mealEndTime = new Date();
-    mealEndTime.setHours(endHour, endMinute + toleranceMinutes, 0);
-
-    if (currentTime < mealStartTime || currentTime > mealEndTime) {
-      throw new Error(`Esta refeição só pode ser utilizada entre ${mealType.horario_inicio} e ${mealType.horario_fim} (+ ${toleranceMinutes} min de tolerância)`);
-    }
-
-    // Validar horário do turno do usuário
-    if (userTurno) {
-      const [shiftStartHour, shiftStartMinute] = userTurno.horario_inicio.split(':').map(Number);
-      const [shiftEndHour, shiftEndMinute] = userTurno.horario_fim.split(':').map(Number);
-
-      const shiftStartTime = new Date();
-      shiftStartTime.setHours(shiftStartHour, shiftStartMinute, 0);
-
-      const shiftEndTime = new Date();
-      shiftEndTime.setHours(shiftEndHour, shiftEndMinute, 0);
-
-      if (currentTime < shiftStartTime || currentTime > shiftEndTime) {
-        throw new Error(`Fora do horário do turno (${userTurno.horario_inicio} - ${userTurno.horario_fim})`);
-      }
-    }
-  };
-
-  const validateDailyLimit = async (userId) => {
-    const today = new Date().toISOString().split('T')[0];
-    const { data: usageCount, error: usageError } = await supabase
-      .from('uso_voucher')
-      .select('count', { count: 'exact' })
-      .eq('usuario_id', userId)
-      .gte('usado_em', today);
-
-    if (usageError) {
-      logger.error('Erro ao verificar limite diário:', usageError);
-      throw usageError;
-    }
-
-    if (usageCount >= 3) {
-      throw new Error('Limite diário de refeições atingido (máximo 3)');
-    }
-  };
-
-  const validateMealInterval = async (userId) => {
-    const { data: lastUsage } = await supabase
-      .from('uso_voucher')
-      .select('usado_em')
-      .eq('usuario_id', userId)
-      .order('usado_em', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (lastUsage) {
-      const lastUsageTime = new Date(lastUsage.usado_em);
-      const currentDateTime = new Date();
-      const hoursDiff = (currentDateTime - lastUsageTime) / (1000 * 60 * 60);
-
-      if (hoursDiff < 3) {
-        throw new Error('É necessário aguardar 3 horas entre as refeições');
-      }
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -122,53 +18,41 @@ const VoucherValidationForm = () => {
       setIsValidating(true);
       logger.info('Iniciando validação do voucher:', voucherCode);
 
-      if (!currentMealType) {
-        toast.error('Nenhum tipo de refeição disponível neste horário');
-        return;
-      }
-
-      // Tentar validar como voucher descartável
-      const disposableResult = await findDisposableVoucher(voucherCode);
+      // Primeiro tenta validar como voucher descartável
+      const disposableResult = await validateDisposableVoucher(voucherCode);
       
       if (disposableResult.data) {
-        // Validar horário da refeição para voucher descartável
-        validateMealTime(currentMealType);
+        // Validar horário da refeição
+        const timeValidation = await validateVoucherTime(disposableResult.data.tipo_refeicao_id);
+        
+        if (!timeValidation.is_valid) {
+          toast.error(timeValidation.message || 'Fora do horário permitido');
+          return;
+        }
 
         localStorage.setItem('disposableVoucher', JSON.stringify({
           code: voucherCode,
-          mealTypeId: currentMealType.id
+          mealTypeId: disposableResult.data.tipo_refeicao_id
         }));
-        localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
+        localStorage.setItem('currentMealType', JSON.stringify(disposableResult.data.tipos_refeicao));
         navigate('/user-confirmation');
         return;
       }
 
-      // Tentar validar como voucher comum
-      const commonResult = await findCommonVoucher(voucherCode);
+      // Se não for descartável, tenta validar como voucher comum
+      const commonResult = await validateCommonVoucher(voucherCode);
       
       if (commonResult.data) {
         const user = commonResult.data.usuarios;
         
-        // Validar status do usuário
-        if (user.suspenso) {
-          toast.error('Usuário suspenso');
+        // Validar horário do turno
+        const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+        const turno = user.turnos;
+        
+        if (!(currentTime >= turno.horario_inicio && currentTime <= turno.horario_fim)) {
+          toast.error(`Fora do horário do turno (${turno.horario_inicio} - ${turno.horario_fim})`);
           return;
         }
-
-        // Validar status da empresa
-        if (!user.empresas?.ativo) {
-          toast.error('Empresa inativa');
-          return;
-        }
-
-        // Validar horário da refeição e turno
-        validateMealTime(currentMealType, user.turnos);
-
-        // Validar limite diário
-        await validateDailyLimit(user.id);
-
-        // Validar intervalo mínimo entre refeições
-        await validateMealInterval(user.id);
 
         localStorage.setItem('commonVoucher', JSON.stringify({
           code: voucherCode,
@@ -177,8 +61,7 @@ const VoucherValidationForm = () => {
           cpf: user.cpf,
           userId: user.id
         }));
-        localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
-        navigate('/user-confirmation');
+        navigate('/self-services');
       } else if (commonResult.error) {
         toast.error(commonResult.error);
       } else {
