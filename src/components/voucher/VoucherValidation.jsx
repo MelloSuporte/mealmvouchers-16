@@ -41,26 +41,50 @@ export const validateVoucher = async (voucherCode, mealTypeId) => {
       throw new Error(message);
     }
 
-    // Validar voucher
-    const { data: result, error } = await supabase.rpc('validate_and_use_voucher', {
-      p_codigo: voucherCode,
-      p_tipo_refeicao_id: mealTypeId
-    });
+    // Primeiro tenta validar como voucher descartável
+    const { data: disposableVoucher } = await supabase
+      .from('vouchers_descartaveis')
+      .select('*')
+      .eq('codigo', voucherCode)
+      .is('usado_em', null)
+      .single();
 
-    if (error) {
-      logger.error('Erro ao validar voucher:', error);
-      throw new Error(error.message || 'Erro ao validar voucher');
+    if (disposableVoucher) {
+      return {
+        success: true,
+        voucherType: 'descartavel',
+        data: disposableVoucher
+      };
     }
 
-    if (!result?.success) {
-      throw new Error(result?.error || 'Erro ao validar voucher');
+    // Se não for descartável, tenta validar como voucher comum
+    const { data: user } = await supabase
+      .from('usuarios')
+      .select(`
+        *,
+        turnos (
+          id,
+          tipo_turno
+        )
+      `)
+      .eq('voucher', voucherCode)
+      .single();
+
+    if (user) {
+      return {
+        success: true,
+        voucherType: 'comum',
+        user: user
+      };
     }
 
-    return result;
+    return {
+      success: false,
+      error: 'Voucher não encontrado ou inválido'
+    };
 
   } catch (error) {
     logger.error('Erro na validação:', error);
-    toast.error(error.message || 'Erro ao validar voucher');
     return {
       success: false,
       error: error.message || 'Erro ao validar voucher'

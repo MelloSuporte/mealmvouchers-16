@@ -55,19 +55,24 @@ const VoucherValidationForm = () => {
       const result = await validateVoucher(voucherCode, currentMealType.id);
       
       if (result.success) {
+        // Store voucher data in localStorage
         if (result.voucherType === 'comum') {
           localStorage.setItem('commonVoucher', JSON.stringify({
             code: voucherCode,
             userName: result.user?.nome || 'Usuário',
-            turno: result.user?.turnos,
+            turno: result.user?.turnos?.tipo_turno,
             cpf: result.user?.cpf,
             userId: result.user?.id
           }));
           localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
           navigate('/user-confirmation');
-        } else if (result.voucherType === 'descartavel' && result.shouldNavigate) {
+        } else if (result.voucherType === 'descartavel') {
+          localStorage.setItem('disposableVoucher', JSON.stringify({
+            code: voucherCode,
+            mealTypeId: currentMealType.id
+          }));
           localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
-          navigate('/bom-apetite');
+          navigate('/user-confirmation');
         }
       } else {
         toast.error(result.error || 'Erro ao validar voucher');
