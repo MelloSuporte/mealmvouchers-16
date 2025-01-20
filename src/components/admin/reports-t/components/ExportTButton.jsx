@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useReportsTData } from '../hooks/useReportsTData';
 import logger from '@/config/logger';
 import { exportToExcel } from '../utils/excelExporter';
+import { exportToExcelDescartaveis } from '../utils/excelExporterDescartaveis';
 import { exportToPDF } from '../utils/pdfExporter';
 import { exportToPDFDescartaveis } from '../utils/pdfExporterDescartaveis';
 import * as XLSX from 'xlsx';
@@ -37,13 +38,25 @@ const ExportTButton = ({ filters }) => {
 
   const handleExcelExport = async () => {
     try {
-      if (!reportData) {
-        toast.error('Nenhum dado disponível para exportar');
-        return;
-      }
-
       logger.info('Iniciando exportação Excel...');
-      const { wb, ws } = exportToExcel(reportData);
+      
+      let wb, ws;
+      
+      // Use different export function based on voucher type
+      if (filters?.voucherType === 'descartavel') {
+        const result = await exportToExcelDescartaveis(filters);
+        wb = result.wb;
+        ws = result.ws;
+      } else {
+        if (!reportData) {
+          toast.error('Nenhum dado disponível para exportar');
+          return;
+        }
+        const result = exportToExcel(reportData);
+        wb = result.wb;
+        ws = result.ws;
+      }
+      
       XLSX.utils.book_append_sheet(wb, ws, "Relatório");
       XLSX.writeFile(wb, `relatorio_${new Date().toISOString().split('T')[0]}.xlsx`);
       toast.success('Relatório Excel gerado com sucesso!');
