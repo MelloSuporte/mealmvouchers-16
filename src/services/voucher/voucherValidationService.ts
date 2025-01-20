@@ -6,33 +6,29 @@ export const validateCommonVoucher = async (code: string) => {
     logger.info('Validando voucher comum:', code);
     
     const { data, error } = await supabase
-      .from('vouchers_comuns')
+      .from('usuarios')
       .select(`
-        *,
-        usuarios (
+        id,
+        nome,
+        cpf,
+        suspenso,
+        voucher,
+        empresa_id,
+        empresas (
           id,
           nome,
-          cpf,
-          suspenso,
-          empresa_id,
-          empresas (
-            id,
-            nome,
-            ativo
-          ),
-          turnos (
-            id,
-            tipo_turno,
-            horario_inicio,
-            horario_fim,
-            ativo
-          )
+          ativo
+        ),
+        turnos (
+          id,
+          tipo_turno,
+          horario_inicio,
+          horario_fim,
+          ativo
         )
       `)
-      .eq('codigo', code)
-      .is('usado', false)
-      .is('usado_em', null)
-      .maybeSingle();
+      .eq('voucher', code)
+      .single();
 
     if (error) {
       logger.error('Erro ao buscar voucher comum:', error);
@@ -40,26 +36,44 @@ export const validateCommonVoucher = async (code: string) => {
     }
 
     if (!data) {
-      logger.info('Voucher comum não encontrado ou já utilizado:', code);
-      return { data: null, error: 'Voucher não encontrado ou já utilizado' };
+      logger.info('Voucher comum não encontrado:', code);
+      return { data: null, error: 'Voucher não encontrado' };
     }
 
     // Validar se o usuário está suspenso
-    if (data.usuarios?.suspenso) {
-      logger.info('Usuário suspenso:', data.usuarios.nome);
+    if (data.suspenso) {
+      logger.info('Usuário suspenso:', data.nome);
       return { data: null, error: 'Usuário suspenso' };
     }
 
     // Validar se a empresa está ativa
-    if (!data.usuarios?.empresas?.ativo) {
-      logger.info('Empresa inativa:', data.usuarios?.empresas?.nome);
+    if (!data.empresas?.ativo) {
+      logger.info('Empresa inativa:', data.empresas?.nome);
       return { data: null, error: 'Empresa inativa' };
     }
 
     // Validar se o turno está ativo
-    if (!data.usuarios?.turnos?.ativo) {
-      logger.info('Turno inativo:', data.usuarios?.turnos?.tipo_turno);
+    if (!data.turnos?.ativo) {
+      logger.info('Turno inativo:', data.turnos?.tipo_turno);
       return { data: null, error: 'Turno inativo' };
+    }
+
+    // Verificar se já foi usado hoje
+    const { data: usoHoje, error: erroUso } = await supabase
+      .from('uso_voucher')
+      .select('*')
+      .eq('usuario_id', data.id)
+      .eq('tipo_voucher', 'comum')
+      .gte('usado_em', new Date().toISOString().split('T')[0]);
+
+    if (erroUso) {
+      logger.error('Erro ao verificar uso do voucher:', erroUso);
+      throw erroUso;
+    }
+
+    if (usoHoje && usoHoje.length > 0) {
+      logger.info('Voucher já utilizado hoje:', code);
+      return { data: null, error: 'Voucher já utilizado hoje' };
     }
 
     logger.info('Voucher comum válido:', data);
@@ -89,7 +103,6 @@ export const validateDisposableVoucher = async (code: string) => {
       `)
       .eq('codigo', code)
       .is('usado_em', null)
-      .is('usado', false)
       .maybeSingle();
 
     if (error) {

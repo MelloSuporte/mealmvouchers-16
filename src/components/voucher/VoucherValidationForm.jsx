@@ -43,7 +43,7 @@ const VoucherValidationForm = () => {
       const commonResult = await validateCommonVoucher(voucherCode);
       
       if (commonResult.data) {
-        const user = commonResult.data.usuarios;
+        const user = commonResult.data;
         
         // Validar horário do turno
         const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false });
