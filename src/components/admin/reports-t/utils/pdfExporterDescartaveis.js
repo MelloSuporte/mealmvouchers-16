@@ -72,21 +72,14 @@ export const exportToPDF = async (filters) => {
     doc.text(`Data de exportação: ${dataExportacao}`, 14, yPos);
     yPos += 5;
 
-    // Tipo de Voucher
-    doc.text("Tipo de Voucher: Descartável", 14, yPos);
-    yPos += 5;
-
-    // Tipo de Refeição (se filtrado)
-    if (filters?.mealType && filters.mealType !== 'all') {
-      const tipoRefeicao = vouchers[0]?.tipos_refeicao?.nome || 'Não especificado';
-      doc.text(`Tipo de Refeição: ${tipoRefeicao}`, 14, yPos);
-      yPos += 5;
-    }
-
     // Período
     const startDate = filters?.startDate ? format(new Date(filters.startDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
     const endDate = filters?.endDate ? format(new Date(filters.endDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
     doc.text(`Período: ${startDate} a ${endDate}`, 14, yPos);
+    yPos += 5;
+
+    // Tipo de Voucher
+    doc.text("Tipo de Voucher: Descartável", 14, yPos);
     yPos += 10;
 
     // Totalizadores
@@ -109,12 +102,13 @@ export const exportToPDF = async (filters) => {
       voucher.nome_pessoa || '-',
       voucher.nome_empresa || '-',
       voucher.tipos_refeicao?.nome || '-',
+      '1', // Quantidade sempre será 1 para vouchers descartáveis
       formatCurrency(voucher.tipos_refeicao?.valor || 0)
     ]);
 
     doc.autoTable({
       startY: yPos,
-      head: [['Data/Hora', 'Nome', 'Empresa', 'Refeição', 'Valor']],
+      head: [['Data/Hora', 'Nome', 'Empresa', 'Refeição', 'Qtd', 'Valor']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 8 },
