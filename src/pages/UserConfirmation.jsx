@@ -21,7 +21,7 @@ const UserConfirmation = () => {
         const { data, error } = await supabase
           .from('background_images')
           .select('image_url')
-          .eq('page', 'userConfirmation')
+          .eq('page', 'user-confirmation')
           .eq('is_active', true)
           .maybeSingle();
 
@@ -35,66 +35,72 @@ const UserConfirmation = () => {
           logger.info('Imagem de fundo carregada com sucesso');
         }
       } catch (error) {
-        logger.error('Erro ao buscar imagem de fundo:', {
-          message: error.message,
-          details: error.stack,
-          hint: error.hint || '',
-          code: error.code || ''
-        });
+        logger.error('Erro ao buscar imagem de fundo:', error);
       }
     };
 
     const loadStoredData = async () => {
       try {
-        const storedData = localStorage.getItem('commonVoucher');
-        if (!storedData) {
+        // Check for both voucher types
+        const commonVoucherData = localStorage.getItem('commonVoucher');
+        const disposableVoucherData = localStorage.getItem('disposableVoucher');
+        
+        if (!commonVoucherData && !disposableVoucherData) {
           logger.warn('Nenhum dado encontrado no localStorage');
           navigate('/voucher');
           return;
         }
 
-        const parsedData = JSON.parse(storedData);
-        logger.info('Dados carregados do localStorage:', parsedData);
+        // Handle common voucher
+        if (commonVoucherData) {
+          const parsedData = JSON.parse(commonVoucherData);
+          logger.info('Dados carregados do localStorage:', parsedData);
 
-        // Buscar dados do turno do usuário
-        const { data: turnoData, error: turnoError } = await supabase
-          .from('usuarios')
-          .select('turno_id, turnos:turnos(*)')
-          .eq('id', parsedData.userId)
-          .single();
+          // Buscar dados do turno do usuário
+          const { data: turnoData, error: turnoError } = await supabase
+            .from('usuarios')
+            .select('turno_id, turnos:turnos(*)')
+            .eq('id', parsedData.userId)
+            .maybeSingle();
 
-        if (turnoError) {
-          logger.error('Erro ao buscar turno do usuário:', turnoError);
-          toast.error('Erro ao carregar turno do usuário');
-          navigate('/voucher');
-          return;
-        }
-
-        if (!turnoData?.turnos) {
-          logger.error('Turno não encontrado para o usuário:', parsedData.userId);
-          toast.error('Turno não encontrado');
-          navigate('/voucher');
-          return;
-        }
-
-        // Atualiza os dados com o turno correto
-        const updatedData = {
-          ...parsedData,
-          turno: {
-            id: turnoData.turno_id,
-            tipo_turno: turnoData.turnos.tipo_turno
+          if (turnoError) {
+            logger.error('Erro ao buscar turno do usuário:', turnoError);
+            toast.error('Erro ao carregar turno do usuário');
+            navigate('/voucher');
+            return;
           }
-        };
 
-        setUserData(updatedData);
-        logger.info('Dados do usuário atualizados com turno:', updatedData);
+          if (!turnoData?.turnos) {
+            logger.error('Turno não encontrado para o usuário:', parsedData.userId);
+            toast.error('Turno não encontrado');
+            navigate('/voucher');
+            return;
+          }
 
-        // Carrega tipo de refeição
+          setUserData({
+            ...parsedData,
+            turno: {
+              id: turnoData.turno_id,
+              tipo_turno: turnoData.turnos.tipo_turno
+            }
+          });
+        }
+        
+        // Handle disposable voucher
+        if (disposableVoucherData) {
+          const parsedData = JSON.parse(disposableVoucherData);
+          setUserData({
+            ...parsedData,
+            userName: 'Voucher Descartável',
+            turno: { tipo_turno: 'N/A' }
+          });
+        }
+
+        // Load meal type data
         const currentMealType = localStorage.getItem('currentMealType');
         if (currentMealType) {
-          const parsedMealType = JSON.parse(currentMealType);
-          setMealType(parsedMealType);
-          logger.info('Tipo de refeição carregado:', parsedMealType);
+          setMealType(JSON.parse(currentMealType));
+          logger.info('Tipo de refeição carregado:', JSON.parse(currentMealType));
         }
       } catch (error) {
         logger.error('Erro ao processar dados:', error);
@@ -110,43 +116,6 @@ const UserConfirmation = () => {
   const handleConfirm = async () => {
     try {
       setIsConfirming(true);
-      const currentMealType = localStorage.getItem('currentMealType');
-      
-      if (!currentMealType) {
-        toast.error('Tipo de refeição não encontrado');
-        return;
-      }
-
-      if (!userData?.turno?.id) {
-        logger.error('Turno não encontrado:', userData);
-        toast.error('Turno do usuário não encontrado');
-        return;
-      }
-
-      const mealTypeData = JSON.parse(currentMealType);
-
-      logger.info('Validando horário para:', {
-        turnoId: userData.turno.id,
-        tipoRefeicaoId: mealTypeData.id
-      });
-
-      const { data: validationResult, error: validationError } = await supabase
-        .rpc('check_meal_time_and_shift', {
-          p_tipo_refeicao_id: mealTypeData.id,
-          p_turno_id: userData.turno.id
-        });
-
-      if (validationError) {
-        logger.error('Erro na validação do horário:', validationError);
-        toast.error('Erro na validação do horário');
-        return;
-      }
-
-      if (!validationResult) {
-        toast.error('Horário não permitido para este turno');
-        return;
-      }
-
       navigate('/bom-apetite');
     } catch (error) {
       logger.error('Erro na confirmação:', error);
@@ -158,6 +127,7 @@ const UserConfirmation = () => {
 
   const handleCancel = () => {
     localStorage.removeItem('commonVoucher');
+    localStorage.removeItem('disposableVoucher');
     localStorage.removeItem('currentMealType');
     navigate('/voucher');
   };
@@ -174,7 +144,8 @@ const UserConfirmation = () => {
       'central': 'Administrativo',
       'primeiro': '1º Turno',
       'segundo': '2º Turno',
-      'terceiro': '3º Turno'
+      'terceiro': '3º Turno',
+      'N/A': 'N/A'
     };
     
     return labels[turno.tipo_turno] || turno.tipo_turno;

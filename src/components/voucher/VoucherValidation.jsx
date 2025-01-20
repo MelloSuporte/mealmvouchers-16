@@ -4,50 +4,24 @@ import { toast } from "sonner";
 
 export const validateVoucher = async (voucherCode, mealTypeId) => {
   try {
-    logger.info('Iniciando validação do voucher:', { voucherCode, mealTypeId });
-
-    // Verificar se o tipo de refeição está ativo e dentro do horário permitido
-    const { data: mealType, error: mealTypeError } = await supabase
-      .from('tipos_refeicao')
-      .select('*')
-      .eq('id', mealTypeId)
-      .eq('ativo', true)
-      .single();
-
-    if (mealTypeError) {
-      logger.error('Erro ao buscar tipo de refeição:', mealTypeError);
-      throw new Error('Erro ao validar tipo de refeição');
-    }
-
-    if (!mealType) {
-      logger.warn('Tipo de refeição não encontrado ou inativo');
-      throw new Error('Tipo de refeição inválido ou inativo');
-    }
-
-    // Validar horário da refeição
-    const currentTime = new Date().toLocaleTimeString('pt-BR', { hour12: false });
-    const startTime = mealType.horario_inicio;
-    const endTime = mealType.horario_fim;
-    const toleranceMinutes = mealType.minutos_tolerancia || 0;
-
-    // Converter horários para minutos para facilitar comparação
-    const currentMinutes = timeToMinutes(currentTime);
-    const startMinutes = timeToMinutes(startTime);
-    const endMinutes = timeToMinutes(endTime) + toleranceMinutes;
-
-    if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
-      const message = `Esta refeição só pode ser utilizada entre ${startTime} e ${endTime} (tolerância de ${toleranceMinutes} minutos)`;
-      logger.warn('Tentativa de uso fora do horário:', message);
+    if (!voucherCode || !mealTypeId) {
+      const message = 'Código do voucher e tipo de refeição são obrigatórios';
+      logger.error(message);
       throw new Error(message);
     }
 
     // Primeiro tenta validar como voucher descartável
-    const { data: disposableVoucher } = await supabase
+    const { data: disposableVoucher, error: disposableError } = await supabase
       .from('vouchers_descartaveis')
       .select('*')
       .eq('codigo', voucherCode)
       .is('usado_em', null)
-      .single();
+      .maybeSingle();
+
+    if (disposableError) {
+      logger.error('Erro ao buscar voucher descartável:', disposableError);
+      throw new Error('Erro ao validar voucher descartável');
+    }
 
     if (disposableVoucher) {
       return {
@@ -58,7 +32,7 @@ export const validateVoucher = async (voucherCode, mealTypeId) => {
     }
 
     // Se não for descartável, tenta validar como voucher comum
-    const { data: user } = await supabase
+    const { data: user, error: userError } = await supabase
       .from('usuarios')
       .select(`
         *,
@@ -68,7 +42,12 @@ export const validateVoucher = async (voucherCode, mealTypeId) => {
         )
       `)
       .eq('voucher', voucherCode)
-      .single();
+      .maybeSingle();
+
+    if (userError) {
+      logger.error('Erro ao buscar usuário:', userError);
+      throw new Error('Erro ao validar voucher comum');
+    }
 
     if (user) {
       return {
@@ -90,11 +69,4 @@ export const validateVoucher = async (voucherCode, mealTypeId) => {
       error: error.message || 'Erro ao validar voucher'
     };
   }
-};
-
-// Função auxiliar para converter horário em minutos
-const timeToMinutes = (time) => {
-  if (!time) return 0;
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
 };
