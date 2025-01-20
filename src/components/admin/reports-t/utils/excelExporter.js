@@ -6,14 +6,30 @@ export const exportToExcel = (data) => {
   try {
     logger.info('Iniciando exportação Excel com dados:', data?.length || 0, 'registros');
     
-    const excelData = data?.map(item => ({
-      'Data/Hora': formatDate(item.usado_em),
-      'Nome': item.nome_pessoa || '-',
-      'Empresa': item.nome_empresa || '-',
-      'Tipo Refeição': item.tipos_refeicao?.nome || '-',
-      'Qtd': 1,
-      'Valor': formatCurrency(item.tipos_refeicao?.valor || 0)
-    })) || [];
+    // Mapear dados para o formato do Excel
+    const excelData = data?.map(item => {
+      // Verificar se é um voucher descartável
+      if (item.tipo_voucher === 'descartavel') {
+        return {
+          'Data/Hora': formatDate(item.usado_em),
+          'Nome': item.nome_pessoa || '-',
+          'Empresa': item.nome_empresa || '-',
+          'Tipo Refeição': item.tipos_refeicao?.nome || '-',
+          'Qtd': 1,
+          'Valor': formatCurrency(item.tipos_refeicao?.valor || 0)
+        };
+      }
+      
+      // Para outros tipos de voucher, manter o formato atual
+      return {
+        'Data/Hora': formatDate(item.usado_em),
+        'Nome': item.nome_pessoa || '-',
+        'Empresa': item.nome_empresa || '-',
+        'Tipo Refeição': item.tipos_refeicao?.nome || '-',
+        'Qtd': 1,
+        'Valor': formatCurrency(item.tipos_refeicao?.valor || 0)
+      };
+    }) || [];
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
