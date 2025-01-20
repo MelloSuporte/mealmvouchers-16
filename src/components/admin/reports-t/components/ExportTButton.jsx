@@ -43,7 +43,12 @@ const ExportTButton = ({ filters }) => {
       }
 
       logger.info('Iniciando exportação Excel...');
-      const { wb, ws } = exportToExcel(reportData);
+      const { wb, ws } = exportToExcel(reportData, filters);
+      
+      if (!wb || !ws) {
+        throw new Error('Erro ao gerar planilha Excel');
+      }
+      
       XLSX.utils.book_append_sheet(wb, ws, "Relatório");
       XLSX.writeFile(wb, `relatorio_${new Date().toISOString().split('T')[0]}.xlsx`);
       toast.success('Relatório Excel gerado com sucesso!');

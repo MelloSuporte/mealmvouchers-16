@@ -11,16 +11,21 @@ export const exportToExcel = (data, filters) => {
     
     // Filtrar dados baseado no tipo de voucher
     const filteredData = data?.filter(item => {
-      if (filters.voucherType === 'descartavel') {
+      if (filters?.voucherType === 'descartavel') {
         return item.tipo_voucher === 'descartavel';
       }
       return item.tipo_voucher === 'comum';
+    }) || [];
+
+    logger.info('Dados filtrados:', {
+      totalFiltrado: filteredData.length,
+      tipoVoucher: filters?.voucherType
     });
 
     // Mapear dados para o formato do Excel
-    const excelData = filteredData?.map(item => {
+    const excelData = filteredData.map(item => {
       // Formato específico para vouchers descartáveis
-      if (filters.voucherType === 'descartavel') {
+      if (filters?.voucherType === 'descartavel') {
         return {
           'Data/Hora': formatDate(item.usado_em || item.data_uso),
           'Pessoa': item.nome_pessoa || item.nome_usuario || '-',
@@ -42,13 +47,13 @@ export const exportToExcel = (data, filters) => {
         'Turno': item.turno || '-',
         'Setor': item.setor || item.nome_setor || '-'
       };
-    }) || [];
+    });
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
 
     // Definir largura das colunas baseado no tipo de voucher
-    const wscols = filters.voucherType === 'descartavel' ? [
+    const wscols = filters?.voucherType === 'descartavel' ? [
       { wch: 25 }, // Data/Hora
       { wch: 35 }, // Pessoa
       { wch: 25 }, // Refeição
@@ -70,7 +75,7 @@ export const exportToExcel = (data, filters) => {
 
     logger.info('Exportação Excel concluída:', {
       registrosProcessados: excelData.length,
-      tipoVoucher: filters.voucherType
+      tipoVoucher: filters?.voucherType
     });
 
     return { wb, ws };
