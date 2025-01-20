@@ -20,7 +20,7 @@ export const findDisposableVoucher = async (code) => {
       `)
       .eq('codigo', code)
       .is('usado_em', null)
-      .is('data_uso', null)
+      .is('usado', false)
       .maybeSingle();
 
     if (error) {

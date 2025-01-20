@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
+import { findCommonVoucher } from './validators/commonVoucherValidator';
+import { findDisposableVoucher } from './validators/disposableVoucherValidator';
 import { supabase } from '../../config/supabase';
-import { validateVoucher } from './VoucherValidation';
 import logger from '../../config/logger';
 
 const VoucherValidationForm = () => {
@@ -20,8 +21,8 @@ const VoucherValidationForm = () => {
           .from('tipos_refeicao')
           .select('*')
           .eq('ativo', true)
-          .gte('horario_fim', currentTime)
-          .lte('horario_inicio', currentTime);
+          .lte('horario_inicio', currentTime)
+          .gte('horario_fim', currentTime);
 
         if (mealTypesError) {
           logger.error('Erro ao buscar tipo de refeição:', mealTypesError);
@@ -52,30 +53,36 @@ const VoucherValidationForm = () => {
         return;
       }
 
-      const result = await validateVoucher(voucherCode, currentMealType.id);
+      // Tentar validar como voucher descartável primeiro
+      const disposableResult = await findDisposableVoucher(voucherCode);
       
-      if (result.success) {
-        // Store voucher data in localStorage
-        if (result.voucherType === 'comum') {
-          localStorage.setItem('commonVoucher', JSON.stringify({
-            code: voucherCode,
-            userName: result.user?.nome || 'Usuário',
-            turno: result.user?.turnos?.tipo_turno,
-            cpf: result.user?.cpf,
-            userId: result.user?.id
-          }));
-          localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
-          navigate('/user-confirmation');
-        } else if (result.voucherType === 'descartavel') {
-          localStorage.setItem('disposableVoucher', JSON.stringify({
-            code: voucherCode,
-            mealTypeId: currentMealType.id
-          }));
-          localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
-          navigate('/user-confirmation');
-        }
+      if (disposableResult.data) {
+        localStorage.setItem('disposableVoucher', JSON.stringify({
+          code: voucherCode,
+          mealTypeId: currentMealType.id
+        }));
+        localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
+        navigate('/user-confirmation');
+        return;
+      }
+
+      // Se não for descartável, tentar como voucher comum
+      const commonResult = await findCommonVoucher(voucherCode);
+      
+      if (commonResult.data) {
+        localStorage.setItem('commonVoucher', JSON.stringify({
+          code: voucherCode,
+          userName: commonResult.data.usuarios?.nome || 'Usuário',
+          turno: commonResult.data.usuarios?.turnos?.tipo_turno,
+          cpf: commonResult.data.usuarios?.cpf,
+          userId: commonResult.data.usuarios?.id
+        }));
+        localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
+        navigate('/user-confirmation');
+      } else if (commonResult.error) {
+        toast.error(commonResult.error);
       } else {
-        toast.error(result.error || 'Erro ao validar voucher');
+        toast.error('Voucher inválido ou não disponível para uso');
       }
     } catch (error) {
       logger.error('Erro ao validar voucher:', error);
