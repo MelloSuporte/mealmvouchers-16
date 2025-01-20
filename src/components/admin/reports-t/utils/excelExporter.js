@@ -4,6 +4,8 @@ import { formatCurrency, formatDate } from './formatters';
 
 export const exportToExcel = (data) => {
   try {
+    logger.info('Iniciando exportação Excel com dados:', data?.length || 0, 'registros');
+    
     const excelData = data?.map(item => ({
       'Data/Hora': formatDate(item.usado_em),
       'Nome': item.nome_pessoa || '-',
