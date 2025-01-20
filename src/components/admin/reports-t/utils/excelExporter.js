@@ -7,22 +7,23 @@ export const exportToExcel = (data) => {
     const excelData = data?.map(item => ({
       'Data/Hora': formatDate(item.usado_em),
       'Nome': item.nome_pessoa || '-',
-      'Refeição': item.tipos_refeicao?.nome || '-',
-      'Valor': formatCurrency(item.tipos_refeicao?.valor || 0),
       'Empresa': item.nome_empresa || '-',
-      'Setor': item.setor || '-'
+      'Tipo Refeição': item.tipos_refeicao?.nome || '-',
+      'Qtd': 1,
+      'Valor': formatCurrency(item.tipos_refeicao?.valor || 0)
     })) || [];
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
 
+    // Definir largura das colunas
     const wscols = [
       { wch: 20 }, // Data/Hora
       { wch: 30 }, // Nome
-      { wch: 20 }, // Refeição
-      { wch: 15 }, // Valor
       { wch: 30 }, // Empresa
-      { wch: 20 }  // Setor
+      { wch: 20 }, // Tipo Refeição
+      { wch: 10 }, // Qtd
+      { wch: 15 }  // Valor
     ];
 
     ws['!cols'] = wscols;
