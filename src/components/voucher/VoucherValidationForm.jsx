@@ -40,6 +40,80 @@ const VoucherValidationForm = () => {
     getCurrentMealType();
   }, []);
 
+  const validateMealTime = (mealType, userTurno) => {
+    const currentTime = new Date();
+    const currentHour = currentTime.getHours();
+    const currentMinute = currentTime.getMinutes();
+
+    const [startHour, startMinute] = mealType.horario_inicio.split(':').map(Number);
+    const [endHour, endMinute] = mealType.horario_fim.split(':').map(Number);
+    const toleranceMinutes = mealType.minutos_tolerancia || 15;
+
+    const mealStartTime = new Date();
+    mealStartTime.setHours(startHour, startMinute, 0);
+
+    const mealEndTime = new Date();
+    mealEndTime.setHours(endHour, endMinute + toleranceMinutes, 0);
+
+    if (currentTime < mealStartTime || currentTime > mealEndTime) {
+      throw new Error(`Esta refeição só pode ser utilizada entre ${mealType.horario_inicio} e ${mealType.horario_fim} (+ ${toleranceMinutes} min de tolerância)`);
+    }
+
+    // Validate user's shift time
+    if (userTurno) {
+      const [shiftStartHour, shiftStartMinute] = userTurno.horario_inicio.split(':').map(Number);
+      const [shiftEndHour, shiftEndMinute] = userTurno.horario_fim.split(':').map(Number);
+
+      const shiftStartTime = new Date();
+      shiftStartTime.setHours(shiftStartHour, shiftStartMinute, 0);
+
+      const shiftEndTime = new Date();
+      shiftEndTime.setHours(shiftEndHour, shiftEndMinute, 0);
+
+      if (currentTime < shiftStartTime || currentTime > shiftEndTime) {
+        throw new Error(`Fora do horário do turno (${userTurno.horario_inicio} - ${userTurno.horario_fim})`);
+      }
+    }
+  };
+
+  const validateDailyLimit = async (userId) => {
+    const today = new Date().toISOString().split('T')[0];
+    const { data: usageCount, error: usageError } = await supabase
+      .from('uso_voucher')
+      .select('count', { count: 'exact' })
+      .eq('usuario_id', userId)
+      .gte('usado_em', today);
+
+    if (usageError) {
+      logger.error('Erro ao verificar limite diário:', usageError);
+      throw usageError;
+    }
+
+    if (usageCount >= 3) {
+      throw new Error('Limite diário de refeições atingido (máximo 3)');
+    }
+  };
+
+  const validateMealInterval = async (userId) => {
+    const { data: lastUsage } = await supabase
+      .from('uso_voucher')
+      .select('usado_em')
+      .eq('usuario_id', userId)
+      .order('usado_em', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (lastUsage) {
+      const lastUsageTime = new Date(lastUsage.usado_em);
+      const currentDateTime = new Date();
+      const hoursDiff = (currentDateTime - lastUsageTime) / (1000 * 60 * 60);
+
+      if (hoursDiff < 3) {
+        throw new Error('É necessário aguardar 3 horas entre as refeições');
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isValidating) return;
@@ -53,10 +127,13 @@ const VoucherValidationForm = () => {
         return;
       }
 
-      // Tentar validar como voucher descartável primeiro
+      // Try disposable voucher first
       const disposableResult = await findDisposableVoucher(voucherCode);
       
       if (disposableResult.data) {
+        // Validate meal time for disposable voucher
+        validateMealTime(currentMealType);
+
         localStorage.setItem('disposableVoucher', JSON.stringify({
           code: voucherCode,
           mealTypeId: currentMealType.id
@@ -66,16 +143,39 @@ const VoucherValidationForm = () => {
         return;
       }
 
-      // Se não for descartável, tentar como voucher comum
+      // Try common voucher
       const commonResult = await findCommonVoucher(voucherCode);
       
       if (commonResult.data) {
+        const user = commonResult.data.usuarios;
+        
+        // Validate user status
+        if (user.suspenso) {
+          toast.error('Usuário suspenso');
+          return;
+        }
+
+        // Validate company status
+        if (!user.empresas?.ativo) {
+          toast.error('Empresa inativa');
+          return;
+        }
+
+        // Validate meal time and shift
+        validateMealTime(currentMealType, user.turnos);
+
+        // Validate daily limit
+        await validateDailyLimit(user.id);
+
+        // Validate minimum interval between meals
+        await validateMealInterval(user.id);
+
         localStorage.setItem('commonVoucher', JSON.stringify({
           code: voucherCode,
-          userName: commonResult.data.usuarios?.nome || 'Usuário',
-          turno: commonResult.data.usuarios?.turnos?.tipo_turno,
-          cpf: commonResult.data.usuarios?.cpf,
-          userId: commonResult.data.usuarios?.id
+          userName: user.nome || 'Usuário',
+          turno: user.turnos?.tipo_turno,
+          cpf: user.cpf,
+          userId: user.id
         }));
         localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
         navigate('/user-confirmation');
