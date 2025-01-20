@@ -14,11 +14,12 @@ export const exportToExcel = (data) => {
       // Formato específico para vouchers descartáveis
       if (isDisposable) {
         return {
-          'Data': formatDate(item.usado_em || item.data_uso),
-          'Usuário': item.nome_pessoa || item.nome_usuario || '-',
-          'Empresa': item.nome_empresa || '-',
-          'Tipo Refeição': item.tipos_refeicao?.nome || item.tipo_refeicao || '-',
-          'Valor': formatCurrency(item.tipos_refeicao?.valor || item.valor_refeicao || 0)
+          'Data/Hora': formatDate(item.usado_em || item.data_uso),
+          'Pessoa': item.nome_pessoa || item.nome_usuario || '-',
+          'Refeição': item.tipos_refeicao?.nome || item.tipo_refeicao || '-',
+          'Valor': formatCurrency(item.tipos_refeicao?.valor || item.valor_refeicao || 0),
+          'Código': item.codigo || '-',
+          'Empresa': item.nome_empresa || '-'
         };
       }
       
@@ -40,11 +41,12 @@ export const exportToExcel = (data) => {
 
     // Definir largura das colunas para vouchers descartáveis
     const wscols = [
-      { wch: 20 }, // Data
-      { wch: 30 }, // Usuário
-      { wch: 30 }, // Empresa
-      { wch: 25 }, // Tipo Refeição
-      { wch: 15 }  // Valor
+      { wch: 25 }, // Data/Hora
+      { wch: 35 }, // Pessoa
+      { wch: 25 }, // Refeição
+      { wch: 20 }, // Valor
+      { wch: 20 }, // Código
+      { wch: 30 }  // Empresa
     ];
 
     ws['!cols'] = wscols;
