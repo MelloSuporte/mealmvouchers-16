@@ -9,25 +9,16 @@ export const exportToExcel = (data) => {
     // Mapear dados para o formato do Excel
     const excelData = data?.map(item => {
       // Verificar se é um voucher descartável
-      if (item.tipo_voucher === 'descartavel') {
-        return {
-          'Data/Hora': formatDate(item.usado_em),
-          'Nome': item.nome_pessoa || '-',
-          'Empresa': item.nome_empresa || '-',
-          'Tipo Refeição': item.tipos_refeicao?.nome || '-',
-          'Qtd': 1,
-          'Valor': formatCurrency(item.tipos_refeicao?.valor || 0)
-        };
-      }
+      const isDisposable = item.tipo_voucher === 'descartavel' || item.voucher_descartavel_id;
       
-      // Para outros tipos de voucher, manter o formato atual
       return {
-        'Data/Hora': formatDate(item.usado_em),
-        'Nome': item.nome_pessoa || '-',
+        'Data/Hora': formatDate(item.data_uso || item.usado_em),
+        'Nome': item.nome_usuario || item.nome_pessoa || '-',
         'Empresa': item.nome_empresa || '-',
-        'Tipo Refeição': item.tipos_refeicao?.nome || '-',
+        'Tipo Refeição': item.tipo_refeicao || (item.tipos_refeicao?.nome) || '-',
+        'Código': isDisposable ? (item.codigo_voucher || item.codigo || '-') : (item.voucher || '-'),
         'Qtd': 1,
-        'Valor': formatCurrency(item.tipos_refeicao?.valor || 0)
+        'Valor': formatCurrency(item.valor_refeicao || item.tipos_refeicao?.valor || 0)
       };
     }) || [];
 
@@ -40,6 +31,7 @@ export const exportToExcel = (data) => {
       { wch: 30 }, // Nome
       { wch: 30 }, // Empresa
       { wch: 20 }, // Tipo Refeição
+      { wch: 15 }, // Código
       { wch: 10 }, // Qtd
       { wch: 15 }  // Valor
     ];
