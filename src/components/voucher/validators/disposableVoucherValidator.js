@@ -21,7 +21,7 @@ export const findDisposableVoucher = async (code) => {
       .eq('codigo', code)
       .is('usado_em', null)
       .lte('data_expiracao', new Date().toISOString().split('T')[0])
-      .single();
+      .maybeSingle();
 
     if (error) {
       logger.error('Erro ao buscar voucher descartável:', error);
