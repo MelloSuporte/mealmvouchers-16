@@ -31,12 +31,14 @@ export const exportToPDFDescartaveis = async (filters) => {
       query = query.eq('tipo_refeicao_id', filters.mealType);
     }
 
-    // Aplicar filtros de data
+    // Aplicar filtros de data - Agora usando toISOString() para formato correto
     if (filters?.startDate) {
-      query = query.gte('usado_em', filters.startDate);
+      const startDate = new Date(filters.startDate);
+      query = query.gte('usado_em', startDate.toISOString());
     }
     if (filters?.endDate) {
-      query = query.lte('usado_em', filters.endDate);
+      const endDate = new Date(filters.endDate);
+      query = query.lte('usado_em', endDate.toISOString());
     }
 
     const { data: vouchers, error } = await query;
