@@ -5,6 +5,7 @@ import { useReportsTData } from '../hooks/useReportsTData';
 import logger from '@/config/logger';
 import { exportToExcel } from '../utils/excelExporter';
 import { exportToPDF } from '../utils/pdfExporter';
+import { exportToPDFDescartaveis } from '../utils/pdfExporterDescartaveis';
 import * as XLSX from 'xlsx';
 import { useAdmin } from '@/contexts/AdminContext';
 
@@ -20,7 +21,12 @@ const ExportTButton = ({ filters }) => {
       }
 
       logger.info('Iniciando exportação PDF...');
-      const doc = await exportToPDF(reportData, filters, adminUser?.nome);
+      
+      // Use different export function based on voucher type
+      const doc = filters?.voucherType === 'descartavel' 
+        ? await exportToPDFDescartaveis(filters)
+        : await exportToPDF(reportData, filters, adminUser?.nome);
+      
       doc.save(`relatorio_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success('Relatório PDF gerado com sucesso!');
     } catch (error) {
