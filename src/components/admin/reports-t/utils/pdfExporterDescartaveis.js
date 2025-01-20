@@ -6,7 +6,7 @@ import logger from '@/config/logger';
 import { formatCurrency } from './formatters';
 import { supabase } from '@/config/supabase';
 
-export const exportToPDF = async (filters) => {
+export const exportToPDFDescartaveis = async (filters) => {
   try {
     logger.info('Iniciando exportação PDF de vouchers descartáveis...', filters);
 
@@ -92,8 +92,7 @@ export const exportToPDF = async (filters) => {
 
     if (!vouchers || vouchers.length === 0) {
       doc.text("Nenhum registro encontrado para o período selecionado.", 14, yPos);
-      doc.save('relatorio-vouchers-descartaveis.pdf');
-      return;
+      return doc;
     }
 
     // Tabela de Vouchers
@@ -115,8 +114,7 @@ export const exportToPDF = async (filters) => {
       headStyles: { fillColor: [66, 66, 66] }
     });
 
-    doc.save('relatorio-vouchers-descartaveis.pdf');
-    logger.info('PDF gerado com sucesso', { totalRegistros, valorTotal });
+    return doc;
 
   } catch (error) {
     logger.error('Erro ao gerar PDF:', error);
