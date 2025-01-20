@@ -1,147 +1,115 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { supabase } from '../../../config/supabase';
-import { toast } from "sonner";
 
-const MealTypeFields = ({ 
-  mealType, 
-  setMealType,
-  mealValue,
-  setMealValue,
-  startTime,
-  setStartTime,
-  endTime,
-  setEndTime,
-  maxUsersPerDay,
-  setMaxUsersPerDay,
-  toleranceMinutes,
-  setToleranceMinutes,
-  mealTypes,
-  existingMealData,
-  onStatusChange
-}) => {
-  const handleActiveChange = async (checked) => {
-    if (!existingMealData?.id) return;
-
-    try {
-      const { error } = await supabase
-        .from('tipos_refeicao')
-        .update({ ativo: checked })
-        .eq('id', existingMealData.id);
-
-      if (error) {
-        console.error('Erro ao atualizar status da refeição:', error);
-        toast.error("Erro ao atualizar status da refeição");
-        return;
-      }
-
-      if (onStatusChange) {
-        onStatusChange(checked);
-      }
-      
-      toast.success(`Refeição ${checked ? 'ativada' : 'suspensa'} com sucesso!`);
-    } catch (error) {
-      console.error('Erro ao atualizar status da refeição:', error);
-      toast.error("Erro ao atualizar status da refeição");
-    }
-  };
-
+const MealTypeFields = ({ formData, onChange }) => {
   return (
-    <>
-      <div className="space-y-2">
-        <Label htmlFor="meal-type">Tipo de Refeição</Label>
-        <Select value={mealType} onValueChange={setMealType}>
-          <SelectTrigger className="h-9" id="meal-type">
-            <SelectValue placeholder="Selecione o tipo de refeição" />
-          </SelectTrigger>
-          <SelectContent>
-            {mealTypes.map((type) => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label htmlFor="meal-value">Valor (R$)</Label>
-          <Input 
-            id="meal-value"
-            placeholder="0,00" 
-            type="number" 
-            step="0.01" 
-            value={mealValue}
-            onChange={(e) => setMealValue(e.target.value)}
-            className="h-9"
+    <div className="space-y-4">
+      <div className="grid gap-4">
+        <div className="space-y-2">
+          <label htmlFor="nome" className="text-sm font-medium">
+            Nome
+          </label>
+          <Input
+            id="nome"
+            name="nome"
+            value={formData.nome || ''}
+            onChange={onChange}
+            placeholder="Nome do tipo de refeição"
           />
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="max-users">Limite Diário</Label>
-          <Input 
-            id="max-users"
-            placeholder="Nº usuários" 
-            type="number" 
-            value={maxUsersPerDay}
-            onChange={(e) => setMaxUsersPerDay(e.target.value)}
-            className="h-9"
+        <div className="space-y-2">
+          <label htmlFor="horario_inicio" className="text-sm font-medium">
+            Horário Início
+          </label>
+          <Input
+            id="horario_inicio"
+            name="horario_inicio"
+            type="time"
+            value={formData.horario_inicio || ''}
+            onChange={onChange}
           />
         </div>
-      </div>
 
-      {mealType !== "Extra" && (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label htmlFor="start-time">Início</Label>
-            <Input 
-              id="start-time"
-              placeholder="Horário inicial" 
-              type="time" 
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="h-9"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="end-time">Término</Label>
-            <Input 
-              id="end-time"
-              placeholder="Horário final" 
-              type="time" 
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="h-9"
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-1">
-        <Label htmlFor="tolerance">Tolerância (minutos)</Label>
-        <Input 
-          id="tolerance"
-          placeholder="Minutos" 
-          type="number" 
-          value={toleranceMinutes}
-          onChange={(e) => setToleranceMinutes(e.target.value)}
-          className="h-9"
-        />
-      </div>
-
-      {existingMealData && (
-        <div className="flex items-center space-x-2 pt-2">
-          <Switch 
-            id="active"
-            checked={existingMealData.ativo}
-            onCheckedChange={handleActiveChange}
+        <div className="space-y-2">
+          <label htmlFor="horario_fim" className="text-sm font-medium">
+            Horário Fim
+          </label>
+          <Input
+            id="horario_fim"
+            name="horario_fim"
+            type="time"
+            value={formData.horario_fim || ''}
+            onChange={onChange}
           />
-          <Label htmlFor="active">Refeição Ativa</Label>
         </div>
-      )}
-    </>
+
+        <div className="space-y-2">
+          <label htmlFor="valor" className="text-sm font-medium">
+            Valor
+          </label>
+          <Input
+            id="valor"
+            name="valor"
+            type="number"
+            step="0.01"
+            value={formData.valor || ''}
+            onChange={onChange}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="max_usuarios_por_dia" className="text-sm font-medium">
+            Máximo de Usuários por Dia
+          </label>
+          <Input
+            id="max_usuarios_por_dia"
+            name="max_usuarios_por_dia"
+            type="number"
+            value={formData.max_usuarios_por_dia || ''}
+            onChange={onChange}
+            placeholder="0"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="minutos_tolerancia" className="text-sm font-medium">
+            Minutos de Tolerância
+          </label>
+          <Input
+            id="minutos_tolerancia"
+            name="minutos_tolerancia"
+            type="number"
+            value={formData.minutos_tolerancia || ''}
+            onChange={onChange}
+            placeholder="0"
+          />
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="ativo"
+            name="ativo"
+            checked={formData.ativo}
+            onCheckedChange={(checked) => 
+              onChange({ target: { name: 'ativo', value: checked } })
+            }
+          />
+          <label htmlFor="ativo" className="text-sm font-medium">
+            Ativo
+          </label>
+        </div>
+      </div>
+    </div>
   );
 };
 
