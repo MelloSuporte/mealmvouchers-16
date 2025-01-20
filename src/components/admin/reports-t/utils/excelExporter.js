@@ -16,9 +16,10 @@ export const exportToExcel = (data) => {
         'Nome': item.nome_usuario || item.nome_pessoa || '-',
         'Empresa': item.nome_empresa || '-',
         'Tipo Refeição': item.tipo_refeicao || (item.tipos_refeicao?.nome) || '-',
-        'Código': isDisposable ? (item.codigo_voucher || item.codigo || '-') : (item.voucher || '-'),
-        'Qtd': 1,
-        'Valor': formatCurrency(item.valor_refeicao || item.tipos_refeicao?.valor || 0)
+        'Código': isDisposable ? (item.codigo_voucher || item.codigo || '-') : '-',
+        'Valor': formatCurrency(item.valor_refeicao || item.tipos_refeicao?.valor || 0),
+        'Turno': item.turno || '-',
+        'Setor': item.setor || item.nome_setor || '-'
       };
     }) || [];
 
@@ -32,8 +33,9 @@ export const exportToExcel = (data) => {
       { wch: 30 }, // Empresa
       { wch: 20 }, // Tipo Refeição
       { wch: 15 }, // Código
-      { wch: 10 }, // Qtd
-      { wch: 15 }  // Valor
+      { wch: 15 }, // Valor
+      { wch: 15 }, // Turno
+      { wch: 20 }  // Setor
     ];
 
     ws['!cols'] = wscols;
