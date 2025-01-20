@@ -9,14 +9,26 @@ export const exportToExcel = (data) => {
     // Mapear dados para o formato do Excel
     const excelData = data?.map(item => {
       // Verificar se é um voucher descartável
-      const isDisposable = item.tipo_voucher === 'descartavel' || item.voucher_descartavel_id;
+      const isDisposable = item.tipo_voucher === 'descartavel';
       
+      if (isDisposable) {
+        return {
+          'Data/Hora': formatDate(item.usado_em || item.data_uso),
+          'Nome': item.nome_pessoa || '-',
+          'Empresa': item.nome_empresa || '-',
+          'Tipo Refeição': item.tipos_refeicao?.nome || '-',
+          'Código': item.codigo || '-',
+          'Valor': formatCurrency(item.tipos_refeicao?.valor || 0)
+        };
+      }
+      
+      // Retornar formato padrão para outros tipos de voucher
       return {
-        'Data/Hora': formatDate(item.data_uso || item.usado_em),
+        'Data/Hora': formatDate(item.usado_em || item.data_uso),
         'Nome': item.nome_usuario || item.nome_pessoa || '-',
         'Empresa': item.nome_empresa || '-',
         'Tipo Refeição': item.tipo_refeicao || (item.tipos_refeicao?.nome) || '-',
-        'Código': isDisposable ? (item.codigo_voucher || item.codigo || '-') : '-',
+        'Código': '-',
         'Valor': formatCurrency(item.valor_refeicao || item.tipos_refeicao?.valor || 0),
         'Turno': item.turno || '-',
         'Setor': item.setor || item.nome_setor || '-'
