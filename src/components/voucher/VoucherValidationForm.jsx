@@ -59,7 +59,7 @@ const VoucherValidationForm = () => {
       throw new Error(`Esta refeição só pode ser utilizada entre ${mealType.horario_inicio} e ${mealType.horario_fim} (+ ${toleranceMinutes} min de tolerância)`);
     }
 
-    // Validate user's shift time
+    // Validar horário do turno do usuário
     if (userTurno) {
       const [shiftStartHour, shiftStartMinute] = userTurno.horario_inicio.split(':').map(Number);
       const [shiftEndHour, shiftEndMinute] = userTurno.horario_fim.split(':').map(Number);
@@ -127,11 +127,11 @@ const VoucherValidationForm = () => {
         return;
       }
 
-      // Try disposable voucher first
+      // Tentar validar como voucher descartável
       const disposableResult = await findDisposableVoucher(voucherCode);
       
       if (disposableResult.data) {
-        // Validate meal time for disposable voucher
+        // Validar horário da refeição para voucher descartável
         validateMealTime(currentMealType);
 
         localStorage.setItem('disposableVoucher', JSON.stringify({
@@ -143,31 +143,31 @@ const VoucherValidationForm = () => {
         return;
       }
 
-      // Try common voucher
+      // Tentar validar como voucher comum
       const commonResult = await findCommonVoucher(voucherCode);
       
       if (commonResult.data) {
         const user = commonResult.data.usuarios;
         
-        // Validate user status
+        // Validar status do usuário
         if (user.suspenso) {
           toast.error('Usuário suspenso');
           return;
         }
 
-        // Validate company status
+        // Validar status da empresa
         if (!user.empresas?.ativo) {
           toast.error('Empresa inativa');
           return;
         }
 
-        // Validate meal time and shift
+        // Validar horário da refeição e turno
         validateMealTime(currentMealType, user.turnos);
 
-        // Validate daily limit
+        // Validar limite diário
         await validateDailyLimit(user.id);
 
-        // Validate minimum interval between meals
+        // Validar intervalo mínimo entre refeições
         await validateMealInterval(user.id);
 
         localStorage.setItem('commonVoucher', JSON.stringify({
