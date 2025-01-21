@@ -97,10 +97,20 @@ const UserConfirmation = () => {
         }
 
         // Load meal type data
-        const currentMealType = localStorage.getItem('currentMealType');
-        if (currentMealType) {
-          setMealType(JSON.parse(currentMealType));
-          logger.info('Tipo de refeição carregado:', JSON.parse(currentMealType));
+        const currentMealTypeStr = localStorage.getItem('currentMealType');
+        if (currentMealTypeStr) {
+          try {
+            const currentMealType = JSON.parse(currentMealTypeStr);
+            setMealType(currentMealType);
+            logger.info('Tipo de refeição carregado:', currentMealType);
+          } catch (error) {
+            logger.error('Erro ao processar tipo de refeição:', error);
+            toast.error('Erro ao carregar tipo de refeição');
+          }
+        } else {
+          logger.warn('Tipo de refeição não encontrado no localStorage');
+          toast.error('Tipo de refeição não encontrado');
+          navigate('/voucher');
         }
       } catch (error) {
         logger.error('Erro ao processar dados:', error);
@@ -132,7 +142,7 @@ const UserConfirmation = () => {
     navigate('/voucher');
   };
 
-  if (!userData) return null;
+  if (!userData || !mealType) return null;
 
   const getTurnoLabel = (turno) => {
     if (!turno || !turno.tipo_turno) {
