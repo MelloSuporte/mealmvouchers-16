@@ -11,7 +11,6 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 const MealTypeFields = ({ formData = {}, onChange }) => {
-  // Ensure formData has default values
   const {
     nome = '',
     horario_inicio = '',
