@@ -2,8 +2,6 @@ import { supabase } from '../config/supabase';
 import logger from '../config/logger';
 import { identifyVoucherType } from './voucher/validators/voucherTypeIdentifier';
 import { validateDisposableVoucher } from './voucher/validators/disposableVoucherValidator';
-import { validateCommonVoucher } from './voucher/validators/commonVoucherValidator';
-import { validateExtraVoucher } from './voucher/validators/extraVoucherValidator';
 
 export const validateVoucher = async (codigo: string, tipoRefeicaoId: string) => {
   try {
@@ -23,8 +21,6 @@ export const validateVoucher = async (codigo: string, tipoRefeicaoId: string) =>
         return await validateDisposableVoucher(codigo, tipoRefeicaoId);
       case 'comum':
         return await validateCommonVoucher(codigo, tipoRefeicaoId);
-      case 'extra':
-        return await validateExtraVoucher(codigo, tipoRefeicaoId);
       default:
         return { success: false, error: 'Tipo de voucher não suportado' };
     }
