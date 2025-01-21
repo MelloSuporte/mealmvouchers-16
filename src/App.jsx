@@ -5,7 +5,6 @@ import Home from './pages/Home';
 import Voucher from './pages/Voucher';
 import UserConfirmation from './pages/UserConfirmation';
 import BomApetite from './pages/BomApetite';
-import SelfServices from './pages/SelfServices';
 import Admin from './pages/Admin';
 import BackgroundImages from './pages/BackgroundImages';
 import { Toaster } from './components/ui/toaster';
@@ -34,7 +33,6 @@ function App() {
             <Route path="/refeitorio" element={<Home />} />
             <Route path="/user-confirmation" element={<UserConfirmation />} />
             <Route path="/bom-apetite" element={<BomApetite />} />
-            <Route path="/self-services" element={<SelfServices />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/background-images" element={<BackgroundImages />} />
             <Route path="/admin-login" element={<Navigate to="/admin" replace />} />
