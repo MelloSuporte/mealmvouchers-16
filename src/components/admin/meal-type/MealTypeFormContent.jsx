@@ -15,7 +15,6 @@ const MealTypeFormContent = ({
   setMaxUsersPerDay,
   toleranceMinutes,
   setToleranceMinutes,
-  mealTypes,
   existingMealData,
   onStatusChange,
   handleSaveMealType,
@@ -62,7 +61,9 @@ const MealTypeFormContent = ({
 
   return (
     <form className="space-y-4 max-w-md mx-auto bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-xl font-semibold mb-4">Configuração de Refeição</h2>
+      <h2 className="text-xl font-semibold mb-4">
+        {existingMealData ? 'Editar Refeição' : 'Nova Refeição'}
+      </h2>
       
       <MealTypeFields 
         formData={formData}

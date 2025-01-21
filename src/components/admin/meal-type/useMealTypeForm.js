@@ -26,64 +26,47 @@ export const useMealTypeForm = () => {
     }
   });
 
-  useEffect(() => {
-    const fetchExistingMealData = async () => {
-      if (!mealType) {
-        setExistingMealData(null);
-        return;
+  const handleMealTypeSelect = async (selectedType) => {
+    setMealType(selectedType);
+    
+    if (!selectedType) {
+      // Clear form for new meal type
+      setExistingMealData(null);
+      setMealValue('');
+      setStartTime('');
+      setEndTime('');
+      setMaxUsersPerDay('');
+      setToleranceMinutes('15');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('tipos_refeicao')
+        .select('*')
+        .eq('nome', selectedType)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setExistingMealData(data);
+        setMealValue(data.valor.toString());
+        setStartTime(data.horario_inicio || '');
+        setEndTime(data.horario_fim || '');
+        setMaxUsersPerDay(data.max_usuarios_por_dia?.toString() || '');
+        setToleranceMinutes(data.minutos_tolerancia?.toString() || '15');
+        toast.success("Dados da refeição carregados");
       }
-
-      try {
-        console.log('Buscando dados para o tipo de refeição:', mealType);
-        
-        const { data, error } = await supabase
-          .from('tipos_refeicao')
-          .select('*')
-          .eq('nome', mealType)
-          .maybeSingle();
-
-        if (error) {
-          if (error.code === '42501') {
-            toast.error("Erro de permissão: Você não tem acesso a esta funcionalidade");
-            return;
-          }
-          console.error('Erro na consulta:', error);
-          toast.error("Erro ao buscar dados da refeição: " + error.message);
-          throw error;
-        }
-
-        if (data) {
-          console.log('Dados encontrados:', data);
-          setExistingMealData(data);
-          setMealValue(data.valor.toString());
-          setStartTime(data.horario_inicio || '');
-          setEndTime(data.horario_fim || '');
-          setMaxUsersPerDay(data.max_usuarios_por_dia?.toString() || '');
-          setToleranceMinutes(data.minutos_tolerancia?.toString() || '15');
-          toast.success("Dados da refeição carregados com sucesso!");
-        } else {
-          console.log('Nenhum dado encontrado para:', mealType);
-          setExistingMealData(null);
-          setMealValue('');
-          setStartTime('');
-          setEndTime('');
-          setMaxUsersPerDay('');
-          setToleranceMinutes('15');
-          toast.info("Nova refeição - preencha os dados necessários");
-        }
-      } catch (error) {
-        console.error('Erro ao buscar dados da refeição:', error);
-        toast.error("Erro ao buscar dados da refeição. Por favor, tente novamente.");
-        setExistingMealData(null);
-      }
-    };
-
-    fetchExistingMealData();
-  }, [mealType]);
+    } catch (error) {
+      console.error('Erro ao carregar dados da refeição:', error);
+      toast.error("Erro ao carregar dados da refeição");
+    }
+  };
 
   const handleSaveMealType = async () => {
     if (!mealType || !mealValue || (mealType !== "Extra" && (!startTime || !endTime))) {
-      toast.error("Por favor, preencha todos os campos obrigatórios.");
+      toast.error("Por favor, preencha todos os campos obrigatórios");
       return;
     }
 
@@ -114,17 +97,11 @@ export const useMealTypeForm = () => {
 
       const { error } = await operation;
       
-      if (error) {
-        if (error.code === '42501') {
-          toast.error("Erro de permissão: Você não tem acesso para salvar tipos de refeição");
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
 
-      toast.success(`Tipo de refeição ${mealType} ${existingMealData ? 'atualizado' : 'salvo'} com sucesso!`);
+      toast.success(`Tipo de refeição ${existingMealData ? 'atualizado' : 'cadastrado'} com sucesso!`);
       
-      // Limpar formulário após salvar
+      // Clear form
       setMealType("");
       setMealValue("");
       setStartTime("");
@@ -133,7 +110,7 @@ export const useMealTypeForm = () => {
       setToleranceMinutes("15");
       setExistingMealData(null);
       
-      // Recarregar lista de tipos de refeição
+      // Refresh meal types list
       refetchMealTypes();
     } catch (error) {
       console.error('Erro ao salvar tipo de refeição:', error);
@@ -169,6 +146,7 @@ export const useMealTypeForm = () => {
     existingMealData,
     isSubmitting,
     handleSaveMealType,
-    handleStatusChange
+    handleStatusChange,
+    handleMealTypeSelect
   };
 };
