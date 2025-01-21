@@ -61,7 +61,7 @@ const VoucherValidationForm = () => {
           cpf: user.cpf,
           userId: user.id
         }));
-        navigate('/self-services');
+        navigate('/user-confirmation');
       } else if (commonResult.error) {
         toast.error(commonResult.error);
       } else {
