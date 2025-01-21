@@ -28,12 +28,12 @@ const MealTypeForm = () => {
   return (
     <div className="space-y-6">
       <div className="w-full max-w-md mx-auto">
-        <Select onValueChange={handleMealTypeSelect} value={mealType}>
+        <Select onValueChange={handleMealTypeSelect} value={mealType || undefined}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Selecione ou crie um tipo de refeição" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Novo tipo de refeição</SelectItem>
+            <SelectItem value="new">Novo tipo de refeição</SelectItem>
             {mealTypes.map((type) => (
               <SelectItem key={type} value={type}>
                 {type}
@@ -56,7 +56,6 @@ const MealTypeForm = () => {
         setMaxUsersPerDay={setMaxUsersPerDay}
         toleranceMinutes={toleranceMinutes}
         setToleranceMinutes={setToleranceMinutes}
-        mealTypes={mealTypes}
         existingMealData={existingMealData}
         onStatusChange={handleStatusChange}
         handleSaveMealType={handleSaveMealType}

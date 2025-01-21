@@ -27,19 +27,19 @@ export const useMealTypeForm = () => {
   });
 
   const handleMealTypeSelect = async (selectedType) => {
-    setMealType(selectedType);
-    
-    if (!selectedType) {
-      // Clear form for new meal type
+    if (selectedType === "new") {
+      setMealType("");
       setExistingMealData(null);
-      setMealValue('');
-      setStartTime('');
-      setEndTime('');
-      setMaxUsersPerDay('');
-      setToleranceMinutes('15');
+      setMealValue("");
+      setStartTime("");
+      setEndTime("");
+      setMaxUsersPerDay("");
+      setToleranceMinutes("15");
       return;
     }
 
+    setMealType(selectedType);
+    
     try {
       const { data, error } = await supabase
         .from('tipos_refeicao')
