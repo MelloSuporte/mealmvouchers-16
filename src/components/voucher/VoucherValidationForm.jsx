@@ -35,7 +35,7 @@ const VoucherValidationForm = () => {
       const startTimeInMinutes = startHour * 60 + startMinute;
       let endTimeInMinutes = endHour * 60 + endMinute + toleranceMinutes;
 
-      // Lidar com horários que atravessam a meia-noite
+      // Handle times that cross midnight
       if (endTimeInMinutes < startTimeInMinutes) {
         return currentTimeInMinutes >= startTimeInMinutes || 
                currentTimeInMinutes <= endTimeInMinutes;
