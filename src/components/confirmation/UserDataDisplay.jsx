@@ -23,7 +23,7 @@ const UserDataDisplay = ({ userName, cpf, turno, mealName }) => {
         <h3 className="font-bold text-lg mb-2">Tipo de Refeição</h3>
         <p className="flex items-center gap-2">
           <span className="text-green-600">✓</span>
-          {mealName}
+          {mealName || 'Não definido'}
         </p>
       </div>
     </div>

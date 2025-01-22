@@ -41,7 +41,6 @@ const UserConfirmation = () => {
 
     const loadStoredData = async () => {
       try {
-        // Check for both voucher types
         const commonVoucherData = localStorage.getItem('commonVoucher');
         const disposableVoucherData = localStorage.getItem('disposableVoucher');
         
@@ -51,12 +50,10 @@ const UserConfirmation = () => {
           return;
         }
 
-        // Handle common voucher
         if (commonVoucherData) {
           const parsedData = JSON.parse(commonVoucherData);
           logger.info('Dados carregados do localStorage:', parsedData);
 
-          // Buscar dados do turno do usuário
           const { data: turnoData, error: turnoError } = await supabase
             .from('usuarios')
             .select('turno_id, turnos:turnos(*)')
@@ -86,7 +83,6 @@ const UserConfirmation = () => {
           });
         }
         
-        // Handle disposable voucher
         if (disposableVoucherData) {
           const parsedData = JSON.parse(disposableVoucherData);
           setUserData({
@@ -96,7 +92,6 @@ const UserConfirmation = () => {
           });
         }
 
-        // Load meal type data
         const currentMealTypeStr = localStorage.getItem('currentMealType');
         if (currentMealTypeStr) {
           try {
@@ -180,7 +175,7 @@ const UserConfirmation = () => {
           userName={userData.userName}
           cpf={userData.cpf}
           turno={getTurnoLabel(userData.turno)}
-          mealName={mealType?.nome || 'Não definido'}
+          mealName={mealType?.nome}
         />
         
         <ConfirmationActions
