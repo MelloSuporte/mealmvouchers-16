@@ -12,25 +12,32 @@ const VoucherValidationForm = () => {
   const { data: mealTypes, isLoading: isLoadingMealTypes } = useMealTypes();
 
   const getCurrentMealType = (mealTypes) => {
-    if (!mealTypes) return null;
+    if (!mealTypes?.length) {
+      logger.warn('Nenhum tipo de refeição disponível');
+      return null;
+    }
 
-    const currentTime = new Date();
-    const currentHour = currentTime.getHours();
-    const currentMinute = currentTime.getMinutes();
-    const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}:00`;
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
 
     return mealTypes.find(type => {
-      const startTime = type.horario_inicio;
-      const endTime = type.horario_fim;
+      const [startHour, startMinute] = type.horario_inicio.split(':').map(Number);
+      const [endHour, endMinute] = type.horario_fim.split(':').map(Number);
       const toleranceMinutes = type.minutos_tolerancia || 0;
 
-      // Adiciona tolerância ao horário final
-      const [endHour, endMinute] = endTime.split(':').map(Number);
-      const endDateTime = new Date();
-      endDateTime.setHours(endHour, endMinute + toleranceMinutes, 0);
-      const endTimeWithTolerance = `${String(endDateTime.getHours()).padStart(2, '0')}:${String(endDateTime.getMinutes()).padStart(2, '0')}:00`;
+      const startTimeInMinutes = startHour * 60 + startMinute;
+      const endTimeInMinutes = endHour * 60 + endMinute + toleranceMinutes;
 
-      return currentTimeStr >= startTime && currentTimeStr <= endTimeWithTolerance;
+      // Lidar com horários que atravessam a meia-noite
+      if (endTimeInMinutes < startTimeInMinutes) {
+        return currentTimeInMinutes >= startTimeInMinutes || 
+               currentTimeInMinutes <= endTimeInMinutes;
+      }
+
+      return currentTimeInMinutes >= startTimeInMinutes && 
+             currentTimeInMinutes <= endTimeInMinutes;
     });
   };
 
@@ -52,6 +59,8 @@ const VoucherValidationForm = () => {
         toast.error('Fora do horário de refeições');
         return;
       }
+
+      logger.info('Tipo de refeição atual:', currentMealType);
 
       // Primeiro tenta validar como voucher descartável
       const disposableResult = await validateDisposableVoucher(voucherCode, currentMealType.id);
