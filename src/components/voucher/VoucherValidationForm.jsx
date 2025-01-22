@@ -8,13 +8,11 @@ import logger from '../../config/logger';
 
 const VoucherValidationForm = () => {
   const navigate = useNavigate();
-  const [voucherCode, setVoucherCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const { data: mealTypes, isLoading: isLoadingMealTypes } = useMealTypes();
   const [selectedMealType, setSelectedMealType] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (voucherCode) => {
     if (isValidating) return;
     
     try {
@@ -90,14 +88,8 @@ const VoucherValidationForm = () => {
 
   return (
     <VoucherForm
-      voucherCode={voucherCode}
       onSubmit={handleSubmit}
-      onNumpadClick={(num) => setVoucherCode(prev => prev.length < 4 ? prev + num : prev)}
-      onBackspace={() => setVoucherCode(prev => prev.slice(0, -1))}
-      isValidating={isValidating}
-      mealTypes={mealTypes}
-      selectedMealType={selectedMealType}
-      onMealTypeChange={setSelectedMealType}
+      isSubmitting={isValidating}
     />
   );
 };

@@ -16,7 +16,7 @@ const VoucherForm = ({ onSubmit, isSubmitting }) => {
     setVoucherCode(prev => prev.slice(0, -1));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     if (!voucherCode || voucherCode.length !== 4) {
