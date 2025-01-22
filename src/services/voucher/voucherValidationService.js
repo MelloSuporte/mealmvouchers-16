@@ -1,23 +1,42 @@
 import { validateCommonVoucher } from '../../components/voucher/validators/commonVoucherValidator';
 import { validateDisposableVoucher } from '../../components/voucher/validators/disposableVoucherValidator';
 import logger from '../../config/logger';
+import { supabase } from '../../config/supabase';
 
-export const validateVoucher = async (code, tipoRefeicaoId) => {
+export const validateVoucher = async (codigo, tipoRefeicaoId) => {
   try {
-    logger.info('Iniciando validação do voucher:', code);
+    logger.info('Iniciando validação do voucher:', codigo);
+    
+    // Primeiro validar se o tipo de refeição existe e está ativo
+    const { data: tipoRefeicao, error: tipoRefeicaoError } = await supabase
+      .from('tipos_refeicao')
+      .select('*')
+      .eq('id', tipoRefeicaoId)
+      .eq('ativo', true)
+      .single();
 
-    // Primeiro tenta validar como voucher descartável
-    const disposableResult = await validateDisposableVoucher(code, tipoRefeicaoId);
-    if (disposableResult.success) {
-      return disposableResult;
+    if (tipoRefeicaoError || !tipoRefeicao) {
+      logger.error('Erro ao buscar tipo de refeição:', tipoRefeicaoError);
+      return { 
+        success: false, 
+        error: 'Tipo de refeição não encontrado ou inativo' 
+      };
+    }
+
+    // Identificar e validar o tipo de voucher
+    const { data: disposableVoucher } = await validateDisposableVoucher(codigo, tipoRefeicaoId);
+    
+    if (disposableVoucher) {
+      logger.info('Voucher descartável validado com sucesso');
+      return { success: true, data: disposableVoucher };
     }
 
     // Se não for descartável, tenta validar como voucher comum
-    const commonResult = await validateCommonVoucher(code, tipoRefeicaoId);
-    return commonResult;
+    const commonVoucherResult = await validateCommonVoucher(codigo, tipoRefeicaoId);
+    return commonVoucherResult;
 
   } catch (error) {
-    logger.error('Erro na validação do voucher:', error);
+    logger.error('Erro na validação:', error);
     return { 
       success: false, 
       error: error.message || 'Erro ao validar voucher'
@@ -31,6 +50,22 @@ export { validateCommonVoucher, validateDisposableVoucher };
 // Export validateVoucherTime function
 export const validateVoucherTime = async (tipoRefeicaoId) => {
   try {
+    if (!tipoRefeicaoId) {
+      throw new Error('ID do tipo de refeição é obrigatório');
+    }
+
+    const { data: tipoRefeicao, error: tipoRefeicaoError } = await supabase
+      .from('tipos_refeicao')
+      .select('*')
+      .eq('id', tipoRefeicaoId)
+      .eq('ativo', true)
+      .single();
+
+    if (tipoRefeicaoError || !tipoRefeicao) {
+      logger.error('Erro ao validar horário - tipo de refeição não encontrado:', tipoRefeicaoError);
+      throw new Error('Tipo de refeição não encontrado ou inativo');
+    }
+
     const { data, error } = await supabase
       .rpc('validate_meal_time', {
         p_tipo_refeicao_id: tipoRefeicaoId
