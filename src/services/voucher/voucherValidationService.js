@@ -24,3 +24,26 @@ export const validateVoucher = async (code, tipoRefeicaoId) => {
     };
   }
 };
+
+// Re-export the imported functions so they can be used by other components
+export { validateCommonVoucher, validateDisposableVoucher };
+
+// Export validateVoucherTime function
+export const validateVoucherTime = async (tipoRefeicaoId) => {
+  try {
+    const { data, error } = await supabase
+      .rpc('validate_meal_time', {
+        p_tipo_refeicao_id: tipoRefeicaoId
+      });
+
+    if (error) {
+      logger.error('Erro ao validar horário:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    logger.error('Erro ao validar horário:', error);
+    throw error;
+  }
+};
