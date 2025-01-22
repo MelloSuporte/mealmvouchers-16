@@ -106,6 +106,7 @@ const UserConfirmation = () => {
           } catch (error) {
             logger.error('Erro ao processar tipo de refeição:', error);
             toast.error('Erro ao carregar tipo de refeição');
+            navigate('/voucher');
           }
         } else {
           logger.warn('Tipo de refeição não encontrado no localStorage');
