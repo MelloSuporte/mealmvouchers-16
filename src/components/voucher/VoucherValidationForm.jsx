@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
-import { validateCommonVoucher, validateDisposableVoucher } from '../../services/voucher/voucherValidationService';
+import { validateVoucher } from '../../services/voucher/voucherValidationService';
 import { useMealTypes } from '../../hooks/useMealTypes';
 import logger from '../../config/logger';
 
@@ -22,13 +22,18 @@ const VoucherValidationForm = () => {
     const currentMinute = now.getMinutes();
     const currentTimeInMinutes = currentHour * 60 + currentMinute;
 
-    return mealTypes.find(type => {
+    logger.info('Buscando tipo de refeição para horário:', { 
+      hora: currentHour, 
+      minuto: currentMinute 
+    });
+
+    const availableMealType = mealTypes.find(type => {
       const [startHour, startMinute] = type.horario_inicio.split(':').map(Number);
       const [endHour, endMinute] = type.horario_fim.split(':').map(Number);
       const toleranceMinutes = type.minutos_tolerancia || 0;
 
       const startTimeInMinutes = startHour * 60 + startMinute;
-      const endTimeInMinutes = endHour * 60 + endMinute + toleranceMinutes;
+      let endTimeInMinutes = endHour * 60 + endMinute + toleranceMinutes;
 
       // Lidar com horários que atravessam a meia-noite
       if (endTimeInMinutes < startTimeInMinutes) {
@@ -36,9 +41,26 @@ const VoucherValidationForm = () => {
                currentTimeInMinutes <= endTimeInMinutes;
       }
 
-      return currentTimeInMinutes >= startTimeInMinutes && 
-             currentTimeInMinutes <= endTimeInMinutes;
+      const isWithinTime = currentTimeInMinutes >= startTimeInMinutes && 
+                          currentTimeInMinutes <= endTimeInMinutes;
+
+      if (isWithinTime) {
+        logger.info('Tipo de refeição encontrado:', {
+          nome: type.nome,
+          inicio: type.horario_inicio,
+          fim: type.horario_fim,
+          tolerancia: type.minutos_tolerancia
+        });
+      }
+
+      return isWithinTime;
     });
+
+    if (!availableMealType) {
+      logger.warn('Nenhum tipo de refeição disponível para o horário atual');
+    }
+
+    return availableMealType;
   };
 
   const handleSubmit = async (voucherCode) => {
@@ -60,40 +82,35 @@ const VoucherValidationForm = () => {
         return;
       }
 
-      logger.info('Tipo de refeição atual:', currentMealType);
+      logger.info('Validando voucher com tipo de refeição:', {
+        id: currentMealType.id,
+        nome: currentMealType.nome
+      });
 
-      // Primeiro tenta validar como voucher descartável
-      const disposableResult = await validateDisposableVoucher(voucherCode, currentMealType.id);
+      const result = await validateVoucher(voucherCode, currentMealType.id);
       
-      if (disposableResult.data) {
-        localStorage.setItem('disposableVoucher', JSON.stringify({
-          code: voucherCode,
-          mealTypeId: currentMealType.id
-        }));
+      if (result.success) {
         localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
-        navigate('/user-confirmation');
-        return;
-      }
-
-      // Se não for descartável, tenta validar como voucher comum
-      const commonResult = await validateCommonVoucher(voucherCode, currentMealType.id);
-      
-      if (commonResult.data) {
-        const user = commonResult.data;
         
-        localStorage.setItem('commonVoucher', JSON.stringify({
-          code: voucherCode,
-          userName: user.nome || 'Usuário',
-          turno: user.turnos?.tipo_turno,
-          cpf: user.cpf,
-          userId: user.id,
-          mealTypeId: currentMealType.id
-        }));
+        if (result.voucherType === 'descartavel') {
+          localStorage.setItem('disposableVoucher', JSON.stringify({
+            code: voucherCode,
+            mealTypeId: currentMealType.id
+          }));
+        } else {
+          localStorage.setItem('commonVoucher', JSON.stringify({
+            code: voucherCode,
+            userName: result.user?.nome || 'Usuário',
+            turno: result.user?.turnos?.tipo_turno,
+            cpf: result.user?.cpf,
+            userId: result.user?.id,
+            mealTypeId: currentMealType.id
+          }));
+        }
+        
         navigate('/user-confirmation');
-      } else if (commonResult.error) {
-        toast.error(commonResult.error);
       } else {
-        toast.error('Voucher inválido ou não disponível para uso');
+        toast.error(result.error || 'Erro ao validar voucher');
       }
     } catch (error) {
       logger.error('Erro ao validar voucher:', error);

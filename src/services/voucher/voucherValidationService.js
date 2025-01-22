@@ -7,32 +7,34 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
   try {
     logger.info('Iniciando validação do voucher:', { codigo, tipoRefeicaoId });
     
-    // First validate if meal type exists and is active
-    if (!tipoRefeicaoId) {
-      return { success: false, error: 'Tipo de refeição não fornecido' };
+    if (!codigo || !tipoRefeicaoId) {
+      throw new Error('Código do voucher e tipo de refeição são obrigatórios');
     }
 
-    const { data: mealType, error: mealTypeError } = await supabase
-      .from('tipos_refeicao')
-      .select('*')
-      .eq('id', tipoRefeicaoId)
-      .eq('ativo', true)
-      .single();
-
-    if (mealTypeError || !mealType) {
-      logger.error('Erro ao validar tipo de refeição:', mealTypeError);
-      return { success: false, error: 'Tipo de refeição não encontrado ou inativo' };
-    }
-
-    // Try disposable voucher first
+    // Primeiro tenta validar como voucher descartável
     const disposableResult = await validateDisposableVoucher(codigo, tipoRefeicaoId);
+    
     if (disposableResult.success) {
-      return disposableResult;
+      return {
+        ...disposableResult,
+        voucherType: 'descartavel'
+      };
     }
 
-    // If not disposable, try common voucher
+    // Se não for descartável, tenta validar como voucher comum
     const commonResult = await validateCommonVoucher(codigo, tipoRefeicaoId);
-    return commonResult;
+    
+    if (commonResult.success) {
+      return {
+        ...commonResult,
+        voucherType: 'comum'
+      };
+    }
+
+    return {
+      success: false,
+      error: commonResult.error || disposableResult.error || 'Voucher inválido'
+    };
 
   } catch (error) {
     logger.error('Erro na validação:', error);
@@ -42,46 +44,3 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
     };
   }
 };
-
-export const validateVoucherTime = async (tipoRefeicaoId) => {
-  try {
-    if (!tipoRefeicaoId) {
-      throw new Error('ID do tipo de refeição é obrigatório');
-    }
-
-    const { data: mealType, error: mealTypeError } = await supabase
-      .from('tipos_refeicao')
-      .select('*')
-      .eq('id', tipoRefeicaoId)
-      .eq('ativo', true)
-      .single();
-
-    if (mealTypeError || !mealType) {
-      logger.error('Erro ao validar horário - tipo de refeição não encontrado:', mealTypeError);
-      throw new Error('Tipo de refeição não encontrado ou inativo');
-    }
-
-    const currentTime = new Date();
-    const [startHour, startMinute] = mealType.horario_inicio.split(':');
-    const [endHour, endMinute] = mealType.horario_fim.split(':');
-    
-    const startTime = new Date();
-    startTime.setHours(parseInt(startHour), parseInt(startMinute), 0);
-    
-    const endTime = new Date();
-    endTime.setHours(parseInt(endHour), parseInt(endMinute), 0);
-    endTime.setMinutes(endTime.getMinutes() + mealType.minutos_tolerancia);
-
-    const isWithinTime = currentTime >= startTime && currentTime <= endTime;
-
-    return {
-      success: isWithinTime,
-      error: isWithinTime ? null : `Esta refeição só pode ser utilizada entre ${mealType.horario_inicio} e ${mealType.horario_fim}`
-    };
-  } catch (error) {
-    logger.error('Erro ao validar horário:', error);
-    throw error;
-  }
-};
-
-export { validateCommonVoucher, validateDisposableVoucher };

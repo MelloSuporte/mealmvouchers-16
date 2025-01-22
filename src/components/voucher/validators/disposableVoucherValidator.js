@@ -60,7 +60,10 @@ export const validateDisposableVoucher = async (code, tipoRefeicaoId) => {
         voucher: voucher.tipo_refeicao_id,
         requested: tipoRefeicaoId
       });
-      return { success: false, error: 'Tipo de refeição inválido para este voucher' };
+      return { 
+        success: false, 
+        error: 'Este voucher não é válido para este tipo de refeição' 
+      };
     }
 
     // Validate meal type is active
