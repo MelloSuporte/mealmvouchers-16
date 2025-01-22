@@ -20,8 +20,7 @@ export const findDisposableVoucher = async (code) => {
       `)
       .eq('codigo', code)
       .is('usado_em', null)
-      .is('usado', false)
-      .maybeSingle();
+      .single();
 
     if (error) {
       logger.error('Erro ao buscar voucher descartável:', error);
@@ -41,8 +40,26 @@ export const findDisposableVoucher = async (code) => {
   }
 };
 
-export const validateDisposableVoucher = async (code) => {
+export const validateDisposableVoucher = async (code, tipoRefeicaoId) => {
   try {
+    // First validate if meal type exists and is active
+    if (!tipoRefeicaoId) {
+      logger.error('ID do tipo de refeição não fornecido');
+      return { success: false, error: 'Tipo de refeição não fornecido' };
+    }
+
+    const { data: mealType, error: mealTypeError } = await supabase
+      .from('tipos_refeicao')
+      .select('*')
+      .eq('id', tipoRefeicaoId)
+      .eq('ativo', true)
+      .single();
+
+    if (mealTypeError || !mealType) {
+      logger.error('Erro ao validar tipo de refeição:', mealTypeError);
+      return { success: false, error: 'Tipo de refeição não encontrado ou inativo' };
+    }
+
     const result = await findDisposableVoucher(code);
     
     if (!result.data) {
@@ -50,14 +67,19 @@ export const validateDisposableVoucher = async (code) => {
     }
 
     const voucher = result.data;
-    const mealType = voucher.tipos_refeicao;
 
-    if (!mealType) {
-      logger.error('Tipo de refeição não encontrado para o voucher:', code);
-      return { success: false, error: 'Tipo de refeição não encontrado' };
+    // Validate if voucher matches the meal type
+    if (voucher.tipo_refeicao_id !== tipoRefeicaoId) {
+      logger.error('Tipo de refeição do voucher não corresponde:', {
+        voucher: voucher.tipo_refeicao_id,
+        requested: tipoRefeicaoId
+      });
+      return { success: false, error: 'Tipo de refeição inválido para este voucher' };
     }
 
-    if (!mealType.ativo) {
+    // Validate meal type is active
+    if (!voucher.tipos_refeicao?.ativo) {
+      logger.error('Tipo de refeição inativo:', voucher.tipos_refeicao?.nome);
       return { success: false, error: 'Tipo de refeição inativo' };
     }
 
