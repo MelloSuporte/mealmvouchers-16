@@ -1,31 +1,32 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { DeleteIcon } from "lucide-react";
+import { Delete } from "lucide-react";
 
 const VoucherNumpad = ({ onNumpadClick, onBackspace, voucherCode = '', disabled }) => {
   const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
 
   return (
-    <div className="grid grid-cols-3 gap-2 p-4">
+    <div className="grid grid-cols-3 gap-2">
       {numbers.map((number) => (
         <Button
           key={number}
+          type="button"
+          variant="outline"
           onClick={() => onNumpadClick(number)}
           disabled={disabled || voucherCode.length >= 4}
-          variant="outline"
           className="h-12 text-lg font-semibold"
         >
           {number}
         </Button>
       ))}
       <Button
-        onClick={onBackspace}
-        disabled={disabled || voucherCode.length === 0}
+        type="button"
         variant="outline"
-        className="h-12 col-span-3"
+        onClick={onBackspace}
+        disabled={disabled || !voucherCode.length}
+        className="h-12"
       >
-        <DeleteIcon className="w-4 h-4 mr-2" />
-        Apagar
+        <Delete className="h-4 w-4" />
       </Button>
     </div>
   );
