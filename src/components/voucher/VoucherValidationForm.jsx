@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
-import { validateCommonVoucher, validateDisposableVoucher, validateVoucherTime } from '../../services/voucher/voucherValidationService';
 import { useMealTypes } from '../../hooks/useMealTypes';
 import logger from '../../config/logger';
 
@@ -90,6 +89,9 @@ const VoucherValidationForm = () => {
     <VoucherForm
       onSubmit={handleSubmit}
       isSubmitting={isValidating}
+      mealTypes={mealTypes}
+      selectedMealType={selectedMealType}
+      onMealTypeChange={setSelectedMealType}
     />
   );
 };

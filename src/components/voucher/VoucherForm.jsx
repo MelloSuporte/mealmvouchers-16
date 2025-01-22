@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import VoucherNumpad from './VoucherNumpad';
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
-const VoucherForm = ({ onSubmit, isSubmitting }) => {
+const VoucherForm = ({ onSubmit, isSubmitting, mealTypes, selectedMealType, onMealTypeChange }) => {
   const [voucherCode, setVoucherCode] = useState('');
 
   const handleNumpadClick = (number) => {
@@ -24,11 +26,38 @@ const VoucherForm = ({ onSubmit, isSubmitting }) => {
       return;
     }
 
+    if (!selectedMealType) {
+      toast.error("Por favor, selecione um tipo de refeição");
+      return;
+    }
+
     onSubmit(voucherCode);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label>Tipo de Refeição</Label>
+        <Select 
+          value={selectedMealType?.id} 
+          onValueChange={(value) => {
+            const mealType = mealTypes.find(type => type.id === value);
+            onMealTypeChange(mealType);
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o tipo de refeição" />
+          </SelectTrigger>
+          <SelectContent>
+            {mealTypes?.map((type) => (
+              <SelectItem key={type.id} value={type.id}>
+                {type.nome} ({type.horario_inicio} - {type.horario_fim})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="flex justify-center">
         <input
           type="text"
@@ -49,7 +78,7 @@ const VoucherForm = ({ onSubmit, isSubmitting }) => {
       <Button 
         type="submit"
         className="w-full bg-blue-600 hover:bg-blue-700"
-        disabled={voucherCode.length !== 4 || isSubmitting}
+        disabled={voucherCode.length !== 4 || isSubmitting || !selectedMealType}
       >
         {isSubmitting ? 'Validando...' : 'Validar Voucher'}
       </Button>

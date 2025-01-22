@@ -1,29 +1,32 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Backspace } from "lucide-react";
 
-const VoucherNumpad = ({ onNumpadClick, onBackspace, voucherCode = '', disabled = false }) => {
+const VoucherNumpad = ({ onNumpadClick, onBackspace, voucherCode = '', disabled }) => {
   const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
 
   return (
-    <div className="grid grid-cols-3 gap-2 mt-4">
-      {numbers.map(num => (
+    <div className="grid grid-cols-3 gap-2">
+      {numbers.map((number) => (
         <Button
-          key={num}
+          key={number}
           type="button"
-          onClick={() => onNumpadClick(num)}
-          className="bg-gray-200 text-black hover:bg-gray-300 text-xl py-4"
-          disabled={voucherCode?.length >= 4 || disabled}
+          variant="outline"
+          onClick={() => onNumpadClick(number)}
+          disabled={disabled || voucherCode.length >= 4}
+          className="h-12 text-lg font-semibold"
         >
-          {num}
+          {number}
         </Button>
       ))}
-      <Button 
+      <Button
         type="button"
-        onClick={onBackspace} 
-        className="bg-red-500 hover:bg-red-600 text-white col-span-2"
-        disabled={disabled}
+        variant="outline"
+        onClick={onBackspace}
+        disabled={disabled || !voucherCode.length}
+        className="h-12"
       >
-        Apagar
+        <Backspace className="h-4 w-4" />
       </Button>
     </div>
   );
