@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Delete } from "lucide-react";
+import { Backspace } from "lucide-react";
 
 const VoucherNumpad = ({ onNumpadClick, onBackspace, voucherCode = '', disabled }) => {
   const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
@@ -26,7 +26,7 @@ const VoucherNumpad = ({ onNumpadClick, onBackspace, voucherCode = '', disabled 
         disabled={disabled || !voucherCode.length}
         className="h-12"
       >
-        <Delete className="h-4 w-4" />
+        <Backspace className="h-4 w-4" />
       </Button>
     </div>
   );
