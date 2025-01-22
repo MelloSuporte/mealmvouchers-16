@@ -1,31 +1,26 @@
-import { findCommonVoucher } from '../../components/voucher/validators/commonVoucherValidator';
-import { findDisposableVoucher } from '../../components/voucher/validators/disposableVoucherValidator';
-import { validateMealTime } from '../../components/voucher/validators/timeValidator';
+import { validateCommonVoucher } from '../../components/voucher/validators/commonVoucherValidator';
+import { validateDisposableVoucher } from '../../components/voucher/validators/disposableVoucherValidator';
 import logger from '../../config/logger';
 
-export const validateCommonVoucher = async (code) => {
+export const validateVoucher = async (code, tipoRefeicaoId) => {
   try {
-    return await findCommonVoucher(code);
-  } catch (error) {
-    logger.error('Erro ao validar voucher comum:', error);
-    throw error;
-  }
-};
+    logger.info('Iniciando validação do voucher:', code);
 
-export const validateDisposableVoucher = async (code) => {
-  try {
-    return await findDisposableVoucher(code);
-  } catch (error) {
-    logger.error('Erro ao validar voucher descartável:', error);
-    throw error;
-  }
-};
+    // Primeiro tenta validar como voucher descartável
+    const disposableResult = await validateDisposableVoucher(code, tipoRefeicaoId);
+    if (disposableResult.success) {
+      return disposableResult;
+    }
 
-export const validateVoucherTime = async (tipoRefeicaoId) => {
-  try {
-    return await validateMealTime(tipoRefeicaoId);
+    // Se não for descartável, tenta validar como voucher comum
+    const commonResult = await validateCommonVoucher(code, tipoRefeicaoId);
+    return commonResult;
+
   } catch (error) {
-    logger.error('Erro ao validar horário do voucher:', error);
-    throw error;
+    logger.error('Erro na validação do voucher:', error);
+    return { 
+      success: false, 
+      error: error.message || 'Erro ao validar voucher'
+    };
   }
 };
