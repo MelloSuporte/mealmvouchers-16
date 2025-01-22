@@ -40,3 +40,37 @@ export const findDisposableVoucher = async (code) => {
     throw error;
   }
 };
+
+export const validateDisposableVoucher = async (code) => {
+  try {
+    const result = await findDisposableVoucher(code);
+    
+    if (!result.data) {
+      return { success: false, error: 'Voucher descartável não encontrado ou já utilizado' };
+    }
+
+    const voucher = result.data;
+    const mealType = voucher.tipos_refeicao;
+
+    if (!mealType) {
+      logger.error('Tipo de refeição não encontrado para o voucher:', code);
+      return { success: false, error: 'Tipo de refeição não encontrado' };
+    }
+
+    if (!mealType.ativo) {
+      return { success: false, error: 'Tipo de refeição inativo' };
+    }
+
+    return { 
+      success: true, 
+      data: voucher,
+      message: 'Voucher descartável válido'
+    };
+  } catch (error) {
+    logger.error('Erro ao validar voucher descartável:', error);
+    return { 
+      success: false, 
+      error: error.message || 'Erro ao validar voucher descartável'
+    };
+  }
+};
