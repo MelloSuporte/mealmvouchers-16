@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import { toast } from "sonner";
+import logger from '../config/logger';
 
 export const useMealTypes = () => {
   return useQuery({
     queryKey: ['mealTypes'],
     queryFn: async () => {
-      console.log('Iniciando busca de tipos de refeição...');
+      logger.info('Iniciando busca de tipos de refeição...');
       const { data, error } = await supabase
         .from('tipos_refeicao')
         .select('*')
@@ -14,12 +15,12 @@ export const useMealTypes = () => {
         .order('nome');
 
       if (error) {
-        console.error('Erro ao buscar tipos de refeição:', error);
+        logger.error('Erro ao buscar tipos de refeição:', error);
         toast.error(`Erro ao buscar tipos de refeição: ${error.message}`);
         throw error;
       }
 
-      console.log('Tipos de refeição encontrados:', data);
+      logger.info('Tipos de refeição encontrados:', data);
       return data || [];
     }
   });

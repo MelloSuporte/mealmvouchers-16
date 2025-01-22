@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
 import { validateCommonVoucher, validateDisposableVoucher, validateVoucherTime } from '../../services/voucher/voucherValidationService';
+import { useMealTypes } from '../../hooks/useMealTypes';
 import logger from '../../config/logger';
 
 const VoucherValidationForm = () => {
   const navigate = useNavigate();
   const [voucherCode, setVoucherCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
+  const { data: mealTypes, isLoading: isLoadingMealTypes } = useMealTypes();
+  const [selectedMealType, setSelectedMealType] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,12 +21,17 @@ const VoucherValidationForm = () => {
       setIsValidating(true);
       logger.info('Iniciando validação do voucher:', voucherCode);
 
+      if (!selectedMealType) {
+        toast.error('Por favor selecione um tipo de refeição');
+        return;
+      }
+
       // Primeiro tenta validar como voucher descartável
-      const disposableResult = await validateDisposableVoucher(voucherCode);
+      const disposableResult = await validateDisposableVoucher(voucherCode, selectedMealType.id);
       
       if (disposableResult.data) {
         // Validar horário da refeição
-        const timeValidation = await validateVoucherTime(disposableResult.data.tipo_refeicao_id);
+        const timeValidation = await validateVoucherTime(selectedMealType.id);
         
         if (!timeValidation.is_valid) {
           toast.error(timeValidation.message || 'Fora do horário permitido');
@@ -32,15 +40,15 @@ const VoucherValidationForm = () => {
 
         localStorage.setItem('disposableVoucher', JSON.stringify({
           code: voucherCode,
-          mealTypeId: disposableResult.data.tipo_refeicao_id
+          mealTypeId: selectedMealType.id
         }));
-        localStorage.setItem('currentMealType', JSON.stringify(disposableResult.data.tipos_refeicao));
+        localStorage.setItem('currentMealType', JSON.stringify(selectedMealType));
         navigate('/user-confirmation');
         return;
       }
 
       // Se não for descartável, tenta validar como voucher comum
-      const commonResult = await validateCommonVoucher(voucherCode);
+      const commonResult = await validateCommonVoucher(voucherCode, selectedMealType.id);
       
       if (commonResult.data) {
         const user = commonResult.data;
@@ -59,7 +67,8 @@ const VoucherValidationForm = () => {
           userName: user.nome || 'Usuário',
           turno: user.turnos?.tipo_turno,
           cpf: user.cpf,
-          userId: user.id
+          userId: user.id,
+          mealTypeId: selectedMealType.id
         }));
         navigate('/user-confirmation');
       } else if (commonResult.error) {
@@ -75,6 +84,10 @@ const VoucherValidationForm = () => {
     }
   };
 
+  if (isLoadingMealTypes) {
+    return <div>Carregando tipos de refeição...</div>;
+  }
+
   return (
     <VoucherForm
       voucherCode={voucherCode}
@@ -82,6 +95,9 @@ const VoucherValidationForm = () => {
       onNumpadClick={(num) => setVoucherCode(prev => prev.length < 4 ? prev + num : prev)}
       onBackspace={() => setVoucherCode(prev => prev.slice(0, -1))}
       isValidating={isValidating}
+      mealTypes={mealTypes}
+      selectedMealType={selectedMealType}
+      onMealTypeChange={setSelectedMealType}
     />
   );
 };
