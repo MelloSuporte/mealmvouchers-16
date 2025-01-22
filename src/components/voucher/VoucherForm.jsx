@@ -1,71 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import VoucherNumpad from './VoucherNumpad';
+import { toast } from "sonner";
 
-const VoucherForm = ({
-  voucherCode,
-  onSubmit,
-  onNumpadClick,
-  onBackspace,
-  isValidating,
-  mealTypes,
-  selectedMealType,
-  onMealTypeChange
-}) => {
+const VoucherForm = ({ onSubmit, isSubmitting }) => {
+  const [voucherCode, setVoucherCode] = useState('');
+
+  const handleNumpadClick = (number) => {
+    if (voucherCode.length < 4) {
+      setVoucherCode(prev => prev + number);
+    }
+  };
+
+  const handleBackspace = () => {
+    setVoucherCode(prev => prev.slice(0, -1));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!voucherCode || voucherCode.length !== 4) {
+      toast.error("Por favor, insira um código de voucher válido");
+      return;
+    }
+
+    onSubmit(voucherCode);
+  };
+
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Tipo de Refeição
-          </label>
-          <Select
-            value={selectedMealType?.id || ''}
-            onValueChange={(value) => {
-              const mealType = mealTypes.find(mt => mt.id === value);
-              onMealTypeChange(mealType);
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione o tipo de refeição" />
-            </SelectTrigger>
-            <SelectContent>
-              {mealTypes?.map((type) => (
-                <SelectItem key={type.id} value={type.id}>
-                  {type.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Código do Voucher
-          </label>
-          <input
-            type="text"
-            value={voucherCode}
-            readOnly
-            className="w-full p-4 text-center text-2xl font-mono bg-gray-100 border border-gray-300 rounded-lg"
-            maxLength={4}
-          />
-        </div>
-
-        <VoucherNumpad
-          onNumClick={onNumpadClick}
-          onBackspace={onBackspace}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex justify-center">
+        <input
+          type="text"
+          value={voucherCode}
+          readOnly
+          className="text-center text-3xl font-bold tracking-wider bg-gray-100 rounded-lg p-4 w-48"
+          placeholder="____"
         />
-
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={voucherCode.length !== 4 || !selectedMealType || isValidating}
-        >
-          {isValidating ? 'Validando...' : 'Validar Voucher'}
-        </Button>
       </div>
+
+      <VoucherNumpad
+        onNumpadClick={handleNumpadClick}
+        onBackspace={handleBackspace}
+        voucherCode={voucherCode}
+        disabled={isSubmitting}
+      />
+
+      <Button 
+        type="submit"
+        className="w-full bg-blue-600 hover:bg-blue-700"
+        disabled={voucherCode.length !== 4 || isSubmitting}
+      >
+        {isSubmitting ? 'Validando...' : 'Validar Voucher'}
+      </Button>
     </form>
   );
 };
