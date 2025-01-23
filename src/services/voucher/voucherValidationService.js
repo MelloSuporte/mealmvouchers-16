@@ -95,6 +95,14 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
     if (disposableVoucher) {
       logger.info('Voucher descartável encontrado:', disposableVoucher);
 
+      // Verificar se o tipo de refeição corresponde
+      if (disposableVoucher.tipo_refeicao_id !== tipoRefeicaoId) {
+        return {
+          success: false,
+          error: 'Tipo de refeição não corresponde ao voucher'
+        };
+      }
+
       // Marcar voucher descartável como usado
       const { error: updateError } = await supabase
         .from('vouchers_descartaveis')
@@ -102,7 +110,8 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
           usado_em: new Date().toISOString(),
           data_uso: new Date().toISOString()
         })
-        .eq('id', disposableVoucher.id);
+        .eq('id', disposableVoucher.id)
+        .is('usado_em', null); // Garantir que não foi usado entre a validação e atualização
 
       if (updateError) {
         logger.error('Erro ao atualizar voucher descartável:', updateError);
