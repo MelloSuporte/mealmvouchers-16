@@ -7,7 +7,19 @@ export const exportToExcelDescartaveis = async (filters) => {
   try {
     logger.info('Iniciando exportação Excel de vouchers descartáveis...', filters);
 
-    // Buscar dados dos vouchers descartáveis
+    // Ajustar as datas para considerar o dia inteiro
+    const startDate = filters?.startDate ? new Date(filters.startDate) : null;
+    const endDate = filters?.endDate ? new Date(filters.endDate) : null;
+
+    if (startDate) {
+      startDate.setHours(0, 0, 0, 0);
+    }
+    
+    if (endDate) {
+      endDate.setHours(23, 59, 59, 999);
+    }
+
+    // Buscar dados com as datas ajustadas
     let query = supabase
       .from('vouchers_descartaveis')
       .select(`
@@ -21,15 +33,13 @@ export const exportToExcelDescartaveis = async (filters) => {
           valor
         )
       `)
-      .not('usado_em', 'is', null); // Apenas vouchers utilizados
+      .order('usado_em', { ascending: false });
 
-    // Aplicar filtros
-    if (filters?.startDate) {
-      const startDate = new Date(filters.startDate);
+    if (startDate) {
       query = query.gte('usado_em', startDate.toISOString());
     }
-    if (filters?.endDate) {
-      const endDate = new Date(filters.endDate);
+
+    if (endDate) {
       query = query.lte('usado_em', endDate.toISOString());
     }
 

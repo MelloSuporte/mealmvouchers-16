@@ -8,82 +8,110 @@ export const exportToPDF = async (metrics, filters) => {
   try {
     logger.info('Iniciando geração do PDF de vouchers descartáveis:', { metrics, filters });
     
-    if (!metrics || !Array.isArray(metrics.data)) {
-      logger.error('Dados inválidos recebidos:', metrics);
-      throw new Error('Dados inválidos para geração do PDF');
+    // Ajustar as datas para considerar o dia inteiro
+    const startDate = filters?.startDate ? new Date(filters.startDate) : null;
+    const endDate = filters?.endDate ? new Date(filters.endDate) : null;
+
+    if (startDate) {
+      startDate.setHours(0, 0, 0, 0);
+    }
+    
+    if (endDate) {
+      endDate.setHours(23, 59, 59, 999);
     }
 
+    // Buscar dados com as datas ajustadas
+    let query = supabase
+      .from('vouchers_descartaveis')
+      .select(`
+        *,
+        tipos_refeicao (
+          id,
+          nome,
+          valor
+        )
+      `)
+      .order('usado_em', { ascending: false });
+
+    if (startDate) {
+      query = query.gte('usado_em', startDate.toISOString());
+    }
+
+    if (endDate) {
+      query = query.lte('usado_em', endDate.toISOString());
+    }
+
+    const { data: vouchers, error } = await query;
+
+    if (error) {
+      logger.error('Erro ao buscar vouchers:', error);
+      throw error;
+    }
+
+    // Criar PDF
     const doc = new jsPDF();
     let yPos = 20;
 
-    // Cabeçalho com informações do administrador
+    // Cabeçalho
     doc.setFontSize(16);
     doc.text("Relatório de Vouchers Descartáveis", 14, yPos);
     yPos += 10;
 
-    // Informações do administrador
+    // Informações do relatório
     doc.setFontSize(10);
-    const adminName = localStorage.getItem('adminName') || 'Usuário não identificado';
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    doc.text(`Relatório gerado por ${adminName} em ${dataExportacao}`, 14, yPos);
+    doc.text(`Relatório gerado em ${dataExportacao}`, 14, yPos);
     yPos += 10;
 
-    // Totalizadores no topo
-    const totalRegistros = metrics.data.length;
-    const valorTotal = metrics.data.reduce((sum, item) => sum + (Number(item.valor_refeicao) || 0), 0);
-    
+    // Período do relatório
+    if (startDate && endDate) {
+      doc.text(
+        `Período: ${format(startDate, 'dd/MM/yyyy')} a ${format(endDate, 'dd/MM/yyyy')}`,
+        14,
+        yPos
+      );
+      yPos += 10;
+    }
+
+    // Totalizadores
+    const totalRegistros = vouchers?.length || 0;
+    const valorTotal = vouchers?.reduce((sum, item) => 
+      sum + (item.tipos_refeicao?.valor || 0), 0
+    );
+
     doc.text(`Total de Registros: ${totalRegistros}`, 14, yPos);
     yPos += 6;
-    doc.text(`Valor Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}`, 14, yPos);
+    doc.text(
+      `Valor Total: ${new Intl.NumberFormat('pt-BR', { 
+        style: 'currency', 
+        currency: 'BRL' 
+      }).format(valorTotal)}`,
+      14,
+      yPos
+    );
     yPos += 10;
 
-    // Seção de Filtros Aplicados
-    doc.setFontSize(12);
-    doc.text("Filtros Aplicados:", 14, yPos);
-    yPos += 8;
-
-    doc.setFontSize(10);
-    
-    // Período
-    if (filters?.startDate && filters?.endDate) {
-      doc.text(`Período: ${format(new Date(filters.startDate), 'dd/MM/yyyy')} a ${format(new Date(filters.endDate), 'dd/MM/yyyy')}`, 14, yPos);
-      yPos += 6;
-    }
-
-    // Empresa
-    if (filters?.company && filters.company !== 'all') {
-      doc.text(`Empresa: ${filters.companyName || filters.company}`, 14, yPos);
-      yPos += 6;
-    }
-
-    // Tipo de Refeição
-    if (filters?.mealType && filters.mealType !== 'all') {
-      doc.text(`Tipo de Refeição: ${filters.mealTypeName || filters.mealType}`, 14, yPos);
-      yPos += 6;
-    }
-
-    yPos += 10;
-
-    // Verificar se há dados
-    if (!metrics.data || metrics.data.length === 0) {
+    if (!vouchers || vouchers.length === 0) {
       doc.setFontSize(12);
-      doc.text("Nenhum registro encontrado para os filtros selecionados.", 14, yPos);
-      doc.save('relatorio-vouchers-descartaveis.pdf');
+      doc.text("Nenhum registro encontrado para o período selecionado.", 14, yPos);
       return doc;
     }
 
     // Tabela de dados
-    const tableData = metrics.data.map(item => [
-      format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-      item.nome_pessoa || '-',
-      item.tipos_refeicao?.nome || '-',
-      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.tipos_refeicao?.valor || 0),
-      item.codigo || '-',
-      item.nome_empresa || '-'
+    const tableData = vouchers.map(voucher => [
+      format(new Date(voucher.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      voucher.nome_pessoa || '-',
+      voucher.tipos_refeicao?.nome || '-',
+      new Intl.NumberFormat('pt-BR', { 
+        style: 'currency', 
+        currency: 'BRL' 
+      }).format(voucher.tipos_refeicao?.valor || 0),
+      voucher.codigo || '-',
+      voucher.nome_empresa || '-'
     ]);
 
     doc.autoTable({
-      startY: yPos,
+      startY: yPos + 10,
       head: [['Data/Hora', 'Pessoa', 'Refeição', 'Valor', 'Código', 'Empresa']],
       body: tableData,
       theme: 'grid',
@@ -107,7 +135,6 @@ export const exportToPDF = async (metrics, filters) => {
     });
 
     logger.info('PDF de vouchers descartáveis gerado com sucesso');
-    doc.save('relatorio-vouchers-descartaveis.pdf');
     return doc;
   } catch (error) {
     logger.error('Erro ao gerar PDF:', error);
