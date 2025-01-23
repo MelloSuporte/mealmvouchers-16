@@ -1,25 +1,30 @@
 import { useState } from 'react';
-import { validateVoucher } from '@/services/voucher/validators/voucherValidationService';
+import { validateTimeInterval, validateMealTime } from '@/services/voucher/validators/timeValidator';
 import { toast } from "sonner";
 import logger from '@/config/logger';
-import { VoucherValidationParams, ValidationResult } from '@/types/voucher';
 
 export const useVoucherValidation = () => {
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const validateVoucherCode = async (params: VoucherValidationParams): Promise<boolean> => {
+  const validateVoucherTime = async (userId: string, mealTypeId: string): Promise<boolean> => {
     try {
       setIsValidating(true);
       setValidationError(null);
 
-      logger.info('Iniciando validação do voucher:', params);
+      // Validar intervalo entre refeições
+      const intervalResult = await validateTimeInterval(userId);
+      if (!intervalResult.success) {
+        setValidationError(intervalResult.error);
+        toast.error(intervalResult.error);
+        return false;
+      }
 
-      const validationResult = await validateVoucher(params);
-
-      if (!validationResult.success) {
-        setValidationError(validationResult.error || 'Erro na validação do voucher');
-        toast.error(validationResult.error || 'Erro na validação do voucher');
+      // Validar horário da refeição
+      const mealTimeResult = await validateMealTime(mealTypeId);
+      if (!mealTimeResult.success) {
+        setValidationError(mealTimeResult.error);
+        toast.error(mealTimeResult.error);
         return false;
       }
 
@@ -37,6 +42,6 @@ export const useVoucherValidation = () => {
   return {
     isValidating,
     validationError,
-    validateVoucherCode
+    validateVoucherTime
   };
 };
