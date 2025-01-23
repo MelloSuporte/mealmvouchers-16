@@ -1,145 +1,122 @@
-import { supabase } from '@/config/supabase';
-import logger from '@/config/logger';
-import { toast } from "sonner";
+import { supabase } from '../../config/supabase';
+import logger from '../../config/logger';
+import { toast } from 'sonner';
 
-interface ValidationResult {
-  success: boolean;
-  error?: string;
-  data?: any;
-}
-
-export const validateVoucher = async (codigo: string, tipoRefeicaoId: string): Promise<ValidationResult> => {
+export const validateVoucherExtra = async (codigo: string, tipoRefeicaoId: string) => {
   try {
-    logger.info('Iniciando validação do voucher:', { codigo, tipoRefeicaoId });
+    logger.info('Validando voucher extra:', { codigo, tipoRefeicaoId });
 
-    // 1. Validar tipo de refeição
-    const { data: tipoRefeicao, error: tipoRefeicaoError } = await supabase
-      .from('tipos_refeicao')
-      .select('*')
-      .eq('id', tipoRefeicaoId)
-      .single();
-
-    if (tipoRefeicaoError || !tipoRefeicao) {
-      throw new Error('Tipo de refeição inválido');
-    }
-
-    // 2. Validar horário da refeição
-    const now = new Date();
-    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    
-    const startTime = tipoRefeicao.horario_inicio;
-    const endTime = tipoRefeicao.horario_fim;
-    const toleranceMinutes = tipoRefeicao.minutos_tolerancia || 0;
-
-    const endTimeWithTolerance = new Date();
-    const [endHour, endMinute] = endTime.split(':').map(Number);
-    endTimeWithTolerance.setHours(endHour, endMinute + toleranceMinutes);
-
-    const isWithinTime = currentTime >= startTime && 
-                        currentTime <= `${endTimeWithTolerance.getHours().toString().padStart(2, '0')}:${endTimeWithTolerance.getMinutes().toString().padStart(2, '0')}`;
-
-    if (!isWithinTime) {
-      throw new Error(`Esta refeição só pode ser utilizada entre ${startTime} e ${endTime} (tolerância de ${toleranceMinutes} minutos)`);
-    }
-
-    // 3. Verificar se é voucher descartável
-    const { data: disposableVoucher } = await supabase
-      .from('vouchers_descartaveis')
-      .select('*')
-      .eq('codigo', codigo)
-      .is('usado_em', null)
-      .maybeSingle();
-
-    if (disposableVoucher) {
-      // Validar data de validade
-      if (new Date(disposableVoucher.data_expiracao) < new Date()) {
-        throw new Error('Voucher expirado');
-      }
-
-      return {
-        success: true,
-        voucherType: 'descartavel',
-        data: disposableVoucher
-      };
-    }
-
-    // 4. Se não for descartável, validar como voucher comum
-    const { data: user } = await supabase
-      .from('usuarios')
+    // Buscar voucher extra
+    const { data: voucher, error: voucherError } = await supabase
+      .from('vouchers_extras')
       .select(`
         *,
-        empresas (
+        usuarios (
           id,
           nome,
-          ativo
+          suspenso,
+          empresa_id,
+          turnos (
+            id,
+            tipo_turno,
+            horario_inicio,
+            horario_fim
+          )
         ),
-        turnos (
+        tipos_refeicao (
           id,
-          tipo_turno,
+          nome,
           horario_inicio,
           horario_fim,
-          ativo
+          minutos_tolerancia
         )
       `)
-      .eq('voucher', codigo)
-      .maybeSingle();
+      .eq('codigo', codigo)
+      .is('usado_em', null)
+      .single();
 
-    if (!user) {
-      throw new Error('Voucher não encontrado ou inválido');
+    if (voucherError) {
+      logger.error('Erro ao buscar voucher extra:', voucherError);
+      throw new Error('Voucher não encontrado ou já utilizado');
     }
 
-    // 5. Validações do usuário
-    if (user.suspenso) {
+    if (!voucher) {
+      throw new Error('Voucher não encontrado ou já utilizado');
+    }
+
+    // Validar se voucher não está expirado
+    if (new Date(voucher.valido_ate) < new Date()) {
+      throw new Error('Voucher expirado');
+    }
+
+    // Validar se usuário não está suspenso
+    if (voucher.usuarios?.suspenso) {
       throw new Error('Usuário suspenso');
     }
 
-    if (!user.empresas?.ativo) {
+    // Validar empresa ativa
+    const { data: empresa } = await supabase
+      .from('empresas')
+      .select('ativo')
+      .eq('id', voucher.usuarios?.empresa_id)
+      .single();
+
+    if (!empresa?.ativo) {
       throw new Error('Empresa inativa');
     }
 
-    if (!user.turnos?.ativo) {
-      throw new Error('Turno inativo');
+    // Validar horário da refeição
+    const tipoRefeicao = voucher.tipos_refeicao;
+    if (!tipoRefeicao) {
+      throw new Error('Tipo de refeição não encontrado');
     }
 
-    // 6. Validar horário do turno
-    const turnoStart = user.turnos.horario_inicio;
-    const turnoEnd = user.turnos.horario_fim;
+    const now = new Date();
+    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:00`;
     
-    const isWithinShift = turnoEnd < turnoStart 
-      ? (currentTime >= turnoStart || currentTime <= turnoEnd)
-      : (currentTime >= turnoStart && currentTime <= turnoEnd);
+    const [startHour, startMinute] = tipoRefeicao.horario_inicio.split(':');
+    const [endHour, endMinute] = tipoRefeicao.horario_fim.split(':');
+    
+    const startTime = new Date();
+    startTime.setHours(parseInt(startHour), parseInt(startMinute), 0);
+    
+    const endTime = new Date();
+    endTime.setHours(parseInt(endHour), parseInt(endMinute), 0);
+    endTime.setMinutes(endTime.getMinutes() + (tipoRefeicao.minutos_tolerancia || 0));
 
-    if (!isWithinShift) {
-      throw new Error(`Fora do horário do turno (${turnoStart} - ${turnoEnd})`);
+    if (now < startTime || now > endTime) {
+      throw new Error('Fora do horário permitido para esta refeição');
     }
 
-    // 7. Validar intervalo entre refeições
-    const today = new Date().toISOString().split('T')[0];
-    const { data: usageToday } = await supabase
+    // Validar intervalo entre refeições (60 minutos)
+    const { data: ultimaRefeicao } = await supabase
       .from('uso_voucher')
-      .select('*')
-      .eq('usuario_id', user.id)
-      .gte('usado_em', today);
+      .select('usado_em')
+      .eq('usuario_id', voucher.usuario_id)
+      .order('usado_em', { ascending: false })
+      .limit(1)
+      .single();
 
-    if (usageToday && usageToday.length > 0) {
-      const lastUsage = new Date(usageToday[usageToday.length - 1].usado_em);
-      const minInterval = new Date(lastUsage.getTime() + (60 * 60 * 1000)); // 1 hora
-
-      if (now < minInterval) {
-        throw new Error('Deve aguardar 1 hora entre refeições');
+    if (ultimaRefeicao?.usado_em) {
+      const ultimoUso = new Date(ultimaRefeicao.usado_em);
+      const intervaloMinutos = Math.floor((now.getTime() - ultimoUso.getTime()) / (1000 * 60));
+      
+      if (intervaloMinutos < 60) {
+        throw new Error('Intervalo mínimo entre refeições não respeitado (60 minutos)');
       }
     }
 
     return {
       success: true,
-      voucherType: 'comum',
-      user: user
+      voucher,
+      message: 'Voucher válido'
     };
 
   } catch (error) {
-    logger.error('Erro na validação:', error);
-    return { 
-      success: false, 
+    logger.error('Erro na validação do voucher extra:', error);
+    toast.error(error.message || 'Erro ao validar voucher');
+    return {
+      success: false,
       error: error.message || 'Erro ao validar voucher'
     };
   }
