@@ -1,86 +1,9 @@
--- Drop existing policies
-DROP POLICY IF EXISTS "vouchers_descartaveis_select_policy" ON vouchers_descartaveis;
-DROP POLICY IF EXISTS "vouchers_descartaveis_update_policy" ON vouchers_descartaveis;
-DROP POLICY IF EXISTS "uso_voucher_insert_policy" ON uso_voucher;
+-- Drop existing function if exists
+DROP FUNCTION IF EXISTS validate_and_use_voucher CASCADE;
 
--- Enable RLS
-ALTER TABLE vouchers_descartaveis ENABLE ROW LEVEL SECURITY;
-ALTER TABLE uso_voucher ENABLE ROW LEVEL SECURITY;
-
--- Create select policy with proper validation for vouchers_descartaveis
-CREATE POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis
-    FOR SELECT TO authenticated, anon
-    USING (
-        -- Allow selection of unused vouchers within validity period
-        usado_em IS NULL 
-        AND CURRENT_DATE <= data_expiracao::date
-        AND codigo IS NOT NULL
-        AND EXISTS (
-            SELECT 1 FROM tipos_refeicao tr
-            WHERE tr.id = tipo_refeicao_id
-            AND tr.ativo = true
-            AND CURRENT_TIME BETWEEN tr.horario_inicio 
-            AND (tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL)
-        )
-    );
-
--- Create update policy for vouchers_descartaveis
-CREATE POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis
-    FOR UPDATE TO authenticated, anon
-    USING (
-        usado_em IS NULL 
-        AND CURRENT_DATE <= data_expiracao::date
-        AND EXISTS (
-            SELECT 1 FROM tipos_refeicao tr
-            WHERE tr.id = tipo_refeicao_id
-            AND tr.ativo = true
-            AND CURRENT_TIME BETWEEN tr.horario_inicio 
-            AND (tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL)
-        )
-    )
-    WITH CHECK (
-        usado_em IS NOT NULL
-        AND data_uso IS NOT NULL
-    );
-
--- Create insert policy for uso_voucher with proper validation
-CREATE POLICY "uso_voucher_insert_policy" ON uso_voucher
-    FOR INSERT TO authenticated, anon
-    WITH CHECK (
-        -- For disposable vouchers
-        (
-            voucher_descartavel_id IS NOT NULL
-            AND EXISTS (
-                SELECT 1 
-                FROM vouchers_descartaveis vd
-                JOIN tipos_refeicao tr ON tr.id = vd.tipo_refeicao_id
-                WHERE vd.id = voucher_descartavel_id
-                AND vd.usado_em IS NULL
-                AND vd.data_uso IS NULL
-                AND CURRENT_DATE <= vd.data_expiracao::date
-                AND tr.ativo = true
-                AND CURRENT_TIME BETWEEN tr.horario_inicio 
-                AND (tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL)
-            )
-        )
-        OR
-        -- For common vouchers
-        (
-            usuario_id IS NOT NULL
-            AND EXISTS (
-                SELECT 1 
-                FROM usuarios u
-                JOIN empresas e ON e.id = u.empresa_id
-                WHERE u.id = usuario_id
-                AND NOT u.suspenso
-                AND e.ativo = true
-            )
-        )
-    );
-
--- Create function to validate and use disposable voucher
-CREATE OR REPLACE FUNCTION validate_and_use_disposable_voucher(
-    p_voucher_id UUID,
+-- Create updated function with proper data insertion
+CREATE OR REPLACE FUNCTION validate_and_use_voucher(
+    p_codigo VARCHAR(4),
     p_tipo_refeicao_id UUID
 ) RETURNS JSONB
 SECURITY DEFINER
@@ -88,54 +11,132 @@ SET search_path = public
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_voucher RECORD;
+    v_usuario_id UUID;
+    v_turno_id UUID;
+    v_empresa_id UUID;
+    v_cpf VARCHAR;
+    v_result JSONB;
+    v_refeicoes_dia INTEGER;
+    v_ultima_refeicao TIMESTAMP;
 BEGIN
-    -- Get voucher with validation
-    SELECT vd.* 
-    INTO v_voucher
-    FROM vouchers_descartaveis vd
-    JOIN tipos_refeicao tr ON tr.id = vd.tipo_refeicao_id
-    WHERE vd.id = p_voucher_id
-    AND vd.usado_em IS NULL
-    AND vd.data_uso IS NULL
-    AND CURRENT_DATE <= vd.data_expiracao::date
-    AND tr.ativo = true
-    AND CURRENT_TIME BETWEEN tr.horario_inicio 
-    AND (tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL)
-    FOR UPDATE SKIP LOCKED;
+    -- Find user by voucher code
+    SELECT u.id, u.turno_id, u.empresa_id, u.cpf
+    INTO v_usuario_id, v_turno_id, v_empresa_id, v_cpf
+    FROM usuarios u
+    WHERE u.voucher = p_codigo
+    AND NOT u.suspenso
+    AND EXISTS (
+        SELECT 1 FROM empresas e
+        WHERE e.id = u.empresa_id
+        AND e.ativo = true
+    );
 
     IF NOT FOUND THEN
         RETURN jsonb_build_object(
             'success', false,
-            'error', 'Voucher inválido, expirado ou fora do horário permitido'
+            'error', 'Voucher inválido ou usuário suspenso'
         );
     END IF;
 
-    -- Update voucher status
-    UPDATE vouchers_descartaveis
-    SET 
-        usado_em = CURRENT_TIMESTAMP,
-        data_uso = CURRENT_TIMESTAMP
-    WHERE id = p_voucher_id;
+    -- Check meal time and shift
+    IF NOT EXISTS (
+        SELECT 1 FROM turnos t
+        JOIN tipos_refeicao tr ON true
+        WHERE t.id = v_turno_id
+        AND tr.id = p_tipo_refeicao_id
+        AND t.ativo = true
+        AND tr.ativo = true
+        AND CURRENT_TIME BETWEEN t.horario_inicio AND t.horario_fim
+        AND CURRENT_TIME BETWEEN tr.horario_inicio 
+            AND tr.horario_fim + (tr.minutos_tolerancia || ' minutes')::INTERVAL
+    ) THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Horário não permitido para esta refeição'
+        );
+    END IF;
 
-    -- Register usage
+    -- Check daily limit
+    SELECT COUNT(*), MAX(usado_em)
+    INTO v_refeicoes_dia, v_ultima_refeicao
+    FROM uso_voucher
+    WHERE usuario_id = v_usuario_id
+    AND DATE(usado_em) = CURRENT_DATE;
+
+    IF v_refeicoes_dia >= 3 THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Limite diário de refeições atingido'
+        );
+    END IF;
+
+    -- Check minimum interval
+    IF v_ultima_refeicao IS NOT NULL AND 
+       v_ultima_refeicao + INTERVAL '3 hours' > CURRENT_TIMESTAMP THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Intervalo mínimo entre refeições não respeitado'
+        );
+    END IF;
+
+    -- Register usage with all required fields
     INSERT INTO uso_voucher (
-        voucher_descartavel_id,
+        usuario_id,
         tipo_refeicao_id,
-        usado_em
+        usado_em,
+        cpf,
+        tipo_voucher,
+        observacao
     ) VALUES (
-        p_voucher_id,
+        v_usuario_id,
         p_tipo_refeicao_id,
-        CURRENT_TIMESTAMP
+        CURRENT_TIMESTAMP,
+        v_cpf,
+        'comum',
+        'Voucher comum utilizado'
+    );
+
+    -- Log the usage
+    INSERT INTO logs_sistema (
+        tipo,
+        mensagem,
+        detalhes,
+        nivel
+    ) VALUES (
+        'USO_VOUCHER',
+        'Voucher comum utilizado com sucesso',
+        jsonb_build_object(
+            'usuario_id', v_usuario_id,
+            'tipo_refeicao_id', p_tipo_refeicao_id,
+            'codigo_voucher', p_codigo
+        ),
+        'info'
     );
 
     RETURN jsonb_build_object(
         'success', true,
-        'message', 'Voucher validado com sucesso'
+        'message', 'Voucher validado com sucesso',
+        'usuario_id', v_usuario_id
     );
 
 EXCEPTION
     WHEN OTHERS THEN
+        -- Log error
+        INSERT INTO logs_sistema (
+            tipo,
+            mensagem,
+            detalhes,
+            nivel
+        ) VALUES (
+            'ERRO_VOUCHER',
+            'Erro ao registrar uso do voucher comum',
+            jsonb_build_object(
+                'error', SQLERRM,
+                'codigo_voucher', p_codigo
+            ),
+            'error'
+        );
+        
         RETURN jsonb_build_object(
             'success', false,
             'error', SQLERRM
@@ -144,17 +145,9 @@ END;
 $$;
 
 -- Grant necessary permissions
-GRANT SELECT, UPDATE ON vouchers_descartaveis TO anon;
-GRANT SELECT ON tipos_refeicao TO anon;
-GRANT INSERT ON uso_voucher TO anon;
-GRANT EXECUTE ON FUNCTION validate_and_use_disposable_voucher TO anon;
+REVOKE ALL ON FUNCTION validate_and_use_voucher FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION validate_and_use_voucher TO authenticated;
+GRANT EXECUTE ON FUNCTION validate_and_use_voucher TO anon;
 
--- Add helpful comments
-COMMENT ON POLICY "vouchers_descartaveis_select_policy" ON vouchers_descartaveis IS 
-'Permite visualizar vouchers válidos para validação e uso';
-
-COMMENT ON POLICY "vouchers_descartaveis_update_policy" ON vouchers_descartaveis IS 
-'Permite marcar vouchers como usados quando dentro do horário permitido';
-
-COMMENT ON POLICY "uso_voucher_insert_policy" ON uso_voucher IS 
-'Permite registrar uso de vouchers com validações específicas para cada tipo';
+-- Add helpful comment
+COMMENT ON FUNCTION validate_and_use_voucher IS 'Validates and registers the use of common vouchers with proper data insertion and logging';
