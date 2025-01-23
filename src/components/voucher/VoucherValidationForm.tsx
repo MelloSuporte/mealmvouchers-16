@@ -98,6 +98,8 @@ const VoucherValidationForm = () => {
         }
         
         navigate('/user-confirmation');
+      } else {
+        toast.error(result.error || 'Erro ao validar voucher');
       }
     } catch (error) {
       logger.error('Erro ao validar voucher:', error);
