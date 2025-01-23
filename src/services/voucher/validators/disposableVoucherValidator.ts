@@ -56,7 +56,7 @@ export const validateDisposableVoucher = async (
       };
     }
 
-    // 3. Verificar tipo de refeição e horário
+    // 3. Verificar tipo de refeição
     if (voucher.tipo_refeicao_id !== mealTypeId) {
       return {
         success: false,
@@ -91,41 +91,18 @@ export const validateDisposableVoucher = async (
       };
     }
 
-    // 5. Verificar limite diário de refeições (2 por dia)
-    const today_start = new Date();
-    today_start.setHours(0, 0, 0, 0);
-    
-    const { data: usageToday, error: usageError } = await supabase
+    // 5. Verificar se não existe uso anterior
+    const { data: existingUsage } = await supabase
       .from('uso_voucher')
       .select('*')
       .eq('voucher_descartavel_id', voucher.id)
-      .gte('usado_em', today_start.toISOString())
-      .order('usado_em', { ascending: false });
+      .single();
 
-    if (usageError) {
-      logger.error('Erro ao verificar uso do voucher:', usageError);
-      throw usageError;
-    }
-
-    if (usageToday && usageToday.length >= 2) {
+    if (existingUsage) {
       return {
         success: false,
-        error: 'Limite diário de refeições atingido (máximo 2)'
+        error: 'Este voucher já foi utilizado'
       };
-    }
-
-    // 6. Verificar intervalo mínimo entre refeições (1 hora)
-    if (usageToday && usageToday.length > 0) {
-      const lastUsage = new Date(usageToday[0].usado_em);
-      const minInterval = new Date(lastUsage.getTime() + (60 * 60 * 1000)); // 1 hora em milissegundos
-
-      if (currentTime < minInterval) {
-        const minutesRemaining = Math.ceil((minInterval.getTime() - currentTime.getTime()) / (1000 * 60));
-        return {
-          success: false,
-          error: `Intervalo mínimo entre refeições não respeitado. Aguarde ${minutesRemaining} minutos.`
-        };
-      }
     }
 
     logger.info('Voucher válido:', voucher);
