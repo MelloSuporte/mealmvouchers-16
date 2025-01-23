@@ -42,10 +42,6 @@ export const findDisposableVoucher = async (code) => {
 
 export const validateDisposableVoucher = async (code, tipoRefeicaoId) => {
   try {
-    if (!code || !tipoRefeicaoId) {
-      throw new Error('Código do voucher e tipo de refeição são obrigatórios');
-    }
-
     const result = await findDisposableVoucher(code);
     
     if (!result.data) {
@@ -128,7 +124,7 @@ export const useDisposableVoucher = async (code, tipoRefeicaoId) => {
     const voucher = validationResult.data;
     const now = new Date().toISOString();
 
-    // Start a transaction to update both tables
+    // Update only vouchers_descartaveis table
     const { error: updateError } = await supabase
       .from('vouchers_descartaveis')
       .update({
@@ -140,24 +136,6 @@ export const useDisposableVoucher = async (code, tipoRefeicaoId) => {
 
     if (updateError) {
       logger.error('Erro ao marcar voucher como usado:', updateError);
-      return {
-        success: false,
-        error: 'Erro ao registrar uso do voucher'
-      };
-    }
-
-    // Register usage in uso_voucher table
-    const { error: usageError } = await supabase
-      .from('uso_voucher')
-      .insert({
-        voucher_descartavel_id: voucher.id,
-        tipo_refeicao_id: tipoRefeicaoId,
-        tipo_voucher: 'descartavel',
-        usado_em: now
-      });
-
-    if (usageError) {
-      logger.error('Erro ao registrar uso do voucher:', usageError);
       return {
         success: false,
         error: 'Erro ao registrar uso do voucher'
