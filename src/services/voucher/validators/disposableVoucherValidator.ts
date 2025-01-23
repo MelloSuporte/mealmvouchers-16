@@ -1,6 +1,5 @@
-import { supabase } from '@/config/supabase';
-import logger from '@/config/logger';
-import { toast } from "sonner";
+import { supabase } from '../../../config/supabase';
+import logger from '../../../config/logger';
 import { addMinutes, isWithinInterval, parse } from 'date-fns';
 
 interface DisposableVoucherValidationResult {
@@ -169,7 +168,6 @@ export const useDisposableVoucher = async (
       };
     }
 
-    toast.success('Voucher validado com sucesso!');
     return {
       success: true,
       data: voucher
