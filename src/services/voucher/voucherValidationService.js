@@ -47,42 +47,19 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
         return { success: false, error: 'Turno inativo' };
       }
 
-      // Validate shift time
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}:00`;
-
-      const shiftStart = user.turnos.horario_inicio;
-      const shiftEnd = user.turnos.horario_fim;
-
-      // Handle shifts that cross midnight
-      const isWithinShift = shiftEnd < shiftStart 
-        ? (currentTime >= shiftStart || currentTime <= shiftEnd)
-        : (currentTime >= shiftStart && currentTime <= shiftEnd);
-
-      if (!isWithinShift) {
-        return { 
-          success: false, 
-          error: `Fora do horário do turno (${shiftStart} - ${shiftEnd})` 
-        };
-      }
-
-      // Check meal usage for today
-      const today = new Date().toISOString().split('T')[0];
-      const { data: usageToday, error: usageError } = await supabase
+      // Registrar uso do voucher comum
+      const { error: usageError } = await supabase
         .from('uso_voucher')
-        .select('*')
-        .eq('usuario_id', user.id)
-        .gte('usado_em', today);
+        .insert({
+          usuario_id: user.id,
+          tipo_refeicao_id: tipoRefeicaoId,
+          usado_em: new Date().toISOString(),
+          tipo_voucher: 'comum'
+        });
 
       if (usageError) {
-        logger.error('Erro ao verificar uso do voucher:', usageError);
+        logger.error('Erro ao registrar uso do voucher comum:', usageError);
         throw usageError;
-      }
-
-      if (usageToday && usageToday.length >= 3) {
-        return { success: false, error: 'Limite diário de refeições atingido' };
       }
 
       return {
@@ -117,6 +94,36 @@ export const validateVoucher = async (codigo, tipoRefeicaoId) => {
 
     if (disposableVoucher) {
       logger.info('Voucher descartável encontrado:', disposableVoucher);
+
+      // Marcar voucher descartável como usado
+      const { error: updateError } = await supabase
+        .from('vouchers_descartaveis')
+        .update({
+          usado_em: new Date().toISOString(),
+          data_uso: new Date().toISOString()
+        })
+        .eq('id', disposableVoucher.id);
+
+      if (updateError) {
+        logger.error('Erro ao atualizar voucher descartável:', updateError);
+        throw updateError;
+      }
+
+      // Registrar uso do voucher descartável
+      const { error: usageError } = await supabase
+        .from('uso_voucher')
+        .insert({
+          tipo_refeicao_id: tipoRefeicaoId,
+          usado_em: new Date().toISOString(),
+          tipo_voucher: 'descartavel',
+          voucher_descartavel_id: disposableVoucher.id
+        });
+
+      if (usageError) {
+        logger.error('Erro ao registrar uso do voucher descartável:', usageError);
+        throw usageError;
+      }
+
       return {
         success: true,
         voucherType: 'descartavel',
