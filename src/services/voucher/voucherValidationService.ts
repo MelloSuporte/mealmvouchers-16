@@ -1,15 +1,61 @@
 import { supabase } from '../../config/supabase';
 import logger from '../../config/logger';
-import { validateCommonVoucherRules } from './validators/commonVoucherRules';
-import { validateDisposableVoucher } from './validators/disposableVoucherValidator';
-import { validateCommonVoucher } from './validators/commonVoucherValidator';
+import { toast } from "sonner";
 
 export const validateVoucher = async (codigo: string, tipoRefeicaoId: string) => {
   try {
     logger.info('Iniciando validação do voucher:', { codigo, tipoRefeicaoId });
     
-    // Buscar usuário pelo voucher
-    const { data: user, error: userError } = await supabase
+    // 1. Validar tipo de refeição
+    const { data: tipoRefeicao, error: tipoRefeicaoError } = await supabase
+      .from('tipos_refeicao')
+      .select('*')
+      .eq('id', tipoRefeicaoId)
+      .single();
+
+    if (tipoRefeicaoError || !tipoRefeicao) {
+      throw new Error('Tipo de refeição inválido');
+    }
+
+    // 2. Validar horário da refeição
+    const now = new Date();
+    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    
+    const startTime = tipoRefeicao.horario_inicio;
+    const endTime = tipoRefeicao.horario_fim;
+    const toleranceMinutes = tipoRefeicao.minutos_tolerancia || 0;
+
+    const endTimeWithTolerance = new Date();
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+    endTimeWithTolerance.setHours(endHour, endMinute + toleranceMinutes);
+
+    const isWithinTime = currentTime >= startTime && 
+                        currentTime <= `${endTimeWithTolerance.getHours().toString().padStart(2, '0')}:${endTimeWithTolerance.getMinutes().toString().padStart(2, '0')}`;
+
+    if (!isWithinTime) {
+      throw new Error(`Esta refeição só pode ser utilizada entre ${startTime} e ${endTime} (tolerância de ${toleranceMinutes} minutos)`);
+    }
+
+    // 3. Validar intervalo entre refeições
+    const today = new Date().toISOString().split('T')[0];
+    const { data: lastUsage } = await supabase
+      .from('uso_voucher')
+      .select('usado_em')
+      .gte('usado_em', today)
+      .order('usado_em', { ascending: false })
+      .limit(1);
+
+    if (lastUsage?.[0]) {
+      const lastUsageTime = new Date(lastUsage[0].usado_em);
+      const diffInMinutes = (now.getTime() - lastUsageTime.getTime()) / (1000 * 60);
+      
+      if (diffInMinutes < 60) { // 1 hora de intervalo
+        throw new Error(`Aguarde ${Math.ceil(60 - diffInMinutes)} minutos para usar outro voucher`);
+      }
+    }
+
+    // 4. Buscar e validar voucher
+    const { data: user } = await supabase
       .from('usuarios')
       .select(`
         *,
@@ -29,36 +75,30 @@ export const validateVoucher = async (codigo: string, tipoRefeicaoId: string) =>
       .eq('voucher', codigo)
       .maybeSingle();
 
-    if (userError) {
-      logger.error('Erro ao buscar usuário:', userError);
-      throw userError;
-    }
-
-    // Se encontrado como voucher comum
     if (user) {
-      logger.info('Voucher comum encontrado:', user);
-
+      // Validações para voucher comum
       if (user.suspenso) {
-        return { success: false, error: 'Usuário suspenso' };
+        throw new Error('Usuário suspenso');
       }
 
       if (!user.empresas?.ativo) {
-        return { success: false, error: 'Empresa inativa' };
+        throw new Error('Empresa inativa');
       }
 
       if (!user.turnos?.ativo) {
-        return { success: false, error: 'Turno inativo' };
+        throw new Error('Turno inativo');
       }
 
-      // Aplicar regras de validação
-      const isValid = await validateCommonVoucherRules({
-        userId: user.id,
-        mealTypeId: tipoRefeicaoId,
-        shiftId: user.turno_id
-      });
+      // Validar horário do turno
+      const turnoStart = user.turnos.horario_inicio;
+      const turnoEnd = user.turnos.horario_fim;
+      
+      const isWithinShift = turnoEnd < turnoStart 
+        ? (currentTime >= turnoStart || currentTime <= turnoEnd)
+        : (currentTime >= turnoStart && currentTime <= turnoEnd);
 
-      if (!isValid) {
-        return { success: false, error: 'Validação falhou' };
+      if (!isWithinShift) {
+        throw new Error(`Fora do horário do turno (${turnoStart} - ${turnoEnd})`);
       }
 
       return {
@@ -68,29 +108,32 @@ export const validateVoucher = async (codigo: string, tipoRefeicaoId: string) =>
       };
     }
 
-    // Se não encontrado como voucher comum, tenta validar como voucher descartável
-    const { data: disposableVoucher, error: disposableError } = await supabase
+    // 5. Tentar validar como voucher descartável
+    const { data: disposableVoucher } = await supabase
       .from('vouchers_descartaveis')
       .select('*')
       .eq('codigo', codigo)
       .is('usado_em', null)
       .maybeSingle();
 
-    if (disposableError) {
-      logger.error('Erro ao buscar voucher descartável:', disposableError);
-      throw disposableError;
-    }
-
     if (disposableVoucher) {
-      return await validateDisposableVoucher(codigo, tipoRefeicaoId);
+      // Validar data de validade
+      if (new Date(disposableVoucher.data_expiracao) < new Date()) {
+        throw new Error('Voucher expirado');
+      }
+
+      return {
+        success: true,
+        voucherType: 'descartavel',
+        data: disposableVoucher
+      };
     }
 
-    // Se não encontrado como voucher comum ou descartável, tenta validar como voucher comum
-    const commonValidationResult = await validateCommonVoucher(codigo, tipoRefeicaoId);
-    return commonValidationResult;
+    throw new Error('Voucher não encontrado ou inválido');
 
   } catch (error) {
     logger.error('Erro na validação:', error);
+    toast.error(error.message || 'Erro ao validar voucher');
     return { 
       success: false, 
       error: error.message || 'Erro ao validar voucher'

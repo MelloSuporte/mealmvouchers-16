@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
-import { useVoucherValidation } from '@/hooks/useVoucherValidation';
+import { validateVoucher } from '@/services/voucher/voucherValidationService';
 import { useMealTypes } from '@/hooks/useMealTypes';
 import logger from '@/config/logger';
 
 const VoucherValidationForm = () => {
   const navigate = useNavigate();
   const [isValidating, setIsValidating] = useState(false);
-  const { validateVoucherCode } = useVoucherValidation();
   const { data: mealTypes, isLoading: isLoadingMealTypes } = useMealTypes();
 
   const getCurrentMealType = (mealTypes: any[]) => {
@@ -77,23 +76,32 @@ const VoucherValidationForm = () => {
         return;
       }
 
-      logger.info('Validando voucher com tipo de refeição:', {
-        id: currentMealType.id,
-        nome: currentMealType.nome
-      });
-
-      const isValid = await validateVoucherCode({
-        code: voucherCode,
-        mealTypeId: currentMealType.id
-      });
+      const result = await validateVoucher(voucherCode, currentMealType.id);
       
-      if (isValid) {
+      if (result.success) {
         localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
+        
+        if (result.voucherType === 'descartavel') {
+          localStorage.setItem('disposableVoucher', JSON.stringify({
+            code: voucherCode,
+            mealTypeId: currentMealType.id
+          }));
+        } else {
+          localStorage.setItem('commonVoucher', JSON.stringify({
+            code: voucherCode,
+            userName: result.user?.nome || 'Usuário',
+            turno: result.user?.turnos?.tipo_turno,
+            cpf: result.user?.cpf,
+            userId: result.user?.id,
+            mealTypeId: currentMealType.id
+          }));
+        }
+        
         navigate('/user-confirmation');
       }
     } catch (error) {
       logger.error('Erro ao validar voucher:', error);
-      toast.error("Erro ao validar o voucher");
+      toast.error(error.message || "Erro ao validar o voucher");
     } finally {
       setIsValidating(false);
     }
