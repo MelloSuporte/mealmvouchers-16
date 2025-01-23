@@ -1,38 +1,33 @@
 import { supabase } from '../../../config/supabase';
 import logger from '../../../config/logger';
 
-export const identifyVoucherType = async (codigo) => {
+export const identifyVoucherType = async (code) => {
   try {
-    logger.info('Identificando tipo de voucher:', codigo);
-    
-    // First check if it's a disposable voucher
-    const { data: disposableVoucher } = await supabase
-      .from('vouchers_descartaveis')
-      .select('*')
-      .eq('codigo', codigo)
-      .maybeSingle();
-
-    if (disposableVoucher) {
-      logger.info('Voucher identificado como descartável');
-      return 'descartavel';
-    }
-
-    // Then check if it's a common voucher
-    const { data: commonVoucher } = await supabase
+    // Verificar se é um voucher comum (usuário)
+    const { data: user } = await supabase
       .from('usuarios')
       .select('voucher')
-      .eq('voucher', codigo)
-      .maybeSingle();
+      .eq('voucher', code)
+      .single();
 
-    if (commonVoucher) {
-      logger.info('Voucher identificado como comum');
+    if (user) {
       return 'comum';
     }
 
-    logger.warn('Tipo de voucher não identificado');
+    // Verificar se é um voucher descartável
+    const { data: disposable } = await supabase
+      .from('vouchers_descartaveis')
+      .select('id')
+      .eq('codigo', code)
+      .single();
+
+    if (disposable) {
+      return 'descartavel';
+    }
+
     return null;
   } catch (error) {
-    logger.error('Erro ao identificar tipo de voucher:', error);
-    return null;
+    logger.error('Erro ao identificar tipo do voucher:', error);
+    throw error;
   }
 };
