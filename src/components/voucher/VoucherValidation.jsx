@@ -10,32 +10,16 @@ export const validateVoucher = async (voucherCode, mealTypeId) => {
       throw new Error(message);
     }
 
-    // Primeiro tenta validar como voucher descartável
-    const { data: disposableVoucher, error: disposableError } = await supabase
-      .from('vouchers_descartaveis')
-      .select('*')
-      .eq('codigo', voucherCode)
-      .is('usado_em', null)
-      .maybeSingle();
-
-    if (disposableError) {
-      logger.error('Erro ao buscar voucher descartável:', disposableError);
-      throw new Error('Erro ao validar voucher descartável');
-    }
-
-    if (disposableVoucher) {
-      return {
-        success: true,
-        voucherType: 'descartavel',
-        data: disposableVoucher
-      };
-    }
-
-    // Se não for descartável, tenta validar como voucher comum
+    // Validar apenas como voucher comum
     const { data: user, error: userError } = await supabase
       .from('usuarios')
       .select(`
         *,
+        empresas (
+          id,
+          nome,
+          ativo
+        ),
         turnos (
           id,
           tipo_turno
