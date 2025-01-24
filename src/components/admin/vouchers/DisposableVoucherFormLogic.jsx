@@ -4,6 +4,7 @@ import { supabase } from '@/config/supabase';
 import { toast } from "sonner";
 import { useMealTypes } from '@/hooks/useMealTypes';
 import { useVouchers } from '@/hooks/useVouchers';
+import { useAdmin } from '@/contexts/AdminContext';
 
 const generateUniqueCode = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
@@ -18,18 +19,18 @@ export const useDisposableVoucherFormLogic = () => {
   const queryClient = useQueryClient();
   const { data: mealTypes, isLoading } = useMealTypes();
   const { data: allVouchers } = useVouchers();
+  const { adminId } = useAdmin();
 
   const generateMutation = useMutation({
     mutationFn: async ({ mealTypeId, dataUso, personName, companyName }) => {
       const code = generateUniqueCode();
       console.log('Gerando voucher com código:', code);
       
-      const { data: adminData } = await supabase.auth.getUser();
-      const adminId = adminData?.user?.id;
-
       if (!adminId) {
         throw new Error('Administrador não identificado');
       }
+
+      console.log('Admin ID:', adminId);
       
       const { data, error } = await supabase.rpc('insert_voucher_descartavel', {
         codigo: code,
