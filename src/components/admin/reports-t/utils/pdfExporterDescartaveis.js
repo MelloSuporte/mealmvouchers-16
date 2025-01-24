@@ -46,22 +46,22 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
       return doc;
     }
 
-    // Preparar dados para a tabela
+    // Preparar dados para a tabela usando as mesmas colunas do Excel
     const tableData = metrics.map(item => [
       item.codigo || '-',
       item.nome_pessoa || '-',
       item.nome_empresa || '-',
       item.tipos_refeicao?.nome || '-',
       item.data_requisicao ? format(new Date(item.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
-      item.usado_em ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
+      item.data_uso ? format(new Date(item.data_uso), 'dd/MM/yyyy', { locale: ptBR }) : '-',
       formatCurrency(item.tipos_refeicao?.valor || 0),
-      item.usado_em ? 'Usado' : 'Disponível'
+      item.admin_users?.nome || '-'
     ]);
 
     // Configurar e gerar a tabela
     doc.autoTable({
       startY: yPos + 10,
-      head: [['Código', 'Nome', 'Empresa', 'Refeição', 'Data Requisição', 'Data Uso', 'Valor', 'Status']],
+      head: [['Código', 'Nome', 'Empresa', 'Refeição', 'Data Requisição', 'Data Uso', 'Valor', 'Solicitante']],
       body: tableData,
       theme: 'grid',
       styles: { 
@@ -83,7 +83,7 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
         4: { cellWidth: 25 },
         5: { cellWidth: 25 },
         6: { cellWidth: 20 },
-        7: { cellWidth: 15 }
+        7: { cellWidth: 25 }
       }
     });
 
