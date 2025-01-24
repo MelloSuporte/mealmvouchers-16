@@ -26,12 +26,18 @@ export const useDisposableVoucherFormLogic = () => {
       const code = generateUniqueCode();
       console.log('Gerando voucher com código:', code);
       
+      if (!adminId) {
+        throw new Error('Administrador não identificado');
+      }
+
+      console.log('Admin ID:', adminId);
+      
       const { data, error } = await supabase.rpc('insert_voucher_descartavel', {
-        p_codigo: code,
-        p_tipo_refeicao_id: mealTypeId,
-        p_data_expiracao: dataUso,
-        p_nome_pessoa: personName,
-        p_nome_empresa: companyName
+        codigo: code,
+        tipo_refeicao_id: mealTypeId,
+        data_expiracao: dataUso,
+        nome_pessoa: personName,
+        nome_empresa: companyName
       });
 
       if (error) {
