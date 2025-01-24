@@ -29,7 +29,6 @@ export const useDisposableVoucherFormLogic = () => {
         throw new Error('Administrador não identificado');
       }
 
-      console.log('Admin ID:', adminId);
       console.log('Parâmetros da chamada:', {
         codigo: code,
         tipo_refeicao_id: mealTypeId,
