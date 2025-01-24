@@ -48,10 +48,7 @@ const VoucherTable = ({ vouchers }) => {
       alternateRowStyles: {
         fillColor: [245, 245, 245]
       },
-      margin: { top: 20 },
-      didDrawPage: function (data) {
-        doc.text('Página ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
-      }
+      margin: { top: 20 }
     });
 
     doc.save('vouchers-descartaveis.pdf');
