@@ -17,7 +17,7 @@ export const exportToExcelDescartaveis = async (data) => {
       'Data Requisição': item.data_requisicao ? format(new Date(item.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       'Data Uso': item.data_uso ? format(new Date(item.data_uso), 'dd/MM/yyyy', { locale: ptBR }) : '-',
       'Valor': formatCurrency(item.tipos_refeicao?.valor || 0),
-      'Solicitante': item.nome_solicitante || '-' // Alterado para usar nome_solicitante em vez de solicitante
+      'Solicitante': item.admin_users?.nome || '-'
     })) || [];
 
     const wb = XLSX.utils.book_new();

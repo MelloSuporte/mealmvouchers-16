@@ -20,6 +20,9 @@ export const useReportsTData = (filters) => {
                 id,
                 nome,
                 valor
+              ),
+              admin_users (
+                nome
               )
             `);
 
