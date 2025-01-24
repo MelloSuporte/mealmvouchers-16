@@ -10,11 +10,14 @@ export const exportToExcelDescartaveis = async (data) => {
     
     // Mapear dados para o formato do Excel
     const excelData = data?.map(item => ({
-      'Tipo Refeição': item.tipos_refeicao?.nome || '-',
+      'Código': item.codigo || '-',
+      'Nome Pessoa': item.nome_pessoa || '-',
       'Empresa': item.nome_empresa || '-',
+      'Tipo Refeição': item.tipos_refeicao?.nome || '-',
       'Data Requisição': item.data_requisicao ? format(new Date(item.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       'Data Uso': item.usado_em ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
-      'Solicitante': item.solicitante || '-'
+      'Valor': formatCurrency(item.tipos_refeicao?.valor || 0),
+      'Status': item.usado_em ? 'Usado' : 'Disponível'
     })) || [];
 
     const wb = XLSX.utils.book_new();
@@ -22,11 +25,14 @@ export const exportToExcelDescartaveis = async (data) => {
 
     // Definir largura das colunas
     const wscols = [
-      { wch: 35 }, // Tipo Refeição
+      { wch: 15 }, // Código
+      { wch: 35 }, // Nome Pessoa
       { wch: 35 }, // Empresa
-      { wch: 35 }, // Data Requisição
-      { wch: 35 }, // Data Uso
-      { wch: 35 }  // Solicitante
+      { wch: 25 }, // Tipo Refeição
+      { wch: 20 }, // Data Requisição
+      { wch: 20 }, // Data Uso
+      { wch: 15 }, // Valor
+      { wch: 15 }  // Status
     ];
 
     ws['!cols'] = wscols;

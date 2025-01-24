@@ -10,6 +10,44 @@ export const useReportsTData = (filters) => {
       try {
         logger.info('Iniciando busca de dados com filtros:', filters);
 
+        // Se o tipo de voucher for descartável, usar a tabela vouchers_descartaveis
+        if (filters?.voucherType === 'descartavel') {
+          let query = supabase
+            .from('vouchers_descartaveis')
+            .select(`
+              *,
+              tipos_refeicao (
+                id,
+                nome,
+                valor
+              )
+            `);
+
+          // Aplicar filtros de data
+          if (filters.startDate) {
+            const startDate = new Date(filters.startDate);
+            startDate.setHours(0, 0, 0, 0);
+            query = query.gte('data_requisicao', startDate.toISOString());
+          }
+
+          if (filters.endDate) {
+            const endDate = new Date(filters.endDate);
+            endDate.setHours(23, 59, 59, 999);
+            query = query.lte('data_requisicao', endDate.toISOString());
+          }
+
+          const { data: vouchersData, error: vouchersError } = await query;
+
+          if (vouchersError) {
+            logger.error('Erro ao buscar vouchers descartáveis:', vouchersError);
+            toast.error('Erro ao carregar dados do relatório');
+            throw vouchersError;
+          }
+
+          return vouchersData || [];
+        }
+
+        // Para outros tipos de voucher, manter a lógica existente
         let query = supabase
           .from('vw_uso_voucher_detalhado')
           .select(`

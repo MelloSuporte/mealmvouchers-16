@@ -14,33 +14,23 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
 
     // Cabeçalho
     doc.setFontSize(16);
-    doc.text("Relatório Consumo de Refeições", 14, yPos);
+    doc.text("Relatório de Vouchers Descartáveis", 14, yPos);
     yPos += 10;
 
     // Informações do relatório
     doc.setFontSize(10);
-    const adminName = localStorage.getItem('adminName') || 'Usuário não identificado';
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    doc.text(`Relatório gerado por: ${adminName}`, 14, yPos);
-    yPos += 6;
-    doc.text(`Data de exportação: ${dataExportacao}`, 14, yPos);
-    yPos += 6;
+    doc.text(`Relatório gerado em ${dataExportacao}`, 14, yPos);
+    yPos += 10;
 
-    // Período
+    // Período do relatório
     if (filters?.startDate && filters?.endDate) {
       const periodo = `Período: ${format(new Date(filters.startDate), 'dd/MM/yyyy', { locale: ptBR })} a ${format(new Date(filters.endDate), 'dd/MM/yyyy', { locale: ptBR })}`;
       doc.text(periodo, 14, yPos);
-      yPos += 6;
+      yPos += 10;
     }
 
-    // Tipo de Voucher
-    doc.text("Tipo de Voucher: Descartável", 14, yPos);
-    yPos += 10;
-
     // Totalizadores
-    doc.text("Totalizadores:", 14, yPos);
-    yPos += 6;
-    
     const totalRegistros = metrics?.length || 0;
     const valorTotal = metrics?.reduce((sum, item) => sum + (Number(item.tipos_refeicao?.valor) || 0), 0) || 0;
     
@@ -58,21 +48,23 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
 
     // Preparar dados para a tabela
     const tableData = metrics.map(item => [
-      item.tipos_refeicao?.nome || '-',
+      item.codigo || '-',
       item.nome_pessoa || '-',
       item.nome_empresa || '-',
+      item.tipos_refeicao?.nome || '-',
       item.data_requisicao ? format(new Date(item.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       item.usado_em ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
-      item.solicitante || '-'
+      formatCurrency(item.tipos_refeicao?.valor || 0),
+      item.usado_em ? 'Usado' : 'Disponível'
     ]);
 
     // Configurar e gerar a tabela
     doc.autoTable({
-      startY: yPos,
-      head: [['Tipo Refeição', 'Nome', 'Empresa', 'Data Requisição', 'Data Uso', 'Solicitante']],
+      startY: yPos + 10,
+      head: [['Código', 'Nome', 'Empresa', 'Refeição', 'Data Requisição', 'Data Uso', 'Valor', 'Status']],
       body: tableData,
       theme: 'grid',
-      styles: {
+      styles: { 
         fontSize: 8,
         cellPadding: 2
       },
@@ -84,12 +76,14 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
         halign: 'center'
       },
       columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 30 }
+        0: { cellWidth: 20 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 25 },
+        6: { cellWidth: 20 },
+        7: { cellWidth: 15 }
       }
     });
 
