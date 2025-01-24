@@ -13,11 +13,11 @@ const generateUniqueCode = () => {
 };
 
 export const useDisposableVoucherFormLogic = () => {
+  const [quantity, setQuantity] = useState(1);
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
   const [personName, setPersonName] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [dataUso, setDataUso] = useState(null);
   const queryClient = useQueryClient();
   const { data: mealTypes, isLoading } = useMealTypes();
   const { data: allVouchers } = useVouchers();
@@ -31,15 +31,6 @@ export const useDisposableVoucherFormLogic = () => {
         throw new Error('Administrador não identificado');
       }
 
-      console.log('Parâmetros da chamada:', {
-        p_codigo: code,
-        p_tipo_refeicao_id: mealTypeId,
-        p_nome_pessoa: personName,
-        p_nome_empresa: companyName,
-        p_solicitante: adminId,
-        p_data_uso: dataUso
-      });
-      
       const { data, error } = await supabase.rpc('insert_voucher_descartavel', {
         p_codigo: code,
         p_tipo_refeicao_id: mealTypeId,
@@ -72,19 +63,15 @@ export const useDisposableVoucherFormLogic = () => {
   const generatePDF = (voucherData) => {
     const doc = new jsPDF();
     
-    // Adicionar cabeçalho
     doc.setFontSize(18);
     doc.text('Voucher Descartável', 105, 20, { align: 'center' });
     
-    // Adicionar informações do voucher
     doc.setFontSize(12);
     doc.text(`Código: ${voucherData.codigo}`, 20, 40);
     doc.text(`Nome: ${voucherData.nome_pessoa}`, 20, 50);
     doc.text(`Empresa: ${voucherData.nome_empresa}`, 20, 60);
     doc.text(`Data de Uso: ${new Date(voucherData.data_uso).toLocaleDateString()}`, 20, 70);
     doc.text(`Tipo de Refeição: ${voucherData.tipo_refeicao?.nome || ''}`, 20, 80);
-    
-    // Adicionar QR Code ou código de barras se necessário
     
     doc.save(`voucher-${voucherData.codigo}.pdf`);
   };
@@ -105,36 +92,31 @@ export const useDisposableVoucherFormLogic = () => {
       return;
     }
 
-    if (!dataUso) {
-      toast.error('Selecione a data de uso do voucher.');
-      return;
-    }
-
     try {
-      const voucherPromises = selectedMealTypes.map(mealTypeId =>
-        selectedDates.map(async () => {
-          const result = await generateMutation.mutateAsync({
-            mealTypeId,
-            personName,
-            companyName,
-            dataUso: dataUso.toISOString()
-          });
-
-          // Gerar PDF para cada voucher
-          if (result) {
-            generatePDF({
-              codigo: result.codigo,
-              nome_pessoa: personName,
-              nome_empresa: companyName,
-              data_uso: dataUso,
-              tipo_refeicao: mealTypes.find(mt => mt.id === mealTypeId)
+      for (const mealTypeId of selectedMealTypes) {
+        for (const date of selectedDates) {
+          for (let i = 0; i < quantity; i++) {
+            const result = await generateMutation.mutateAsync({
+              mealTypeId,
+              personName,
+              companyName,
+              dataUso: date.toISOString()
             });
-          }
-        })
-      );
 
-      await Promise.all(voucherPromises.flat());
-      toast.success(`${selectedMealTypes.length * selectedDates.length} vouchers gerados com sucesso!`);
+            if (result) {
+              generatePDF({
+                codigo: result.codigo,
+                nome_pessoa: personName,
+                nome_empresa: companyName,
+                data_uso: date,
+                tipo_refeicao: mealTypes.find(mt => mt.id === mealTypeId)
+              });
+            }
+          }
+        }
+      }
+
+      toast.success(`${selectedMealTypes.length * selectedDates.length * quantity} vouchers gerados com sucesso!`);
     } catch (error) {
       console.error('Erro ao gerar vouchers:', error);
       toast.error('Erro ao gerar vouchers: ' + (error.message || 'Erro desconhecido'));
@@ -142,6 +124,8 @@ export const useDisposableVoucherFormLogic = () => {
   };
 
   return {
+    quantity,
+    setQuantity,
     selectedMealTypes,
     selectedDates,
     setSelectedDates,
@@ -149,8 +133,6 @@ export const useDisposableVoucherFormLogic = () => {
     setPersonName,
     companyName,
     setCompanyName,
-    dataUso,
-    setDataUso,
     mealTypes,
     isLoading,
     isGenerating: generateMutation.isPending,
