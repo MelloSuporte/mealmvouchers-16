@@ -24,12 +24,13 @@ const VoucherTable = ({ vouchers }) => {
       voucher.tipos_refeicao?.nome || '',
       voucher.nome_pessoa || '-',
       voucher.nome_empresa || '-',
-      format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      format(new Date(voucher.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      voucher.data_uso ? format(new Date(voucher.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       voucher.solicitante || '-'
     ]);
 
     doc.autoTable({
-      head: [['Código', 'Tipo de Refeição', 'Nome', 'Empresa', 'Data Criação', 'Solicitante']],
+      head: [['Código', 'Tipo de Refeição', 'Nome', 'Empresa', 'Data Requisição', 'Data Uso', 'Solicitante']],
       body: tableData,
       startY: 25,
       theme: 'grid',
@@ -80,14 +81,15 @@ const VoucherTable = ({ vouchers }) => {
               <TableHead>Tipo de Refeição</TableHead>
               <TableHead>Nome</TableHead>
               <TableHead>Empresa</TableHead>
-              <TableHead>Data Criação</TableHead>
+              <TableHead>Data Requisição</TableHead>
+              <TableHead>Data Uso</TableHead>
               <TableHead>Solicitante</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {!vouchers || vouchers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   Nenhum voucher descartável ativo
                 </TableCell>
               </TableRow>
@@ -99,7 +101,10 @@ const VoucherTable = ({ vouchers }) => {
                   <TableCell>{voucher.nome_pessoa || '-'}</TableCell>
                   <TableCell>{voucher.nome_empresa || '-'}</TableCell>
                   <TableCell>
-                    {format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                    {format(new Date(voucher.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  </TableCell>
+                  <TableCell>
+                    {voucher.data_uso ? format(new Date(voucher.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-'}
                   </TableCell>
                   <TableCell>{voucher.solicitante || '-'}</TableCell>
                 </TableRow>
