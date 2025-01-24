@@ -33,18 +33,18 @@ export const useDisposableVoucherFormLogic = () => {
       console.log('Admin ID:', adminId);
       console.log('Parâmetros da chamada:', {
         codigo: code,
-        data_expiracao: dataUso,
-        nome_empresa: companyName,
+        tipo_refeicao_id: mealTypeId,
         nome_pessoa: personName,
-        tipo_refeicao_id: mealTypeId
+        nome_empresa: companyName,
+        solicitante: adminId
       });
       
       const { data, error } = await supabase.rpc('insert_voucher_descartavel', {
         codigo: code,
-        data_expiracao: dataUso,
-        nome_empresa: companyName,
+        tipo_refeicao_id: mealTypeId,
         nome_pessoa: personName,
-        tipo_refeicao_id: mealTypeId
+        nome_empresa: companyName,
+        solicitante: adminId
       });
 
       if (error) {
