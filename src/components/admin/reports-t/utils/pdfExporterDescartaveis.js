@@ -5,7 +5,7 @@ import 'jspdf-autotable';
 import logger from '@/config/logger';
 import { formatCurrency } from './formatters';
 
-export const exportToPDF = async (metrics, filters) => {
+export const exportToPDFDescartaveis = async (metrics, filters) => {
   try {
     logger.info('Iniciando geração do PDF:', { metrics, filters });
 

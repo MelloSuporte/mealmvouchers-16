@@ -25,7 +25,7 @@ const ExportTButton = ({ filters }) => {
       
       // Use different export function based on voucher type
       const doc = filters?.voucherType === 'descartavel' 
-        ? await exportToPDFDescartaveis(filters)
+        ? await exportToPDFDescartaveis(reportData, filters)
         : await exportToPDF(reportData, filters, adminUser?.nome);
       
       doc.save(`relatorio_${new Date().toISOString().split('T')[0]}.pdf`);
