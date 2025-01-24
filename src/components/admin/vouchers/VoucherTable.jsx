@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,13 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { FileDown } from "lucide-react";
 
 const VoucherTable = ({ vouchers }) => {
-  const generatePDF = () => {
+  const handleExportPDF = () => {
     const doc = new jsPDF();
-    
+    doc.setFont('helvetica');
     doc.text('Vouchers Descartáveis Ativos', 14, 15);
 
     const tableData = vouchers.map(voucher => [
@@ -25,28 +24,33 @@ const VoucherTable = ({ vouchers }) => {
       voucher.tipos_refeicao?.nome || '',
       voucher.nome_pessoa || '-',
       voucher.nome_empresa || '-',
-      format(new Date(voucher.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-      voucher.solicitante?.nome || '-'
+      format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      voucher.solicitante || '-'
     ]);
 
     doc.autoTable({
-      head: [['Código', 'Tipo de Refeição', 'Nome', 'Empresa', 'Data Requisição', 'Solicitante']],
+      head: [['Código', 'Tipo de Refeição', 'Nome', 'Empresa', 'Data Criação', 'Solicitante']],
       body: tableData,
       startY: 25,
       theme: 'grid',
-      styles: {
-        fontSize: 8,
-        cellPadding: 2,
-      },
       headStyles: {
         fillColor: [41, 128, 185],
         textColor: 255,
-        fontSize: 8,
+        fontSize: 10,
         fontStyle: 'bold',
+        halign: 'center'
+      },
+      bodyStyles: {
+        fontSize: 9,
+        halign: 'center'
       },
       alternateRowStyles: {
-        fillColor: [245, 245, 245],
+        fillColor: [245, 245, 245]
       },
+      margin: { top: 20 },
+      didDrawPage: function (data) {
+        doc.text('Página ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
+      }
     });
 
     doc.save('vouchers-descartaveis.pdf');
@@ -55,54 +59,55 @@ const VoucherTable = ({ vouchers }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Vouchers Descartáveis Ativos</h3>
+        <h2 className="text-2xl font-bold tracking-tight">Vouchers Descartáveis Ativos</h2>
         {vouchers && vouchers.length > 0 && (
           <Button
+            onClick={handleExportPDF}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
-            onClick={generatePDF}
+            className="ml-auto"
           >
-            <FileDown className="h-4 w-4" />
             Exportar PDF
           </Button>
         )}
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Código</TableHead>
-            <TableHead>Tipo de Refeição</TableHead>
-            <TableHead>Nome</TableHead>
-            <TableHead>Empresa</TableHead>
-            <TableHead>Data Requisição</TableHead>
-            <TableHead>Solicitante</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {!vouchers || vouchers.length === 0 ? (
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
-                Nenhum voucher descartável ativo
-              </TableCell>
+              <TableHead>Código</TableHead>
+              <TableHead>Tipo de Refeição</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>Empresa</TableHead>
+              <TableHead>Data Criação</TableHead>
+              <TableHead>Solicitante</TableHead>
             </TableRow>
-          ) : (
-            vouchers.map((voucher) => (
-              <TableRow key={voucher.id}>
-                <TableCell>{voucher.codigo}</TableCell>
-                <TableCell>{voucher.tipos_refeicao?.nome}</TableCell>
-                <TableCell>{voucher.nome_pessoa || '-'}</TableCell>
-                <TableCell>{voucher.nome_empresa || '-'}</TableCell>
-                <TableCell>
-                  {format(new Date(voucher.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+          </TableHeader>
+          <TableBody>
+            {!vouchers || vouchers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  Nenhum voucher descartável ativo
                 </TableCell>
-                <TableCell>{voucher.solicitante?.nome || '-'}</TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              vouchers.map((voucher) => (
+                <TableRow key={voucher.id}>
+                  <TableCell>{voucher.codigo}</TableCell>
+                  <TableCell>{voucher.tipos_refeicao?.nome}</TableCell>
+                  <TableCell>{voucher.nome_pessoa || '-'}</TableCell>
+                  <TableCell>{voucher.nome_empresa || '-'}</TableCell>
+                  <TableCell>
+                    {format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  </TableCell>
+                  <TableCell>{voucher.solicitante || '-'}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
