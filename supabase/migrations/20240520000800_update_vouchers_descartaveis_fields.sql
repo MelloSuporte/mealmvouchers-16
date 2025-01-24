@@ -12,7 +12,8 @@ CREATE OR REPLACE FUNCTION insert_voucher_descartavel(
     p_tipo_refeicao_id UUID,
     p_data_requisicao TIMESTAMP WITH TIME ZONE,
     p_nome_pessoa VARCHAR,
-    p_nome_empresa VARCHAR
+    p_nome_empresa VARCHAR,
+    p_solicitante UUID
 )
 RETURNS UUID
 SECURITY DEFINER
@@ -44,23 +45,25 @@ BEGIN
     /* Inserir o voucher usando os nomes corretos das colunas */
     INSERT INTO vouchers_descartaveis (
         id,
-        tipo_refeicao_id,
         codigo,
+        tipo_refeicao_id,
         data_requisicao,
-        usado_em,
         data_criacao,
         nome_pessoa,
-        nome_empresa
+        nome_empresa,
+        solicitante,
+        usado_em
     )
     VALUES (
         gen_random_uuid(),
-        p_tipo_refeicao_id,
         p_codigo,
+        p_tipo_refeicao_id,
         p_data_requisicao,
-        NULL,
         CURRENT_TIMESTAMP,
         p_nome_pessoa,
-        p_nome_empresa
+        p_nome_empresa,
+        p_solicitante,
+        NULL
     )
     RETURNING id INTO v_id;
 
