@@ -19,6 +19,10 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
 
     // Informações do relatório
     doc.setFontSize(10);
+    const adminName = localStorage.getItem('adminName') || 'Administrador';
+    doc.text(`Relatório gerado por ${adminName}`, 14, yPos);
+    yPos += 6;
+
     const dataExportacao = format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
     doc.text(`Relatório gerado em ${dataExportacao}`, 14, yPos);
     yPos += 10;
