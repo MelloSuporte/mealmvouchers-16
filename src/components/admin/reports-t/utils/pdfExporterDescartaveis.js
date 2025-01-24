@@ -60,7 +60,7 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
     const tableData = metrics.map(item => [
       item.tipos_refeicao?.nome || '-',
       item.nome_empresa || '-',
-      format(new Date(item.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      item.data_requisicao ? format(new Date(item.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       item.usado_em ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       item.solicitante || '-'
     ]);
