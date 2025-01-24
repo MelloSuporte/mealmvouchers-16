@@ -1,12 +1,14 @@
 -- Drop existing function if it exists
 DROP FUNCTION IF EXISTS insert_voucher_descartavel;
 
--- Create updated function without data_expiracao
+-- Create updated function with solicitante and data_uso
 CREATE OR REPLACE FUNCTION public.insert_voucher_descartavel(
     p_codigo TEXT,
     p_tipo_refeicao_id UUID,
     p_nome_pessoa TEXT,
-    p_nome_empresa TEXT
+    p_nome_empresa TEXT,
+    p_solicitante UUID,
+    p_data_uso TIMESTAMP WITH TIME ZONE
 )
 RETURNS UUID AS
 $$
@@ -40,7 +42,9 @@ BEGIN
         usado_em,
         data_criacao,
         nome_pessoa,
-        nome_empresa
+        nome_empresa,
+        solicitante,
+        data_uso
     )
     VALUES (
         gen_random_uuid(),
@@ -49,7 +53,9 @@ BEGIN
         NULL,
         CURRENT_TIMESTAMP,
         p_nome_pessoa,
-        p_nome_empresa
+        p_nome_empresa,
+        p_solicitante,
+        p_data_uso
     )
     RETURNING id INTO v_id;
 
@@ -62,4 +68,4 @@ REVOKE ALL ON FUNCTION insert_voucher_descartavel FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION insert_voucher_descartavel TO authenticated;
 
 -- Add comment
-COMMENT ON FUNCTION insert_voucher_descartavel IS 'Insere um novo voucher descartável com nome da pessoa e empresa';
+COMMENT ON FUNCTION insert_voucher_descartavel IS 'Insere um novo voucher descartável com nome da pessoa, empresa, solicitante e data de uso';

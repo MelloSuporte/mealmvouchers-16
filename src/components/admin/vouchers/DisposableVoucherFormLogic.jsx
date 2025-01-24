@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { useMealTypes } from '@/hooks/useMealTypes';
 import { useVouchers } from '@/hooks/useVouchers';
 import { useAdmin } from '@/contexts/AdminContext';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const generateUniqueCode = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
@@ -15,13 +17,14 @@ export const useDisposableVoucherFormLogic = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [personName, setPersonName] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [dataUso, setDataUso] = useState(null);
   const queryClient = useQueryClient();
   const { data: mealTypes, isLoading } = useMealTypes();
   const { data: allVouchers } = useVouchers();
   const { adminId } = useAdmin();
 
   const generateMutation = useMutation({
-    mutationFn: async ({ mealTypeId, personName, companyName }) => {
+    mutationFn: async ({ mealTypeId, personName, companyName, dataUso }) => {
       const code = generateUniqueCode();
       
       if (!adminId) {
@@ -32,14 +35,18 @@ export const useDisposableVoucherFormLogic = () => {
         p_codigo: code,
         p_tipo_refeicao_id: mealTypeId,
         p_nome_pessoa: personName,
-        p_nome_empresa: companyName
+        p_nome_empresa: companyName,
+        p_solicitante: adminId,
+        p_data_uso: dataUso
       });
       
       const { data, error } = await supabase.rpc('insert_voucher_descartavel', {
         p_codigo: code,
         p_tipo_refeicao_id: mealTypeId,
         p_nome_pessoa: personName,
-        p_nome_empresa: companyName
+        p_nome_empresa: companyName,
+        p_solicitante: adminId,
+        p_data_uso: dataUso
       });
 
       if (error) {
@@ -62,6 +69,26 @@ export const useDisposableVoucherFormLogic = () => {
     );
   };
 
+  const generatePDF = (voucherData) => {
+    const doc = new jsPDF();
+    
+    // Adicionar cabeçalho
+    doc.setFontSize(18);
+    doc.text('Voucher Descartável', 105, 20, { align: 'center' });
+    
+    // Adicionar informações do voucher
+    doc.setFontSize(12);
+    doc.text(`Código: ${voucherData.codigo}`, 20, 40);
+    doc.text(`Nome: ${voucherData.nome_pessoa}`, 20, 50);
+    doc.text(`Empresa: ${voucherData.nome_empresa}`, 20, 60);
+    doc.text(`Data de Uso: ${new Date(voucherData.data_uso).toLocaleDateString()}`, 20, 70);
+    doc.text(`Tipo de Refeição: ${voucherData.tipo_refeicao?.nome || ''}`, 20, 80);
+    
+    // Adicionar QR Code ou código de barras se necessário
+    
+    doc.save(`voucher-${voucherData.codigo}.pdf`);
+  };
+
   const handleGenerateVouchers = async () => {
     if (!personName || !companyName) {
       toast.error('Nome da pessoa e nome da empresa são obrigatórios.');
@@ -78,14 +105,31 @@ export const useDisposableVoucherFormLogic = () => {
       return;
     }
 
+    if (!dataUso) {
+      toast.error('Selecione a data de uso do voucher.');
+      return;
+    }
+
     try {
       const voucherPromises = selectedMealTypes.map(mealTypeId =>
         selectedDates.map(async () => {
-          await generateMutation.mutateAsync({
+          const result = await generateMutation.mutateAsync({
             mealTypeId,
             personName,
-            companyName
+            companyName,
+            dataUso: dataUso.toISOString()
           });
+
+          // Gerar PDF para cada voucher
+          if (result) {
+            generatePDF({
+              codigo: result.codigo,
+              nome_pessoa: personName,
+              nome_empresa: companyName,
+              data_uso: dataUso,
+              tipo_refeicao: mealTypes.find(mt => mt.id === mealTypeId)
+            });
+          }
         })
       );
 
@@ -105,6 +149,8 @@ export const useDisposableVoucherFormLogic = () => {
     setPersonName,
     companyName,
     setCompanyName,
+    dataUso,
+    setDataUso,
     mealTypes,
     isLoading,
     isGenerating: generateMutation.isPending,
