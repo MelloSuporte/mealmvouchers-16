@@ -59,6 +59,7 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
     // Preparar dados para a tabela
     const tableData = metrics.map(item => [
       item.tipos_refeicao?.nome || '-',
+      item.nome_pessoa || '-',
       item.nome_empresa || '-',
       item.data_requisicao ? format(new Date(item.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       item.usado_em ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
@@ -68,7 +69,7 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
     // Configurar e gerar a tabela
     doc.autoTable({
       startY: yPos,
-      head: [['Tipo Refeição', 'Empresa', 'Data Requisição', 'Data Uso', 'Solicitante']],
+      head: [['Tipo Refeição', 'Nome', 'Empresa', 'Data Requisição', 'Data Uso', 'Solicitante']],
       body: tableData,
       theme: 'grid',
       styles: {
@@ -83,11 +84,12 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
         halign: 'center'
       },
       columnStyles: {
-        0: { cellWidth: 35 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 35 },
-        4: { cellWidth: 35 }
+        0: { cellWidth: 30 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 30 },
+        5: { cellWidth: 30 }
       }
     });
 
