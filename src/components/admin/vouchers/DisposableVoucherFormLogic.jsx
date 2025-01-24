@@ -20,7 +20,7 @@ export const useDisposableVoucherFormLogic = () => {
   const { data: allVouchers } = useVouchers();
 
   const generateMutation = useMutation({
-    mutationFn: async ({ mealTypeId, requestDate, personName, companyName }) => {
+    mutationFn: async ({ mealTypeId, dataUso, personName, companyName }) => {
       const code = generateUniqueCode();
       console.log('Gerando voucher com código:', code);
       
@@ -32,12 +32,11 @@ export const useDisposableVoucherFormLogic = () => {
       }
       
       const { data, error } = await supabase.rpc('insert_voucher_descartavel', {
-        p_codigo: code,
-        p_tipo_refeicao_id: mealTypeId,
-        p_data_requisicao: requestDate.toISOString(),
-        p_nome_pessoa: personName,
-        p_nome_empresa: companyName,
-        p_solicitante: adminId
+        codigo: code,
+        tipo_refeicao_id: mealTypeId,
+        nome_pessoa: personName,
+        nome_empresa: companyName,
+        solicitante: adminId
       });
 
       if (error) {
@@ -77,7 +76,7 @@ export const useDisposableVoucherFormLogic = () => {
           for (let i = 0; i < quantity; i++) {
             await generateMutation.mutateAsync({
               mealTypeId,
-              requestDate: date,
+              dataUso: date,
               personName,
               companyName
             });

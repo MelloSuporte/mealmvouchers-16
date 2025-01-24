@@ -27,7 +27,7 @@ const DisposableVoucherForm = () => {
     handleGenerateVouchers
   } = useDisposableVoucherFormLogic();
 
-  console.log('Todos os vouchers:', allVouchers); // Debug log
+  console.log('Todos os vouchers:', allVouchers);
 
   if (isLoading) {
     return <div className="text-sm text-gray-500">Carregando tipos de refeição...</div>;
@@ -87,7 +87,7 @@ const DisposableVoucherForm = () => {
 
             <div className="space-y-2">
               <label className="text-xs font-medium text-gray-700 block">
-                Datas de Expiração
+                Data para Uso
               </label>
               <div className="border rounded-lg p-2 bg-white">
                 <Calendar

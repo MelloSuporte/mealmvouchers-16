@@ -43,6 +43,7 @@ BEGIN
         tipo_refeicao_id,
         data_criacao,
         data_requisicao,
+        data_uso,
         nome_pessoa,
         nome_empresa,
         solicitante
@@ -53,6 +54,7 @@ BEGIN
         tipo_refeicao_id,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP,
+        NULL,
         nome_pessoa,
         nome_empresa,
         solicitante
