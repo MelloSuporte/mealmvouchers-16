@@ -25,12 +25,11 @@ const VoucherTable = ({ vouchers = [] }) => {
         voucher.tipos_refeicao?.nome || '',
         format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
         voucher.nome_pessoa || '-',
-        voucher.nome_empresa || '-',
-        format(new Date(voucher.data_expiracao), 'dd/MM/yyyy HH:mm', { locale: ptBR })
+        voucher.nome_empresa || '-'
       ]);
 
       doc.autoTable({
-        head: [['Código', 'Tipo de Refeição', 'Data Criação', 'Nome', 'Empresa', 'Data Expiração']],
+        head: [['Código', 'Tipo de Refeição', 'Data Criação', 'Nome', 'Empresa']],
         body: tableData,
         startY: 25,
         theme: 'grid',
@@ -82,13 +81,12 @@ const VoucherTable = ({ vouchers = [] }) => {
               <TableHead>Data Criação</TableHead>
               <TableHead>Nome</TableHead>
               <TableHead>Empresa</TableHead>
-              <TableHead>Data Expiração</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {!vouchers || vouchers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
                   Nenhum voucher descartável ativo
                 </TableCell>
               </TableRow>
@@ -102,9 +100,6 @@ const VoucherTable = ({ vouchers = [] }) => {
                   </TableCell>
                   <TableCell>{voucher.nome_pessoa || '-'}</TableCell>
                   <TableCell>{voucher.nome_empresa || '-'}</TableCell>
-                  <TableCell>
-                    {format(new Date(voucher.data_expiracao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                  </TableCell>
                 </TableRow>
               ))
             )}
