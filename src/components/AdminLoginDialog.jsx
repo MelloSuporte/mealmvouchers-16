@@ -38,8 +38,8 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         localStorage.setItem('adminLoginTime', Date.now().toString());
         
         onClose();
-        navigate('/admin');
         toast.success("Login realizado com sucesso!");
+        navigate('/admin', { replace: true });
         return;
       }
 
@@ -58,6 +58,7 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         logger.error('Erro ao buscar admin:', { error, details: error.details });
         console.error('Detalhes completos do erro:', error);
         toast.error("Email ou senha incorretos");
+        setIsSubmitting(false);
         return;
       }
 
@@ -87,8 +88,8 @@ const AdminLoginDialog = ({ isOpen, onClose }) => {
         });
         
         onClose();
-        navigate('/admin');
         toast.success("Login realizado com sucesso!");
+        navigate('/admin', { replace: true });
       } else {
         logger.warn('Nenhum admin encontrado com as credenciais fornecidas');
         toast.error("Email ou senha incorretos");
