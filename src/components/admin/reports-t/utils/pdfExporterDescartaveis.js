@@ -62,7 +62,7 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
       item.admin_users?.nome || '-'
     ]);
 
-    // Configurar e gerar a tabela
+    // Configurar e gerar a tabela com tamanhos ajustados
     doc.autoTable({
       startY: yPos + 10,
       head: [['Código', 'Nome', 'Empresa', 'Refeição', 'Data Requisição', 'Data Uso', 'Valor', 'Solicitante']],
@@ -70,7 +70,7 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
       theme: 'grid',
       styles: { 
         fontSize: 8,
-        cellPadding: 2
+        cellPadding: 1
       },
       headStyles: {
         fillColor: [51, 51, 51],
@@ -80,14 +80,14 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
         halign: 'center'
       },
       columnStyles: {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 25 },
-        5: { cellWidth: 25 },
-        6: { cellWidth: 20 },
-        7: { cellWidth: 25 }
+        0: { cellWidth: 15 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 22 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 15 },
+        7: { cellWidth: 20 }
       }
     });
 
