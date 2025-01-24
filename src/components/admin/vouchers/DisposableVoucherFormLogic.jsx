@@ -11,7 +11,6 @@ const generateUniqueCode = () => {
 };
 
 export const useDisposableVoucherFormLogic = () => {
-  const [quantity, setQuantity] = useState(1);
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
   const [personName, setPersonName] = useState('');
@@ -81,13 +80,11 @@ export const useDisposableVoucherFormLogic = () => {
     try {
       for (const mealTypeId of selectedMealTypes) {
         for (const date of selectedDates) {
-          for (let i = 0; i < quantity; i++) {
-            await generateMutation.mutateAsync({
-              mealTypeId,
-              personName,
-              companyName
-            });
-          }
+          await generateMutation.mutateAsync({
+            mealTypeId,
+            personName,
+            companyName
+          });
         }
       }
     } catch (error) {
@@ -97,8 +94,6 @@ export const useDisposableVoucherFormLogic = () => {
   };
 
   return {
-    quantity,
-    setQuantity,
     selectedMealTypes,
     selectedDates,
     setSelectedDates,
