@@ -23,7 +23,6 @@ export const useDisposableVoucherFormLogic = () => {
   const generateMutation = useMutation({
     mutationFn: async ({ mealTypeId, personName, companyName }) => {
       const code = generateUniqueCode();
-      console.log('Gerando voucher com código:', code);
       
       if (!adminId) {
         throw new Error('Administrador não identificado');
@@ -54,11 +53,6 @@ export const useDisposableVoucherFormLogic = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vouchers-descartaveis'] });
-      toast.success('Vouchers gerados com sucesso!');
-    },
-    onError: (error) => {
-      console.error('Erro ao gerar vouchers:', error);
-      toast.error('Erro ao gerar vouchers: ' + error.message);
     }
   });
 
@@ -72,23 +66,36 @@ export const useDisposableVoucherFormLogic = () => {
 
   const handleGenerateVouchers = async () => {
     if (!personName || !companyName) {
-      toast.error('Nome da pessoa e empresa são obrigatórios');
+      toast.error('Nome da pessoa e nome da empresa são obrigatórios.');
+      return;
+    }
+
+    if (!selectedMealTypes.length) {
+      toast.error('Selecione pelo menos um tipo de refeição.');
+      return;
+    }
+
+    if (!selectedDates.length) {
+      toast.error('Selecione pelo menos uma data.');
       return;
     }
 
     try {
-      for (const mealTypeId of selectedMealTypes) {
-        for (const date of selectedDates) {
+      const voucherPromises = selectedMealTypes.map(mealTypeId =>
+        selectedDates.map(async (date) => {
           await generateMutation.mutateAsync({
             mealTypeId,
             personName,
             companyName
           });
-        }
-      }
+        })
+      );
+
+      await Promise.all(voucherPromises.flat());
+      toast.success(`${selectedMealTypes.length * selectedDates.length} vouchers gerados com sucesso!`);
     } catch (error) {
       console.error('Erro ao gerar vouchers:', error);
-      toast.error('Erro ao gerar vouchers: ' + error.message);
+      toast.error('Erro ao gerar vouchers: ' + (error.message || 'Erro desconhecido'));
     }
   };
 
