@@ -16,7 +16,6 @@ export const exportToExcelDescartaveis = async (data) => {
       'Tipo Refeição': item.tipos_refeicao?.nome || '-',
       'Data Requisição': item.data_requisicao ? format(new Date(item.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       'Data Uso': item.data_uso ? format(new Date(item.data_uso), 'dd/MM/yyyy', { locale: ptBR }) : '-',
-      'Usado Em': item.usado_em ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       'Valor': formatCurrency(item.tipos_refeicao?.valor || 0),
       'Solicitante': item.solicitante || '-'
     })) || [];
@@ -32,7 +31,6 @@ export const exportToExcelDescartaveis = async (data) => {
       { wch: 25 }, // Tipo Refeição
       { wch: 20 }, // Data Requisição
       { wch: 20 }, // Data Uso
-      { wch: 20 }, // Usado Em
       { wch: 15 }, // Valor
       { wch: 35 }  // Solicitante
     ];
