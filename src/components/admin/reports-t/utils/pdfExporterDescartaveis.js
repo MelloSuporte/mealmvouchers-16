@@ -84,7 +84,7 @@ export const exportToPDFDescartaveis = async (metrics, filters) => {
         halign: 'center'
       },
       columnStyles: {
-        0: { cellWidth: 30 },
+        0: { cellWidth: 25 },
         1: { cellWidth: 30 },
         2: { cellWidth: 30 },
         3: { cellWidth: 30 },
