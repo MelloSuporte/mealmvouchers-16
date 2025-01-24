@@ -23,7 +23,6 @@ const VoucherTable = ({ vouchers }) => {
     const tableData = vouchers.map(voucher => [
       voucher.codigo,
       voucher.tipos_refeicao?.nome || '',
-      format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
       voucher.nome_pessoa || '-',
       voucher.nome_empresa || '-',
       format(new Date(voucher.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
@@ -31,7 +30,7 @@ const VoucherTable = ({ vouchers }) => {
     ]);
 
     doc.autoTable({
-      head: [['Código', 'Tipo de Refeição', 'Data Criação', 'Nome', 'Empresa', 'Data Requisição', 'Solicitante']],
+      head: [['Código', 'Tipo de Refeição', 'Nome', 'Empresa', 'Data Requisição', 'Solicitante']],
       body: tableData,
       startY: 25,
       theme: 'grid',
@@ -75,7 +74,6 @@ const VoucherTable = ({ vouchers }) => {
           <TableRow>
             <TableHead>Código</TableHead>
             <TableHead>Tipo de Refeição</TableHead>
-            <TableHead>Data Criação</TableHead>
             <TableHead>Nome</TableHead>
             <TableHead>Empresa</TableHead>
             <TableHead>Data Requisição</TableHead>
@@ -85,7 +83,7 @@ const VoucherTable = ({ vouchers }) => {
         <TableBody>
           {!vouchers || vouchers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
                 Nenhum voucher descartável ativo
               </TableCell>
             </TableRow>
@@ -94,9 +92,6 @@ const VoucherTable = ({ vouchers }) => {
               <TableRow key={voucher.id}>
                 <TableCell>{voucher.codigo}</TableCell>
                 <TableCell>{voucher.tipos_refeicao?.nome}</TableCell>
-                <TableCell>
-                  {format(new Date(voucher.data_criacao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                </TableCell>
                 <TableCell>{voucher.nome_pessoa || '-'}</TableCell>
                 <TableCell>{voucher.nome_empresa || '-'}</TableCell>
                 <TableCell>
