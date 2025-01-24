@@ -10,7 +10,7 @@ DROP FUNCTION IF EXISTS insert_voucher_descartavel;
 CREATE OR REPLACE FUNCTION insert_voucher_descartavel(
     p_codigo VARCHAR,
     p_tipo_refeicao_id UUID,
-    p_data_expiracao DATE,
+    p_data_requisicao DATE,
     p_nome_pessoa VARCHAR,
     p_nome_empresa VARCHAR
 )
@@ -41,17 +41,12 @@ BEGIN
         RAISE EXCEPTION 'Código de voucher já existe';
     END IF;
 
-    /* Verificar se a data de expiração é válida */
-    IF p_data_expiracao < CURRENT_DATE THEN
-        RAISE EXCEPTION 'Data de expiração deve ser futura';
-    END IF;
-
     /* Inserir o voucher usando os nomes corretos das colunas */
     INSERT INTO vouchers_descartaveis (
         id,
         tipo_refeicao_id,
         codigo,
-        data_expiracao,
+        data_requisicao,
         usado_em,
         data_criacao,
         nome_pessoa,
@@ -61,7 +56,7 @@ BEGIN
         gen_random_uuid(),
         p_tipo_refeicao_id,
         p_codigo,
-        p_data_expiracao,
+        p_data_requisicao,
         NULL,
         CURRENT_TIMESTAMP,
         p_nome_pessoa,
