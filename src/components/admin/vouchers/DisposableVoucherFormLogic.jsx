@@ -21,7 +21,7 @@ export const useDisposableVoucherFormLogic = () => {
   const { adminId } = useAdmin();
 
   const generateMutation = useMutation({
-    mutationFn: async ({ mealTypeId, personName, companyName, date }) => {
+    mutationFn: async ({ mealTypeId, personName, companyName }) => {
       const code = generateUniqueCode();
       
       if (!adminId) {
@@ -31,7 +31,6 @@ export const useDisposableVoucherFormLogic = () => {
       console.log('Parâmetros da chamada:', {
         p_codigo: code,
         p_tipo_refeicao_id: mealTypeId,
-        p_data_expiracao: date.toISOString().split('T')[0],
         p_nome_pessoa: personName,
         p_nome_empresa: companyName
       });
@@ -39,7 +38,6 @@ export const useDisposableVoucherFormLogic = () => {
       const { data, error } = await supabase.rpc('insert_voucher_descartavel', {
         p_codigo: code,
         p_tipo_refeicao_id: mealTypeId,
-        p_data_expiracao: date.toISOString().split('T')[0],
         p_nome_pessoa: personName,
         p_nome_empresa: companyName
       });
@@ -82,12 +80,11 @@ export const useDisposableVoucherFormLogic = () => {
 
     try {
       const voucherPromises = selectedMealTypes.map(mealTypeId =>
-        selectedDates.map(async (date) => {
+        selectedDates.map(async () => {
           await generateMutation.mutateAsync({
             mealTypeId,
             personName,
-            companyName,
-            date
+            companyName
           });
         })
       );
