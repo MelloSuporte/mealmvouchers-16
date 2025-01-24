@@ -1,62 +1,20 @@
 import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import logger from '@/config/logger';
-import { formatCurrency, formatDate } from './formatters';
-import { supabase } from '@/config/supabase';
+import { formatCurrency } from './formatters';
 
-export const exportToExcelDescartaveis = async (filters) => {
+export const exportToExcelDescartaveis = async (data) => {
   try {
-    logger.info('Iniciando exportação Excel de vouchers descartáveis...', filters);
-
-    // Ajustar as datas para considerar o dia inteiro
-    const startDate = filters?.startDate ? new Date(filters.startDate) : null;
-    const endDate = filters?.endDate ? new Date(filters.endDate) : null;
-
-    if (startDate) {
-      startDate.setHours(0, 0, 0, 0);
-    }
+    logger.info('Iniciando exportação Excel de vouchers descartáveis:', data?.length || 0, 'registros');
     
-    if (endDate) {
-      endDate.setHours(23, 59, 59, 999);
-    }
-
-    // Buscar dados com as datas ajustadas
-    let query = supabase
-      .from('vouchers_descartaveis')
-      .select(`
-        id,
-        usado_em,
-        nome_pessoa,
-        nome_empresa,
-        tipos_refeicao (
-          id,
-          nome,
-          valor
-        )
-      `)
-      .order('usado_em', { ascending: false });
-
-    if (startDate) {
-      query = query.gte('usado_em', startDate.toISOString());
-    }
-
-    if (endDate) {
-      query = query.lte('usado_em', endDate.toISOString());
-    }
-
-    const { data: vouchers, error } = await query;
-
-    if (error) {
-      logger.error('Erro ao buscar vouchers:', error);
-      throw error;
-    }
-
     // Mapear dados para o formato do Excel
-    const excelData = vouchers?.map(item => ({
-      'Data/Hora': formatDate(item.usado_em),
-      'Pessoa': item.nome_pessoa || '-',
-      'Refeição': item.tipos_refeicao?.nome || '-',
-      'Valor': formatCurrency(item.tipos_refeicao?.valor || 0),
-      'Empresa': item.nome_empresa || '-'
+    const excelData = data?.map(item => ({
+      'Tipo Refeição': item.tipos_refeicao?.nome || '-',
+      'Empresa': item.nome_empresa || '-',
+      'Data Requisição': item.data_requisicao ? format(new Date(item.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
+      'Data Uso': item.usado_em ? format(new Date(item.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
+      'Solicitante': item.solicitante || '-'
     })) || [];
 
     const wb = XLSX.utils.book_new();
@@ -64,11 +22,11 @@ export const exportToExcelDescartaveis = async (filters) => {
 
     // Definir largura das colunas
     const wscols = [
-      { wch: 25 }, // Data/Hora
-      { wch: 35 }, // Pessoa
-      { wch: 25 }, // Refeição
-      { wch: 20 }, // Valor
-      { wch: 30 }  // Empresa
+      { wch: 35 }, // Tipo Refeição
+      { wch: 35 }, // Empresa
+      { wch: 35 }, // Data Requisição
+      { wch: 35 }, // Data Uso
+      { wch: 35 }  // Solicitante
     ];
 
     ws['!cols'] = wscols;

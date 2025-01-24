@@ -44,7 +44,7 @@ const ExportTButton = ({ filters }) => {
       
       // Use different export function based on voucher type
       if (filters?.voucherType === 'descartavel') {
-        const result = await exportToExcelDescartaveis(filters);
+        const result = await exportToExcelDescartaveis(reportData);
         wb = result.wb;
         ws = result.ws;
       } else {
