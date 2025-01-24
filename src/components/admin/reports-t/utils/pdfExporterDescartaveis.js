@@ -4,56 +4,11 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import logger from '@/config/logger';
 import { formatCurrency } from './formatters';
-import { supabase } from '@/config/supabase';
 
-export const exportToPDFDescartaveis = async (filters) => {
+export const exportToPDF = async (metrics, filters) => {
   try {
-    logger.info('Iniciando exportação PDF de vouchers descartáveis...', filters);
+    logger.info('Iniciando geração do PDF:', { metrics, filters });
 
-    // Buscar dados dos vouchers descartáveis
-    let query = supabase
-      .from('vouchers_descartaveis')
-      .select(`
-        id,
-        usado_em,
-        nome_pessoa,
-        nome_empresa,
-        tipos_refeicao (
-          id,
-          nome,
-          valor
-        )
-      `)
-      .not('usado_em', 'is', null); // Apenas vouchers utilizados
-
-    // Aplicar filtro de tipo de refeição se especificado
-    if (filters?.mealType && filters.mealType !== 'all') {
-      query = query.eq('tipo_refeicao_id', filters.mealType);
-    }
-
-    // Aplicar filtros de data - Agora usando toISOString() para formato correto
-    if (filters?.startDate) {
-      const startDate = new Date(filters.startDate);
-      query = query.gte('usado_em', startDate.toISOString());
-    }
-    if (filters?.endDate) {
-      const endDate = new Date(filters.endDate);
-      query = query.lte('usado_em', endDate.toISOString());
-    }
-
-    const { data: vouchers, error } = await query;
-
-    if (error) {
-      logger.error('Erro ao buscar vouchers:', error);
-      throw error;
-    }
-
-    // Calcular totalizadores
-    const totalRegistros = vouchers?.length || 0;
-    const valorTotal = vouchers?.reduce((acc, voucher) => 
-      acc + (voucher.tipos_refeicao?.valor || 0), 0);
-
-    // Criar PDF
     const doc = new jsPDF();
     let yPos = 15;
 
@@ -87,18 +42,18 @@ export const exportToPDFDescartaveis = async (filters) => {
     // Totalizadores
     doc.text("Totalizadores:", 14, yPos);
     yPos += 5;
-    doc.text(`Total de Registros: ${totalRegistros}`, 14, yPos);
+    doc.text(`Total de Registros: ${metrics?.data?.length || 0}`, 14, yPos);
     yPos += 5;
-    doc.text(`Valor Total: ${formatCurrency(valorTotal)}`, 14, yPos);
+    doc.text(`Valor Total: ${formatCurrency(metrics?.totalCost || 0)}`, 14, yPos);
     yPos += 15;
 
-    if (!vouchers || vouchers.length === 0) {
+    if (!metrics?.data || metrics.data.length === 0) {
       doc.text("Nenhum registro encontrado para o período selecionado.", 14, yPos);
       return doc;
     }
 
     // Tabela de Vouchers
-    const tableData = vouchers.map(voucher => [
+    const tableData = metrics.data.map(voucher => [
       voucher.usado_em ? format(new Date(voucher.usado_em), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-',
       voucher.nome_pessoa || '-',
       voucher.nome_empresa || '-',
