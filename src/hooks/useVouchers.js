@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/config/supabase';
 import logger from '@/config/logger';
 
@@ -20,7 +19,7 @@ export const useVouchers = () => {
             usado_em,
             nome_pessoa,
             nome_empresa,
-            solicitante,
+            solicitante:admin_users(nome),
             tipos_refeicao (
               id,
               nome,
@@ -38,8 +37,14 @@ export const useVouchers = () => {
           throw error;
         }
 
-        logger.info('Vouchers recebidos:', data);
-        return data || [];
+        // Map the data to get the solicitante name from the joined admin_users table
+        const mappedData = data?.map(voucher => ({
+          ...voucher,
+          solicitante: voucher.solicitante?.nome || '-'
+        }));
+
+        logger.info('Vouchers recebidos:', mappedData);
+        return mappedData || [];
       } catch (error) {
         logger.error('Erro ao buscar vouchers:', error);
         throw error;
