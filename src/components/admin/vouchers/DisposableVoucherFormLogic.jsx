@@ -22,7 +22,7 @@ export const useDisposableVoucherFormLogic = () => {
   const { adminId } = useAdmin();
 
   const generateMutation = useMutation({
-    mutationFn: async ({ mealTypeId, dataUso, personName, companyName }) => {
+    mutationFn: async ({ mealTypeId, personName, companyName }) => {
       const code = generateUniqueCode();
       console.log('Gerando voucher com código:', code);
       
@@ -84,7 +84,6 @@ export const useDisposableVoucherFormLogic = () => {
           for (let i = 0; i < quantity; i++) {
             await generateMutation.mutateAsync({
               mealTypeId,
-              dataUso: date,
               personName,
               companyName
             });
