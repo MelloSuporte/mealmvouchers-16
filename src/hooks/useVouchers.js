@@ -9,18 +9,18 @@ export const useVouchers = () => {
       try {
         logger.info('[INFO] Iniciando busca de vouchers descartáveis...');
         
-        const currentDate = new Date().toISOString().split('T')[0];
-        
         const { data, error } = await supabase
           .from('vouchers_descartaveis')
           .select(`
             id,
             codigo,
             tipo_refeicao_id,
-            data_expiracao,
-            usado_em,
             data_uso,
-            data_criacao,
+            data_requisicao,
+            usado_em,
+            nome_pessoa,
+            nome_empresa,
+            solicitante,
             tipos_refeicao (
               id,
               nome,
@@ -31,8 +31,7 @@ export const useVouchers = () => {
             )
           `)
           .is('usado_em', null)
-          .gte('data_expiracao', currentDate)
-          .order('data_criacao', { ascending: false });
+          .order('data_requisicao', { ascending: false });
 
         if (error) {
           logger.error('Erro ao buscar vouchers:', error);

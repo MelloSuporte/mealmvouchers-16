@@ -48,7 +48,10 @@ const VoucherTable = ({ vouchers }) => {
       alternateRowStyles: {
         fillColor: [245, 245, 245]
       },
-      margin: { top: 20 }
+      margin: { top: 20 },
+      didDrawPage: function(data) {
+        doc.text('Página ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
+      }
     });
 
     doc.save('vouchers-descartaveis.pdf');
@@ -98,10 +101,14 @@ const VoucherTable = ({ vouchers }) => {
                   <TableCell>{voucher.nome_pessoa || '-'}</TableCell>
                   <TableCell>{voucher.nome_empresa || '-'}</TableCell>
                   <TableCell>
-                    {format(new Date(voucher.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                    {voucher.data_requisicao ? 
+                      format(new Date(voucher.data_requisicao), 'dd/MM/yyyy HH:mm', { locale: ptBR }) 
+                      : '-'}
                   </TableCell>
                   <TableCell>
-                    {voucher.data_uso ? format(new Date(voucher.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-'}
+                    {voucher.data_uso ? 
+                      format(new Date(voucher.data_uso), 'dd/MM/yyyy HH:mm', { locale: ptBR }) 
+                      : '-'}
                   </TableCell>
                   <TableCell>{voucher.solicitante || '-'}</TableCell>
                 </TableRow>
