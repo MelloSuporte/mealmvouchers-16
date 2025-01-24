@@ -10,7 +10,7 @@ DROP FUNCTION IF EXISTS insert_voucher_descartavel;
 CREATE OR REPLACE FUNCTION insert_voucher_descartavel(
     p_codigo VARCHAR,
     p_tipo_refeicao_id UUID,
-    p_data_requisicao DATE,
+    p_data_requisicao TIMESTAMP WITH TIME ZONE,
     p_nome_pessoa VARCHAR,
     p_nome_empresa VARCHAR
 )
