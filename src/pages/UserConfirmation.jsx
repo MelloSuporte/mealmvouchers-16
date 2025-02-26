@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -132,6 +133,8 @@ const UserConfirmation = () => {
   };
 
   const handleCancel = () => {
+    // Apenas limpa os dados do localStorage e redireciona
+    logger.info('Cancelando confirmação e limpando dados');
     localStorage.removeItem('commonVoucher');
     localStorage.removeItem('disposableVoucher');
     localStorage.removeItem('currentMealType');
