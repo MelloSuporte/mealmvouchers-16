@@ -123,6 +123,40 @@ const UserConfirmation = () => {
   const handleConfirm = async () => {
     try {
       setIsConfirming(true);
+
+      // Registrar uso do voucher apenas quando o usuário confirmar
+      const commonVoucherData = localStorage.getItem('commonVoucher');
+      const disposableVoucherData = localStorage.getItem('disposableVoucher');
+      const currentMealType = JSON.parse(localStorage.getItem('currentMealType'));
+
+      if (commonVoucherData) {
+        const { voucher } = JSON.parse(commonVoucherData);
+        const { error } = await supabase.rpc('validate_and_use_voucher', {
+          p_codigo: voucher,
+          p_tipo_refeicao_id: currentMealType.id
+        });
+
+        if (error) {
+          logger.error('Erro ao registrar uso do voucher comum:', error);
+          toast.error('Erro ao registrar uso do voucher');
+          return;
+        }
+      }
+
+      if (disposableVoucherData) {
+        const voucherData = JSON.parse(disposableVoucherData);
+        const { error } = await supabase.rpc('validate_and_use_voucher', {
+          p_codigo: voucherData.voucher,
+          p_tipo_refeicao_id: currentMealType.id
+        });
+
+        if (error) {
+          logger.error('Erro ao registrar uso do voucher descartável:', error);
+          toast.error('Erro ao registrar uso do voucher');
+          return;
+        }
+      }
+
       navigate('/bom-apetite');
     } catch (error) {
       logger.error('Erro na confirmação:', error);
@@ -133,7 +167,6 @@ const UserConfirmation = () => {
   };
 
   const handleCancel = () => {
-    // Apenas limpa os dados do localStorage e redireciona
     logger.info('Cancelando confirmação e limpando dados');
     localStorage.removeItem('commonVoucher');
     localStorage.removeItem('disposableVoucher');
