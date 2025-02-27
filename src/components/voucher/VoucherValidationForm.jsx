@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import VoucherForm from './VoucherForm';
-import { validateVoucher } from '../../services/voucher/voucherValidationService';
 import { useMealTypes } from '../../hooks/useMealTypes';
 import logger from '../../config/logger';
+import { supabase } from '../../config/supabase';
 
 const VoucherValidationForm = () => {
   const navigate = useNavigate();
@@ -63,6 +64,166 @@ const VoucherValidationForm = () => {
     return availableMealType;
   };
 
+  const validateVoucherOnly = async (code, tipoRefeicaoId) => {
+    try {
+      logger.info('Validando regras do voucher (sem registrar uso):', { codigo: code, tipoRefeicaoId });
+      
+      // Primeiro tenta encontrar como voucher comum
+      const { data: user, error: userError } = await supabase
+        .from('usuarios')
+        .select(`
+          *,
+          empresas (
+            id,
+            nome,
+            ativo
+          ),
+          turnos (
+            id,
+            tipo_turno,
+            horario_inicio,
+            horario_fim,
+            ativo
+          )
+        `)
+        .eq('voucher', code)
+        .maybeSingle();
+
+      if (userError) {
+        logger.error('Erro ao buscar usuário:', userError);
+        throw userError;
+      }
+
+      // Se encontrado como voucher comum
+      if (user) {
+        logger.info('Voucher comum encontrado:', user);
+
+        if (user.suspenso) {
+          return { success: false, error: 'Usuário suspenso' };
+        }
+
+        if (!user.empresas?.ativo) {
+          return { success: false, error: 'Empresa inativa' };
+        }
+
+        if (!user.turnos?.ativo) {
+          return { success: false, error: 'Turno inativo' };
+        }
+
+        // Verificar horário do turno
+        const now = new Date();
+        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:00`;
+
+        if (currentTime < user.turnos.horario_inicio || currentTime > user.turnos.horario_fim) {
+          return { 
+            success: false, 
+            error: `Fora do horário do turno (${user.turnos.horario_inicio} - ${user.turnos.horario_fim})` 
+          };
+        }
+
+        // Verificar se já usou este tipo de refeição hoje
+        const today = new Date().toISOString().split('T')[0];
+        const { data: usageToday } = await supabase
+          .from('uso_voucher')
+          .select('*')
+          .eq('usuario_id', user.id)
+          .eq('tipo_refeicao_id', tipoRefeicaoId)
+          .gte('usado_em', today);
+
+        if (usageToday && usageToday.length > 0) {
+          return { success: false, error: 'Tipo de refeição já utilizado hoje' };
+        }
+
+        // Verificar limite diário total
+        const { data: totalUsageToday } = await supabase
+          .from('uso_voucher')
+          .select('*')
+          .eq('usuario_id', user.id)
+          .gte('usado_em', today);
+
+        if (totalUsageToday && totalUsageToday.length >= 3) {
+          return { success: false, error: 'Limite diário de refeições atingido' };
+        }
+
+        // Verificar intervalo mínimo entre refeições
+        if (totalUsageToday && totalUsageToday.length > 0) {
+          const lastUsage = new Date(totalUsageToday[totalUsageToday.length - 1].usado_em);
+          const minInterval = new Date(lastUsage.getTime() + (3 * 60 * 60 * 1000)); // 3 horas
+
+          if (now < minInterval) {
+            return { success: false, error: 'Intervalo mínimo entre refeições não respeitado' };
+          }
+        }
+
+        return {
+          success: true,
+          voucherType: 'comum',
+          user: user,
+          code: code
+        };
+      }
+
+      // Se não encontrado como voucher comum, tentar descartável
+      const { data: disposableVoucher, error: disposableError } = await supabase
+        .from('vouchers_descartaveis')
+        .select(`
+          *,
+          tipos_refeicao (
+            id,
+            nome,
+            horario_inicio,
+            horario_fim,
+            minutos_tolerancia,
+            ativo
+          )
+        `)
+        .eq('codigo', code)
+        .is('usado_em', null)
+        .maybeSingle();
+
+      if (disposableError) {
+        logger.error('Erro ao buscar voucher descartável:', disposableError);
+        throw disposableError;
+      }
+
+      if (disposableVoucher) {
+        logger.info('Voucher descartável encontrado:', disposableVoucher);
+
+        // Validar data de expiração
+        const today = new Date();
+        const expirationDate = new Date(disposableVoucher.data_expiracao);
+        
+        if (today > expirationDate) {
+          return { success: false, error: 'Voucher expirado' };
+        }
+
+        // Validar tipo de refeição
+        if (disposableVoucher.tipo_refeicao_id !== tipoRefeicaoId) {
+          return { success: false, error: 'Tipo de refeição inválido para este voucher' };
+        }
+
+        return {
+          success: true,
+          voucherType: 'descartavel',
+          data: disposableVoucher,
+          code: code
+        };
+      }
+
+      return {
+        success: false,
+        error: 'Voucher não encontrado ou inválido'
+      };
+
+    } catch (error) {
+      logger.error('Erro na validação:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Erro ao validar voucher'
+      };
+    }
+  };
+
   const handleSubmit = async (voucherCode) => {
     if (isValidating) return;
     
@@ -87,19 +248,20 @@ const VoucherValidationForm = () => {
         nome: currentMealType.nome
       });
 
-      const result = await validateVoucher(voucherCode, currentMealType.id);
+      // Apenas validar, sem registrar uso
+      const result = await validateVoucherOnly(voucherCode, currentMealType.id);
       
       if (result.success) {
         localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
         
         if (result.voucherType === 'descartavel') {
           localStorage.setItem('disposableVoucher', JSON.stringify({
-            code: voucherCode,
+            voucher: result.code,
             mealTypeId: currentMealType.id
           }));
         } else {
           localStorage.setItem('commonVoucher', JSON.stringify({
-            code: voucherCode,
+            voucher: result.code,
             userName: result.user?.nome || 'Usuário',
             turno: result.user?.turnos?.tipo_turno,
             cpf: result.user?.cpf,
