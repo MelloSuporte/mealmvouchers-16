@@ -123,6 +123,7 @@ const UserConfirmation = () => {
   const handleConfirm = async () => {
     try {
       setIsConfirming(true);
+      logger.info('Iniciando confirmação e registro de uso do voucher');
 
       // Registrar uso do voucher apenas quando o usuário confirmar
       const commonVoucherData = localStorage.getItem('commonVoucher');
@@ -131,32 +132,39 @@ const UserConfirmation = () => {
 
       if (commonVoucherData) {
         const { voucher } = JSON.parse(commonVoucherData);
-        const { error } = await supabase.rpc('validate_and_use_voucher', {
+        logger.info('Registrando uso do voucher comum:', voucher);
+        const { data, error } = await supabase.rpc('validate_and_use_voucher', {
           p_codigo: voucher,
           p_tipo_refeicao_id: currentMealType.id
         });
 
         if (error) {
           logger.error('Erro ao registrar uso do voucher comum:', error);
-          toast.error('Erro ao registrar uso do voucher');
+          toast.error('Erro ao registrar uso do voucher: ' + error.message);
           return;
         }
+        
+        logger.info('Voucher comum registrado com sucesso:', data);
       }
 
       if (disposableVoucherData) {
         const voucherData = JSON.parse(disposableVoucherData);
-        const { error } = await supabase.rpc('validate_and_use_voucher', {
+        logger.info('Registrando uso do voucher descartável:', voucherData.voucher);
+        const { data, error } = await supabase.rpc('validate_and_use_voucher', {
           p_codigo: voucherData.voucher,
           p_tipo_refeicao_id: currentMealType.id
         });
 
         if (error) {
           logger.error('Erro ao registrar uso do voucher descartável:', error);
-          toast.error('Erro ao registrar uso do voucher');
+          toast.error('Erro ao registrar uso do voucher: ' + error.message);
           return;
         }
+        
+        logger.info('Voucher descartável registrado com sucesso:', data);
       }
 
+      toast.success('Voucher registrado com sucesso!');
       navigate('/bom-apetite');
     } catch (error) {
       logger.error('Erro na confirmação:', error);
