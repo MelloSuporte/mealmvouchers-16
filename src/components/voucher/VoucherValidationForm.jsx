@@ -252,6 +252,7 @@ const VoucherValidationForm = () => {
       const result = await validateVoucherOnly(voucherCode, currentMealType.id);
       
       if (result.success) {
+        logger.info('Voucher validado com sucesso, redirecionando para confirmação');
         localStorage.setItem('currentMealType', JSON.stringify(currentMealType));
         
         if (result.voucherType === 'descartavel') {
@@ -270,6 +271,7 @@ const VoucherValidationForm = () => {
           }));
         }
         
+        toast.success('Voucher validado com sucesso! Confirme para registrar o uso.');
         navigate('/user-confirmation');
       } else {
         toast.error(result.error || 'Erro ao validar voucher');

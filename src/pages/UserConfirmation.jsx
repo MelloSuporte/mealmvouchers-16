@@ -131,10 +131,11 @@ const UserConfirmation = () => {
       const currentMealType = JSON.parse(localStorage.getItem('currentMealType'));
 
       if (commonVoucherData) {
-        const { voucher } = JSON.parse(commonVoucherData);
-        logger.info('Registrando uso do voucher comum:', voucher);
+        const parsedData = JSON.parse(commonVoucherData);
+        logger.info('Registrando uso do voucher comum:', parsedData.voucher);
+        
         const { data, error } = await supabase.rpc('validate_and_use_voucher', {
-          p_codigo: voucher,
+          p_codigo: parsedData.voucher,
           p_tipo_refeicao_id: currentMealType.id
         });
 
@@ -150,6 +151,7 @@ const UserConfirmation = () => {
       if (disposableVoucherData) {
         const voucherData = JSON.parse(disposableVoucherData);
         logger.info('Registrando uso do voucher descartável:', voucherData.voucher);
+        
         const { data, error } = await supabase.rpc('validate_and_use_voucher', {
           p_codigo: voucherData.voucher,
           p_tipo_refeicao_id: currentMealType.id
