@@ -25,7 +25,14 @@ const VoucherValidationForm = () => {
 
     logger.info('Buscando tipo de refeição para horário:', { 
       hora: currentHour, 
-      minuto: currentMinute 
+      minuto: currentMinute,
+      timeInMinutes: currentTimeInMinutes,
+      tiposDisponiveis: mealTypes.map(t => ({
+        nome: t.nome,
+        inicio: t.horario_inicio,
+        fim: t.horario_fim,
+        tolerancia: t.minutos_tolerancia
+      }))
     });
 
     const availableMealType = mealTypes.find(type => {
@@ -35,6 +42,14 @@ const VoucherValidationForm = () => {
 
       const startTimeInMinutes = startHour * 60 + startMinute;
       let endTimeInMinutes = endHour * 60 + endMinute + toleranceMinutes;
+
+      logger.info('Verificando tipo de refeição:', {
+        nome: type.nome,
+        startTimeInMinutes,
+        endTimeInMinutes,
+        currentTimeInMinutes,
+        toleranceMinutes
+      });
 
       // Handle times that cross midnight
       if (endTimeInMinutes < startTimeInMinutes) {
