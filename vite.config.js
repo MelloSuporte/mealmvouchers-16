@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 4173,
+    port: 8080,
     allowedHosts: ['mellotransportes.ddns.net']
   }
 });

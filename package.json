@@ -61,6 +61,7 @@
     "input-otp": "^1.2.4",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
+    "lovable-tagger": "^1.1.8",
     "lucide-react": "^0.417.0",
     "multer": "^1.4.5-lts.1",
     "next-themes": "^0.3.0",
